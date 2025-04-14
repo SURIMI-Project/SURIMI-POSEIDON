@@ -2,3 +2,6 @@
 	path = POSEIDON
 	url = git@github.com:poseidon-fisheries/POSEIDON.git
 	branch = SURIMI
+[submodule "server/src/main/proto"]
+	path = server/src/main/proto
+	url = git@github.com:Official-EwE/SURIMI-protocol.git
