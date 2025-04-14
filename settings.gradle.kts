@@ -13,3 +13,4 @@ plugins {
 
 rootProject.name = "SURIMI-POSEIDON"
 include("app")
+includeBuild("POSEIDON")
