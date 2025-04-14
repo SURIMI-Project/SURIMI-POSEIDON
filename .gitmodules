@@ -1,0 +1,4 @@
+[submodule "POSEIDON"]
+	path = POSEIDON
+	url = git@github.com:poseidon-fisheries/POSEIDON.git
+	branch = SURIMI
