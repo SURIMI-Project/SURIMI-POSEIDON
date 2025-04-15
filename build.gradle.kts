@@ -52,6 +52,11 @@ tasks.shadowJar {
     }
 }
 
+tasks.register("buildDockerImage", Exec::class) {
+    dependsOn(tasks.named("shadowJar"))
+    commandLine("docker", "build", "-t", "nicolaspayette/poseidon:latest", ".")
+}
+
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
