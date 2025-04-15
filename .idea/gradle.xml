@@ -43,7 +43,6 @@
             <option value="$PROJECT_DIR$/POSEIDON/io" />
             <option value="$PROJECT_DIR$/POSEIDON/regulations" />
             <option value="$PROJECT_DIR$/POSEIDON/server" />
-            <option value="$PROJECT_DIR$/server" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -6,9 +6,9 @@ package eu.project.surimi.poseidon;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-class AppTest {
+class ServerTest {
     @Test void appHasAGreeting() {
-        App classUnderTest = new App();
+        Server classUnderTest = new Server();
         assertNotNull(classUnderTest.getGreeting(), "app should have a greeting");
     }
 }

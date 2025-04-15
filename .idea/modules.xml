@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/agents/POSEIDON.agents.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/agents/POSEIDON.agents.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/biology/POSEIDON.biology.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/biology/POSEIDON.biology.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/core/POSEIDON.core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/core/POSEIDON.core.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/examples/POSEIDON.examples.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/examples/POSEIDON.examples.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/geography/POSEIDON.geography.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/geography/POSEIDON.geography.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/gui/POSEIDON.gui.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/gui/POSEIDON.gui.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/io/POSEIDON.io.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/io/POSEIDON.io.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/regulations/POSEIDON.regulations.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/regulations/POSEIDON.regulations.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/server/POSEIDON.server.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/server/POSEIDON.server.main.iml" />
+    </modules>
+  </component>
+</project>

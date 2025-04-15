@@ -12,5 +12,28 @@ plugins {
 }
 
 rootProject.name = "SURIMI-POSEIDON"
-include("server")
-includeBuild("POSEIDON")
+includeBuild("POSEIDON") {
+    dependencySubstitution {
+        substitute(module("POSEIDON:regulations")).using(project(":regulations"))
+        substitute(module("POSEIDON:biology")).using(project(":biology"))
+        substitute(module("POSEIDON:io")).using(project(":io"))
+        substitute(module("POSEIDON:examples")).using(project(":examples"))
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        maven {
+            // needs to come before Maven Central, otherwise we fail to find javax.media:jai_core:1.1.3
+            url = uri("https://repo.osgeo.org/repository/geotools-releases/")
+        }
+        mavenCentral()
+        maven { url = uri("https://maven.geo-solutions.it/") }
+        maven {
+            // needs to come after mavenCentral otherwise we fail to find
+            // flatlaf-3.5.1-macos-arm64.dylib and flatlaf-3.5.1-macos-x86_64.dylib
+            url = uri("https://nexus.geomatys.com/repository/maven-public/")
+        }
+    }
+}
