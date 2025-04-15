@@ -17,7 +17,7 @@
  *
  */
 
-package eu.project.surimi.poseidon;
+package eu.project.surimi.poseidon.server;
 
 import lombok.RequiredArgsConstructor;
 import uk.ac.ox.poseidon.core.Simulation;

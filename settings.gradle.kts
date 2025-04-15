@@ -21,10 +21,12 @@ plugins {
 rootProject.name = "SURIMI-POSEIDON"
 includeBuild("POSEIDON") {
     dependencySubstitution {
-        substitute(module("POSEIDON:regulations")).using(project(":regulations"))
+        substitute(module("POSEIDON:agents")).using(project(":agents"))
         substitute(module("POSEIDON:biology")).using(project(":biology"))
-        substitute(module("POSEIDON:io")).using(project(":io"))
         substitute(module("POSEIDON:examples")).using(project(":examples"))
+        substitute(module("POSEIDON:gui")).using(project(":gui"))
+        substitute(module("POSEIDON:io")).using(project(":io"))
+        substitute(module("POSEIDON:regulations")).using(project(":regulations"))
     }
 }
 

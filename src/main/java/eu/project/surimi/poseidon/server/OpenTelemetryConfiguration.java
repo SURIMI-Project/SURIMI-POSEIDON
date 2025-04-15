@@ -17,7 +17,7 @@
  *
  */
 
-package eu.project.surimi.poseidon;
+package eu.project.surimi.poseidon.server;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;

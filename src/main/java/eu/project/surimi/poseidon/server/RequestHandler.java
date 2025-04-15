@@ -17,7 +17,7 @@
  *
  */
 
-package eu.project.surimi.poseidon;
+package eu.project.surimi.poseidon.server;
 
 import com.google.protobuf.Timestamp;
 import io.grpc.Status;

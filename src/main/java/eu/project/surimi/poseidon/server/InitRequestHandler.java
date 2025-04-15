@@ -17,7 +17,7 @@
  *
  */
 
-package eu.project.surimi.poseidon;
+package eu.project.surimi.poseidon.server;
 
 import eu.project.surimi.Workflow;
 import lombok.RequiredArgsConstructor;

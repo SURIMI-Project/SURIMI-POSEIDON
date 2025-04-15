@@ -9,10 +9,12 @@ plugins {
 val mockitoAgent: Configuration = configurations.create("mockitoAgent")
 
 dependencies {
+    implementation("POSEIDON:gui")
     implementation("POSEIDON:regulations")
+    implementation("POSEIDON:examples")
+    implementation("POSEIDON:agents")
     implementation("POSEIDON:biology")
     implementation("POSEIDON:io")
-    runtimeOnly("POSEIDON:examples")
     implementation(libs.lombok)
     annotationProcessor(libs.lombok)
     implementation(libs.protobuf.java.util)
@@ -39,7 +41,7 @@ java {
 }
 
 application {
-    mainClass = "eu.project.surimi.poseidon.Server"
+    mainClass = "eu.project.surimi.poseidon.server.Server"
 }
 
 tasks.shadowJar {
