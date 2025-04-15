@@ -17,7 +17,6 @@
                   <project path="$PROJECT_DIR$/POSEIDON/gui" />
                   <project path="$PROJECT_DIR$/POSEIDON/io" />
                   <project path="$PROJECT_DIR$/POSEIDON/regulations" />
-                  <project path="$PROJECT_DIR$/POSEIDON/server" />
                 </projects>
               </build>
               <build path="$PROJECT_DIR$/POSEIDON/buildSrc" name="buildSrc">
@@ -42,7 +41,6 @@
             <option value="$PROJECT_DIR$/POSEIDON/gui" />
             <option value="$PROJECT_DIR$/POSEIDON/io" />
             <option value="$PROJECT_DIR$/POSEIDON/regulations" />
-            <option value="$PROJECT_DIR$/POSEIDON/server" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -29,6 +29,8 @@ grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
 grpc-services = { module = "io.grpc:grpc-services", version.ref = "grpc" }
 grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
 annotation-api = { module = "javax.annotation:javax.annotation-api", version.ref = "annotation-api" }
+spotbugs-annotations = { module = "com.github.spotbugs:spotbugs-annotations" }
+spotbugs-gradle-plugin = { module = "com.github.spotbugs.snom:spotbugs-gradle-plugin", version.ref = "spotbugs" }
 
 [bundles]
 grpc = [

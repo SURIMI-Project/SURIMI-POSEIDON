@@ -12,8 +12,8 @@
         <module name="POSEIDON.gui.main" />
         <module name="POSEIDON.io.main" />
         <module name="POSEIDON.regulations.main" />
+        <module name="SURIMI-POSEIDON.main" />
         <module name="POSEIDON.geography.main" />
-        <module name="POSEIDON.server.main" />
         <module name="POSEIDON.biology.main" />
         <module name="POSEIDON.examples.main" />
       </profile>
