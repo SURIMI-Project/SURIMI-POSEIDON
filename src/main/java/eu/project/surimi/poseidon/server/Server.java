@@ -25,17 +25,17 @@ public class Server {
     private static final System.Logger logger = System.getLogger(Server.class.getName());
 
     @Parameter(
-            names = {"-s", "--scenario"},
-            description = "Path to the scenario file in YAML format.",
-            converter = CustomPathConverter.class,
-            required = true
+        names = {"-s", "--scenario"},
+        description = "Path to the scenario file in YAML format.",
+        converter = CustomPathConverter.class,
+        required = true
     )
     private Path scenarioPath;
 
     @Parameter(
-            names = {"-p", "--port"},
-            description = "Port to listen on for gRPC requests.",
-            required = true
+        names = {"-p", "--port"},
+        description = "Port to listen on for gRPC requests.",
+        required = true
     )
     private int port;
 
@@ -43,9 +43,9 @@ public class Server {
         logger.log(INFO, () -> "Received arguments: " + Arrays.toString(args));
         final Server server = new Server();
         final JCommander jCommander = JCommander
-                .newBuilder()
-                .addObject(server)
-                .build();
+            .newBuilder()
+            .addObject(server)
+            .build();
         try {
             jCommander.parse(args);
             server.startServer();
@@ -59,11 +59,12 @@ public class Server {
         final WorkflowService workflowService = createWorkflowService();
         // Bind to 0.0.0.0 so the server listens on all network interfaces
         final io.grpc.Server grpcServer = NettyServerBuilder
-                .forAddress(new InetSocketAddress("0.0.0.0", this.port))
-                .addService(ProtoReflectionServiceV1.newInstance())
-                .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
-                .addService(workflowService)
-                .build();
+            .forAddress(new InetSocketAddress("0.0.0.0", this.port))
+            .addService(ProtoReflectionServiceV1.newInstance())
+            .intercept(new ExceptionInterceptor())
+            .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
+            .addService(workflowService)
+            .build();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.log(INFO, "Shutting down gRPC server...");
             grpcServer.shutdown();
@@ -77,15 +78,15 @@ public class Server {
     private WorkflowService createWorkflowService() {
         final SimulationManager simulationManager = new SimulationManager();
         return new WorkflowService(
-                new InitRequestHandler(
-                        simulationManager,
-                        new ScenarioLoader(),
-                        scenarioPath.toFile()
-                ),
-                new SimulateStepRequestHandler(simulationManager),
-                new UpdatePricesRequestHandler(simulationManager),
-                new RequestBiomassRequestHandler(simulationManager),
-                new UpdateBiomassRequestHandler(simulationManager)
+            new InitRequestHandler(
+                simulationManager,
+                new ScenarioLoader(),
+                scenarioPath.toFile()
+            ),
+            new SimulateStepRequestHandler(simulationManager),
+            new UpdatePricesRequestHandler(simulationManager),
+            new RequestBiomassRequestHandler(simulationManager),
+            new UpdateBiomassRequestHandler(simulationManager)
         );
     }
 
