@@ -24,7 +24,6 @@ import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
-import uk.ac.ox.poseidon.gui.palettes.PaletteColorMap;
 import uk.ac.ox.poseidon.gui.portrayals.*;
 
 import java.util.List;
