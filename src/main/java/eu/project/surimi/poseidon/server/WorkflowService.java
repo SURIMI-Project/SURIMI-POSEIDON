@@ -30,7 +30,6 @@ class WorkflowService extends WorkflowServiceGrpc.WorkflowServiceImplBase {
     private final InitRequestHandler initRequestHandler;
     private final SimulateStepRequestHandler simulateStepRequestHandler;
     private final UpdatePricesRequestHandler updatePricesRequestHandler;
-    private final RequestBiomassRequestHandler requestBiomassRequestHandler;
     private final UpdateBiomassRequestHandler updateBiomassRequestHandler;
 
     @Override
@@ -55,14 +54,6 @@ class WorkflowService extends WorkflowServiceGrpc.WorkflowServiceImplBase {
         final StreamObserver<Workflow.UpdatePricesResponse> responseObserver
     ) {
         updatePricesRequestHandler.handle(request, responseObserver);
-    }
-
-    @Override
-    public void requestBiomass(
-        final Workflow.RequestBiomassRequest request,
-        final StreamObserver<Workflow.RequestBiomassResponse> responseObserver
-    ) {
-        requestBiomassRequestHandler.handle(request, responseObserver);
     }
 
     @Override

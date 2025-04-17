@@ -5,3 +5,6 @@
 [submodule "western_med"]
   path = western_med
   url = https://github.com/Official-EwE/SURIMI-western_med.git
+[submodule "src/main/proto"]
+	path = src/main/proto
+	url = https://github.com/Official-EwE/SURIMI-protocol.git

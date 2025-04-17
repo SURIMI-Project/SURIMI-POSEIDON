@@ -20,7 +20,7 @@
 package eu.project.surimi.poseidon.server;
 
 import eu.project.surimi.Biomass;
-import eu.project.surimi.Workflow;
+import eu.project.surimi.Ecology;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.Coordinate;
@@ -32,14 +32,14 @@ import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.NOT_FOUND;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
-public class RequestBiomassRequestHandler extends
-    WithSimulationRequestHandler<Workflow.RequestBiomassRequest, Workflow.RequestBiomassResponse> {
-    public RequestBiomassRequestHandler(final SimulationManager simulationManager) {
+public class GetBiomassRequestHandler extends
+    WithSimulationRequestHandler<Ecology.GetBiomassRequest, Ecology.GetBiomassResponse> {
+    public GetBiomassRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 
     @Override
-    protected String getSimulationId(final Workflow.RequestBiomassRequest request) {
+    protected String getSimulationId(final Ecology.GetBiomassRequest request) {
         return request.getSimulationId();
     }
 
@@ -54,13 +54,13 @@ public class RequestBiomassRequestHandler extends
     }
 
     @Override
-    protected Workflow.RequestBiomassResponse getResponseWithSimulation(
-        final Workflow.RequestBiomassRequest request,
+    protected Ecology.GetBiomassResponse getResponseWithSimulation(
+        final Ecology.GetBiomassRequest request,
         final Simulation simulation
     ) {
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
-        final Workflow.RequestBiomassResponse.Builder responseBuilder =
-            Workflow.RequestBiomassResponse
+        final Ecology.GetBiomassResponse.Builder responseBuilder =
+            Ecology.GetBiomassResponse
                 .newBuilder()
                 .setMeasurementUnit(KILOGRAM.getSymbol());
         simulation.getComponents(BiomassGrid.class).forEach(grid -> {

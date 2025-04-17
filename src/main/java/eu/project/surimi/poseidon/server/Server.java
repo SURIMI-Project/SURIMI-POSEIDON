@@ -56,14 +56,15 @@ public class Server {
 
     private void startServer() throws IOException, InterruptedException {
         final OpenTelemetry openTelemetry = OpenTelemetryConfiguration.initOpenTelemetry();
-        final WorkflowService workflowService = createWorkflowService();
+        final SimulationManager simulationManager = new SimulationManager();
         // Bind to 0.0.0.0 so the server listens on all network interfaces
         final io.grpc.Server grpcServer = NettyServerBuilder
             .forAddress(new InetSocketAddress("0.0.0.0", this.port))
             .addService(ProtoReflectionServiceV1.newInstance())
             .intercept(new ExceptionInterceptor())
             .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
-            .addService(workflowService)
+            .addService(createWorkflowService(simulationManager))
+            .addService(createEcologyService(simulationManager))
             .build();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.log(INFO, "Shutting down gRPC server...");
@@ -75,8 +76,13 @@ public class Server {
         grpcServer.awaitTermination();
     }
 
-    private WorkflowService createWorkflowService() {
-        final SimulationManager simulationManager = new SimulationManager();
+    private EcologyService createEcologyService(SimulationManager simulationManager) {
+        return new EcologyService(
+            new GetBiomassRequestHandler(simulationManager)
+        );
+    }
+
+    private WorkflowService createWorkflowService(SimulationManager simulationManager) {
         return new WorkflowService(
             new InitRequestHandler(
                 simulationManager,
@@ -85,7 +91,6 @@ public class Server {
             ),
             new SimulateStepRequestHandler(simulationManager),
             new UpdatePricesRequestHandler(simulationManager),
-            new RequestBiomassRequestHandler(simulationManager),
             new UpdateBiomassRequestHandler(simulationManager)
         );
     }
