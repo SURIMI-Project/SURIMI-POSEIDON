@@ -26,21 +26,23 @@ import io.grpc.stub.StreamObserver;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Map;
 
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.ERROR;
+import static java.time.ZoneOffset.UTC;
 
 public abstract class RequestHandler<ReqT, RespT> {
 
     private static final System.Logger logger = System.getLogger(RequestHandler.class.getName());
 
-    static LocalDateTime toLocalDateTime(final Timestamp startDateTime) {
-        return LocalDateTime.ofInstant(
-            Instant.ofEpochSecond(
-                startDateTime.getSeconds()), ZoneOffset.UTC
-        );
+    static LocalDateTime toLocalDateTime(
+        final Timestamp timestamp
+    ) {
+        return Instant
+            .ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos())
+            .atOffset(UTC)
+            .toLocalDateTime();
     }
 
     static <K, V> V getOrThrow(

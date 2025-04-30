@@ -58,11 +58,14 @@ public class Server {
         final OpenTelemetry openTelemetry = OpenTelemetryConfiguration.initOpenTelemetry();
         final SimulationManager simulationManager = new SimulationManager();
         // Bind to 0.0.0.0 so the server listens on all network interfaces
-        final io.grpc.Server grpcServer = NettyServerBuilder
+        @SuppressWarnings("deprecation") final io.grpc.Server grpcServer = NettyServerBuilder
             .forAddress(new InetSocketAddress("0.0.0.0", this.port))
+            //.addService(ProtoReflectionService.newInstance()) // deprecated, but works with
+            // postman
             .addService(ProtoReflectionServiceV1.newInstance())
             .intercept(new ExceptionInterceptor())
             .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
+            .addService(createAgentsService(simulationManager))
             .addService(createWorkflowService(simulationManager))
             .addService(createEcologyService(simulationManager))
             .build();
@@ -74,6 +77,10 @@ public class Server {
         grpcServer.start();
         logger.log(INFO, "Server started, listening on " + port);
         grpcServer.awaitTermination();
+    }
+
+    private AgentsService createAgentsService(SimulationManager simulationManager) {
+        return new AgentsService(new GetSalesSummaryRequestHandler(simulationManager));
     }
 
     private EcologyService createEcologyService(SimulationManager simulationManager) {

@@ -22,6 +22,7 @@ package eu.project.surimi.poseidon.server;
 import com.google.protobuf.util.Timestamps;
 import eu.project.surimi.Workflow;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -50,8 +51,9 @@ public class SimulateStepRequestHandler extends
         final Simulation simulation
     ) {
         final Period stepSize = simulationManager.getSimulationProperties(simulation).stepSize();
-        simulation.getTemporalSchedule().stepFor(simulation, stepSize);
-        final LocalDateTime dateTime = simulation.getTemporalSchedule().getDateTime();
+        TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
+        temporalSchedule.stepFor(simulation, stepSize);
+        final LocalDateTime dateTime = temporalSchedule.getDateTime();
         logger.log(
             INFO, "Advanced simulation {0} by {1} to {2}",
             request.getSimulationId(), stepSize, dateTime
@@ -59,9 +61,9 @@ public class SimulateStepRequestHandler extends
         return Workflow.SimulateStepResponse
             .newBuilder()
             .setDateTime(
-                Timestamps.fromSeconds(dateTime
-                    .toInstant(ZoneOffset.UTC)
-                    .getEpochSecond())
+                Timestamps.fromSeconds(
+                    dateTime.toInstant(ZoneOffset.UTC).getEpochSecond()
+                )
             )
             .build();
     }

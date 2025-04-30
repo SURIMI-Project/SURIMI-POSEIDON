@@ -37,9 +37,7 @@ import uk.ac.ox.poseidon.agents.behaviours.travel.TravellingAlongPathBehaviourFa
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
-import uk.ac.ox.poseidon.agents.market.BiomassMarketGridPriceFileFactory;
-import uk.ac.ox.poseidon.agents.market.Market;
-import uk.ac.ox.poseidon.agents.market.MarketGrid;
+import uk.ac.ox.poseidon.agents.market.*;
 import uk.ac.ox.poseidon.agents.registers.Register;
 import uk.ac.ox.poseidon.agents.registers.RegisterFactory;
 import uk.ac.ox.poseidon.agents.registers.RegisteringFactory;
@@ -277,6 +275,8 @@ public class WesternMedScenario extends ScenarioSupplier {
                 true
             )
         );
+    private Factory<? extends BiomassSaleAccumulator> biomassSaleAccumulator =
+        new BiomassSaleAccumulatorFactory();
     private VesselScopeFactory<? extends Hold<Biomass>> hold = new StandardBiomassHoldFactory(
         MassFactory.of(VESSEL_HOLD_CAPACITY),
         MassFactory.of("1 kg"),
