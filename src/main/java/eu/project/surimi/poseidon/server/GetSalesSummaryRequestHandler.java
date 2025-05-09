@@ -56,12 +56,6 @@ public class GetSalesSummaryRequestHandler extends
             toLocalDateTime(request.getStartDateTime()),
             toLocalDateTime(request.getEndDateTime())
         );
-        System.out.println(dateTimeRange);
-        System.out.println(simulation
-            .getComponent(BiomassSaleAccumulator.class));
-        System.out.println(simulation
-            .getComponent(BiomassSaleAccumulator.class)
-            .getEvents().toList());
         record Key(Market<?> market, CurrencyUnit currencyUnit) {}
         final List<Sales.SalesSummary> saleSummaries =
             simulation
