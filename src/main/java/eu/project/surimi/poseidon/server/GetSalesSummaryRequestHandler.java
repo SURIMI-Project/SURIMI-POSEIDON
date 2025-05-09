@@ -21,16 +21,16 @@ import static tech.units.indriya.unit.Units.KILOGRAM;
 public class GetSalesSummaryRequestHandler extends
     WithSimulationRequestHandler<Agents.GetSalesSummaryRequest, Agents.GetSalesSummaryResponse> {
 
-    public GetSalesSummaryRequestHandler(SimulationManager simulationManager) {
+    public GetSalesSummaryRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 
-    private static Sales.Sale summariseSale(List<SaleEntry> saleEntries) {
-        String speciesCode = saleEntries.getFirst().species.getCode();
-        double totalKg = saleEntries.stream()
+    private static Sales.Sale summariseSale(final List<SaleEntry> saleEntries) {
+        final String speciesCode = saleEntries.getFirst().species.getCode();
+        final double totalKg = saleEntries.stream()
             .mapToDouble(saleEntry -> saleEntry.biomass.asKg())
             .sum();
-        double totalValue = saleEntries.stream()
+        final double totalValue = saleEntries.stream()
             .map(SaleEntry::value)
             .reduce(Money::plus)
             .map(money -> money.getAmount().doubleValue())
@@ -43,16 +43,16 @@ public class GetSalesSummaryRequestHandler extends
     }
 
     @Override
-    protected String getSimulationId(Agents.GetSalesSummaryRequest request) {
+    protected String getSimulationId(final Agents.GetSalesSummaryRequest request) {
         return request.getSimulationId();
     }
 
     @Override
     protected Agents.GetSalesSummaryResponse getResponseWithSimulation(
-        Agents.GetSalesSummaryRequest request,
-        Simulation simulation
+        final Agents.GetSalesSummaryRequest request,
+        final Simulation simulation
     ) {
-        Range<LocalDateTime> dateTimeRange = Range.closed(
+        final Range<LocalDateTime> dateTimeRange = Range.closed(
             toLocalDateTime(request.getStartDateTime()),
             toLocalDateTime(request.getEndDateTime())
         );
@@ -63,7 +63,7 @@ public class GetSalesSummaryRequestHandler extends
             .getComponent(BiomassSaleAccumulator.class)
             .getEvents().toList());
         record Key(Market<?> market, CurrencyUnit currencyUnit) {}
-        List<Sales.SalesSummary> saleSummaries =
+        final List<Sales.SalesSummary> saleSummaries =
             simulation
                 .getComponent(BiomassSaleAccumulator.class)
                 .getEvents()
@@ -106,8 +106,6 @@ public class GetSalesSummaryRequestHandler extends
                         .setMeasurementUnit(KILOGRAM.getSymbol())
                         .setCurrency(entry.getKey().currencyUnit().getCode())
                         .addAllSales(entry.getValue())
-                        .setStartDateTime(request.getStartDateTime())
-                        .setEndDateTime(request.getEndDateTime())
                         .build()
                 )
                 .toList();
