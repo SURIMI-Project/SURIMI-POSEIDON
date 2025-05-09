@@ -19,14 +19,12 @@
 
 package eu.project.surimi.poseidon.server;
 
-import com.google.protobuf.util.Timestamps;
 import eu.project.surimi.Workflow;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.time.ZoneOffset;
 
 import static java.lang.System.Logger.Level.INFO;
 
@@ -51,7 +49,7 @@ public class SimulateStepRequestHandler extends
         final Simulation simulation
     ) {
         final Period stepSize = simulationManager.getSimulationProperties(simulation).stepSize();
-        TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
+        final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
         temporalSchedule.stepFor(simulation, stepSize);
         final LocalDateTime dateTime = temporalSchedule.getDateTime();
         logger.log(
@@ -60,11 +58,6 @@ public class SimulateStepRequestHandler extends
         );
         return Workflow.SimulateStepResponse
             .newBuilder()
-            .setDateTime(
-                Timestamps.fromSeconds(
-                    dateTime.toInstant(ZoneOffset.UTC).getEpochSecond()
-                )
-            )
             .build();
     }
 }
