@@ -29,7 +29,12 @@ import uk.ac.ox.poseidon.agents.behaviours.choices.BestOptionsFromFriendsSupplie
 import uk.ac.ox.poseidon.agents.behaviours.choices.ExponentialMovingAverageOptionValuesFactory;
 import uk.ac.ox.poseidon.agents.behaviours.choices.MutableOptionValues;
 import uk.ac.ox.poseidon.agents.behaviours.destination.*;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.CompositeDispositionStrategyFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.ProportionallyLimitBiomassToHoldFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.RetainSelectedSpeciesFactory;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.DefaultFishingBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulator;
+import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.HomeBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.LandingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.strategy.ThereAndBackBehaviourFactory;
@@ -50,10 +55,10 @@ import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselsFromFileFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.hold.Hold;
-import uk.ac.ox.poseidon.agents.vessels.hold.ProportionalBiomassOvercapacityDiscardingStrategyFactory;
 import uk.ac.ox.poseidon.agents.vessels.hold.StandardBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.*;
 import uk.ac.ox.poseidon.biology.species.Species;
+import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFromFileFactory;
 import uk.ac.ox.poseidon.core.*;
 import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentDayOfWeekFactory;
@@ -75,6 +80,7 @@ import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeAfterFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
+import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.examples.QuickRunner;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
@@ -277,10 +283,11 @@ public class WesternMedScenario extends ScenarioSupplier {
         );
     private Factory<? extends BiomassSaleAccumulator> biomassSaleAccumulator =
         new BiomassSaleAccumulatorFactory();
+    private Factory<? extends FishingActionAccumulator> fishingActionAccumulator =
+        new FishingActionAccumulatorFactory();
     private VesselScopeFactory<? extends Hold<Biomass>> hold = new StandardBiomassHoldFactory(
         MassFactory.of(VESSEL_HOLD_CAPACITY),
-        MassFactory.of("1 kg"),
-        new ProportionalBiomassOvercapacityDiscardingStrategyFactory()
+        MassFactory.of("1 kg")
     );
     private VesselScopeFactory<? extends MutableOptionValues<Int2D>> optionValues =
         new RegisteringFactory<>(
@@ -350,7 +357,23 @@ public class WesternMedScenario extends ScenarioSupplier {
                                 biomassGrids
                             )
                         ),
-                        regulations
+                        regulations,
+                        new CompositeDispositionStrategyFactory<>(
+                            new RetainSelectedSpeciesFactory<Biomass>(
+                                new SpeciesByCodeFactory(
+                                    new ConstantFactory<>(List.of("PIL", "ANE")),
+                                    // TODO: we're currently restricting to a couple of species code
+                                    //  for testing,  but, once we have the complete list of species
+                                    //  for the  model (and not just the ones for which we currently
+                                    //  have prices) we should (probably?) restrict to species
+                                    //  that have a monetary value:
+                                    // new StringColumnReaderFactory(inputPath.plus("prices.csv")
+                                    // , "species_id"),
+                                    species
+                                )
+                            ),
+                            new ProportionallyLimitBiomassToHoldFactory()
+                        )
                     ),
                     travellingBehaviour
                 ),
