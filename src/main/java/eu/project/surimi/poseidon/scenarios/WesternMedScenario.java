@@ -29,9 +29,10 @@ import uk.ac.ox.poseidon.agents.behaviours.choices.BestOptionsFromFriendsSupplie
 import uk.ac.ox.poseidon.agents.behaviours.choices.ExponentialMovingAverageOptionValuesFactory;
 import uk.ac.ox.poseidon.agents.behaviours.choices.MutableOptionValues;
 import uk.ac.ox.poseidon.agents.behaviours.destination.*;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.CompositeDispositionStrategyFactory;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.ProportionallyLimitBiomassToHoldFactory;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.RetainSelectedSpeciesFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.CompositeDispositionProcessFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.ProportionalDiscardMortalityFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.ProportionallyLimitingBiomassToHoldFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.DefaultFishingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulator;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulatorFactory;
@@ -74,6 +75,7 @@ import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
+import uk.ac.ox.poseidon.core.suppliers.ConstantDoubleSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
@@ -358,8 +360,8 @@ public class WesternMedScenario extends ScenarioSupplier {
                             )
                         ),
                         regulations,
-                        new CompositeDispositionStrategyFactory<>(
-                            new RetainSelectedSpeciesFactory<Biomass>(
+                        new CompositeDispositionProcessFactory<>(
+                            new SelectedSpeciesRetentionFactory<Biomass>(
                                 new SpeciesByCodeFactory(
                                     new ConstantFactory<>(List.of("PIL", "ANE")),
                                     // TODO: we're currently restricting to a couple of species code
@@ -372,7 +374,10 @@ public class WesternMedScenario extends ScenarioSupplier {
                                     species
                                 )
                             ),
-                            new ProportionallyLimitBiomassToHoldFactory()
+                            new ProportionallyLimitingBiomassToHoldFactory(),
+                            new ProportionalDiscardMortalityFactory(
+                                new ConstantDoubleSupplierFactory(0.1)
+                            )
                         )
                     ),
                     travellingBehaviour
