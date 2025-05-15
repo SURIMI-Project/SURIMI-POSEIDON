@@ -9,12 +9,21 @@ import lombok.RequiredArgsConstructor;
 public class AgentsService extends AgentsServiceGrpc.AgentsServiceImplBase {
 
     private final GetSalesSummaryRequestHandler salesSummaryRequestHandler;
+    private final GetGrossCatchesRequestHandler grossCatchesRequestHandler;
 
     @Override
     public void getSalesSummary(
-        Agents.GetSalesSummaryRequest request,
-        StreamObserver<Agents.GetSalesSummaryResponse> responseObserver
+        final Agents.GetSalesSummaryRequest request,
+        final StreamObserver<Agents.GetSalesSummaryResponse> responseObserver
     ) {
         salesSummaryRequestHandler.handle(request, responseObserver);
+    }
+
+    @Override
+    public void getGrossCatches(
+        final Agents.GetGrossCatchesRequest request,
+        final StreamObserver<Agents.GetGrossCatchesResponse> responseObserver
+    ) {
+        grossCatchesRequestHandler.handle(request, responseObserver);
     }
 }

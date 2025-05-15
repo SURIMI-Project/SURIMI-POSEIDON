@@ -79,17 +79,20 @@ public class Server {
         grpcServer.awaitTermination();
     }
 
-    private AgentsService createAgentsService(SimulationManager simulationManager) {
-        return new AgentsService(new GetSalesSummaryRequestHandler(simulationManager));
+    private AgentsService createAgentsService(final SimulationManager simulationManager) {
+        return new AgentsService(
+            new GetSalesSummaryRequestHandler(simulationManager),
+            new GetGrossCatchesRequestHandler(simulationManager)
+        );
     }
 
-    private EcologyService createEcologyService(SimulationManager simulationManager) {
+    private EcologyService createEcologyService(final SimulationManager simulationManager) {
         return new EcologyService(
             new GetBiomassRequestHandler(simulationManager)
         );
     }
 
-    private WorkflowService createWorkflowService(SimulationManager simulationManager) {
+    private WorkflowService createWorkflowService(final SimulationManager simulationManager) {
         return new WorkflowService(
             new InitRequestHandler(
                 simulationManager,
