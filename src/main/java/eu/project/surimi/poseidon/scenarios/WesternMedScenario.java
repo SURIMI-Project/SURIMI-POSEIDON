@@ -44,16 +44,13 @@ import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
 import uk.ac.ox.poseidon.agents.market.*;
+import uk.ac.ox.poseidon.agents.registers.DynamicRegisterFactory;
+import uk.ac.ox.poseidon.agents.registers.ImmutableRegisterFactory;
 import uk.ac.ox.poseidon.agents.registers.Register;
-import uk.ac.ox.poseidon.agents.registers.RegisterFactory;
-import uk.ac.ox.poseidon.agents.registers.RegisteringFactory;
 import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactory;
 import uk.ac.ox.poseidon.agents.regulations.Regulations;
 import uk.ac.ox.poseidon.agents.tables.FishingActionListenerTableFactory;
-import uk.ac.ox.poseidon.agents.vessels.AdaptedVesselPredicateFactory;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactory;
-import uk.ac.ox.poseidon.agents.vessels.VesselsFromFileFactory;
+import uk.ac.ox.poseidon.agents.vessels.*;
 import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.hold.Hold;
 import uk.ac.ox.poseidon.agents.vessels.hold.StandardBiomassHoldFactory;
@@ -127,6 +124,7 @@ public class WesternMedScenario extends ScenarioSupplier {
     private static final double CATCH_PROPORTION = 0.1;
     private static final String VESSEL_SPEED = "9.5 kn"; // as per email on 2025-03-18 08:20
     private static final String VESSEL_HOLD_CAPACITY = "1 t";
+    private static final String FLEET_ID = "F0";
 
     private Factory<? extends BiomassGrowthRule> biomassGrowthRule =
         new LogisticGrowthRuleFactory(LOGISTIC_GROWTH_RATE);
@@ -273,8 +271,6 @@ public class WesternMedScenario extends ScenarioSupplier {
             portGrid,
             species
         );
-    private Factory<? extends Register<MutableOptionValues<Int2D>>> optionValuesRegister =
-        new RegisterFactory<>();
     private Factory<? extends CsvTableWriter> catchTableWriter =
         new FinalProcessFactory<>(
             new CsvTableWriterFactory(
@@ -292,10 +288,9 @@ public class WesternMedScenario extends ScenarioSupplier {
         MassFactory.of("1 kg")
     );
     private VesselScopeFactory<? extends MutableOptionValues<Int2D>> optionValues =
-        new RegisteringFactory<>(
-            optionValuesRegister,
-            new ExponentialMovingAverageOptionValuesFactory<>(LEARNING_ALPHA)
-        );
+        new ExponentialMovingAverageOptionValuesFactory<>(LEARNING_ALPHA);
+    private Factory<? extends Register<MutableOptionValues<Int2D>>> optionValuesRegister =
+        new DynamicRegisterFactory<>(optionValues);
     private Factory<List<Vessel>> vessels =
         new VesselsFromFileFactory(
             inputPath.plus("vessels.csv"),
@@ -396,6 +391,12 @@ public class WesternMedScenario extends ScenarioSupplier {
             portGrid,
             SpeedFactory.of(VESSEL_SPEED),
             "EUR"
+        );
+
+    private Factory<? extends Register<String>> fleetIdRegister =
+        new ImmutableRegisterFactory<>(
+            vessels,
+            new VesselScopeAdaptor<>(new ConstantFactory<>(FLEET_ID))
         );
 
     public static void main(final String[] args) {
