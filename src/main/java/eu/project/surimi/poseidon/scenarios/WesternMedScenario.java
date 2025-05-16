@@ -30,7 +30,7 @@ import uk.ac.ox.poseidon.agents.behaviours.choices.ExponentialMovingAverageOptio
 import uk.ac.ox.poseidon.agents.behaviours.choices.MutableOptionValues;
 import uk.ac.ox.poseidon.agents.behaviours.destination.*;
 import uk.ac.ox.poseidon.agents.behaviours.disposition.CompositeDispositionProcessFactory;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.ProportionalDiscardMortalityFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.GeneralDiscardMortalityFactory;
 import uk.ac.ox.poseidon.agents.behaviours.disposition.ProportionallyLimitingBiomassToHoldFactory;
 import uk.ac.ox.poseidon.agents.behaviours.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.DefaultFishingBehaviourFactory;
@@ -375,7 +375,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                                 )
                             ),
                             new ProportionallyLimitingBiomassToHoldFactory(),
-                            new ProportionalDiscardMortalityFactory(
+                            new GeneralDiscardMortalityFactory(
                                 new ConstantDoubleSupplierFactory(0.1)
                             )
                         )
