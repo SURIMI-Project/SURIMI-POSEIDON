@@ -1,6 +1,10 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2024 CoHESyS Lab cohesys.lab@gmail.com
+ * Copyright (c) 2024-2025, University of Oxford.
+ *
+ * University of Oxford means the Chancellor, Masters and Scholars of the
+ * University of Oxford, having an administrative office at Wellington
+ * Square, Oxford OX1 2JD, UK.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,11 +18,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 package eu.project.surimi.poseidon.scenarios;
 
+import eu.project.surimi.poseidon.components.FleetIdRegister;
+import eu.project.surimi.poseidon.components.FleetIdRegisterFactory;
 import lombok.Getter;
 import lombok.Setter;
 import sim.engine.Steppable;
@@ -393,16 +398,18 @@ public class WesternMedScenario extends ScenarioSupplier {
             "EUR"
         );
 
-    private Factory<? extends Register<String>> fleetIdRegister =
-        new ImmutableRegisterFactory<>(
-            vessels,
-            new VesselScopeAdaptor<>(new ConstantFactory<>(FLEET_ID))
+    private Factory<? extends FleetIdRegister> fleetIdRegister =
+        new FleetIdRegisterFactory(
+            new ImmutableRegisterFactory<>(
+                vessels,
+                new VesselScopeAdaptor<>(new ConstantFactory<>(FLEET_ID))
+            )
         );
 
     public static void main(final String[] args) {
         final Scenario scenario = new WesternMedScenario().get();
         final Path scenarioPath = Path.of("scenario.yaml");
         new ScenarioWriter().write(scenario, scenarioPath);
-        new QuickRunner(scenarioPath, Period.ofYears(1)).run();
+        new QuickRunner(scenarioPath, Period.ofYears(1), List.of("eu.project.surimi")).run();
     }
 }

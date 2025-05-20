@@ -20,24 +20,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.components;
 
-import eu.project.surimi.Ecology;
-import eu.project.surimi.EcologyServiceGrpc;
-import eu.project.surimi.Workflow;
-import io.grpc.stub.StreamObserver;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import uk.ac.ox.poseidon.agents.registers.Register;
+import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.SimulationScopeFactory;
 
-@RequiredArgsConstructor
-public class EcologyService extends EcologyServiceGrpc.EcologyServiceImplBase {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class FleetIdRegisterFactory extends SimulationScopeFactory<FleetIdRegister> {
 
-    private final GetBiomassRequestHandler getBiomassRequestHandler;
+    private Factory<? extends Register<String>> delegateRegister;
 
     @Override
-    public void getBiomass(
-        Ecology.GetBiomassRequest request,
-        StreamObserver<Ecology.GetBiomassResponse> responseObserver
-    ) {
-        getBiomassRequestHandler.handle(request, responseObserver);
+    protected FleetIdRegister newInstance(final Simulation simulation) {
+        return new FleetIdRegister(delegateRegister.get(simulation));
     }
+
 }

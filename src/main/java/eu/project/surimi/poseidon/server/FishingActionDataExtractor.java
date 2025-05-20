@@ -1,8 +1,31 @@
+/*
+ * POSEIDON: an agent-based model of fisheries
+ * Copyright (c) 2025, University of Oxford.
+ *
+ * University of Oxford means the Chancellor, Masters and Scholars of the
+ * University of Oxford, having an administrative office at Wellington
+ * Square, Oxford OX1 2JD, UK.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package eu.project.surimi.poseidon.server;
 
 import com.google.common.collect.Range;
 import com.google.protobuf.Timestamp;
 import eu.project.surimi.Biomass;
+import eu.project.surimi.poseidon.components.FleetIdRegister;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingAction;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulator;
 import uk.ac.ox.poseidon.biology.Bucket;
@@ -23,7 +46,7 @@ public class FishingActionDataExtractor {
 
     private FishingActionDataExtractor() {}
 
-    public static Map<Species, Map<Coordinate, Double>> extractFishingActionData(
+    private static Map<String, Map<Species, Map<Coordinate, Double>>> extractFishingActionData(
         final Simulation simulation,
         final Timestamp startDateTime,
         final Timestamp endDateTime,
@@ -33,34 +56,64 @@ public class FishingActionDataExtractor {
             toLocalDateTime(startDateTime),
             toLocalDateTime(endDateTime)
         );
-        record Row(Species species, Coordinate coordinate, double biomassInKg) {}
+        record Row(String fleetId, Species species, Coordinate coordinate, double biomassInKg) {}
+        final FleetIdRegister fleetIdRegister = simulation.getComponent(FleetIdRegister.class);
         return simulation
             .getComponent(FishingActionAccumulator.class)
             .getEvents()
             .filter(fishingAction -> dateTimeRange.contains(fishingAction.getEndDateTime()))
-            .flatMap(fishingAction ->
-                bucketGetter.apply(fishingAction)
+            .flatMap(fishingAction -> {
+                final String fleetId = fleetIdRegister
+                    .get(fishingAction.getVessel())
+                    .orElseThrow(() -> new IllegalStateException(
+                        "Fleet ID not found for vessel " + fishingAction.getVessel())
+                    );
+                return bucketGetter.apply(fishingAction)
                     .getMap()
                     .entrySet()
                     .stream()
                     .map(entry -> new Row(
+                        fleetId,
                         entry.getKey(),
                         fishingAction.getEndCoordinate(),
                         entry.getValue().asBiomass().asKg()
-                    ))
-            )
+                    ));
+            })
             .collect(
                 groupingBy(
-                    Row::species,
+                    Row::fleetId,
                     groupingBy(
-                        Row::coordinate,
-                        summingDouble(Row::biomassInKg)
+                        Row::species,
+                        groupingBy(
+                            Row::coordinate,
+                            summingDouble(Row::biomassInKg)
+                        )
                     )
                 )
             );
     }
 
-    public static List<Biomass.BiomassGrid> extractBiomassGrids(
+    public static List<Biomass.FleetBiomassGrids> extractFleetBiomassGrids(
+        final Simulation simulation,
+        final Timestamp startDateTime,
+        final Timestamp endDateTime,
+        final Function<FishingAction, Bucket<?>> bucketGetter
+    ) {
+        return extractFishingActionData(simulation, startDateTime, endDateTime, bucketGetter)
+            .entrySet()
+            .stream()
+            .map(entry ->
+                Biomass.FleetBiomassGrids.newBuilder()
+                    .setFleetId(entry.getKey())
+                    .addAllBiomassGrids(
+                        extractBiomassGrids(entry.getValue())
+                    )
+                    .build()
+            )
+            .toList();
+    }
+
+    private static List<Biomass.BiomassGrid> extractBiomassGrids(
         final Map<Species, Map<Coordinate, Double>> fishingActionData
     ) {
         return fishingActionData

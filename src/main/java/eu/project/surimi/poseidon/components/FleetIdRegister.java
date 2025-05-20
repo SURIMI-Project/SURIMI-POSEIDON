@@ -20,24 +20,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.components;
 
-import eu.project.surimi.Ecology;
-import eu.project.surimi.EcologyServiceGrpc;
-import eu.project.surimi.Workflow;
-import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
+import uk.ac.ox.poseidon.agents.registers.Register;
+import uk.ac.ox.poseidon.agents.vessels.Vessel;
 
-@RequiredArgsConstructor
-public class EcologyService extends EcologyServiceGrpc.EcologyServiceImplBase {
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
-    private final GetBiomassRequestHandler getBiomassRequestHandler;
+import static lombok.AccessLevel.PACKAGE;
+
+@RequiredArgsConstructor(access = PACKAGE)
+public class FleetIdRegister implements Register<String> {
+    private final Register<String> delegate;
 
     @Override
-    public void getBiomass(
-        Ecology.GetBiomassRequest request,
-        StreamObserver<Ecology.GetBiomassResponse> responseObserver
-    ) {
-        getBiomassRequestHandler.handle(request, responseObserver);
+    public Optional<String> get(final Vessel vessel) {
+        return delegate.get(vessel);
+    }
+
+    @Override
+    public Stream<Vessel> getVessels() {
+        return delegate.getVessels();
+    }
+
+    @Override
+    public Stream<Map.Entry<Vessel, String>> getAllEntries() {
+        return delegate.getAllEntries();
     }
 }
