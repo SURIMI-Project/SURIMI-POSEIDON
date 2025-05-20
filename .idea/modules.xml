@@ -10,6 +10,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/gui/POSEIDON.gui.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/gui/POSEIDON.gui.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/io/POSEIDON.io.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/io/POSEIDON.io.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/POSEIDON/regulations/POSEIDON.regulations.main.iml" filepath="$PROJECT_DIR$/.idea/modules/POSEIDON/regulations/POSEIDON.regulations.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/SURIMI-POSEIDON.main.iml" filepath="$PROJECT_DIR$/.idea/modules/SURIMI-POSEIDON.main.iml" />
     </modules>
   </component>
 </project>

@@ -79,6 +79,11 @@ tasks.register("buildDockerImage", Exec::class) {
     commandLine("docker", "build", "-t", "nicolaspayette/poseidon:latest", ".")
 }
 
+tasks.register("pushDockerImage", Exec::class) {
+    dependsOn(tasks.named("buildDockerImage"))
+    commandLine("docker", "push", "nicolaspayette/poseidon:latest")
+}
+
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
