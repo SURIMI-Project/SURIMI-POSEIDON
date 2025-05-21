@@ -91,7 +91,7 @@ public class UpdateBiomassRequestHandler extends
         request.getBiomassGridsList().forEach(biomassGrid -> {
             final BiomassGrid simulationGrid = getOrThrow(
                 simulationGrids,
-                biomassGrid.getSpeciesId(), "Biomass grid"
+                biomassGrid.getSpeciesCode(), "Biomass grid"
             );
             biomassGrid.getBiomassCellsList().forEach(biomassCell -> {
                 final Int2D cell = getSimulationCell(biomassCell, bathymetricGrid);

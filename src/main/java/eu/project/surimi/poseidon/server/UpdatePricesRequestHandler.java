@@ -93,12 +93,12 @@ public class UpdatePricesRequestHandler extends
         request.getPricesList().forEach(price -> {
             final BiomassMarket market = getOrThrow(
                 marketsById,
-                price.getPortId(),
+                price.getPortCode(),
                 "Market"
             );
             final Species species = getOrThrow(
                 speciesByCode,
-                price.getSpeciesId(),
+                price.getSpeciesCode(),
                 "Species"
             );
             final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());

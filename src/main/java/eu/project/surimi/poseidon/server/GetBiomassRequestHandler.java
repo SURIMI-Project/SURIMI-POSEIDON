@@ -70,7 +70,7 @@ public class GetBiomassRequestHandler extends
             final Biomass.BiomassGrid.Builder gridBuilder =
                 Biomass.BiomassGrid
                     .newBuilder()
-                    .setSpeciesId(grid.getSpecies().getCode());
+                    .setSpeciesCode(grid.getSpecies().getCode());
             bathymetricGrid.getActiveWaterCells().forEach(cell -> {
                 final Coordinate coordinate =
                     bathymetricGrid.getModelGrid().toCoordinate(cell);

@@ -95,6 +95,7 @@ public class WesternMedScenarioWithUI extends ScenarioWithUI {
                                 scenario.component("regulations"),
                                 scenario.component("vessels"),
                                 scenario.component("bathymetricGrid"),
+                                scenario.component("fishingGear"),
                                 WIDTH,
                                 HEIGHT
                             ),

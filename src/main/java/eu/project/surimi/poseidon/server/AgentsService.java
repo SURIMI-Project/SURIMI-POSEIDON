@@ -33,9 +33,7 @@ import static lombok.AccessLevel.PACKAGE;
 public class AgentsService extends AgentsServiceGrpc.AgentsServiceImplBase {
 
     private final GetSalesSummaryRequestHandler salesSummaryRequestHandler;
-    private final GetGrossCatchesRequestHandler grossCatchesRequestHandler;
-    private final GetLiveDiscardsRequestHandler liveDiscardsRequestHandler;
-    private final GetDeadDiscardsRequestHandler deadDiscardsRequestHandler;
+    private final GetCatchDispositionSummaryRequestHandler catchDispositionSummaryRequestHandler;
 
     @Override
     public void getSalesSummary(
@@ -46,26 +44,10 @@ public class AgentsService extends AgentsServiceGrpc.AgentsServiceImplBase {
     }
 
     @Override
-    public void getGrossCatches(
-        final Agents.GetGrossCatchesRequest request,
-        final StreamObserver<Agents.GetGrossCatchesResponse> responseObserver
+    public void getCatchDispositionSummary(
+        final Agents.GetCatchDispositionSummaryRequest request,
+        final StreamObserver<Agents.GetCatchDispositionSummaryResponse> responseObserver
     ) {
-        grossCatchesRequestHandler.handle(request, responseObserver);
-    }
-
-    @Override
-    public void getLiveDiscards(
-        final Agents.GetLiveDiscardsRequest request,
-        final StreamObserver<Agents.GetLiveDiscardsResponse> responseObserver
-    ) {
-        liveDiscardsRequestHandler.handle(request, responseObserver);
-    }
-
-    @Override
-    public void getDeadDiscards(
-        final Agents.GetDeadDiscardsRequest request,
-        final StreamObserver<Agents.GetDeadDiscardsResponse> responseObserver
-    ) {
-        deadDiscardsRequestHandler.handle(request, responseObserver);
+        catchDispositionSummaryRequestHandler.handle(request, responseObserver);
     }
 }

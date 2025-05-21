@@ -104,9 +104,7 @@ public class Server {
     private AgentsService createAgentsService(final SimulationManager simulationManager) {
         return new AgentsService(
             new GetSalesSummaryRequestHandler(simulationManager),
-            new GetGrossCatchesRequestHandler(simulationManager),
-            new GetLiveDiscardsRequestHandler(simulationManager),
-            new GetDeadDiscardsRequestHandler(simulationManager)
+            new GetCatchDispositionSummaryRequestHandler(simulationManager)
         );
     }
 

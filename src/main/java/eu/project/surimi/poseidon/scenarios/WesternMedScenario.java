@@ -52,10 +52,10 @@ import uk.ac.ox.poseidon.agents.market.*;
 import uk.ac.ox.poseidon.agents.registers.DynamicRegisterFactory;
 import uk.ac.ox.poseidon.agents.registers.ImmutableRegisterFactory;
 import uk.ac.ox.poseidon.agents.registers.Register;
-import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactory;
-import uk.ac.ox.poseidon.agents.regulations.Regulations;
+import uk.ac.ox.poseidon.agents.regulations.*;
 import uk.ac.ox.poseidon.agents.tables.FishingActionListenerTableFactory;
 import uk.ac.ox.poseidon.agents.vessels.*;
+import uk.ac.ox.poseidon.agents.vessels.gears.FishingGear;
 import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.hold.Hold;
 import uk.ac.ox.poseidon.agents.vessels.hold.StandardBiomassHoldFactory;
@@ -107,7 +107,6 @@ import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFacto
 import java.nio.file.Path;
 import java.time.Period;
 import java.util.List;
-import java.util.function.Predicate;
 
 import static java.time.DayOfWeek.*;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_DAY_DURATION_SUPPLIER;
@@ -203,12 +202,25 @@ public class WesternMedScenario extends ScenarioSupplier {
             pathFinder,
             distance
         );
-    private VesselScopeFactory<? extends Predicate<Int2D>> fishingLocationChecker =
+
+    private Factory<? extends FishingGear<Biomass>> fishingGear =
+        new FixedBiomassProportionGearFactory(
+            "PS",
+            CATCH_PROPORTION,
+            ONE_HOUR_DURATION_SUPPLIER
+        );
+
+    private VesselScopeFactory<? extends FishingLocationLegalityChecker> fishingLocationChecker =
         new FishingLocationLegalityCheckerFactory(
             regulations,
             pathFinder,
             distance
         );
+
+    private VesselScopeFactory<? extends GearSpecificFishingLocationLegalityChecker>
+        gearSpecificFishingLocationChecker =
+        new GearSpecificFishingLocationLegalityCheckerFactory(fishingGear, fishingLocationChecker);
+
     private Factory<? extends List<Species>> species =
         new SpeciesFromFileFactory(
             inputPath.plus("species.csv"),
@@ -328,7 +340,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                             optionValues,
                             new NeighbourhoodGridExplorerFactory(
                                 optionValues,
-                                fishingLocationChecker,
+                                gearSpecificFishingLocationChecker,
                                 pathFinder,
                                 new ShiftedIntSupplierFactory(
                                     new PoissonIntSupplierFactory(MEAN_EXPLORATION_RADIUS),
@@ -337,7 +349,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                             ),
                             new ImitatingPickerFactory<>(
                                 optionValues,
-                                fishingLocationChecker,
+                                gearSpecificFishingLocationChecker,
                                 new BestOptionsFromFriendsSupplierFactory<>(
                                     5,
                                     optionValuesRegister
@@ -349,10 +361,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                         new WaitingBehaviourFactory(ONE_DAY_DURATION_SUPPLIER)
                     ),
                     new DefaultFishingBehaviourFactory<>(
-                        new FixedBiomassProportionGearFactory(
-                            CATCH_PROPORTION,
-                            ONE_HOUR_DURATION_SUPPLIER
-                        ),
+                        new VesselScopeAdaptor<>(fishingGear),
                         hold,
                         new CurrentCellFisheableFactory<>(
                             new BiomassGridsFactory(

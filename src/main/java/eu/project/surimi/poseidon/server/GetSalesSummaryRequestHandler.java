@@ -58,7 +58,7 @@ public class GetSalesSummaryRequestHandler extends
             .map(money -> money.getAmount().doubleValue())
             .orElse(0.0);
         return Sales.Sale.newBuilder()
-            .setSpeciesId(speciesCode)
+            .setSpeciesCode(speciesCode)
             .setQuantity(totalKg)
             .setValue(totalValue)
             .build();
