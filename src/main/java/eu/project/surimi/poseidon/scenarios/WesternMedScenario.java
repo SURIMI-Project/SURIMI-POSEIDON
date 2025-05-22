@@ -189,7 +189,7 @@ public class WesternMedScenario extends ScenarioSupplier {
             bathymetricGrid,
             distance,
             inputPath.plus("ports.csv"),
-            "port_id", "port_name", "lon", "lat"
+            "port_code", "port_name", "lon", "lat"
         );
     private Factory<? extends GridPathFinder> pathFinder =
         new DefaultPathFinderFactory(
@@ -202,29 +202,25 @@ public class WesternMedScenario extends ScenarioSupplier {
             pathFinder,
             distance
         );
-
-    private Factory<? extends FishingGear<Biomass>> fishingGear =
-        new FixedBiomassProportionGearFactory(
-            "PS",
-            CATCH_PROPORTION,
-            ONE_HOUR_DURATION_SUPPLIER
-        );
-
     private VesselScopeFactory<? extends FishingLocationLegalityChecker> fishingLocationChecker =
         new FishingLocationLegalityCheckerFactory(
             regulations,
             pathFinder,
             distance
         );
-
+    private Factory<? extends FishingGear<Biomass>> fishingGear =
+        new FixedBiomassProportionGearFactory(
+            "PS",
+            CATCH_PROPORTION,
+            ONE_HOUR_DURATION_SUPPLIER
+        );
     private VesselScopeFactory<? extends GearSpecificFishingLocationLegalityChecker>
         gearSpecificFishingLocationChecker =
         new GearSpecificFishingLocationLegalityCheckerFactory(fishingGear, fishingLocationChecker);
-
     private Factory<? extends List<Species>> species =
         new SpeciesFromFileFactory(
             inputPath.plus("species.csv"),
-            "species_id",
+            "species_code",
             "species_name"
         );
     private Factory<List<BiomassGrid>> biomassGrids =
@@ -280,8 +276,8 @@ public class WesternMedScenario extends ScenarioSupplier {
     private Factory<? extends MarketGrid<Biomass, ? extends Market<Biomass>>> marketGrid =
         new BiomassMarketGridPriceFileFactory(
             inputPath.plus("prices.csv"),
-            "port_id",
-            "species_id",
+            "port_code",
+            "species_code",
             "price",
             "currency",
             "measurement_unit",
@@ -313,7 +309,7 @@ public class WesternMedScenario extends ScenarioSupplier {
             inputPath.plus("vessels.csv"),
             "vessel_id",
             "vessel_name",
-            "port_id",
+            "port_code",
             new HomeBehaviourFactory(
                 portGrid,
                 hold,
