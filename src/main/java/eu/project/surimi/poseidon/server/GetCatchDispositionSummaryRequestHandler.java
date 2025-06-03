@@ -24,7 +24,7 @@ package eu.project.surimi.poseidon.server;
 
 import com.google.common.collect.Range;
 import com.google.protobuf.Timestamp;
-import eu.project.surimi.Agents;
+import eu.project.surimi.Fishery;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulator;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -37,56 +37,11 @@ import java.util.Map;
 import static java.util.stream.Collectors.*;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
-public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequestHandler<Agents.GetCatchDispositionSummaryRequest, Agents.GetCatchDispositionSummaryResponse> {
+public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequestHandler<Fishery.GetCatchDispositionSummaryRequest, Fishery.GetCatchDispositionSummaryResponse> {
 
     public GetCatchDispositionSummaryRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
-
-    @Override
-    protected String getSimulationId(final Agents.GetCatchDispositionSummaryRequest request) {
-        return request.getSimulationId();
-    }
-
-    @Override
-    protected Agents.GetCatchDispositionSummaryResponse getResponseWithSimulation(
-        final Agents.GetCatchDispositionSummaryRequest request,
-        final Simulation simulation
-    ) {
-        final Agents.GetCatchDispositionSummaryResponse.Builder responseBuilder =
-            Agents.GetCatchDispositionSummaryResponse
-                .newBuilder()
-                .setMeasurementUnit(KILOGRAM.getSymbol());
-        extractFishingActionData(
-            simulation,
-            request.getStartDateTime(),
-            request.getEndDateTime()
-        ).forEach((gearCode, speciesData) -> {
-            speciesData.forEach((species, coordinateData) -> {
-                final eu.project.surimi.Disposition.DispositionGrid.Builder
-                    dispositionGridsBuilder =
-                    responseBuilder
-                        .addDispositionGridsBuilder()
-                        .setGearCode(gearCode)
-                        .setSpeciesCode(species.getCode());
-                coordinateData.forEach((coordinate, disposition) ->
-                    dispositionGridsBuilder
-                        .addBiomassCellsBuilder()
-                        .setLongitude(coordinate.lon)
-                        .setLatitude(coordinate.lat)
-                        .setGrossCatchBiomass(disposition.grossCatchInKg)
-                        .setLiveDiscardsBiomass(disposition.liveDiscardsInKg)
-                        .setDeadDiscardsBiomass(disposition.deadDiscardsInKg));
-            });
-        });
-        return responseBuilder.build();
-    }
-
-    record Disposition(
-        double grossCatchInKg,
-        double liveDiscardsInKg,
-        double deadDiscardsInKg
-    ) {}
 
     private static Map<String, Map<Species, Map<Coordinate, Disposition>>> extractFishingActionData(
         final Simulation simulation,
@@ -163,5 +118,50 @@ public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequ
                 )
             );
     }
+
+    @Override
+    protected String getSimulationId(final Fishery.GetCatchDispositionSummaryRequest request) {
+        return request.getSimulationId();
+    }
+
+    @Override
+    protected Fishery.GetCatchDispositionSummaryResponse getResponseWithSimulation(
+        final Fishery.GetCatchDispositionSummaryRequest request,
+        final Simulation simulation
+    ) {
+        final Fishery.GetCatchDispositionSummaryResponse.Builder responseBuilder =
+            Fishery.GetCatchDispositionSummaryResponse
+                .newBuilder()
+                .setMeasurementUnit(KILOGRAM.getSymbol());
+        extractFishingActionData(
+            simulation,
+            request.getStartDateTime(),
+            request.getEndDateTime()
+        ).forEach((gearCode, speciesData) -> {
+            speciesData.forEach((species, coordinateData) -> {
+                final eu.project.surimi.Disposition.DispositionGrid.Builder
+                    dispositionGridsBuilder =
+                    responseBuilder
+                        .addDispositionGridsBuilder()
+                        .setGearCode(gearCode)
+                        .setSpeciesCode(species.getCode());
+                coordinateData.forEach((coordinate, disposition) ->
+                    dispositionGridsBuilder
+                        .addDispositionCellsBuilder()
+                        .setLongitude(coordinate.lon)
+                        .setLatitude(coordinate.lat)
+                        .setGrossCatch(disposition.grossCatchInKg)
+                        .setLiveDiscards(disposition.liveDiscardsInKg)
+                        .setDeadDiscards(disposition.deadDiscardsInKg));
+            });
+        });
+        return responseBuilder.build();
+    }
+
+    record Disposition(
+        double grossCatchInKg,
+        double liveDiscardsInKg,
+        double deadDiscardsInKg
+    ) {}
 
 }

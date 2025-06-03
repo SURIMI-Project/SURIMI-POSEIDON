@@ -23,7 +23,7 @@
 package eu.project.surimi.poseidon.server;
 
 import com.google.common.collect.Range;
-import eu.project.surimi.Agents;
+import eu.project.surimi.Fishery;
 import eu.project.surimi.Sales;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
@@ -41,7 +41,7 @@ import static java.util.stream.Collectors.*;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class GetSalesSummaryRequestHandler extends
-    WithSimulationRequestHandler<Agents.GetSalesSummaryRequest, Agents.GetSalesSummaryResponse> {
+    WithSimulationRequestHandler<Fishery.GetSalesSummaryRequest, Fishery.GetSalesSummaryResponse> {
 
     public GetSalesSummaryRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
@@ -65,13 +65,13 @@ public class GetSalesSummaryRequestHandler extends
     }
 
     @Override
-    protected String getSimulationId(final Agents.GetSalesSummaryRequest request) {
+    protected String getSimulationId(final Fishery.GetSalesSummaryRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected Agents.GetSalesSummaryResponse getResponseWithSimulation(
-        final Agents.GetSalesSummaryRequest request,
+    protected Fishery.GetSalesSummaryResponse getResponseWithSimulation(
+        final Fishery.GetSalesSummaryRequest request,
         final Simulation simulation
     ) {
         final Range<LocalDateTime> dateTimeRange = Range.closed(
@@ -118,7 +118,7 @@ public class GetSalesSummaryRequestHandler extends
                 .map(entry ->
                     Sales.SalesSummary
                         .newBuilder()
-                        .setMarketId(entry.getKey().market().getId())
+                        .setMarketCode(entry.getKey().market().getId())
                         .setMeasurementUnit(KILOGRAM.getSymbol())
                         .setCurrency(entry.getKey().currencyUnit().getCode())
                         .addAllSales(entry.getValue())
@@ -126,7 +126,7 @@ public class GetSalesSummaryRequestHandler extends
                 )
                 .toList();
 
-        return Agents.GetSalesSummaryResponse
+        return Fishery.GetSalesSummaryResponse
             .newBuilder()
             .addAllSalesSummaries(saleSummaries)
             .build();
