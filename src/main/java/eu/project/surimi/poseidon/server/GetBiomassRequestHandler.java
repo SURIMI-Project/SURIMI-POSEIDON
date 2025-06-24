@@ -22,8 +22,8 @@
 
 package eu.project.surimi.poseidon.server;
 
-import eu.project.surimi.Biomass;
-import eu.project.surimi.Ecology;
+import build.buf.gen.surimi.v1.GetBiomassRequest;
+import build.buf.gen.surimi.v1.GetBiomassResponse;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.Coordinate;
@@ -36,13 +36,13 @@ import static io.grpc.Status.NOT_FOUND;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class GetBiomassRequestHandler extends
-    WithSimulationRequestHandler<Ecology.GetBiomassRequest, Ecology.GetBiomassResponse> {
+    WithSimulationRequestHandler<GetBiomassRequest, GetBiomassResponse> {
     public GetBiomassRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 
     @Override
-    protected String getSimulationId(final Ecology.GetBiomassRequest request) {
+    protected String getSimulationId(final GetBiomassRequest request) {
         return request.getSimulationId();
     }
 
@@ -57,25 +57,25 @@ public class GetBiomassRequestHandler extends
     }
 
     @Override
-    protected Ecology.GetBiomassResponse getResponseWithSimulation(
-        final Ecology.GetBiomassRequest request,
+    protected GetBiomassResponse getResponseWithSimulation(
+        final GetBiomassRequest request,
         final Simulation simulation
     ) {
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
-        final Ecology.GetBiomassResponse.Builder responseBuilder =
-            Ecology.GetBiomassResponse
+        final GetBiomassResponse.Builder responseBuilder =
+            GetBiomassResponse
                 .newBuilder()
                 .setMeasurementUnit(KILOGRAM.getSymbol());
         simulation.getComponents(BiomassGrid.class).forEach(grid -> {
-            final Biomass.BiomassGrid.Builder gridBuilder =
-                Biomass.BiomassGrid
+            final build.buf.gen.surimi.v1.BiomassGrid.Builder gridBuilder =
+                build.buf.gen.surimi.v1.BiomassGrid
                     .newBuilder()
                     .setSpeciesCode(grid.getSpecies().getCode());
             bathymetricGrid.getActiveWaterCells().forEach(cell -> {
                 final Coordinate coordinate =
                     bathymetricGrid.getModelGrid().toCoordinate(cell);
                 gridBuilder.addBiomassCells(
-                    Biomass.BiomassCell
+                    build.buf.gen.surimi.v1.BiomassCell
                         .newBuilder()
                         .setLongitude(coordinate.getLon())
                         .setLatitude(coordinate.getLat())

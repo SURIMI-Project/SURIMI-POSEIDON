@@ -22,7 +22,8 @@
 
 package eu.project.surimi.poseidon.server;
 
-import eu.project.surimi.Workflow;
+import build.buf.gen.surimi.v1.UpdatePricesRequest;
+import build.buf.gen.surimi.v1.UpdatePricesResponse;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.IllegalCurrencyException;
 import org.joda.money.Money;
@@ -47,7 +48,7 @@ import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
 
 public class UpdatePricesRequestHandler extends
-    WithSimulationRequestHandler<Workflow.UpdatePricesRequest, Workflow.UpdatePricesResponse> {
+    WithSimulationRequestHandler<UpdatePricesRequest, UpdatePricesResponse> {
 
     private static final System.Logger logger =
         System.getLogger(UpdatePricesRequestHandler.class.getName());
@@ -75,13 +76,13 @@ public class UpdatePricesRequestHandler extends
     }
 
     @Override
-    protected String getSimulationId(final Workflow.UpdatePricesRequest request) {
+    protected String getSimulationId(final UpdatePricesRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected Workflow.UpdatePricesResponse getResponseWithSimulation(
-        final Workflow.UpdatePricesRequest request,
+    protected UpdatePricesResponse getResponseWithSimulation(
+        final UpdatePricesRequest request,
         final Simulation simulation
     ) {
         final Map<String, Species> speciesByCode = getSpeciesByCode(simulation);
@@ -118,7 +119,7 @@ public class UpdatePricesRequestHandler extends
                 marketPrice.biomassUnit()
             );
         });
-        return Workflow.UpdatePricesResponse.newBuilder().build();
+        return UpdatePricesResponse.newBuilder().build();
     }
 
     private CurrencyUnit parseCurrency(final String currency) {

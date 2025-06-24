@@ -23,7 +23,7 @@
 plugins {
     application
     jacoco
-    alias(libs.plugins.protobuf)
+    //alias(libs.plugins.protobuf)
     alias(libs.plugins.shadow)
     alias(libs.plugins.spotbugs)
 }
@@ -39,10 +39,10 @@ dependencies {
     implementation("POSEIDON:io")
     implementation(libs.lombok)
     annotationProcessor(libs.lombok)
-    implementation(libs.protobuf.java.util)
     implementation(libs.grpc.services)
+    implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.73.0.1.20250615224731.f39267420493")
     implementation(libs.jcommander)
-    implementation(libs.bundles.grpc)
+    implementation(libs.grpc.netty.shaded)
     implementation(libs.commons.beanutils)
     implementation(libs.bundles.opentelemetry)
     compileOnly("${libs.spotbugs.annotations.get()}:${spotbugs.toolVersion.get()}")
@@ -104,24 +104,6 @@ tasks.jacocoTestCoverageVerification {
         rule {
             element = "METHOD"
             excludes = listOf("lombok.Generated")
-        }
-    }
-}
-
-protobuf {
-    protoc {
-        artifact = libs.protoc.get().toString()
-    }
-    plugins {
-        create("grpc") {
-            artifact = libs.protocGenGrpcJava.get().toString()
-        }
-    }
-    generateProtoTasks {
-        all().configureEach {
-            plugins {
-                create("grpc")
-            }
         }
     }
 }

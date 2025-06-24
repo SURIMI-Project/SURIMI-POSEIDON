@@ -22,7 +22,8 @@
 
 package eu.project.surimi.poseidon.server;
 
-import eu.project.surimi.Workflow;
+import build.buf.gen.surimi.v1.InitRequest;
+import build.buf.gen.surimi.v1.InitResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
@@ -42,7 +43,7 @@ import static java.lang.System.Logger.Level.INFO;
 
 @RequiredArgsConstructor
 public class InitRequestHandler
-    extends RequestHandler<Workflow.InitRequest, Workflow.InitResponse> {
+    extends RequestHandler<InitRequest, InitResponse> {
 
     private static final System.Logger logger =
         System.getLogger(InitRequestHandler.class.getName());
@@ -52,7 +53,7 @@ public class InitRequestHandler
     private final File scenarioFile;
 
     @Override
-    protected Workflow.InitResponse getResponse(final Workflow.InitRequest request) {
+    protected InitResponse getResponse(final InitRequest request) {
         final UUID simulationId = SimulationManager.parseId(request.getSimulationId());
         if (simulationManager.contains(simulationId)) {
             throw ALREADY_EXISTS
@@ -81,7 +82,7 @@ public class InitRequestHandler
             simulation,
             new SimulationManager.SimulationProperties(stepSize)
         );
-        return Workflow.InitResponse.newBuilder().build();
+        return InitResponse.newBuilder().build();
     }
 
     @SuppressWarnings("SameParameterValue")

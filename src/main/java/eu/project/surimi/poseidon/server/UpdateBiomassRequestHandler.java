@@ -22,8 +22,8 @@
 
 package eu.project.surimi.poseidon.server;
 
-import eu.project.surimi.Biomass;
-import eu.project.surimi.Workflow;
+import build.buf.gen.surimi.v1.UpdateBiomassRequest;
+import build.buf.gen.surimi.v1.UpdateBiomassResponse;
 import sim.util.Int2D;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -43,14 +43,14 @@ import static java.util.stream.Collectors.toMap;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class UpdateBiomassRequestHandler extends
-    WithSimulationRequestHandler<Workflow.UpdateBiomassRequest, Workflow.UpdateBiomassResponse> {
+    WithSimulationRequestHandler<UpdateBiomassRequest, UpdateBiomassResponse> {
 
     public UpdateBiomassRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 
     private static Int2D getSimulationCell(
-        final Biomass.BiomassCell biomassCell,
+        final build.buf.gen.surimi.v1.BiomassCell biomassCell,
         final BathymetricGrid bathymetricGrid
     ) {
         final Int2D cell = bathymetricGrid.getModelGrid().toCell(new Coordinate(
@@ -71,13 +71,13 @@ public class UpdateBiomassRequestHandler extends
     }
 
     @Override
-    protected String getSimulationId(final Workflow.UpdateBiomassRequest request) {
+    protected String getSimulationId(final UpdateBiomassRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected Workflow.UpdateBiomassResponse getResponseWithSimulation(
-        final Workflow.UpdateBiomassRequest request,
+    protected UpdateBiomassResponse getResponseWithSimulation(
+        final UpdateBiomassRequest request,
         final Simulation simulation
     ) {
         final Unit<Mass> massUnit = parseMassUnit(request.getMeasurementUnit());
@@ -107,7 +107,7 @@ public class UpdateBiomassRequestHandler extends
                     );
             });
         });
-        return Workflow.UpdateBiomassResponse.newBuilder().build();
+        return UpdateBiomassResponse.newBuilder().build();
     }
 
     private Unit<Mass> parseMassUnit(final String massUnit) {

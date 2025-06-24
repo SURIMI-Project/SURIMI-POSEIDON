@@ -22,7 +22,8 @@
 
 package eu.project.surimi.poseidon.server;
 
-import eu.project.surimi.Workflow;
+import build.buf.gen.surimi.v1.SimulateStepRequest;
+import build.buf.gen.surimi.v1.SimulateStepResponse;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 
@@ -32,7 +33,7 @@ import java.time.Period;
 import static java.lang.System.Logger.Level.INFO;
 
 public class SimulateStepRequestHandler extends
-    WithSimulationRequestHandler<Workflow.SimulateStepRequest, Workflow.SimulateStepResponse> {
+    WithSimulationRequestHandler<SimulateStepRequest, SimulateStepResponse> {
 
     private static final System.Logger logger =
         System.getLogger(SimulateStepRequestHandler.class.getName());
@@ -42,13 +43,13 @@ public class SimulateStepRequestHandler extends
     }
 
     @Override
-    protected String getSimulationId(final Workflow.SimulateStepRequest request) {
+    protected String getSimulationId(final SimulateStepRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected Workflow.SimulateStepResponse getResponseWithSimulation(
-        final Workflow.SimulateStepRequest request,
+    protected SimulateStepResponse getResponseWithSimulation(
+        final SimulateStepRequest request,
         final Simulation simulation
     ) {
         final Period stepSize = simulationManager.getSimulationProperties(simulation).stepSize();
@@ -59,7 +60,7 @@ public class SimulateStepRequestHandler extends
             INFO, "Advanced simulation {0} by {1} to {2}",
             request.getSimulationId(), stepSize, dateTime
         );
-        return Workflow.SimulateStepResponse
+        return SimulateStepResponse
             .newBuilder()
             .build();
     }

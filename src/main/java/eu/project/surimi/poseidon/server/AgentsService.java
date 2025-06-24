@@ -22,8 +22,9 @@
 
 package eu.project.surimi.poseidon.server;
 
-import eu.project.surimi.Fishery;
-import eu.project.surimi.FisheryServiceGrpc;
+import build.buf.gen.surimi.v1.FisheryServiceGrpc;
+import build.buf.gen.surimi.v1.GetSalesSummaryRequest;
+import build.buf.gen.surimi.v1.GetSalesSummaryResponse;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 
@@ -37,16 +38,16 @@ public class AgentsService extends FisheryServiceGrpc.FisheryServiceImplBase {
 
     @Override
     public void getSalesSummary(
-        final Fishery.GetSalesSummaryRequest request,
-        final StreamObserver<Fishery.GetSalesSummaryResponse> responseObserver
+        final GetSalesSummaryRequest request,
+        final StreamObserver<GetSalesSummaryResponse> responseObserver
     ) {
         salesSummaryRequestHandler.handle(request, responseObserver);
     }
 
     @Override
     public void getCatchDispositionSummary(
-        final Fishery.GetCatchDispositionSummaryRequest request,
-        final StreamObserver<Fishery.GetCatchDispositionSummaryResponse> responseObserver
+        final build.buf.gen.surimi.v1.GetCatchDispositionSummaryRequest request,
+        final StreamObserver<build.buf.gen.surimi.v1.GetCatchDispositionSummaryResponse> responseObserver
     ) {
         catchDispositionSummaryRequestHandler.handle(request, responseObserver);
     }

@@ -22,13 +22,16 @@
 
 package eu.project.surimi.poseidon.server;
 
-import eu.project.surimi.Workflow;
-import eu.project.surimi.WorkflowServiceGrpc;
+import build.buf.gen.surimi.v1.InitRequest;
+import build.buf.gen.surimi.v1.InitResponse;
+import build.buf.gen.surimi.v1.UpdatePricesRequest;
+import build.buf.gen.surimi.v1.UpdatePricesResponse;
+import build.buf.gen.surimi.v1.WorkflowServiceGrpc.WorkflowServiceImplBase;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-class WorkflowService extends WorkflowServiceGrpc.WorkflowServiceImplBase {
+class WorkflowService extends WorkflowServiceImplBase {
 
     private final InitRequestHandler initRequestHandler;
     private final SimulateStepRequestHandler simulateStepRequestHandler;
@@ -37,32 +40,32 @@ class WorkflowService extends WorkflowServiceGrpc.WorkflowServiceImplBase {
 
     @Override
     public void init(
-        final Workflow.InitRequest request,
-        final StreamObserver<Workflow.InitResponse> responseObserver
+        final InitRequest request,
+        final StreamObserver<InitResponse> responseObserver
     ) {
         initRequestHandler.handle(request, responseObserver);
     }
 
     @Override
     public void simulateStep(
-        final Workflow.SimulateStepRequest request,
-        final StreamObserver<Workflow.SimulateStepResponse> responseObserver
+        final build.buf.gen.surimi.v1.SimulateStepRequest request,
+        final StreamObserver<build.buf.gen.surimi.v1.SimulateStepResponse> responseObserver
     ) {
         simulateStepRequestHandler.handle(request, responseObserver);
     }
 
     @Override
     public void updatePrices(
-        final Workflow.UpdatePricesRequest request,
-        final StreamObserver<Workflow.UpdatePricesResponse> responseObserver
+        final UpdatePricesRequest request,
+        final StreamObserver<UpdatePricesResponse> responseObserver
     ) {
         updatePricesRequestHandler.handle(request, responseObserver);
     }
 
     @Override
     public void updateBiomass(
-        final Workflow.UpdateBiomassRequest request,
-        final StreamObserver<Workflow.UpdateBiomassResponse> responseObserver
+        final build.buf.gen.surimi.v1.UpdateBiomassRequest request,
+        final StreamObserver<build.buf.gen.surimi.v1.UpdateBiomassResponse> responseObserver
     ) {
         updateBiomassRequestHandler.handle(request, responseObserver);
     }

@@ -22,9 +22,11 @@
 
 package eu.project.surimi.poseidon.server;
 
+import build.buf.gen.surimi.v1.GetSalesSummaryRequest;
+import build.buf.gen.surimi.v1.GetSalesSummaryResponse;
+import build.buf.gen.surimi.v1.Sale;
+import build.buf.gen.surimi.v1.SalesSummary;
 import com.google.common.collect.Range;
-import eu.project.surimi.Fishery;
-import eu.project.surimi.Sales;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
@@ -41,13 +43,13 @@ import static java.util.stream.Collectors.*;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class GetSalesSummaryRequestHandler extends
-    WithSimulationRequestHandler<Fishery.GetSalesSummaryRequest, Fishery.GetSalesSummaryResponse> {
+    WithSimulationRequestHandler<GetSalesSummaryRequest, GetSalesSummaryResponse> {
 
     public GetSalesSummaryRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 
-    private static Sales.Sale summariseSale(final List<SaleEntry> saleEntries) {
+    private static Sale summariseSale(final List<SaleEntry> saleEntries) {
         final String speciesCode = saleEntries.getFirst().species.getCode();
         final double totalKg = saleEntries.stream()
             .mapToDouble(saleEntry -> saleEntry.biomass.asKg())
@@ -57,7 +59,7 @@ public class GetSalesSummaryRequestHandler extends
             .reduce(Money::plus)
             .map(money -> money.getAmount().doubleValue())
             .orElse(0.0);
-        return Sales.Sale.newBuilder()
+        return Sale.newBuilder()
             .setSpeciesCode(speciesCode)
             .setQuantity(totalKg)
             .setValue(totalValue)
@@ -65,13 +67,13 @@ public class GetSalesSummaryRequestHandler extends
     }
 
     @Override
-    protected String getSimulationId(final Fishery.GetSalesSummaryRequest request) {
+    protected String getSimulationId(final GetSalesSummaryRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected Fishery.GetSalesSummaryResponse getResponseWithSimulation(
-        final Fishery.GetSalesSummaryRequest request,
+    protected GetSalesSummaryResponse getResponseWithSimulation(
+        final GetSalesSummaryRequest request,
         final Simulation simulation
     ) {
         final Range<LocalDateTime> dateTimeRange = Range.closed(
@@ -79,7 +81,7 @@ public class GetSalesSummaryRequestHandler extends
             toLocalDateTime(request.getEndDateTime())
         );
         record Key(Market<?> market, CurrencyUnit currencyUnit) {}
-        final List<Sales.SalesSummary> saleSummaries =
+        final List<SalesSummary> saleSummaries =
             simulation
                 .getComponent(BiomassSaleAccumulator.class)
                 .getEvents()
@@ -116,7 +118,7 @@ public class GetSalesSummaryRequestHandler extends
                 .entrySet()
                 .stream()
                 .map(entry ->
-                    Sales.SalesSummary
+                    SalesSummary
                         .newBuilder()
                         .setMarketCode(entry.getKey().market().getId())
                         .setMeasurementUnit(KILOGRAM.getSymbol())
@@ -126,7 +128,7 @@ public class GetSalesSummaryRequestHandler extends
                 )
                 .toList();
 
-        return Fishery.GetSalesSummaryResponse
+        return GetSalesSummaryResponse
             .newBuilder()
             .addAllSalesSummaries(saleSummaries)
             .build();

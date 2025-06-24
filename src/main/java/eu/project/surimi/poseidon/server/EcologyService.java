@@ -22,9 +22,8 @@
 
 package eu.project.surimi.poseidon.server;
 
-import eu.project.surimi.Ecology;
-import eu.project.surimi.EcologyServiceGrpc;
-import eu.project.surimi.Workflow;
+import build.buf.gen.surimi.v1.EcologyServiceGrpc;
+import build.buf.gen.surimi.v1.GetBiomassRequest;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 
@@ -35,8 +34,8 @@ public class EcologyService extends EcologyServiceGrpc.EcologyServiceImplBase {
 
     @Override
     public void getBiomass(
-        Ecology.GetBiomassRequest request,
-        StreamObserver<Ecology.GetBiomassResponse> responseObserver
+        final GetBiomassRequest request,
+        final StreamObserver<build.buf.gen.surimi.v1.GetBiomassResponse> responseObserver
     ) {
         getBiomassRequestHandler.handle(request, responseObserver);
     }

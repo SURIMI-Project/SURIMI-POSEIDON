@@ -66,5 +66,9 @@ dependencyResolutionManagement {
             // flatlaf-3.5.1-macos-arm64.dylib and flatlaf-3.5.1-macos-x86_64.dylib
             url = uri("https://nexus.geomatys.com/repository/maven-public/")
         }
+        maven {
+            name = "buf"
+            url = uri("https://buf.build/gen/maven")
+        }
     }
 }

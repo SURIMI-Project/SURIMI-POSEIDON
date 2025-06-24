@@ -22,9 +22,11 @@
 
 package eu.project.surimi.poseidon.server;
 
+import build.buf.gen.surimi.v1.DispositionGrid;
+import build.buf.gen.surimi.v1.GetCatchDispositionSummaryRequest;
+import build.buf.gen.surimi.v1.GetCatchDispositionSummaryResponse;
 import com.google.common.collect.Range;
 import com.google.protobuf.Timestamp;
-import eu.project.surimi.Fishery;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulator;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -37,7 +39,7 @@ import java.util.Map;
 import static java.util.stream.Collectors.*;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
-public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequestHandler<Fishery.GetCatchDispositionSummaryRequest, Fishery.GetCatchDispositionSummaryResponse> {
+public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequestHandler<GetCatchDispositionSummaryRequest, GetCatchDispositionSummaryResponse> {
 
     public GetCatchDispositionSummaryRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
@@ -120,17 +122,17 @@ public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequ
     }
 
     @Override
-    protected String getSimulationId(final Fishery.GetCatchDispositionSummaryRequest request) {
+    protected String getSimulationId(final GetCatchDispositionSummaryRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected Fishery.GetCatchDispositionSummaryResponse getResponseWithSimulation(
-        final Fishery.GetCatchDispositionSummaryRequest request,
+    protected GetCatchDispositionSummaryResponse getResponseWithSimulation(
+        final GetCatchDispositionSummaryRequest request,
         final Simulation simulation
     ) {
-        final Fishery.GetCatchDispositionSummaryResponse.Builder responseBuilder =
-            Fishery.GetCatchDispositionSummaryResponse
+        final GetCatchDispositionSummaryResponse.Builder responseBuilder =
+            GetCatchDispositionSummaryResponse
                 .newBuilder()
                 .setMeasurementUnit(KILOGRAM.getSymbol());
         extractFishingActionData(
@@ -139,7 +141,7 @@ public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequ
             request.getEndDateTime()
         ).forEach((gearCode, speciesData) -> {
             speciesData.forEach((species, coordinateData) -> {
-                final eu.project.surimi.Disposition.DispositionGrid.Builder
+                final DispositionGrid.Builder
                     dispositionGridsBuilder =
                     responseBuilder
                         .addDispositionGridsBuilder()
