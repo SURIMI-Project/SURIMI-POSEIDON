@@ -50,6 +50,15 @@ public abstract class RequestHandler<ReqT, RespT> {
             .toLocalDateTime();
     }
 
+    protected static Timestamp toTimestamp(
+        final LocalDateTime localDateTime
+    ) {
+        return Timestamp
+            .newBuilder()
+            .setSeconds(localDateTime.toEpochSecond(UTC))
+            .build();
+    }
+
     protected static <K, V> V getOrThrow(
         final Map<K, V> map,
         final K key,

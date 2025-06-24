@@ -25,20 +25,49 @@ package eu.project.surimi.poseidon.server.market;
 import build.buf.gen.surimi.v1.*;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
+import uk.ac.ox.poseidon.agents.market.BiomassMarket;
+import uk.ac.ox.poseidon.agents.market.BiomassMarketGrid;
+import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.geography.grids.ObjectGrid;
+
+import java.util.Map;
+import java.util.Set;
+
+import static io.grpc.Status.FAILED_PRECONDITION;
+import static java.util.function.UnaryOperator.identity;
+import static java.util.stream.Collectors.toMap;
 
 @RequiredArgsConstructor
 public class MarketService extends MarketServiceGrpc.MarketServiceImplBase {
 
     private final GetSalesRequestHandler salesRequestHandler;
+    private final GetSpeciesPricesRequestHandler getSpeciesPricesRequestHandler;
     private final UpdateSpeciesPricesRequestHandler updateSpeciesPricesRequestHandler;
+
+    static Set<BiomassMarketGrid> getBiomassMarketGrids(final Simulation simulation) {
+        final Set<BiomassMarketGrid> marketGrids =
+            simulation.getComponents(BiomassMarketGrid.class);
+        if (marketGrids.isEmpty()) {
+            throw FAILED_PRECONDITION
+                .withDescription("No market grids defined in simulation.")
+                .asRuntimeException();
+        }
+        return marketGrids;
+    }
+
+    static Map<String, BiomassMarket> getBiomassMarketsById(final Simulation simulation) {
+        return getBiomassMarketGrids(simulation)
+            .stream()
+            .flatMap(ObjectGrid::stream)
+            .collect(toMap(BiomassMarket::getId, identity()));
+    }
 
     @Override
     public void getSpeciesPrices(
         final GetSpeciesPricesRequest request,
         final StreamObserver<GetSpeciesPricesResponse> responseObserver
     ) {
-        // TODO
-        super.getSpeciesPrices(request, responseObserver);
+        getSpeciesPricesRequestHandler.handle(request, responseObserver);
     }
 
     @Override

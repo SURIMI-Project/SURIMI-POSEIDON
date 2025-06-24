@@ -30,20 +30,17 @@ import org.joda.money.CurrencyUnit;
 import org.joda.money.IllegalCurrencyException;
 import org.joda.money.Money;
 import uk.ac.ox.poseidon.agents.market.BiomassMarket;
-import uk.ac.ox.poseidon.agents.market.BiomassMarketGrid;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.utils.Measurements;
-import uk.ac.ox.poseidon.geography.grids.ObjectGrid;
 
 import javax.measure.Unit;
 import javax.measure.format.MeasurementParseException;
 import javax.measure.quantity.Mass;
 import java.math.RoundingMode;
 import java.util.Map;
-import java.util.Set;
 
-import static io.grpc.Status.FAILED_PRECONDITION;
+import static eu.project.surimi.poseidon.server.market.MarketService.getBiomassMarketsById;
 import static io.grpc.Status.INVALID_ARGUMENT;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
@@ -66,17 +63,6 @@ public class UpdateSpeciesPricesRequestHandler extends
             .collect(toMap(Species::getCode, identity()));
     }
 
-    private static Set<BiomassMarketGrid> getBiomassMarketGrids(final Simulation simulation) {
-        final Set<BiomassMarketGrid> marketGrids =
-            simulation.getComponents(BiomassMarketGrid.class);
-        if (marketGrids.isEmpty()) {
-            throw FAILED_PRECONDITION
-                .withDescription("No market grids defined in simulation.")
-                .asRuntimeException();
-        }
-        return marketGrids;
-    }
-
     @Override
     protected String getSimulationId(final UpdateSpeciesPricesRequest request) {
         return request.getSimulationId();
@@ -88,11 +74,7 @@ public class UpdateSpeciesPricesRequestHandler extends
         final Simulation simulation
     ) {
         final Map<String, Species> speciesByCode = getSpeciesByCode(simulation);
-        final Map<String, BiomassMarket> marketsById =
-            getBiomassMarketGrids(simulation)
-                .stream()
-                .flatMap(ObjectGrid::stream)
-                .collect(toMap(BiomassMarket::getId, identity()));
+        final Map<String, BiomassMarket> marketsById = getBiomassMarketsById(simulation);
         request.getPricesList().forEach(price -> {
             final BiomassMarket market = getOrThrow(
                 marketsById,

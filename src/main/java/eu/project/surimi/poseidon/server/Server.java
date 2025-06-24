@@ -34,6 +34,7 @@ import eu.project.surimi.poseidon.server.ecology.UpdateBiomassRequestHandler;
 import eu.project.surimi.poseidon.server.fishery.FisheryService;
 import eu.project.surimi.poseidon.server.fishery.GetCatchDispositionRequestHandler;
 import eu.project.surimi.poseidon.server.market.GetSalesRequestHandler;
+import eu.project.surimi.poseidon.server.market.GetSpeciesPricesRequestHandler;
 import eu.project.surimi.poseidon.server.market.MarketService;
 import eu.project.surimi.poseidon.server.market.UpdateSpeciesPricesRequestHandler;
 import eu.project.surimi.poseidon.server.workflow.InitRequestHandler;
@@ -116,6 +117,7 @@ public class Server {
     private MarketService createMarketService(final SimulationManager simulationManager) {
         return new MarketService(
             new GetSalesRequestHandler(simulationManager),
+            new GetSpeciesPricesRequestHandler(simulationManager),
             new UpdateSpeciesPricesRequestHandler(simulationManager)
         );
     }
