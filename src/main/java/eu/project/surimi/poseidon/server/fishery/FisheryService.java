@@ -20,35 +20,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.fishery;
 
 import build.buf.gen.surimi.v1.FisheryServiceGrpc;
-import build.buf.gen.surimi.v1.GetSalesSummaryRequest;
-import build.buf.gen.surimi.v1.GetSalesSummaryResponse;
+import build.buf.gen.surimi.v1.GetCatchDispositionRequest;
+import build.buf.gen.surimi.v1.GetCatchDispositionResponse;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 
-import static lombok.AccessLevel.PACKAGE;
+@RequiredArgsConstructor
+public class FisheryService extends FisheryServiceGrpc.FisheryServiceImplBase {
 
-@RequiredArgsConstructor(access = PACKAGE)
-public class AgentsService extends FisheryServiceGrpc.FisheryServiceImplBase {
-
-    private final GetSalesSummaryRequestHandler salesSummaryRequestHandler;
-    private final GetCatchDispositionSummaryRequestHandler catchDispositionSummaryRequestHandler;
+    private final GetCatchDispositionRequestHandler catchDispositionSummaryRequestHandler;
 
     @Override
-    public void getSalesSummary(
-        final GetSalesSummaryRequest request,
-        final StreamObserver<GetSalesSummaryResponse> responseObserver
-    ) {
-        salesSummaryRequestHandler.handle(request, responseObserver);
-    }
-
-    @Override
-    public void getCatchDispositionSummary(
-        final build.buf.gen.surimi.v1.GetCatchDispositionSummaryRequest request,
-        final StreamObserver<build.buf.gen.surimi.v1.GetCatchDispositionSummaryResponse> responseObserver
+    public void getCatchDisposition(
+        final GetCatchDispositionRequest request,
+        final StreamObserver<GetCatchDispositionResponse> responseObserver
     ) {
         catchDispositionSummaryRequestHandler.handle(request, responseObserver);
     }
+
 }

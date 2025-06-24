@@ -29,7 +29,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 public abstract class WithSimulationRequestHandler<ReqT, RespT>
     extends RequestHandler<ReqT, RespT> {
 
-    final SimulationManager simulationManager;
+    protected final SimulationManager simulationManager;
 
     @SuppressWarnings("SynchronizeOnNonFinalField")
     @Override

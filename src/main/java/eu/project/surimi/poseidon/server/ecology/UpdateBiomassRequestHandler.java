@@ -20,10 +20,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.ecology;
 
+import build.buf.gen.surimi.v1.BiomassSummary;
 import build.buf.gen.surimi.v1.UpdateBiomassRequest;
 import build.buf.gen.surimi.v1.UpdateBiomassResponse;
+import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import sim.util.Int2D;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -80,7 +83,8 @@ public class UpdateBiomassRequestHandler extends
         final UpdateBiomassRequest request,
         final Simulation simulation
     ) {
-        final Unit<Mass> massUnit = parseMassUnit(request.getMeasurementUnit());
+        final BiomassSummary biomassSummary = request.getBiomassSummary();
+        final Unit<Mass> massUnit = parseMassUnit(biomassSummary.getMeasurementUnit());
         final boolean isKg = massUnit.isEquivalentTo(KILOGRAM);
         final Map<String, BiomassGrid> simulationGrids =
             simulation.getComponents(BiomassGrid.class).stream().collect(toMap(
@@ -88,7 +92,7 @@ public class UpdateBiomassRequestHandler extends
                 identity()
             ));
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
-        request.getBiomassGridsList().forEach(biomassGrid -> {
+        biomassSummary.getBiomassGridsList().forEach(biomassGrid -> {
             final BiomassGrid simulationGrid = getOrThrow(
                 simulationGrids,
                 biomassGrid.getSpeciesCode(), "Biomass grid"
@@ -107,7 +111,10 @@ public class UpdateBiomassRequestHandler extends
                     );
             });
         });
-        return UpdateBiomassResponse.newBuilder().build();
+        return UpdateBiomassResponse
+            .newBuilder()
+            .setSimulationId(request.getSimulationId())
+            .build();
     }
 
     private Unit<Mass> parseMassUnit(final String massUnit) {

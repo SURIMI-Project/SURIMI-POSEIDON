@@ -20,10 +20,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.ecology;
 
-import build.buf.gen.surimi.v1.EcologyServiceGrpc;
-import build.buf.gen.surimi.v1.GetBiomassRequest;
+import build.buf.gen.surimi.v1.*;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 
@@ -31,11 +30,20 @@ import lombok.RequiredArgsConstructor;
 public class EcologyService extends EcologyServiceGrpc.EcologyServiceImplBase {
 
     private final GetBiomassRequestHandler getBiomassRequestHandler;
+    private final UpdateBiomassRequestHandler updateBiomassRequestHandler;
+
+    @Override
+    public void updateBiomass(
+        final UpdateBiomassRequest request,
+        final StreamObserver<UpdateBiomassResponse> responseObserver
+    ) {
+        updateBiomassRequestHandler.handle(request, responseObserver);
+    }
 
     @Override
     public void getBiomass(
         final GetBiomassRequest request,
-        final StreamObserver<build.buf.gen.surimi.v1.GetBiomassResponse> responseObserver
+        final StreamObserver<GetBiomassResponse> responseObserver
     ) {
         getBiomassRequestHandler.handle(request, responseObserver);
     }

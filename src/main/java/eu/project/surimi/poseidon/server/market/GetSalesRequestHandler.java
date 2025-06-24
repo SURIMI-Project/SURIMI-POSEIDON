@@ -20,13 +20,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.market;
 
-import build.buf.gen.surimi.v1.GetSalesSummaryRequest;
-import build.buf.gen.surimi.v1.GetSalesSummaryResponse;
+import build.buf.gen.surimi.v1.GetSalesRequest;
+import build.buf.gen.surimi.v1.GetSalesResponse;
 import build.buf.gen.surimi.v1.Sale;
 import build.buf.gen.surimi.v1.SalesSummary;
 import com.google.common.collect.Range;
+import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
@@ -42,10 +44,10 @@ import java.util.Map;
 import static java.util.stream.Collectors.*;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
-public class GetSalesSummaryRequestHandler extends
-    WithSimulationRequestHandler<GetSalesSummaryRequest, GetSalesSummaryResponse> {
+public class GetSalesRequestHandler extends
+    WithSimulationRequestHandler<GetSalesRequest, GetSalesResponse> {
 
-    public GetSalesSummaryRequestHandler(final SimulationManager simulationManager) {
+    public GetSalesRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 
@@ -67,13 +69,13 @@ public class GetSalesSummaryRequestHandler extends
     }
 
     @Override
-    protected String getSimulationId(final GetSalesSummaryRequest request) {
+    protected String getSimulationId(final GetSalesRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected GetSalesSummaryResponse getResponseWithSimulation(
-        final GetSalesSummaryRequest request,
+    protected GetSalesResponse getResponseWithSimulation(
+        final GetSalesRequest request,
         final Simulation simulation
     ) {
         final Range<LocalDateTime> dateTimeRange = Range.closed(
@@ -108,7 +110,7 @@ public class GetSalesSummaryRequestHandler extends
                                 saleEntry -> saleEntry.species,
                                 collectingAndThen(
                                     toList(),
-                                    GetSalesSummaryRequestHandler::summariseSale
+                                    GetSalesRequestHandler::summariseSale
                                 )
                             ),
                             Map::values
@@ -128,8 +130,9 @@ public class GetSalesSummaryRequestHandler extends
                 )
                 .toList();
 
-        return GetSalesSummaryResponse
+        return GetSalesResponse
             .newBuilder()
+            .setSimulationId(request.getSimulationId())
             .addAllSalesSummaries(saleSummaries)
             .build();
     }

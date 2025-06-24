@@ -28,6 +28,17 @@ package eu.project.surimi.poseidon.server;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import eu.project.surimi.poseidon.server.ecology.EcologyService;
+import eu.project.surimi.poseidon.server.ecology.GetBiomassRequestHandler;
+import eu.project.surimi.poseidon.server.ecology.UpdateBiomassRequestHandler;
+import eu.project.surimi.poseidon.server.fishery.FisheryService;
+import eu.project.surimi.poseidon.server.fishery.GetCatchDispositionRequestHandler;
+import eu.project.surimi.poseidon.server.market.GetSalesRequestHandler;
+import eu.project.surimi.poseidon.server.market.MarketService;
+import eu.project.surimi.poseidon.server.market.UpdateSpeciesPricesRequestHandler;
+import eu.project.surimi.poseidon.server.workflow.InitRequestHandler;
+import eu.project.surimi.poseidon.server.workflow.SimulateStepRequestHandler;
+import eu.project.surimi.poseidon.server.workflow.WorkflowService;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 import io.opentelemetry.api.OpenTelemetry;
@@ -87,9 +98,10 @@ public class Server {
             .addService(ProtoReflectionServiceV1.newInstance())
             .intercept(new ExceptionInterceptor())
             .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
-            .addService(createAgentsService(simulationManager))
             .addService(createWorkflowService(simulationManager))
+            .addService(createFisheryService(simulationManager))
             .addService(createEcologyService(simulationManager))
+            .addService(createMarketService(simulationManager))
             .build();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.log(INFO, "Shutting down gRPC server...");
@@ -101,16 +113,23 @@ public class Server {
         grpcServer.awaitTermination();
     }
 
-    private AgentsService createAgentsService(final SimulationManager simulationManager) {
-        return new AgentsService(
-            new GetSalesSummaryRequestHandler(simulationManager),
-            new GetCatchDispositionSummaryRequestHandler(simulationManager)
+    private MarketService createMarketService(final SimulationManager simulationManager) {
+        return new MarketService(
+            new GetSalesRequestHandler(simulationManager),
+            new UpdateSpeciesPricesRequestHandler(simulationManager)
+        );
+    }
+
+    private FisheryService createFisheryService(final SimulationManager simulationManager) {
+        return new FisheryService(
+            new GetCatchDispositionRequestHandler(simulationManager)
         );
     }
 
     private EcologyService createEcologyService(final SimulationManager simulationManager) {
         return new EcologyService(
-            new GetBiomassRequestHandler(simulationManager)
+            new GetBiomassRequestHandler(simulationManager),
+            new UpdateBiomassRequestHandler(simulationManager)
         );
     }
 
@@ -121,9 +140,7 @@ public class Server {
                 new ScenarioLoader("eu.project.surimi"),
                 scenarioPath.toFile()
             ),
-            new SimulateStepRequestHandler(simulationManager),
-            new UpdatePricesRequestHandler(simulationManager),
-            new UpdateBiomassRequestHandler(simulationManager)
+            new SimulateStepRequestHandler(simulationManager)
         );
     }
 

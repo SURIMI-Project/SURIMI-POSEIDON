@@ -20,10 +20,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.ecology;
 
+import build.buf.gen.surimi.v1.BiomassSummary;
 import build.buf.gen.surimi.v1.GetBiomassRequest;
 import build.buf.gen.surimi.v1.GetBiomassResponse;
+import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.Coordinate;
@@ -37,6 +40,7 @@ import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class GetBiomassRequestHandler extends
     WithSimulationRequestHandler<GetBiomassRequest, GetBiomassResponse> {
+    
     public GetBiomassRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
@@ -62,10 +66,15 @@ public class GetBiomassRequestHandler extends
         final Simulation simulation
     ) {
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
+        final BiomassSummary.Builder biomassSummaryBuilder =
+            BiomassSummary
+                .newBuilder()
+                .setMeasurementUnit(KILOGRAM.getSymbol());
         final GetBiomassResponse.Builder responseBuilder =
             GetBiomassResponse
                 .newBuilder()
-                .setMeasurementUnit(KILOGRAM.getSymbol());
+                .setSimulationId(request.getSimulationId())
+                .setBiomassSummary(biomassSummaryBuilder);
         simulation.getComponents(BiomassGrid.class).forEach(grid -> {
             final build.buf.gen.surimi.v1.BiomassGrid.Builder gridBuilder =
                 build.buf.gen.surimi.v1.BiomassGrid
@@ -83,7 +92,7 @@ public class GetBiomassRequestHandler extends
                         .build()
                 );
             });
-            responseBuilder.addBiomassGrids(gridBuilder.build());
+            biomassSummaryBuilder.addBiomassGrids(gridBuilder.build());
         });
         return responseBuilder.build();
     }

@@ -23,7 +23,6 @@
 plugins {
     application
     jacoco
-    //alias(libs.plugins.protobuf)
     alias(libs.plugins.shadow)
     alias(libs.plugins.spotbugs)
 }
@@ -40,7 +39,7 @@ dependencies {
     implementation(libs.lombok)
     annotationProcessor(libs.lombok)
     implementation(libs.grpc.services)
-    implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.73.0.1.20250615224731.f39267420493")
+    implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.73.0.1.20250623211709.a094771b78d7")
     implementation(libs.jcommander)
     implementation(libs.grpc.netty.shaded)
     implementation(libs.commons.beanutils)

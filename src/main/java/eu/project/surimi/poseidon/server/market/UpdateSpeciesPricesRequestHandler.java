@@ -20,10 +20,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.market;
 
-import build.buf.gen.surimi.v1.UpdatePricesRequest;
-import build.buf.gen.surimi.v1.UpdatePricesResponse;
+import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
+import build.buf.gen.surimi.v1.UpdateSpeciesPricesResponse;
+import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.IllegalCurrencyException;
 import org.joda.money.Money;
@@ -47,13 +49,13 @@ import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
 
-public class UpdatePricesRequestHandler extends
-    WithSimulationRequestHandler<UpdatePricesRequest, UpdatePricesResponse> {
+public class UpdateSpeciesPricesRequestHandler extends
+    WithSimulationRequestHandler<UpdateSpeciesPricesRequest, UpdateSpeciesPricesResponse> {
 
     private static final System.Logger logger =
-        System.getLogger(UpdatePricesRequestHandler.class.getName());
+        System.getLogger(UpdateSpeciesPricesRequestHandler.class.getName());
 
-    public UpdatePricesRequestHandler(final SimulationManager simulationManager) {
+    public UpdateSpeciesPricesRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 
@@ -76,13 +78,13 @@ public class UpdatePricesRequestHandler extends
     }
 
     @Override
-    protected String getSimulationId(final UpdatePricesRequest request) {
+    protected String getSimulationId(final UpdateSpeciesPricesRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected UpdatePricesResponse getResponseWithSimulation(
-        final UpdatePricesRequest request,
+    protected UpdateSpeciesPricesResponse getResponseWithSimulation(
+        final UpdateSpeciesPricesRequest request,
         final Simulation simulation
     ) {
         final Map<String, Species> speciesByCode = getSpeciesByCode(simulation);
@@ -94,7 +96,7 @@ public class UpdatePricesRequestHandler extends
         request.getPricesList().forEach(price -> {
             final BiomassMarket market = getOrThrow(
                 marketsById,
-                price.getPortCode(),
+                price.getMarketCode(),
                 "Market"
             );
             final Species species = getOrThrow(
@@ -119,7 +121,10 @@ public class UpdatePricesRequestHandler extends
                 marketPrice.biomassUnit()
             );
         });
-        return UpdatePricesResponse.newBuilder().build();
+        return UpdateSpeciesPricesResponse
+            .newBuilder()
+            .setSimulationId(request.getSimulationId())
+            .build();
     }
 
     private CurrencyUnit parseCurrency(final String currency) {

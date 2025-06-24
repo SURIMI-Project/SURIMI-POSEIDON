@@ -20,23 +20,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.workflow;
 
 import build.buf.gen.surimi.v1.InitRequest;
 import build.buf.gen.surimi.v1.InitResponse;
-import build.buf.gen.surimi.v1.UpdatePricesRequest;
-import build.buf.gen.surimi.v1.UpdatePricesResponse;
 import build.buf.gen.surimi.v1.WorkflowServiceGrpc.WorkflowServiceImplBase;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-class WorkflowService extends WorkflowServiceImplBase {
+public class WorkflowService extends WorkflowServiceImplBase {
 
     private final InitRequestHandler initRequestHandler;
     private final SimulateStepRequestHandler simulateStepRequestHandler;
-    private final UpdatePricesRequestHandler updatePricesRequestHandler;
-    private final UpdateBiomassRequestHandler updateBiomassRequestHandler;
 
     @Override
     public void init(
@@ -52,22 +48,6 @@ class WorkflowService extends WorkflowServiceImplBase {
         final StreamObserver<build.buf.gen.surimi.v1.SimulateStepResponse> responseObserver
     ) {
         simulateStepRequestHandler.handle(request, responseObserver);
-    }
-
-    @Override
-    public void updatePrices(
-        final UpdatePricesRequest request,
-        final StreamObserver<UpdatePricesResponse> responseObserver
-    ) {
-        updatePricesRequestHandler.handle(request, responseObserver);
-    }
-
-    @Override
-    public void updateBiomass(
-        final build.buf.gen.surimi.v1.UpdateBiomassRequest request,
-        final StreamObserver<build.buf.gen.surimi.v1.UpdateBiomassResponse> responseObserver
-    ) {
-        updateBiomassRequestHandler.handle(request, responseObserver);
     }
 
 }

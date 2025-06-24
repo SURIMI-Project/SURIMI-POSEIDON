@@ -20,13 +20,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.fishery;
 
+import build.buf.gen.surimi.v1.CatchDispositionSummary;
 import build.buf.gen.surimi.v1.DispositionGrid;
-import build.buf.gen.surimi.v1.GetCatchDispositionSummaryRequest;
-import build.buf.gen.surimi.v1.GetCatchDispositionSummaryResponse;
+import build.buf.gen.surimi.v1.GetCatchDispositionRequest;
+import build.buf.gen.surimi.v1.GetCatchDispositionResponse;
 import com.google.common.collect.Range;
 import com.google.protobuf.Timestamp;
+import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulator;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -39,9 +42,10 @@ import java.util.Map;
 import static java.util.stream.Collectors.*;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
-public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequestHandler<GetCatchDispositionSummaryRequest, GetCatchDispositionSummaryResponse> {
+public class GetCatchDispositionRequestHandler
+    extends WithSimulationRequestHandler<GetCatchDispositionRequest, GetCatchDispositionResponse> {
 
-    public GetCatchDispositionSummaryRequestHandler(final SimulationManager simulationManager) {
+    public GetCatchDispositionRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 
@@ -122,19 +126,26 @@ public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequ
     }
 
     @Override
-    protected String getSimulationId(final GetCatchDispositionSummaryRequest request) {
+    protected String getSimulationId(final GetCatchDispositionRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected GetCatchDispositionSummaryResponse getResponseWithSimulation(
-        final GetCatchDispositionSummaryRequest request,
+    protected GetCatchDispositionResponse getResponseWithSimulation(
+        final GetCatchDispositionRequest request,
         final Simulation simulation
     ) {
-        final GetCatchDispositionSummaryResponse.Builder responseBuilder =
-            GetCatchDispositionSummaryResponse
+        final CatchDispositionSummary.Builder catchDispositionSummaryBuilder =
+            CatchDispositionSummary
                 .newBuilder()
                 .setMeasurementUnit(KILOGRAM.getSymbol());
+
+        final GetCatchDispositionResponse.Builder responseBuilder =
+            GetCatchDispositionResponse
+                .newBuilder()
+                .setSimulationId(request.getSimulationId())
+                .setCatchDispositionSummary(catchDispositionSummaryBuilder);
+
         extractFishingActionData(
             simulation,
             request.getStartDateTime(),
@@ -143,7 +154,7 @@ public class GetCatchDispositionSummaryRequestHandler extends WithSimulationRequ
             speciesData.forEach((species, coordinateData) -> {
                 final DispositionGrid.Builder
                     dispositionGridsBuilder =
-                    responseBuilder
+                    catchDispositionSummaryBuilder
                         .addDispositionGridsBuilder()
                         .setGearCode(gearCode)
                         .setSpeciesCode(species.getCode());

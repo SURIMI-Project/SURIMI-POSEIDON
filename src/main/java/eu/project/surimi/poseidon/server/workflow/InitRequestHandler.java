@@ -20,10 +20,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.workflow;
 
 import build.buf.gen.surimi.v1.InitRequest;
 import build.buf.gen.surimi.v1.InitResponse;
+import eu.project.surimi.poseidon.server.RequestHandler;
+import eu.project.surimi.poseidon.server.SimulationManager;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;

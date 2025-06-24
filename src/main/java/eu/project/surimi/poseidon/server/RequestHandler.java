@@ -26,6 +26,7 @@ import com.google.protobuf.Timestamp;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -35,11 +36,12 @@ import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.ERROR;
 import static java.time.ZoneOffset.UTC;
 
+@RequiredArgsConstructor
 public abstract class RequestHandler<ReqT, RespT> {
 
     private static final System.Logger logger = System.getLogger(RequestHandler.class.getName());
 
-    static LocalDateTime toLocalDateTime(
+    protected static LocalDateTime toLocalDateTime(
         final Timestamp timestamp
     ) {
         return Instant
@@ -48,7 +50,7 @@ public abstract class RequestHandler<ReqT, RespT> {
             .toLocalDateTime();
     }
 
-    static <K, V> V getOrThrow(
+    protected static <K, V> V getOrThrow(
         final Map<K, V> map,
         final K key,
         final String name
@@ -64,7 +66,7 @@ public abstract class RequestHandler<ReqT, RespT> {
 
     protected abstract RespT getResponse(final ReqT request);
 
-    void handle(
+    public void handle(
         final ReqT request,
         final StreamObserver<RespT> responseObserver
     ) {
@@ -86,7 +88,7 @@ public abstract class RequestHandler<ReqT, RespT> {
     }
 
     @SuppressWarnings("SameParameterValue")
-    StatusRuntimeException wrap(
+    protected StatusRuntimeException wrap(
         final Status status,
         final Exception e
     ) {
