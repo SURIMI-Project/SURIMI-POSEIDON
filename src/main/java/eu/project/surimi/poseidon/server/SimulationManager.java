@@ -88,4 +88,12 @@ public class SimulationManager {
     public record SimulationProperties(Period stepSize) {
     }
 
+    public void remove(final String simulationId) {
+        remove(parseId(simulationId));
+    }
+
+    public void remove(final UUID simulationId) {
+        simulations.invalidate(simulationId);
+    }
+
 }

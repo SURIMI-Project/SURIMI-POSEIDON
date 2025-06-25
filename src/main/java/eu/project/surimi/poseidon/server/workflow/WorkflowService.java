@@ -22,8 +22,7 @@
 
 package eu.project.surimi.poseidon.server.workflow;
 
-import build.buf.gen.surimi.v1.InitRequest;
-import build.buf.gen.surimi.v1.InitResponse;
+import build.buf.gen.surimi.v1.*;
 import build.buf.gen.surimi.v1.WorkflowServiceGrpc.WorkflowServiceImplBase;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -31,15 +30,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WorkflowService extends WorkflowServiceImplBase {
 
-    private final InitRequestHandler initRequestHandler;
+    private final InitialiseRequestHandler initialiseRequestHandler;
     private final SimulateStepRequestHandler simulateStepRequestHandler;
 
     @Override
-    public void init(
-        final InitRequest request,
-        final StreamObserver<InitResponse> responseObserver
+    public void initialise(
+        final InitialiseRequest request,
+        final StreamObserver<InitialiseResponse> responseObserver
     ) {
-        initRequestHandler.handle(request, responseObserver);
+        initialiseRequestHandler.handle(request, responseObserver);
     }
 
     @Override
@@ -50,4 +49,19 @@ public class WorkflowService extends WorkflowServiceImplBase {
         simulateStepRequestHandler.handle(request, responseObserver);
     }
 
+    @Override
+    public void finalise(
+        final FinaliseRequest request,
+        final StreamObserver<FinaliseResponse> responseObserver
+    ) {
+        super.finalise(request, responseObserver);
+    }
+
+    @Override
+    public void cancel(
+        final CancelRequest request,
+        final StreamObserver<CancelResponse> responseObserver
+    ) {
+        super.cancel(request, responseObserver);
+    }
 }

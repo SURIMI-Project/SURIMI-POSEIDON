@@ -22,8 +22,8 @@
 
 package eu.project.surimi.poseidon.server.workflow;
 
-import build.buf.gen.surimi.v1.InitRequest;
-import build.buf.gen.surimi.v1.InitResponse;
+import build.buf.gen.surimi.v1.InitialiseRequest;
+import build.buf.gen.surimi.v1.InitialiseResponse;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import lombok.RequiredArgsConstructor;
@@ -44,18 +44,18 @@ import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
 
 @RequiredArgsConstructor
-public class InitRequestHandler
-    extends RequestHandler<InitRequest, InitResponse> {
+public class InitialiseRequestHandler
+    extends RequestHandler<InitialiseRequest, InitialiseResponse> {
 
     private static final System.Logger logger =
-        System.getLogger(InitRequestHandler.class.getName());
+        System.getLogger(InitialiseRequestHandler.class.getName());
 
     private final SimulationManager simulationManager;
     private final ScenarioLoader scenarioLoader;
     private final File scenarioFile;
 
     @Override
-    protected InitResponse getResponse(final InitRequest request) {
+    protected InitialiseResponse getResponse(final InitialiseRequest request) {
         final UUID simulationId = SimulationManager.parseId(request.getSimulationId());
         if (simulationManager.contains(simulationId)) {
             throw ALREADY_EXISTS
@@ -84,7 +84,10 @@ public class InitRequestHandler
             simulation,
             new SimulationManager.SimulationProperties(stepSize)
         );
-        return InitResponse.newBuilder().build();
+        return InitialiseResponse
+            .newBuilder()
+            .setSimulationId(simulationId.toString())
+            .build();
     }
 
     @SuppressWarnings("SameParameterValue")

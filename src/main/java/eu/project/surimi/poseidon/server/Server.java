@@ -37,7 +37,7 @@ import eu.project.surimi.poseidon.server.market.GetSalesRequestHandler;
 import eu.project.surimi.poseidon.server.market.GetSpeciesPricesRequestHandler;
 import eu.project.surimi.poseidon.server.market.MarketService;
 import eu.project.surimi.poseidon.server.market.UpdateSpeciesPricesRequestHandler;
-import eu.project.surimi.poseidon.server.workflow.InitRequestHandler;
+import eu.project.surimi.poseidon.server.workflow.InitialiseRequestHandler;
 import eu.project.surimi.poseidon.server.workflow.SimulateStepRequestHandler;
 import eu.project.surimi.poseidon.server.workflow.WorkflowService;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
@@ -137,7 +137,7 @@ public class Server {
 
     private WorkflowService createWorkflowService(final SimulationManager simulationManager) {
         return new WorkflowService(
-            new InitRequestHandler(
+            new InitialiseRequestHandler(
                 simulationManager,
                 new ScenarioLoader("eu.project.surimi"),
                 scenarioPath.toFile()

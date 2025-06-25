@@ -39,12 +39,12 @@ dependencies {
     implementation(libs.lombok)
     annotationProcessor(libs.lombok)
     implementation(libs.grpc.services)
-    implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.73.0.1.20250623211709.a094771b78d7")
     implementation(libs.jcommander)
     implementation(libs.grpc.netty.shaded)
     implementation(libs.commons.beanutils)
     implementation(libs.bundles.opentelemetry)
     compileOnly("${libs.spotbugs.annotations.get()}:${spotbugs.toolVersion.get()}")
+    implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.73.0.1.20250625135408.5be09abcf728")
 }
 
 testing {
