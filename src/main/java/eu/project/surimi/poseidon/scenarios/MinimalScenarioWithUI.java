@@ -22,10 +22,12 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
+import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
+import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
-import uk.ac.ox.poseidon.gui.portrayals.BathymetryFieldPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.*;
 
 import java.util.List;
 
@@ -43,6 +45,46 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
                     List.of(
                         new BathymetryFieldPortrayalFactory(
                             scenario.component("bathymetricGrid")
+                        ),
+                        new MappedFactory<>(
+                            scenario.<List<BiomassGrid>>component("biomassGrids"),
+                            new SpeciesBiomassFieldPortrayalFactory(
+                                null,
+                                scenario.component("carryingCapacityGrid"),
+                                false
+                            ),
+                            "biomassGrid"
+                        ),
+                        new SimpleFieldPortrayalFactory(
+                            "Markets",
+                            new MarketGridPortrayalFactory(
+                                scenario.component("marketGrid")
+                            ),
+                            true
+                        ),
+                        new SimpleFieldPortrayalFactory(
+                            "Ports",
+                            new PortGridPortrayalFactory(
+                                scenario.component("portGrid")
+                            ),
+                            true
+                        ),
+                        /*
+                        new SimpleFieldPortrayalFactory(
+                            "Vessels",
+                            new VesselFieldPortrayalFactory(
+                                scenario.component("vesselField")
+                            ),
+                            true
+                        ),
+*/
+                        new SimpleFieldPortrayalFactory(
+                            "Coordinates",
+                            new CoordinatesPortrayalFactory(
+                                scenario.component("modelGrid"),
+                                3
+                            ),
+                            true
                         )
                     ),
                     600,

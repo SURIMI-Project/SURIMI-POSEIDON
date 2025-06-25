@@ -24,11 +24,30 @@ package eu.project.surimi.poseidon.scenarios;
 
 import lombok.Getter;
 import lombok.Setter;
+import uk.ac.ox.poseidon.agents.fields.VesselField;
+import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
+import uk.ac.ox.poseidon.agents.market.Market;
+import uk.ac.ox.poseidon.agents.market.MarketGrid;
+import uk.ac.ox.poseidon.agents.market.OneMarketPerPortBiomassMarketGridFactory;
+import uk.ac.ox.poseidon.biology.biomass.*;
+import uk.ac.ox.poseidon.biology.species.Species;
+import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.ListFactory;
+import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.ScenarioSupplier;
+import uk.ac.ox.poseidon.core.quantities.MassFactory;
+import uk.ac.ox.poseidon.core.time.DateFactory;
+import uk.ac.ox.poseidon.geography.CoordinateFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
+import uk.ac.ox.poseidon.geography.distance.DistanceCalculator;
+import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
+import uk.ac.ox.poseidon.geography.ports.Port;
+import uk.ac.ox.poseidon.geography.ports.PortFactory;
+import uk.ac.ox.poseidon.geography.ports.PortGrid;
+import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 
 import java.util.List;
 
@@ -36,12 +55,19 @@ import java.util.List;
 @Setter
 public class MinimalScenario extends ScenarioSupplier {
 
+    public MinimalScenario() {
+        super(new DateFactory(2000, 1, 1));
+    }
+
+    ModelGridFactory modelGrid =
+        new ModelGridFactory(
+            1,
+            -1.5, 1.5, -1.5, 1.5
+        );
+
     private Factory<? extends BathymetricGrid> bathymetricGrid =
         new BathymetricGridFromElevationValuesFactory(
-            new ModelGridFactory(
-                1,
-                -1.5, 1.5, -1.5, 1.5
-            ),
+            modelGrid,
             List.of(
                 -1, -1, 0,
                 -1, -1, 0,
@@ -49,4 +75,47 @@ public class MinimalScenario extends ScenarioSupplier {
             )
         );
 
+    private Factory<? extends List<? extends Species>> species =
+        new ListFactory<>(
+            new SpeciesFactory("A"),
+            new SpeciesFactory("B")
+        );
+
+    private Factory<? extends CarryingCapacityGrid> carryingCapacityGrid =
+        new UniformCarryingCapacityGridFactory(
+            bathymetricGrid,
+            MassFactory.of("1 t")
+        );
+
+    private Factory<? extends BiomassAllocator> biomassAllocator =
+        new FullBiomassAllocatorFactory(carryingCapacityGrid);
+
+    private Factory<List<BiomassGrid>> biomassGrids =
+        new MappedFactory<>(
+            species,
+            new BiomassGridFactory(
+                modelGrid,
+                null,
+                biomassAllocator
+            ),
+            "species"
+        );
+
+    private Factory<? extends PortGrid> portGrid =
+        new PortGridFactory(bathymetricGrid);
+
+    private Factory<? extends Port> port1 =
+        new PortFactory(portGrid, "P1", "Port 1", new CoordinateFactory(1, 1));
+
+    private Factory<? extends Port> port2 =
+        new PortFactory(portGrid, "P2", "Port 2", new CoordinateFactory(1, -1));
+
+    private Factory<? extends MarketGrid<Biomass, ? extends Market<Biomass>>> marketGrid =
+        new OneMarketPerPortBiomassMarketGridFactory(portGrid);
+
+    private Factory<? extends VesselField> vesselField =
+        new VesselFieldFactory(modelGrid);
+
+    private Factory<? extends DistanceCalculator> distance =
+        new HaversineDistanceCalculatorFactory(modelGrid);
 }
