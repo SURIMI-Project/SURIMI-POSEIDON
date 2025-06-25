@@ -28,21 +28,40 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * A utility class responsible for managing a minimal scenario file for testing purposes.
+ * <p>
+ * The class ensures that a minimal scenario in YAML format is created and stored in a predefined
+ * location. It provides a static method to retrieve the path to the generated scenario file.
+ * <p>
+ * This class is designed to be used as part of the test initialization process to set up the
+ * simulation environment with a minimal configuration.
+ * <p>
+ * The scenario file is generated automatically upon class loading by leveraging the capabilities of
+ * the {@link ScenarioWriter} and {@link MinimalScenario}.
+ * <p>
+ * Thread-safety: This class is thread-safe as it uses final static fields and immutable behavior.
+ * Mutability: Instances of this class cannot be created as it has a private constructor.
+ */
 public final class MinimalScenarioFile {
-    private static Path scenarioPath;
+
+    private static final Path path = writeScenarioFile();
 
     private MinimalScenarioFile() {}
 
-    public static Path getOrCreate() {
-        if (scenarioPath == null) {
-            scenarioPath = Path.of("build", "minimal_scenario", "scenario.yaml");
-            try {
-                Files.createDirectories(scenarioPath.getParent());
-                new ScenarioWriter().write(new MinimalScenario().get(), scenarioPath);
-            } catch (final IOException e) {
-                throw new RuntimeException("Failed to write minimal scenario", e);
-            }
+    private static Path writeScenarioFile() {
+        final Path scenarioPath = Path.of("build", "minimal_scenario", "scenario.yaml");
+        try {
+            final Path parent = scenarioPath.getParent();
+            if (parent != null) Files.createDirectories(parent);
+            new ScenarioWriter().write(new MinimalScenario().get(), scenarioPath);
+        } catch (final IOException e) {
+            throw new RuntimeException("Failed to write minimal scenario", e);
         }
         return scenarioPath;
+    }
+
+    public static Path getPath() {
+        return MinimalScenarioFile.path;
     }
 }

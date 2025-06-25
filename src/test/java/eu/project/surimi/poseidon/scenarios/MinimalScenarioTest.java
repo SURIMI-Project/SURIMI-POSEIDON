@@ -35,7 +35,7 @@ class MinimalScenarioTest {
 
     @BeforeAll
     static void setUp() {
-        scenarioPath = MinimalScenarioFile.getOrCreate();
+        scenarioPath = MinimalScenarioFile.getPath();
     }
 
     @Test
