@@ -64,6 +64,7 @@ public class SimulateStepRequestHandler extends
         );
         return SimulateStepResponse
             .newBuilder()
+            .setSimulationId(request.getSimulationId())
             .build();
     }
 }
