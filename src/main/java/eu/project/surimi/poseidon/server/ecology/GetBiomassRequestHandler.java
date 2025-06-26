@@ -40,7 +40,7 @@ import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class GetBiomassRequestHandler extends
     WithSimulationRequestHandler<GetBiomassRequest, GetBiomassResponse> {
-    
+
     public GetBiomassRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
@@ -70,11 +70,6 @@ public class GetBiomassRequestHandler extends
             BiomassSummary
                 .newBuilder()
                 .setMeasurementUnit(KILOGRAM.getSymbol());
-        final GetBiomassResponse.Builder responseBuilder =
-            GetBiomassResponse
-                .newBuilder()
-                .setSimulationId(request.getSimulationId())
-                .setBiomassSummary(biomassSummaryBuilder);
         simulation.getComponents(BiomassGrid.class).forEach(grid -> {
             final build.buf.gen.surimi.v1.BiomassGrid.Builder gridBuilder =
                 build.buf.gen.surimi.v1.BiomassGrid
@@ -92,8 +87,12 @@ public class GetBiomassRequestHandler extends
                         .build()
                 );
             });
-            biomassSummaryBuilder.addBiomassGrids(gridBuilder.build());
+            biomassSummaryBuilder.addBiomassGrids(gridBuilder);
         });
-        return responseBuilder.build();
+        return GetBiomassResponse
+            .newBuilder()
+            .setSimulationId(request.getSimulationId())
+            .setBiomassSummary(biomassSummaryBuilder)
+            .build();
     }
 }
