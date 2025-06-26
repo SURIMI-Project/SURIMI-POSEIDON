@@ -82,16 +82,20 @@ public abstract class RequestHandler<ReqT, RespT> {
         try {
             responseObserver.onNext(getResponse(request));
             responseObserver.onCompleted();
-        } catch (final StatusRuntimeException e) {
-            logger.log(ERROR, e);
-            responseObserver.onError(e);
         } catch (final Exception e) {
-            logger.log(ERROR, e);
+            logger.log(ERROR, "", e);
             responseObserver.onError(
-                Status.INTERNAL
-                    .withDescription("Unexpected server error: " + e.getMessage())
-                    .withCause(e)
-                    .asRuntimeException()
+                switch (e) {
+                    case final StatusRuntimeException sre -> sre;
+                    case final IllegalArgumentException iae -> Status.INVALID_ARGUMENT
+                        .withDescription(iae.getMessage())
+                        .withCause(iae)
+                        .asRuntimeException();
+                    default -> Status.INTERNAL
+                        .withDescription("Unexpected server error: " + e.getMessage())
+                        .withCause(e)
+                        .asRuntimeException();
+                }
             );
         }
     }

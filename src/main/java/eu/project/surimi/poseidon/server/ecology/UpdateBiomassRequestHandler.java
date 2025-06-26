@@ -41,6 +41,7 @@ import javax.measure.quantity.Mass;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static io.grpc.Status.*;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
@@ -64,16 +65,11 @@ public class UpdateBiomassRequestHandler extends
         final ModelGrid modelGrid = bathymetricGrid.getModelGrid();
         modelGrid.checkIsInGrid(coordinate);
         final Int2D cell = modelGrid.toCell(coordinate);
-        if (!bathymetricGrid.isActiveWater(cell)) {
-            throw INVALID_ARGUMENT
-                .withDescription(
-                    "Coordinates (" +
-                        biomassCell.getLongitude() +
-                        ", " +
-                        biomassCell.getLatitude() +
-                        ") do not point to an active water cell.")
-                .asRuntimeException();
-        }
+        checkArgument(
+            bathymetricGrid.isActiveWater(cell),
+            "Coordinates %s do not point to an active water cell.",
+            coordinate
+        );
         return cell;
     }
 
