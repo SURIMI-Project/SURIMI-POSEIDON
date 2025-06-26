@@ -33,6 +33,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.utils.Measurements;
 import uk.ac.ox.poseidon.geography.Coordinate;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
+import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 import javax.measure.Unit;
 import javax.measure.format.MeasurementParseException;
@@ -56,10 +57,13 @@ public class UpdateBiomassRequestHandler extends
         final build.buf.gen.surimi.v1.BiomassCell biomassCell,
         final BathymetricGrid bathymetricGrid
     ) {
-        final Int2D cell = bathymetricGrid.getModelGrid().toCell(new Coordinate(
+        final Coordinate coordinate = new Coordinate(
             biomassCell.getLongitude(),
             biomassCell.getLatitude()
-        ));
+        );
+        final ModelGrid modelGrid = bathymetricGrid.getModelGrid();
+        modelGrid.checkIsInGrid(coordinate);
+        final Int2D cell = modelGrid.toCell(coordinate);
         if (!bathymetricGrid.isActiveWater(cell)) {
             throw INVALID_ARGUMENT
                 .withDescription(
