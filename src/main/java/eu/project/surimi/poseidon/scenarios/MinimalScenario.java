@@ -24,11 +24,14 @@ package eu.project.surimi.poseidon.scenarios;
 
 import lombok.Getter;
 import lombok.Setter;
+import uk.ac.ox.poseidon.agents.behaviours.WaitingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.market.Market;
 import uk.ac.ox.poseidon.agents.market.MarketGrid;
 import uk.ac.ox.poseidon.agents.market.OneMarketPerPortBiomassMarketGridFactory;
+import uk.ac.ox.poseidon.agents.vessels.Vessel;
+import uk.ac.ox.poseidon.agents.vessels.VesselFactory;
 import uk.ac.ox.poseidon.biology.biomass.*;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
@@ -37,6 +40,7 @@ import uk.ac.ox.poseidon.core.ListFactory;
 import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.ScenarioSupplier;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
+import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.time.DateFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
@@ -50,6 +54,8 @@ import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 
 import java.util.List;
+
+import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_DAY_DURATION_SUPPLIER;
 
 @Getter
 @Setter
@@ -115,6 +121,18 @@ public class MinimalScenario extends ScenarioSupplier {
 
     private Factory<? extends VesselField> vesselField =
         new VesselFieldFactory(modelGrid);
+
+    private Factory<? extends Vessel> vessel1 =
+        new VesselFactory(
+            new WaitingBehaviourFactory(ONE_DAY_DURATION_SUPPLIER),
+            "V1",
+            "Vessel 1",
+            vesselField,
+            port1,
+            portGrid,
+            SpeedFactory.of("10 kn"),
+            "EUR"
+        );
 
     private Factory<? extends DistanceCalculator> distance =
         new HaversineDistanceCalculatorFactory(modelGrid);

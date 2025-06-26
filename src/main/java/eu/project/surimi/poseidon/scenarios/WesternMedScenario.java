@@ -351,7 +351,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                                     optionValuesRegister
                                 )
                             ),
-                            new TotalBiomassCaughtPerHourDestinationEvaluatorFactory()
+                            new TotalBiomassCaughtPerHourDestinationEvaluatorFactory(portGrid)
                         ),
                         ONE_HOUR_DURATION_SUPPLIER,
                         new WaitingBehaviourFactory(ONE_DAY_DURATION_SUPPLIER)
