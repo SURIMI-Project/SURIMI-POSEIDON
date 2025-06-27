@@ -32,6 +32,8 @@ public class WorkflowService extends WorkflowServiceImplBase {
 
     private final InitialiseRequestHandler initialiseRequestHandler;
     private final SimulateStepRequestHandler simulateStepRequestHandler;
+    private final FinaliseRequestHandler finaliseRequestHandler;
+    private final CancelRequestHandler cancelRequestHandler;
 
     @Override
     public void initialise(
@@ -54,7 +56,7 @@ public class WorkflowService extends WorkflowServiceImplBase {
         final FinaliseRequest request,
         final StreamObserver<FinaliseResponse> responseObserver
     ) {
-        super.finalise(request, responseObserver);
+        finaliseRequestHandler.handle(request, responseObserver);
     }
 
     @Override
@@ -62,6 +64,6 @@ public class WorkflowService extends WorkflowServiceImplBase {
         final CancelRequest request,
         final StreamObserver<CancelResponse> responseObserver
     ) {
-        super.cancel(request, responseObserver);
+        cancelRequestHandler.handle(request, responseObserver);
     }
 }

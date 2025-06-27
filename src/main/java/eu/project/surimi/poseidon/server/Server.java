@@ -37,9 +37,7 @@ import eu.project.surimi.poseidon.server.market.GetSalesRequestHandler;
 import eu.project.surimi.poseidon.server.market.GetSpeciesPricesRequestHandler;
 import eu.project.surimi.poseidon.server.market.MarketService;
 import eu.project.surimi.poseidon.server.market.UpdateSpeciesPricesRequestHandler;
-import eu.project.surimi.poseidon.server.workflow.InitialiseRequestHandler;
-import eu.project.surimi.poseidon.server.workflow.SimulateStepRequestHandler;
-import eu.project.surimi.poseidon.server.workflow.WorkflowService;
+import eu.project.surimi.poseidon.server.workflow.*;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 import io.opentelemetry.api.OpenTelemetry;
@@ -142,7 +140,9 @@ public class Server {
                 new ScenarioLoader("eu.project.surimi"),
                 scenarioPath.toFile()
             ),
-            new SimulateStepRequestHandler(simulationManager)
+            new SimulateStepRequestHandler(simulationManager),
+            new FinaliseRequestHandler(simulationManager),
+            new CancelRequestHandler(simulationManager)
         );
     }
 
