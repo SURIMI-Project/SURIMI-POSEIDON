@@ -225,12 +225,12 @@ public class WesternMedScenario extends ScenarioSupplier {
         );
     private Factory<List<BiomassGrid>> biomassGrids =
         new MappedFactory<>(
-            species,
             new BiomassGridFactory(
                 modelGrid,
                 null,
                 biomassAllocator
             ),
+            species,
             "species"
         );
     private Factory<? extends Steppable> dailyProcesses =
@@ -242,12 +242,12 @@ public class WesternMedScenario extends ScenarioSupplier {
             DAILY,
             new SteppableSequenceFactory(
                 new MappedFactory<>(
-                    biomassGrids,
                     new BiomassDiffuserFactory(
                         null,
                         carryingCapacityGrid,
                         biomassDiffusionRule
                     ),
+                    biomassGrids,
                     "biomassGrid"
                 )
             ),
@@ -262,12 +262,12 @@ public class WesternMedScenario extends ScenarioSupplier {
             MONTHLY,
             new SteppableSequenceFactory(
                 new MappedFactory<>(
-                    biomassGrids,
                     new BiomassGrowerFactory(
                         null,
                         carryingCapacityGrid,
                         biomassGrowthRule
                     ),
+                    biomassGrids,
                     "biomassGrid"
                 )
             ),
@@ -402,7 +402,6 @@ public class WesternMedScenario extends ScenarioSupplier {
             SpeedFactory.of(VESSEL_SPEED),
             "EUR"
         );
-
     private Factory<? extends FleetIdRegister> fleetIdRegister =
         new FleetIdRegisterFactory(
             new ImmutableRegisterFactory<>(

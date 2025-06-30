@@ -47,12 +47,12 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
                             scenario.component("bathymetricGrid")
                         ),
                         new MappedFactory<>(
-                            scenario.<List<BiomassGrid>>component("biomassGrids"),
                             new SpeciesBiomassFieldPortrayalFactory(
                                 null,
                                 scenario.component("carryingCapacityGrid"),
                                 false
                             ),
+                            scenario.<List<BiomassGrid>>component("biomassGrids"),
                             "biomassGrid"
                         ),
                         new SimpleFieldPortrayalFactory(

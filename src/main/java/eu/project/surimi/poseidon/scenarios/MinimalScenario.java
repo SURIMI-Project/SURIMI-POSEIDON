@@ -61,16 +61,11 @@ import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_DAY
 @Setter
 public class MinimalScenario extends ScenarioSupplier {
 
-    public MinimalScenario() {
-        super(new DateFactory(2000, 1, 1));
-    }
-
     ModelGridFactory modelGrid =
         new ModelGridFactory(
             1,
             -1.5, 1.5, -1.5, 1.5
         );
-
     private Factory<? extends BathymetricGrid> bathymetricGrid =
         new BathymetricGridFromElevationValuesFactory(
             modelGrid,
@@ -80,48 +75,38 @@ public class MinimalScenario extends ScenarioSupplier {
                 -1, -1, 0
             )
         );
-
-    private Factory<? extends List<? extends Species>> species =
-        new ListFactory<>(
-            new SpeciesFactory("A"),
-            new SpeciesFactory("B")
-        );
-
     private Factory<? extends CarryingCapacityGrid> carryingCapacityGrid =
         new UniformCarryingCapacityGridFactory(
             bathymetricGrid,
             MassFactory.of("1 t")
         );
-
     private Factory<? extends BiomassAllocator> biomassAllocator =
         new FullBiomassAllocatorFactory(carryingCapacityGrid);
-
+    private Factory<? extends List<? extends Species>> species =
+        new ListFactory<>(
+            new SpeciesFactory("A"),
+            new SpeciesFactory("B")
+        );
     private Factory<List<BiomassGrid>> biomassGrids =
         new MappedFactory<>(
-            species,
             new BiomassGridFactory(
                 modelGrid,
                 null,
                 biomassAllocator
             ),
+            species,
             "species"
         );
-
     private Factory<? extends PortGrid> portGrid =
         new PortGridFactory(bathymetricGrid);
-
     private Factory<? extends Port> port1 =
         new PortFactory(portGrid, "P1", "Port 1", new CoordinateFactory(1, 1));
-
     private Factory<? extends Port> port2 =
         new PortFactory(portGrid, "P2", "Port 2", new CoordinateFactory(1, -1));
-
     private Factory<? extends MarketGrid<Biomass, ? extends Market<Biomass>>> marketGrid =
         new OneMarketPerPortBiomassMarketGridFactory(portGrid);
-
     private Factory<? extends VesselField> vesselField =
         new VesselFieldFactory(modelGrid);
-
     private Factory<? extends Vessel> vessel1 =
         new VesselFactory(
             new WaitingBehaviourFactory(ONE_DAY_DURATION_SUPPLIER),
@@ -133,7 +118,10 @@ public class MinimalScenario extends ScenarioSupplier {
             SpeedFactory.of("10 kn"),
             "EUR"
         );
-
     private Factory<? extends DistanceCalculator> distance =
         new HaversineDistanceCalculatorFactory(modelGrid);
+
+    public MinimalScenario() {
+        super(new DateFactory(2000, 1, 1));
+    }
 }
