@@ -26,31 +26,29 @@ import build.buf.gen.surimi.v1.InitialiseRequest;
 import build.buf.gen.surimi.v1.InitialiseResponse;
 import build.buf.gen.surimi.v1.WorkflowServiceGrpc;
 import eu.project.surimi.poseidon.scenarios.MinimalScenarioFile;
-import io.grpc.*;
+import io.grpc.ChannelCredentials;
+import io.grpc.Grpc;
+import io.grpc.InsecureChannelCredentials;
+import io.grpc.ManagedChannel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.lang.System.Logger.Level.INFO;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class ServerTest {
+public abstract class ServiceTest {
 
-    private static final System.Logger logger = System.getLogger(ServerTest.class.getName());
-
-    private static final int PORT = 50051;
     private static final String SCENARIO_ID = "minimal";
     private static final String STEP_SIZE = "P1M";
     private static final LocalDateTime START_DATE_TIME =
         LocalDate.of(2000, 1, 1).atStartOfDay();
-
+    private static final System.Logger logger =
+        System.getLogger(WorkflowServiceTest.class.getName());
+    private static final int PORT = 50051;
     io.grpc.Server server;
     WorkflowServiceGrpc.WorkflowServiceBlockingStub client;
 
@@ -73,29 +71,7 @@ class ServerTest {
         server.shutdown();
     }
 
-    @Test
-    void simulationCanBeStarted() {
-        final String simulationId = UUID.randomUUID().toString();
-        final InitialiseResponse response = initialiseSimulation(simulationId);
-        assertEquals(simulationId, response.getSimulationId());
-    }
-
-    @Test
-    void cantUseSameIdTwice() {
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId);
-        assertThrows(StatusRuntimeException.class, () -> initialiseSimulation(simulationId));
-    }
-
-    @Test
-    void canStartTwoSimulationsWithDifferentIds() {
-        final String simulationId1 = UUID.randomUUID().toString();
-        final String simulationId2 = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId1);
-        initialiseSimulation(simulationId2);
-    }
-
-    private InitialiseResponse initialiseSimulation(final String simulationId) {
+    protected InitialiseResponse initialiseSimulation(final String simulationId) {
         return client.initialise(
             InitialiseRequest
                 .newBuilder()
