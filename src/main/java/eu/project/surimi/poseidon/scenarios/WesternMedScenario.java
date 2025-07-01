@@ -208,7 +208,7 @@ public class WesternMedScenario extends ScenarioSupplier {
             pathFinder,
             distance
         );
-    private Factory<? extends FishingGear<Biomass>> fishingGear =
+    private VesselScopeFactory<? extends FishingGear<Biomass>> fishingGear =
         new FixedBiomassProportionGearFactory(
             "PS",
             CATCH_PROPORTION,
@@ -357,7 +357,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                         new WaitingBehaviourFactory(ONE_DAY_DURATION_SUPPLIER)
                     ),
                     new DefaultFishingBehaviourFactory<>(
-                        new VesselScopeAdaptor<>(fishingGear),
+                        fishingGear,
                         hold,
                         new CurrentCellFisheableFactory<>(
                             new BiomassGridsFactory(

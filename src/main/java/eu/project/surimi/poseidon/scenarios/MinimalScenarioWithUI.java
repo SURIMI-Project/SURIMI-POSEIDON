@@ -41,7 +41,7 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
             scenario,
             List.of(
                 new DisplayWrapper2D(
-                    "Catalan Mediterranean Sea",
+                    "Ocean",
                     List.of(
                         new BathymetryFieldPortrayalFactory(
                             scenario.component("bathymetricGrid")
@@ -69,7 +69,6 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
                             ),
                             true
                         ),
-                        /*
                         new SimpleFieldPortrayalFactory(
                             "Vessels",
                             new VesselFieldPortrayalFactory(
@@ -77,7 +76,6 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
                             ),
                             true
                         ),
-*/
                         new SimpleFieldPortrayalFactory(
                             "Coordinates",
                             new CoordinatesPortrayalFactory(

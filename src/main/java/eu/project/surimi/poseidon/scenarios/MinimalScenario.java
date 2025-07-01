@@ -24,38 +24,59 @@ package eu.project.surimi.poseidon.scenarios;
 
 import lombok.Getter;
 import lombok.Setter;
+import uk.ac.ox.poseidon.agents.behaviours.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.WaitingBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.destination.ChoosingDestinationBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.destination.ConstantDestinationSupplierFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.CompositeDispositionProcessFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.GeneralDiscardMortalityFactory;
+import uk.ac.ox.poseidon.agents.behaviours.disposition.SelectedSpeciesRetentionFactory;
+import uk.ac.ox.poseidon.agents.behaviours.fishing.DefaultFishingBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.port.HomeBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.port.LandingBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.strategy.ThereAndBackBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.travel.TravellingAlongPathBehaviourFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
+import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
 import uk.ac.ox.poseidon.agents.market.Market;
 import uk.ac.ox.poseidon.agents.market.MarketGrid;
 import uk.ac.ox.poseidon.agents.market.OneMarketPerPortBiomassMarketGridFactory;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.VesselFactory;
+import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactory;
+import uk.ac.ox.poseidon.agents.vessels.gears.FishingGear;
+import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
+import uk.ac.ox.poseidon.agents.vessels.hold.Hold;
+import uk.ac.ox.poseidon.agents.vessels.hold.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.*;
 import uk.ac.ox.poseidon.biology.species.Species;
+import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
-import uk.ac.ox.poseidon.core.Factory;
-import uk.ac.ox.poseidon.core.ListFactory;
-import uk.ac.ox.poseidon.core.MappedFactory;
-import uk.ac.ox.poseidon.core.ScenarioSupplier;
+import uk.ac.ox.poseidon.core.*;
+import uk.ac.ox.poseidon.core.predicates.AlwaysTrueFactory;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
+import uk.ac.ox.poseidon.core.suppliers.ConstantDoubleSupplierFactory;
 import uk.ac.ox.poseidon.core.time.DateFactory;
+import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
 import uk.ac.ox.poseidon.geography.distance.DistanceCalculator;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
+import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
+import uk.ac.ox.poseidon.geography.paths.GridPathFinder;
 import uk.ac.ox.poseidon.geography.ports.Port;
 import uk.ac.ox.poseidon.geography.ports.PortFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
+import uk.ac.ox.poseidon.regulations.PermittedIfFactory;
 
 import java.util.List;
 
-import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_DAY_DURATION_SUPPLIER;
+import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.*;
 
 @Getter
 @Setter
@@ -85,7 +106,8 @@ public class MinimalScenario extends ScenarioSupplier {
     private Factory<? extends List<? extends Species>> species =
         new ListFactory<>(
             new SpeciesFactory("A"),
-            new SpeciesFactory("B")
+            new SpeciesFactory("B"),
+            new SpeciesFactory("C")
         );
     private Factory<List<BiomassGrid>> biomassGrids =
         new MappedFactory<>(
@@ -107,19 +129,108 @@ public class MinimalScenario extends ScenarioSupplier {
         new OneMarketPerPortBiomassMarketGridFactory(portGrid);
     private Factory<? extends VesselField> vesselField =
         new VesselFieldFactory(modelGrid);
-    private Factory<? extends Vessel> vessel1 =
-        new VesselFactory(
-            new WaitingBehaviourFactory(ONE_DAY_DURATION_SUPPLIER),
-            "V1",
-            "Vessel 1",
-            vesselField,
-            port1,
-            portGrid,
-            SpeedFactory.of("10 kn"),
-            "EUR"
-        );
+    private VesselScopeFactory<? extends Hold<Biomass>> hold =
+        new InfiniteBiomassHoldFactory();
     private Factory<? extends DistanceCalculator> distance =
         new HaversineDistanceCalculatorFactory(modelGrid);
+    private Factory<? extends GridPathFinder> pathFinder =
+        new DefaultPathFinderFactory(
+            bathymetricGrid,
+            portGrid,
+            distance
+        );
+    private BehaviourFactory<?> travellingBehaviour =
+        new TravellingAlongPathBehaviourFactory(
+            pathFinder,
+            distance
+        );
+
+    private VesselScopeFactory<? extends FishingGear<Biomass>> gear1 =
+        new FixedBiomassProportionGearFactory(
+            "G1",
+            0.25,
+            ONE_HOUR_DURATION_SUPPLIER
+        );
+
+    private VesselScopeFactory<? extends FishingGear<Biomass>> gear2 =
+        new FixedBiomassProportionGearFactory(
+            "G2",
+            0.5,
+            ONE_HOUR_DURATION_SUPPLIER
+        );
+
+    private Factory<List<Vessel>> vessels =
+        new ZippedFactory<>(
+            new VesselFactory(
+                new HomeBehaviourFactory(
+                    portGrid,
+                    hold,
+                    new AlwaysTrueFactory(),
+                    new ThereAndBackBehaviourFactory(
+                        new ChoosingDestinationBehaviourFactory(
+                            new ConstantDestinationSupplierFactory(
+                                modelGrid,
+                                null
+                            ),
+                            ONE_MINUTE_DURATION_SUPPLIER,
+                            new WaitingBehaviourFactory(ONE_SECOND_DURATION_SUPPLIER)
+                        ),
+                        new DefaultFishingBehaviourFactory<>(
+                            null,
+                            hold,
+                            new CurrentCellFisheableFactory<>(
+                                new BiomassGridsFactory(
+                                    biomassGrids
+                                )
+                            ),
+                            new PermittedIfFactory(new AlwaysTrueFactory()),
+                            new CompositeDispositionProcessFactory<>(
+                                new SelectedSpeciesRetentionFactory<Biomass>(
+                                    new SpeciesByCodeFactory(
+                                        new ConstantFactory<>(List.of("A", "B")),
+                                        species
+                                    )
+                                ),
+                                new GeneralDiscardMortalityFactory(
+                                    new ConstantDoubleSupplierFactory(0.1)
+                                )
+                            )
+                        ),
+                        travellingBehaviour
+                    ),
+                    new WaitingBehaviourFactory(ONE_HOUR_DURATION_SUPPLIER),
+                    travellingBehaviour,
+                    new LandingBehaviourFactory<>(marketGrid, hold, ONE_HOUR_DURATION_SUPPLIER)
+                ),
+                null,
+                null,
+                vesselField,
+                null,
+                portGrid,
+                SpeedFactory.of("10 kn"),
+                "EUR"
+            ),
+            List.of(
+                new ConstantFactory<>(List.of("V1", "V2", "V3", "V4")),
+                new ConstantFactory<>(List.of("Vessel 1", "Vessel 2", "Vessel 3", "Vessel 4")),
+                new ConstantFactory<>(List.of(port1, port1, port2, port2)),
+                new ConstantFactory<>(List.of(gear1, gear2, gear1, gear2)),
+                new ConstantFactory<>(List.of(
+                    new CoordinateFactory(-1, 1),
+                    new CoordinateFactory(0, 0),
+                    new CoordinateFactory(0, 0),
+                    new CoordinateFactory(-1, -1)
+                ))
+            ),
+            List.of(
+                "id",
+                "name",
+                "homePort",
+                "initialBehaviour.behaviourIfReady.fishingBehaviour.fishingGear",
+                "initialBehaviour.behaviourIfReady.fishingDestinationBehaviour" +
+                    ".destinationSupplier.coordinate"
+            )
+        );
 
     public MinimalScenario() {
         super(new DateFactory(2000, 1, 1));
