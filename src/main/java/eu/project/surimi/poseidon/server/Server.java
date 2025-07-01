@@ -28,6 +28,7 @@ package eu.project.surimi.poseidon.server;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.google.protobuf.Timestamp;
 import eu.project.surimi.poseidon.server.ecology.EcologyService;
 import eu.project.surimi.poseidon.server.ecology.GetBiomassRequestHandler;
 import eu.project.surimi.poseidon.server.ecology.UpdateBiomassRequestHandler;
@@ -40,18 +41,25 @@ import eu.project.surimi.poseidon.server.market.UpdateSpeciesPricesRequestHandle
 import eu.project.surimi.poseidon.server.workflow.*;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionServiceV1;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import uk.ac.ox.poseidon.core.utils.CustomPathConverter;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
+import static eu.project.surimi.poseidon.server.OpenTelemetryConfiguration.openTelemetry;
 import static java.lang.System.Logger.Level.INFO;
+import static java.time.ZoneOffset.UTC;
 
+@NoArgsConstructor
+@AllArgsConstructor
 public class Server {
 
     private static final System.Logger logger = System.getLogger(Server.class.getName());
@@ -80,17 +88,17 @@ public class Server {
             .build();
         try {
             jCommander.parse(args);
-            server.startServer();
+            final io.grpc.Server grpcServer = server.startServer();
+            grpcServer.awaitTermination();
         } catch (final ParameterException | IOException | InterruptedException e) {
             System.err.println(e.getMessage());
         }
     }
 
-    private void startServer() throws IOException, InterruptedException {
-        final OpenTelemetry openTelemetry = OpenTelemetryConfiguration.initOpenTelemetry();
+    io.grpc.Server startServer() throws IOException, InterruptedException {
         final SimulationManager simulationManager = new SimulationManager();
-        // Bind to 0.0.0.0 so the server listens on all network interfaces
-        @SuppressWarnings("deprecation") final io.grpc.Server grpcServer = NettyServerBuilder
+        final io.grpc.Server grpcServer = NettyServerBuilder
+            // Bind to 0.0.0.0 so the server listens on all network interfaces
             .forAddress(new InetSocketAddress("0.0.0.0", this.port))
             //.addService(ProtoReflectionService.newInstance()) // deprecated, but works with
             // postman
@@ -109,7 +117,7 @@ public class Server {
         }));
         grpcServer.start();
         logger.log(INFO, "Server started, listening on " + port);
-        grpcServer.awaitTermination();
+        return grpcServer;
     }
 
     private MarketService createMarketService(final SimulationManager simulationManager) {
@@ -146,4 +154,21 @@ public class Server {
         );
     }
 
+    public static LocalDateTime toLocalDateTime(
+        final Timestamp timestamp
+    ) {
+        return Instant
+            .ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos())
+            .atOffset(UTC)
+            .toLocalDateTime();
+    }
+
+    public static Timestamp toTimestamp(
+        final LocalDateTime localDateTime
+    ) {
+        return Timestamp
+            .newBuilder()
+            .setSeconds(localDateTime.toEpochSecond(UTC))
+            .build();
+    }
 }

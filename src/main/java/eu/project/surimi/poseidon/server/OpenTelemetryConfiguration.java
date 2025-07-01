@@ -40,6 +40,8 @@ public class OpenTelemetryConfiguration {
     private static final System.Logger logger =
         System.getLogger(OpenTelemetryConfiguration.class.getName());
 
+    public static final OpenTelemetry openTelemetry = initOpenTelemetry();
+
     public static OpenTelemetry initOpenTelemetry() {
         final SdkTracerProvider tracerProvider =
             Optional.ofNullable(System.getenv().get("OTEL_EXPORTER_OTLP_ENDPOINT"))

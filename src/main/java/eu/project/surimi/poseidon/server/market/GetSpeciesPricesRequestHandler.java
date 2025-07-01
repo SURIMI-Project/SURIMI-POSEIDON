@@ -32,6 +32,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 
 import java.util.Map;
 
+import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static eu.project.surimi.poseidon.server.market.MarketService.getBiomassMarketsById;
 
 public class GetSpeciesPricesRequestHandler extends

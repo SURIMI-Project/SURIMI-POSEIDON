@@ -22,42 +22,20 @@
 
 package eu.project.surimi.poseidon.server;
 
-import com.google.protobuf.Timestamp;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Map;
 
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.ERROR;
-import static java.time.ZoneOffset.UTC;
 
 @RequiredArgsConstructor
 public abstract class RequestHandler<ReqT, RespT> {
 
     private static final System.Logger logger = System.getLogger(RequestHandler.class.getName());
-
-    protected static LocalDateTime toLocalDateTime(
-        final Timestamp timestamp
-    ) {
-        return Instant
-            .ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos())
-            .atOffset(UTC)
-            .toLocalDateTime();
-    }
-
-    protected static Timestamp toTimestamp(
-        final LocalDateTime localDateTime
-    ) {
-        return Timestamp
-            .newBuilder()
-            .setSeconds(localDateTime.toEpochSecond(UTC))
-            .build();
-    }
 
     protected static <K, V> V getOrThrow(
         final Map<K, V> map,
