@@ -61,7 +61,7 @@ class WorkflowServiceTest extends ServiceTest {
     void idBecomesAvailableAfterCancelling() {
         final String simulationId = UUID.randomUUID().toString();
         initialiseSimulation(simulationId);
-        final CancelResponse cancelResponse = client.cancel(
+        final CancelResponse cancelResponse = workflowStub.cancel(
             CancelRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
@@ -76,7 +76,7 @@ class WorkflowServiceTest extends ServiceTest {
     void idBecomesAvailableAfterFinalising() {
         final String simulationId = UUID.randomUUID().toString();
         initialiseSimulation(simulationId);
-        final FinaliseResponse cancelResponse = client.finalise(
+        final FinaliseResponse cancelResponse = workflowStub.finalise(
             FinaliseRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
@@ -95,9 +95,9 @@ class WorkflowServiceTest extends ServiceTest {
             .newBuilder()
             .setSimulationId(simulationId)
             .build();
-        final SimulateStepResponse response1 = client.simulateStep(simulateStepRequest);
+        final SimulateStepResponse response1 = workflowStub.simulateStep(simulateStepRequest);
         assertEquals(simulationId, response1.getSimulationId());
-        final SimulateStepResponse response2 = client.simulateStep(simulateStepRequest);
+        final SimulateStepResponse response2 = workflowStub.simulateStep(simulateStepRequest);
         assertEquals(simulationId, response2.getSimulationId());
     }
 }

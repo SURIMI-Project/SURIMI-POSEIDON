@@ -22,9 +22,7 @@
 
 package eu.project.surimi.poseidon.server;
 
-import build.buf.gen.surimi.v1.InitialiseRequest;
-import build.buf.gen.surimi.v1.InitialiseResponse;
-import build.buf.gen.surimi.v1.WorkflowServiceGrpc;
+import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.MinimalScenarioFile;
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
@@ -50,7 +48,10 @@ public abstract class ServiceTest {
         System.getLogger(WorkflowServiceTest.class.getName());
     private static final int PORT = 50051;
     io.grpc.Server server;
-    WorkflowServiceGrpc.WorkflowServiceBlockingStub client;
+    WorkflowServiceGrpc.WorkflowServiceBlockingStub workflowStub;
+    EcologyServiceGrpc.EcologyServiceBlockingStub ecologyStub;
+    FisheryServiceGrpc.FisheryServiceBlockingStub fisheryStub;
+    MarketServiceGrpc.MarketServiceBlockingStub marketStub;
 
     @BeforeEach
     void setUp() {
@@ -59,7 +60,10 @@ public abstract class ServiceTest {
             final ChannelCredentials credentials = InsecureChannelCredentials.create();
             final ManagedChannel channel =
                 Grpc.newChannelBuilder("localhost:" + PORT, credentials).build();
-            client = WorkflowServiceGrpc.newBlockingStub(channel);
+            workflowStub = WorkflowServiceGrpc.newBlockingStub(channel);
+            ecologyStub = EcologyServiceGrpc.newBlockingStub(channel);
+            fisheryStub = FisheryServiceGrpc.newBlockingStub(channel);
+            marketStub = MarketServiceGrpc.newBlockingStub(channel);
         } catch (final InterruptedException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -72,7 +76,7 @@ public abstract class ServiceTest {
     }
 
     protected InitialiseResponse initialiseSimulation(final String simulationId) {
-        return client.initialise(
+        return workflowStub.initialise(
             InitialiseRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
