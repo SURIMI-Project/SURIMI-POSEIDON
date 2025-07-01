@@ -87,4 +87,17 @@ class WorkflowServiceTest extends ServiceTest {
         assertEquals(simulationId, initResponse.getSimulationId());
     }
 
+    @Test
+    void canStep() {
+        final String simulationId = UUID.randomUUID().toString();
+        initialiseSimulation(simulationId);
+        final SimulateStepRequest simulateStepRequest = SimulateStepRequest
+            .newBuilder()
+            .setSimulationId(simulationId)
+            .build();
+        final SimulateStepResponse response1 = client.simulateStep(simulateStepRequest);
+        assertEquals(simulationId, response1.getSimulationId());
+        final SimulateStepResponse response2 = client.simulateStep(simulateStepRequest);
+        assertEquals(simulationId, response2.getSimulationId());
+    }
 }
