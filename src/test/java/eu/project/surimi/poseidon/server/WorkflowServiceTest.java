@@ -22,7 +22,7 @@
 
 package eu.project.surimi.poseidon.server;
 
-import build.buf.gen.surimi.v1.InitialiseResponse;
+import build.buf.gen.surimi.v1.*;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 
@@ -51,8 +51,40 @@ class WorkflowServiceTest extends ServiceTest {
     void canStartTwoSimulationsWithDifferentIds() {
         final String simulationId1 = UUID.randomUUID().toString();
         final String simulationId2 = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId1);
-        initialiseSimulation(simulationId2);
+        final InitialiseResponse response1 = initialiseSimulation(simulationId1);
+        assertEquals(simulationId1, response1.getSimulationId());
+        final InitialiseResponse response2 = initialiseSimulation(simulationId2);
+        assertEquals(simulationId2, response2.getSimulationId());
+    }
+
+    @Test
+    void idBecomesAvailableAfterCancelling() {
+        final String simulationId = UUID.randomUUID().toString();
+        initialiseSimulation(simulationId);
+        final CancelResponse cancelResponse = client.cancel(
+            CancelRequest
+                .newBuilder()
+                .setSimulationId(simulationId)
+                .build()
+        );
+        assertEquals(simulationId, cancelResponse.getSimulationId());
+        final InitialiseResponse initResponse = initialiseSimulation(simulationId);
+        assertEquals(simulationId, initResponse.getSimulationId());
+    }
+
+    @Test
+    void idBecomesAvailableAfterFinalising() {
+        final String simulationId = UUID.randomUUID().toString();
+        initialiseSimulation(simulationId);
+        final FinaliseResponse cancelResponse = client.finalise(
+            FinaliseRequest
+                .newBuilder()
+                .setSimulationId(simulationId)
+                .build()
+        );
+        assertEquals(simulationId, cancelResponse.getSimulationId());
+        final InitialiseResponse initResponse = initialiseSimulation(simulationId);
+        assertEquals(simulationId, initResponse.getSimulationId());
     }
 
 }
