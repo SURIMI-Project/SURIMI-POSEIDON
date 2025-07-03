@@ -25,19 +25,23 @@ package eu.project.surimi.poseidon.server;
 import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.MinimalScenario;
 import org.junit.jupiter.api.Test;
-import tech.units.indriya.format.SimpleUnitFormat;
-import tech.units.indriya.quantity.Quantities;
+import uk.ac.ox.poseidon.geography.Coordinate;
 
+import javax.measure.Quantity;
 import javax.measure.Unit;
 import javax.measure.quantity.Mass;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.CARRYING_CAPACITY;
+import static eu.project.surimi.poseidon.scenarios.MinimalScenario.SPECIES_CODES;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections.CollectionUtils.isEqualCollection;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static tech.units.indriya.unit.Units.GRAM;
+import static uk.ac.ox.poseidon.core.utils.Measurements.parseMassUnit;
 
 public class EcologyServiceTest extends ServiceTest {
 
@@ -51,26 +55,111 @@ public class EcologyServiceTest extends ServiceTest {
                 .setSimulationId(simulationId)
                 .build()
         );
-        final BiomassSummary biomassSummary = response.getBiomassSummary();
+        final Map<String, Map<Coordinate, Quantity<Mass>>> grids =
+            readBiomassGrids(response.getBiomassSummary());
+        assertTrue(isEqualCollection(MinimalScenario.SPECIES_CODES, grids.keySet()));
+        assertTrue(
+            grids.values().stream().allMatch(grid ->
+                grid.values().stream().allMatch(biomass ->
+                    biomass.isEquivalentTo(CARRYING_CAPACITY)
+                )
+            )
+        );
+    }
+
+    Map<String, Map<Coordinate, Quantity<Mass>>> readBiomassGrids(
+        final BiomassSummary biomassSummary
+    ) {
         final Unit<Mass> unit =
-            SimpleUnitFormat
-                .getInstance()
-                .parse(biomassSummary.getMeasurementUnit())
-                .asType(Mass.class);
-        final Map<String, List<BiomassCell>> grids = biomassSummary
+            parseMassUnit(biomassSummary.getMeasurementUnit());
+        return biomassSummary
             .getBiomassGridsList()
             .stream()
             .collect(toMap(
                 BiomassGrid::getSpeciesCode,
-                BiomassGrid::getBiomassCellsList
+                biomassGrid ->
+                    biomassGrid
+                        .getBiomassCellsList()
+                        .stream()
+                        .collect(toMap(
+                            cell -> new Coordinate(cell.getLongitude(), cell.getLatitude()),
+                            cell -> getQuantity(cell.getBiomass(), unit)
+                        ))
             ));
-        assertTrue(isEqualCollection(MinimalScenario.SPECIES_CODES, grids.keySet()));
-        grids.values().forEach(biomassCells ->
-            biomassCells.forEach(biomassCell -> {
-                assertTrue(
-                    Quantities.getQuantity(biomassCell.getBiomass(), unit)
-                        .isEquivalentTo(CARRYING_CAPACITY)
-                );
-            }));
+    }
+
+    @Test
+    void updateBiomass() {
+        final Unit<Mass> unit = GRAM;
+        final String simulationId = UUID.randomUUID().toString();
+        initialiseSimulation(simulationId);
+        final UpdateBiomassResponse updateBiomassResponse =
+            ecologyStub.updateBiomass(
+                UpdateBiomassRequest
+                    .newBuilder()
+                    .setSimulationId(simulationId)
+                    .setBiomassSummary(
+                        BiomassSummary
+                            .newBuilder()
+                            .setMeasurementUnit(unit.toString())
+                            .addBiomassGrids(
+                                BiomassGrid
+                                    .newBuilder()
+                                    .setSpeciesCode(SPECIES_CODES.getFirst())
+                                    .addBiomassCells(
+                                        BiomassCell
+                                            .newBuilder()
+                                            .setLongitude(-1)
+                                            .setLatitude(-1)
+                                            .setBiomass(10)
+                                    )
+                                    .addBiomassCells(
+                                        BiomassCell
+                                            .newBuilder()
+                                            .setLongitude(0)
+                                            .setLatitude(-1)
+                                            .setBiomass(20)
+                                    )
+                            )
+                            .addBiomassGrids(
+                                BiomassGrid
+                                    .newBuilder()
+                                    .setSpeciesCode(SPECIES_CODES.getLast())
+                                    .addBiomassCells(
+                                        BiomassCell
+                                            .newBuilder()
+                                            .setLongitude(-1)
+                                            .setLatitude(-1)
+                                            .setBiomass(30)
+                                    )
+                            )
+                    )
+                    .build()
+            );
+        assertEquals(simulationId, updateBiomassResponse.getSimulationId());
+        final GetBiomassResponse response = ecologyStub.getBiomass(
+            GetBiomassRequest
+                .newBuilder()
+                .setSimulationId(simulationId)
+                .build()
+        );
+        final Map<String, Map<Coordinate, Quantity<Mass>>> grids =
+            readBiomassGrids(response.getBiomassSummary());
+        assertTrue(
+            grids.get(SPECIES_CODES.getFirst())
+                .get(new Coordinate(-1, -1))
+                .isEquivalentTo(getQuantity(10, unit))
+        );
+        assertTrue(
+            grids.get(SPECIES_CODES.getFirst())
+                .get(new Coordinate(0, -1))
+                .isEquivalentTo(getQuantity(20, unit))
+        );
+        assertTrue(
+            grids.get(SPECIES_CODES.getLast())
+                .get(new Coordinate(-1, -1))
+                .isEquivalentTo(getQuantity(30, unit))
+        );
+
     }
 }
