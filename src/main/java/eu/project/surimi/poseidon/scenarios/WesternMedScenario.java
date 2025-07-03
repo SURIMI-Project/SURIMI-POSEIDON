@@ -85,6 +85,7 @@ import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeAfterFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
+import uk.ac.ox.poseidon.core.utils.WrappedFactory;
 import uk.ac.ox.poseidon.examples.QuickRunner;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
@@ -230,7 +231,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                 null,
                 biomassAllocator
             ),
-            species,
+            new WrappedFactory<>(species),
             "species"
         );
     private Factory<? extends Steppable> dailyProcesses =
@@ -247,7 +248,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                         carryingCapacityGrid,
                         biomassDiffusionRule
                     ),
-                    biomassGrids,
+                    new WrappedFactory<>(biomassGrids),
                     "biomassGrid"
                 )
             ),
@@ -267,7 +268,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                         carryingCapacityGrid,
                         biomassGrowthRule
                     ),
-                    biomassGrids,
+                    new WrappedFactory<>(biomassGrids),
                     "biomassGrid"
                 )
             ),

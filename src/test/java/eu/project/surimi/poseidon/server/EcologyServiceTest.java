@@ -22,11 +22,22 @@
 
 package eu.project.surimi.poseidon.server;
 
-import build.buf.gen.surimi.v1.GetBiomassRequest;
-import build.buf.gen.surimi.v1.GetBiomassResponse;
+import build.buf.gen.surimi.v1.*;
+import eu.project.surimi.poseidon.scenarios.MinimalScenario;
 import org.junit.jupiter.api.Test;
+import tech.units.indriya.format.SimpleUnitFormat;
+import tech.units.indriya.quantity.Quantities;
 
+import javax.measure.Unit;
+import javax.measure.quantity.Mass;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+
+import static eu.project.surimi.poseidon.scenarios.MinimalScenario.CARRYING_CAPACITY;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.collections.CollectionUtils.isEqualCollection;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EcologyServiceTest extends ServiceTest {
 
@@ -34,13 +45,32 @@ public class EcologyServiceTest extends ServiceTest {
     void canGetBiomass() {
         final String simulationId = UUID.randomUUID().toString();
         initialiseSimulation(simulationId);
-        final GetBiomassResponse getBiomassResponse = ecologyStub.getBiomass(
+        final GetBiomassResponse response = ecologyStub.getBiomass(
             GetBiomassRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
                 .build()
         );
-        throw new UnsupportedOperationException("Not yet implemented");
-        // TODO: check that biomass is as expected for the minimal scenario
+        final BiomassSummary biomassSummary = response.getBiomassSummary();
+        final Unit<Mass> unit =
+            SimpleUnitFormat
+                .getInstance()
+                .parse(biomassSummary.getMeasurementUnit())
+                .asType(Mass.class);
+        final Map<String, List<BiomassCell>> grids = biomassSummary
+            .getBiomassGridsList()
+            .stream()
+            .collect(toMap(
+                BiomassGrid::getSpeciesCode,
+                BiomassGrid::getBiomassCellsList
+            ));
+        assertTrue(isEqualCollection(MinimalScenario.SPECIES_CODES, grids.keySet()));
+        grids.values().forEach(biomassCells ->
+            biomassCells.forEach(biomassCell -> {
+                assertTrue(
+                    Quantities.getQuantity(biomassCell.getBiomass(), unit)
+                        .isEquivalentTo(CARRYING_CAPACITY)
+                );
+            }));
     }
 }

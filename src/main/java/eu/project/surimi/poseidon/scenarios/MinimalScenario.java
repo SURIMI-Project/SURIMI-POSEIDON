@@ -53,13 +53,17 @@ import uk.ac.ox.poseidon.biology.biomass.*;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
-import uk.ac.ox.poseidon.core.*;
+import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.MappedFactory;
+import uk.ac.ox.poseidon.core.ScenarioSupplier;
+import uk.ac.ox.poseidon.core.ZippedFactory;
 import uk.ac.ox.poseidon.core.predicates.AlwaysTrueFactory;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.suppliers.ConstantDoubleSupplierFactory;
 import uk.ac.ox.poseidon.core.time.DateFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
+import uk.ac.ox.poseidon.core.utils.WrappedFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
@@ -74,13 +78,20 @@ import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 import uk.ac.ox.poseidon.regulations.PermittedIfFactory;
 
+import javax.measure.Quantity;
+import javax.measure.quantity.Mass;
 import java.util.List;
 
+import static si.uom.NonSI.TONNE;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.*;
 
 @Getter
 @Setter
 public class MinimalScenario extends ScenarioSupplier {
+
+    public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
+    public static final Quantity<Mass> CARRYING_CAPACITY = getQuantity(1, TONNE);
 
     ModelGridFactory modelGrid =
         new ModelGridFactory(
@@ -99,15 +110,15 @@ public class MinimalScenario extends ScenarioSupplier {
     private Factory<? extends CarryingCapacityGrid> carryingCapacityGrid =
         new UniformCarryingCapacityGridFactory(
             bathymetricGrid,
-            MassFactory.of("1 t")
+            MassFactory.of(CARRYING_CAPACITY)
         );
     private Factory<? extends BiomassAllocator> biomassAllocator =
         new FullBiomassAllocatorFactory(carryingCapacityGrid);
-    private Factory<? extends List<? extends Species>> species =
-        new ListFactory<>(
-            new SpeciesFactory("A"),
-            new SpeciesFactory("B"),
-            new SpeciesFactory("C")
+    private Factory<List<Species>> species =
+        new MappedFactory<>(
+            new SpeciesFactory(),
+            new ConstantFactory<>(SPECIES_CODES),
+            "code"
         );
     private Factory<List<BiomassGrid>> biomassGrids =
         new MappedFactory<>(
@@ -116,7 +127,7 @@ public class MinimalScenario extends ScenarioSupplier {
                 null,
                 biomassAllocator
             ),
-            species,
+            new WrappedFactory<>(species),
             "species"
         );
     private Factory<? extends PortGrid> portGrid =
