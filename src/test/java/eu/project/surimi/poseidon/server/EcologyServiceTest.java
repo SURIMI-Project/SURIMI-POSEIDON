@@ -25,9 +25,9 @@ package eu.project.surimi.poseidon.server;
 import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.MinimalScenario;
 import org.junit.jupiter.api.Test;
+import tech.units.indriya.ComparableQuantity;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
-import javax.measure.Quantity;
 import javax.measure.Unit;
 import javax.measure.quantity.Mass;
 import java.util.Map;
@@ -49,14 +49,7 @@ public class EcologyServiceTest extends ServiceTest {
     void canGetBiomass() {
         final String simulationId = UUID.randomUUID().toString();
         initialiseSimulation(simulationId);
-        final GetBiomassResponse response = ecologyStub.getBiomass(
-            GetBiomassRequest
-                .newBuilder()
-                .setSimulationId(simulationId)
-                .build()
-        );
-        final Map<String, Map<Coordinate, Quantity<Mass>>> grids =
-            readBiomassGrids(response.getBiomassSummary());
+        final Map<String, Map<Coordinate, ComparableQuantity<Mass>>> grids = getGrids(simulationId);
         assertTrue(isEqualCollection(MinimalScenario.SPECIES_CODES, grids.keySet()));
         assertTrue(
             grids.values().stream().allMatch(grid ->
@@ -67,7 +60,17 @@ public class EcologyServiceTest extends ServiceTest {
         );
     }
 
-    Map<String, Map<Coordinate, Quantity<Mass>>> readBiomassGrids(
+    private Map<String, Map<Coordinate, ComparableQuantity<Mass>>> getGrids(final String simulationId) {
+        final GetBiomassResponse response = ecologyStub.getBiomass(
+            GetBiomassRequest
+                .newBuilder()
+                .setSimulationId(simulationId)
+                .build()
+        );
+        return readBiomassGrids(response.getBiomassSummary());
+    }
+
+    Map<String, Map<Coordinate, ComparableQuantity<Mass>>> readBiomassGrids(
         final BiomassSummary biomassSummary
     ) {
         final Unit<Mass> unit =
@@ -137,14 +140,7 @@ public class EcologyServiceTest extends ServiceTest {
                     .build()
             );
         assertEquals(simulationId, updateBiomassResponse.getSimulationId());
-        final GetBiomassResponse response = ecologyStub.getBiomass(
-            GetBiomassRequest
-                .newBuilder()
-                .setSimulationId(simulationId)
-                .build()
-        );
-        final Map<String, Map<Coordinate, Quantity<Mass>>> grids =
-            readBiomassGrids(response.getBiomassSummary());
+        final Map<String, Map<Coordinate, ComparableQuantity<Mass>>> grids = getGrids(simulationId);
         assertTrue(
             grids.get(SPECIES_CODES.getFirst())
                 .get(new Coordinate(-1, -1))
@@ -161,5 +157,35 @@ public class EcologyServiceTest extends ServiceTest {
                 .isEquivalentTo(getQuantity(30, unit))
         );
 
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    void someBiomassGetsRemovedAfterAStep() {
+        final String simulationId = UUID.randomUUID().toString();
+        initialiseSimulation(simulationId);
+        final var initialGrids = getGrids(simulationId);
+        workflowStub.simulateStep(
+            SimulateStepRequest
+                .newBuilder()
+                .setSimulationId(simulationId)
+                .build()
+        );
+        final var updatedGrids = getGrids(simulationId);
+        initialGrids.forEach((speciesCode, initialGrid) -> {
+            final var updatedGrid = updatedGrids.get(speciesCode);
+            // Check that no cell has seen an increase in biomass
+            assertTrue(
+                initialGrid.entrySet().stream().allMatch(entry ->
+                    updatedGrid.get(entry.getKey()).isLessThanOrEqualTo(entry.getValue())
+                )
+            );
+            // and that some biomass has been removed (i.e., fished) in at least one cell
+            assertTrue(
+                initialGrid.entrySet().stream().anyMatch(entry ->
+                    updatedGrid.get(entry.getKey()).isLessThan(entry.getValue())
+                )
+            );
+        });
     }
 }
