@@ -78,6 +78,7 @@ import uk.ac.ox.poseidon.regulations.PermittedIfFactory;
 import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
@@ -147,16 +148,25 @@ public class MinimalScenario extends ScenarioSupplier {
                 marketGrid,
                 null,
                 null,
-                new PricePerSpeciesFactory(
-                    species,
-                    range(0, SPECIES_CODES.size()).boxed().collect(toMap(
-                        SPECIES_CODES::get,
-                        i -> new PriceFactory((i + 1) * 10, "GBP", "kg")
-                    ))
-                )
+                null
             ),
-            "portCode",
-            new ConstantFactory<>(List.of("P1", "P2"))
+            List.of("port", "pricesPerSpecies"),
+            List.of(
+                new ListFactory<>(port1, port2),
+                new ListFactory<>(
+                    Stream.of(1, 2)
+                        .map(i ->
+                            new PricePerSpeciesFactory(
+                                species,
+                                range(0, SPECIES_CODES.size()).boxed().collect(toMap(
+                                    SPECIES_CODES::get,
+                                    j -> new PriceFactory(i + j * 0.1, "GBP", "kg")
+                                ))
+                            )
+                        )
+                        .toList()
+                )
+            )
         );
     private Factory<? extends VesselField> vesselField =
         new VesselFieldFactory(modelGrid);
