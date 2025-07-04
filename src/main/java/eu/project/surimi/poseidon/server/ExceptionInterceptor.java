@@ -36,17 +36,17 @@ public class ExceptionInterceptor implements ServerInterceptor {
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-        ServerCall<ReqT, RespT> call,
-        Metadata headers,
-        ServerCallHandler<ReqT, RespT> next
+        final ServerCall<ReqT, RespT> call,
+        final Metadata headers,
+        final ServerCallHandler<ReqT, RespT> next
     ) {
         final String fullMethodName = call.getMethodDescriptor().getFullMethodName();
-        ServerCall<ReqT, RespT> wrappedCall =
+        final ServerCall<ReqT, RespT> wrappedCall =
             new ForwardingServerCall.SimpleForwardingServerCall<>(call) {
                 @Override
                 public void close(
-                    Status status,
-                    Metadata trailers
+                    final Status status,
+                    final Metadata trailers
                 ) {
                     if (!status.isOk()) {
                         trailers.put(METHOD_NAME_KEY, fullMethodName);
