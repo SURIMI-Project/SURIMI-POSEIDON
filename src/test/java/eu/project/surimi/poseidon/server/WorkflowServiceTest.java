@@ -42,8 +42,7 @@ class WorkflowServiceTest extends ServiceTest {
 
     @Test
     void cantUseSameIdTwice() {
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId);
+        final String simulationId = initialiseSimulation();
         assertThrows(StatusRuntimeException.class, () -> initialiseSimulation(simulationId));
     }
 
@@ -59,8 +58,7 @@ class WorkflowServiceTest extends ServiceTest {
 
     @Test
     void idBecomesAvailableAfterCancelling() {
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId);
+        final String simulationId = initialiseSimulation();
         final CancelResponse cancelResponse = workflowStub.cancel(
             CancelRequest
                 .newBuilder()
@@ -74,8 +72,7 @@ class WorkflowServiceTest extends ServiceTest {
 
     @Test
     void idBecomesAvailableAfterFinalising() {
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId);
+        final String simulationId = initialiseSimulation();
         final FinaliseResponse cancelResponse = workflowStub.finalise(
             FinaliseRequest
                 .newBuilder()
@@ -89,8 +86,7 @@ class WorkflowServiceTest extends ServiceTest {
 
     @Test
     void canStep() {
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId);
+        final String simulationId = initialiseSimulation();
         final SimulateStepRequest simulateStepRequest = SimulateStepRequest
             .newBuilder()
             .setSimulationId(simulationId)

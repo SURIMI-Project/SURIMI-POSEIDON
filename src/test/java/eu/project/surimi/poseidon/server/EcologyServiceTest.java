@@ -31,7 +31,6 @@ import uk.ac.ox.poseidon.geography.Coordinate;
 import javax.measure.Unit;
 import javax.measure.quantity.Mass;
 import java.util.Map;
-import java.util.UUID;
 
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.CARRYING_CAPACITY;
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.SPECIES_CODES;
@@ -47,8 +46,7 @@ public class EcologyServiceTest extends ServiceTest {
 
     @Test
     void canGetBiomass() {
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId);
+        final String simulationId = initialiseSimulation();
         final Map<String, Map<Coordinate, ComparableQuantity<Mass>>> grids = getGrids(simulationId);
         assertTrue(isEqualCollection(MinimalScenario.SPECIES_CODES, grids.keySet()));
         assertTrue(
@@ -94,8 +92,7 @@ public class EcologyServiceTest extends ServiceTest {
     @Test
     void updateBiomass() {
         final Unit<Mass> unit = GRAM;
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId);
+        final String simulationId = initialiseSimulation();
         final UpdateBiomassResponse updateBiomassResponse =
             ecologyStub.updateBiomass(
                 UpdateBiomassRequest
@@ -162,8 +159,7 @@ public class EcologyServiceTest extends ServiceTest {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
     void someBiomassGetsRemovedAfterAStep() {
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(simulationId);
+        final String simulationId = initialiseSimulation();
         final var initialGrids = getGrids(simulationId);
         workflowStub.simulateStep(
             SimulateStepRequest

@@ -34,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.lang.System.Logger.Level.INFO;
@@ -73,6 +74,10 @@ public abstract class ServiceTest {
     void tearDown() {
         logger.log(INFO, "Shutting down server");
         server.shutdown();
+    }
+
+    protected String initialiseSimulation() {
+        return initialiseSimulation(UUID.randomUUID().toString()).getSimulationId();
     }
 
     protected InitialiseResponse initialiseSimulation(final String simulationId) {
