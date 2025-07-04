@@ -50,7 +50,7 @@ public final class MinimalScenarioFile {
     private MinimalScenarioFile() {}
 
     private static Path writeScenarioFile() {
-        final Path scenarioPath = Path.of("build", "minimal_scenario", "scenario.yaml");
+        final Path scenarioPath = Path.of("build", "tmp", "test", "scenario.yaml");
         try {
             final Path parent = scenarioPath.getParent();
             if (parent != null) Files.createDirectories(parent);
