@@ -31,6 +31,7 @@ import java.util.Map;
 
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.WARNING;
 
 @RequiredArgsConstructor
 public abstract class RequestHandler<ReqT, RespT> {
@@ -61,18 +62,26 @@ public abstract class RequestHandler<ReqT, RespT> {
             responseObserver.onNext(getResponse(request));
             responseObserver.onCompleted();
         } catch (final Exception e) {
-            logger.log(ERROR, "", e);
             responseObserver.onError(
                 switch (e) {
-                    case final StatusRuntimeException sre -> sre;
-                    case final IllegalArgumentException iae -> Status.INVALID_ARGUMENT
-                        .withDescription(iae.getMessage())
-                        .withCause(iae)
-                        .asRuntimeException();
-                    default -> Status.INTERNAL
-                        .withDescription("Unexpected server error: " + e.getMessage())
-                        .withCause(e)
-                        .asRuntimeException();
+                    case final StatusRuntimeException sre -> {
+                        logger.log(WARNING, "", sre);
+                        yield sre;
+                    }
+                    case final IllegalArgumentException iae -> {
+                        logger.log(WARNING, "", iae);
+                        yield Status.INVALID_ARGUMENT
+                            .withDescription(iae.getMessage())
+                            .withCause(iae)
+                            .asRuntimeException();
+                    }
+                    default -> {
+                        logger.log(ERROR, "", e);
+                        yield Status.INTERNAL
+                            .withDescription("Unexpected server error: " + e.getMessage())
+                            .withCause(e)
+                            .asRuntimeException();
+                    }
                 }
             );
         }
