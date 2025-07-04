@@ -123,7 +123,7 @@ public class GetSalesRequestHandler extends
                 .map(entry ->
                     SalesSummary
                         .newBuilder()
-                        .setMarketCode(entry.getKey().market().getId())
+                        .setMarketCode(entry.getKey().market().getCode())
                         .setMeasurementUnit(KILOGRAM.getSymbol())
                         .setCurrency(entry.getKey().currencyUnit().getCode())
                         .addAllSales(entry.getValue())

@@ -30,6 +30,7 @@ import org.joda.money.CurrencyUnit;
 import org.joda.money.IllegalCurrencyException;
 import org.joda.money.Money;
 import uk.ac.ox.poseidon.agents.market.BiomassMarket;
+import uk.ac.ox.poseidon.agents.market.Price;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.utils.Measurements;
@@ -88,8 +89,8 @@ public class UpdateSpeciesPricesRequestHandler extends
             );
             final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());
             final Unit<Mass> biomassUnit = parseMassUnit(price.getMeasurementUnit());
-            final BiomassMarket.Price marketPrice =
-                new BiomassMarket.Price(
+            final Price marketPrice =
+                new Price(
                     Money.of(currencyUnit, price.getPrice(), RoundingMode.HALF_EVEN),
                     biomassUnit
                 );
@@ -98,9 +99,9 @@ public class UpdateSpeciesPricesRequestHandler extends
                 INFO,
                 "Updated price of species {0} at port market {1} to {2}/{3}.",
                 species.getCode(),
-                market.getId(),
-                marketPrice.amount(),
-                marketPrice.biomassUnit()
+                market.getCode(),
+                marketPrice.getAmount(),
+                marketPrice.getBiomassUnit()
             );
         });
         return UpdateSpeciesPricesResponse

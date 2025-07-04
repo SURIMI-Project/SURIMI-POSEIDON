@@ -39,9 +39,7 @@ import uk.ac.ox.poseidon.agents.behaviours.travel.TravellingAlongPathBehaviourFa
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
-import uk.ac.ox.poseidon.agents.market.Market;
-import uk.ac.ox.poseidon.agents.market.MarketGrid;
-import uk.ac.ox.poseidon.agents.market.OneMarketPerPortBiomassMarketGridFactory;
+import uk.ac.ox.poseidon.agents.market.*;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.VesselFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactory;
@@ -56,14 +54,13 @@ import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.ScenarioSupplier;
-import uk.ac.ox.poseidon.core.ZippedFactory;
 import uk.ac.ox.poseidon.core.predicates.AlwaysTrueFactory;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.suppliers.ConstantDoubleSupplierFactory;
 import uk.ac.ox.poseidon.core.time.DateFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
-import uk.ac.ox.poseidon.core.utils.WrappedFactory;
+import uk.ac.ox.poseidon.core.utils.ListFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
@@ -82,6 +79,8 @@ import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
 import java.util.List;
 
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.*;
@@ -114,12 +113,14 @@ public class MinimalScenario extends ScenarioSupplier {
         );
     private Factory<? extends BiomassAllocator> biomassAllocator =
         new FullBiomassAllocatorFactory(carryingCapacityGrid);
+
     private Factory<List<Species>> species =
         new MappedFactory<>(
             new SpeciesFactory(),
-            new ConstantFactory<>(SPECIES_CODES),
-            "code"
+            "code",
+            new ConstantFactory<>(SPECIES_CODES)
         );
+
     private Factory<List<BiomassGrid>> biomassGrids =
         new MappedFactory<>(
             new BiomassGridFactory(
@@ -127,8 +128,8 @@ public class MinimalScenario extends ScenarioSupplier {
                 null,
                 biomassAllocator
             ),
-            new WrappedFactory<>(species),
-            "species"
+            "species",
+            species
         );
     private Factory<? extends PortGrid> portGrid =
         new PortGridFactory(bathymetricGrid);
@@ -136,8 +137,27 @@ public class MinimalScenario extends ScenarioSupplier {
         new PortFactory(portGrid, "P1", "Port 1", new CoordinateFactory(1, 1));
     private Factory<? extends Port> port2 =
         new PortFactory(portGrid, "P2", "Port 2", new CoordinateFactory(1, -1));
-    private Factory<? extends MarketGrid<Biomass, ? extends Market<Biomass>>> marketGrid =
-        new OneMarketPerPortBiomassMarketGridFactory(portGrid);
+
+    private Factory<BiomassMarketGrid> marketGrid =
+        new BiomassMarketGridFactory(portGrid);
+
+    private Factory<List<BiomassMarket>> markets =
+        new MappedFactory<>(
+            new BiomassMarketFactory(
+                marketGrid,
+                null,
+                null,
+                new PricePerSpeciesFactory(
+                    species,
+                    range(0, SPECIES_CODES.size()).boxed().collect(toMap(
+                        SPECIES_CODES::get,
+                        i -> new PriceFactory((i + 1) * 10, "GBP", "kg")
+                    ))
+                )
+            ),
+            "portCode",
+            new ConstantFactory<>(List.of("P1", "P2"))
+        );
     private Factory<? extends VesselField> vesselField =
         new VesselFieldFactory(modelGrid);
     private VesselScopeFactory<? extends Hold<Biomass>> hold =
@@ -171,7 +191,7 @@ public class MinimalScenario extends ScenarioSupplier {
         );
 
     private Factory<List<Vessel>> vessels =
-        new ZippedFactory<>(
+        new MappedFactory<>(
             new VesselFactory(
                 new HomeBehaviourFactory(
                     portGrid,
@@ -222,24 +242,24 @@ public class MinimalScenario extends ScenarioSupplier {
                 "EUR"
             ),
             List.of(
-                new ConstantFactory<>(List.of("V1", "V2", "V3", "V4")),
-                new ConstantFactory<>(List.of("Vessel 1", "Vessel 2", "Vessel 3", "Vessel 4")),
-                new ConstantFactory<>(List.of(port1, port1, port2, port2)),
-                new ConstantFactory<>(List.of(gear1, gear2, gear1, gear2)),
-                new ConstantFactory<>(List.of(
-                    new CoordinateFactory(-1, 1),
-                    new CoordinateFactory(0, 0),
-                    new CoordinateFactory(0, 0),
-                    new CoordinateFactory(-1, -1)
-                ))
-            ),
-            List.of(
                 "id",
                 "name",
                 "homePort",
                 "initialBehaviour.behaviourIfReady.fishingBehaviour.fishingGear",
                 "initialBehaviour.behaviourIfReady.fishingDestinationBehaviour" +
                     ".destinationSupplier.coordinate"
+            ),
+            List.of(
+                new ListFactory<>("V1", "V2", "V3", "V4"),
+                new ListFactory<>("Vessel 1", "Vessel 2", "Vessel 3", "Vessel 4"),
+                new ListFactory<>(port1, port1, port2, port2),
+                new ListFactory<>(gear1, gear2, gear1, gear2),
+                new ListFactory<>(
+                    new CoordinateFactory(-1, 1),
+                    new CoordinateFactory(0, 0),
+                    new CoordinateFactory(0, 0),
+                    new CoordinateFactory(-1, -1)
+                )
             )
         );
 

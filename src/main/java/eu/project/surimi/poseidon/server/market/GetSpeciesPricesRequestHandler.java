@@ -63,9 +63,9 @@ public class GetSpeciesPricesRequestHandler extends
                     SpeciesPrice.newBuilder()
                         .setMarketCode(marketCode)
                         .setSpeciesCode(species.getCode())
-                        .setCurrency(price.amount().getCurrencyUnit().getCode())
-                        .setPrice(price.amount().getAmount().doubleValue())
-                        .setMeasurementUnit(price.biomassUnit().getSymbol())
+                        .setCurrency(price.getAmount().getCurrencyUnit().getCode())
+                        .setPrice(price.getAmount().getAmount().doubleValue())
+                        .setMeasurementUnit(price.getBiomassUnit().getSymbol())
                         .setGearCode("PS") // TODO
                         .setTimestamp(toTimestamp(simulation.getTemporalSchedule().getDateTime()))
                 )

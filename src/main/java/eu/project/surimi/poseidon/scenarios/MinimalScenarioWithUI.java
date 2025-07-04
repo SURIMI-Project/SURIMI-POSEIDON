@@ -52,8 +52,8 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
                                 scenario.component("carryingCapacityGrid"),
                                 false
                             ),
-                            scenario.<List<BiomassGrid>>component("biomassGrids"),
-                            "biomassGrid"
+                            "biomassGrid",
+                            scenario.<List<BiomassGrid>>component("biomassGrids")
                         ),
                         new SimpleFieldPortrayalFactory(
                             "Markets",

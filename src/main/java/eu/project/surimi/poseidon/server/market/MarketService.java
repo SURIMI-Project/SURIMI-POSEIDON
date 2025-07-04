@@ -59,7 +59,7 @@ public class MarketService extends MarketServiceGrpc.MarketServiceImplBase {
         return getBiomassMarketGrids(simulation)
             .stream()
             .flatMap(ObjectGrid::stream)
-            .collect(toMap(BiomassMarket::getId, identity()));
+            .collect(toMap(BiomassMarket::getCode, identity()));
     }
 
     @Override
