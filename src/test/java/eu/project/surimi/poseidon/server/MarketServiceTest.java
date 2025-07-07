@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.server;
 import build.buf.gen.surimi.v1.GetSpeciesPricesRequest;
 import build.buf.gen.surimi.v1.GetSpeciesPricesResponse;
 import build.buf.gen.surimi.v1.SpeciesPrice;
+import eu.project.surimi.poseidon.scenarios.MinimalScenario;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,11 @@ import static tech.units.indriya.unit.Units.KILOGRAM;
 import static uk.ac.ox.poseidon.core.utils.Measurements.parseMassUnit;
 
 public class MarketServiceTest extends ServiceTest {
+
+    public MarketServiceTest() {
+        super(MinimalScenario.class);
+    }
+
     @Test
     void getPrices() {
         final String simulationId = initialiseSimulation();

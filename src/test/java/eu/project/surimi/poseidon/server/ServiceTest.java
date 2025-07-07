@@ -23,15 +23,17 @@
 package eu.project.surimi.poseidon.server;
 
 import build.buf.gen.surimi.v1.*;
-import eu.project.surimi.poseidon.scenarios.MinimalScenarioFile;
+import eu.project.surimi.poseidon.scenarios.ScenarioFilesForTesting;
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import uk.ac.ox.poseidon.core.ScenarioSupplier;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -41,7 +43,12 @@ import static java.lang.System.Logger.Level.INFO;
 
 public abstract class ServiceTest {
 
-    private static final String SCENARIO_ID = "minimal";
+    private final Class<? extends ScenarioSupplier> scenarioSupplierClass;
+
+    public ServiceTest(final Class<? extends ScenarioSupplier> scenarioSupplierClass) {
+        this.scenarioSupplierClass = scenarioSupplierClass;
+    }
+
     private static final String STEP_SIZE = "P1M";
     private static final LocalDateTime START_DATE_TIME =
         LocalDate.of(2000, 1, 1).atStartOfDay();
@@ -50,15 +57,16 @@ public abstract class ServiceTest {
     private static final int PORT = 50051;
     io.grpc.Server server;
     ManagedChannel channel;
-    WorkflowServiceGrpc.WorkflowServiceBlockingStub workflowStub;
-    EcologyServiceGrpc.EcologyServiceBlockingStub ecologyStub;
-    FisheryServiceGrpc.FisheryServiceBlockingStub fisheryStub;
-    MarketServiceGrpc.MarketServiceBlockingStub marketStub;
+    protected WorkflowServiceGrpc.WorkflowServiceBlockingStub workflowStub;
+    protected EcologyServiceGrpc.EcologyServiceBlockingStub ecologyStub;
+    protected FisheryServiceGrpc.FisheryServiceBlockingStub fisheryStub;
+    protected MarketServiceGrpc.MarketServiceBlockingStub marketStub;
 
     @BeforeEach
     void setUp() {
         try {
-            server = new Server(MinimalScenarioFile.getPath(), PORT).startServer();
+            final Path scenarioPath = ScenarioFilesForTesting.getPath(scenarioSupplierClass);
+            server = new Server(scenarioPath, PORT).startServer();
             final ChannelCredentials credentials = InsecureChannelCredentials.create();
             channel = Grpc.newChannelBuilder("localhost:" + PORT, credentials).build();
             workflowStub = WorkflowServiceGrpc.newBlockingStub(channel);
@@ -86,7 +94,7 @@ public abstract class ServiceTest {
             InitialiseRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
-                .setScenarioId(SCENARIO_ID)
+                .setScenarioId(scenarioSupplierClass.getSimpleName())
                 .setStartDateTime(toTimestamp(START_DATE_TIME))
                 .setStepSize(STEP_SIZE)
                 .build()

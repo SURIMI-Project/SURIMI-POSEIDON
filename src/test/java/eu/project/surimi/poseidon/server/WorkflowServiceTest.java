@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.server;
 
 import build.buf.gen.surimi.v1.*;
+import eu.project.surimi.poseidon.scenarios.MinimalScenario;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +36,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class WorkflowServiceTest extends ServiceTest {
+
+    public WorkflowServiceTest() {
+        super(MinimalScenario.class);
+    }
 
     @Test
     void simulationCanBeStarted() {

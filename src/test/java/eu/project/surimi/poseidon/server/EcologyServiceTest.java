@@ -44,6 +44,10 @@ import static uk.ac.ox.poseidon.core.utils.Measurements.parseMassUnit;
 
 public class EcologyServiceTest extends ServiceTest {
 
+    public EcologyServiceTest() {
+        super(MinimalScenario.class);
+    }
+
     @Test
     void canGetBiomass() {
         final String simulationId = initialiseSimulation();
