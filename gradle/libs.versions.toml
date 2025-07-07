@@ -6,9 +6,11 @@ opentelemetry-instrumentation = "2.14.0-alpha"
 spotbugs = "6.0.26"
 jcommander = "2.0"
 commons-beanutils = "1.11.0"
+commons-io = "2.19.0"
 
 [libraries]
 commons-beanutils = { module = "commons-beanutils:commons-beanutils", version.ref = "commons-beanutils" }
+commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 opentelemetry-api = { module = "io.opentelemetry:opentelemetry-api", version.ref = "opentelemetry-core" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp", version.ref = "opentelemetry-core" }

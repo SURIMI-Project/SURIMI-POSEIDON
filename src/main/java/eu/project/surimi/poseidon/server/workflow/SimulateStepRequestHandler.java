@@ -33,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 
 import static java.lang.System.Logger.Level.INFO;
+import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
 public class SimulateStepRequestHandler extends
     WithSimulationRequestHandler<SimulateStepRequest, SimulateStepResponse> {
@@ -59,12 +60,18 @@ public class SimulateStepRequestHandler extends
         temporalSchedule.stepFor(simulation, stepSize);
         final LocalDateTime dateTime = temporalSchedule.getDateTime();
         logger.log(
-            INFO, "Advanced simulation {0} by {1} to {2}",
-            request.getSimulationId(), stepSize, dateTime
+            INFO, "Advanced simulation {0} by {1} to {2}\nMemory usage: {3}",
+            request.getSimulationId(), stepSize, dateTime, memoryUsage()
         );
         return SimulateStepResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
             .build();
+    }
+
+    private static String memoryUsage() {
+        final Runtime rt = Runtime.getRuntime();
+        return byteCountToDisplaySize(rt.totalMemory() - rt.freeMemory()) +
+            " / " + byteCountToDisplaySize(rt.maxMemory());
     }
 }

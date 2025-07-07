@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.jcommander)
     implementation(libs.grpc.netty.shaded)
     implementation(libs.commons.beanutils)
+    implementation(libs.commons.io)
     implementation(libs.bundles.opentelemetry)
     compileOnly("${libs.spotbugs.annotations.get()}:${spotbugs.toolVersion.get()}")
     implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.73.0.1.20250626071534.ec245cf69a82")
