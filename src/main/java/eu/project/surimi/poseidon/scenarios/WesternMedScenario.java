@@ -137,7 +137,7 @@ public class WesternMedScenario extends ScenarioSupplier {
             DIFFERENTIAL_PERCENTAGE_TO_MOVE,
             PERCENTAGE_LIMIT_ON_DAILY_MOVEMENT
         );
-    private PathFactory inputPath = PathFactory.of("data");
+    private PathFactory inputPath = PathFactory.of("western_med", "data");
     private GlobalScopeFactory<? extends ModelGrid> modelGrid =
         new ModelGridWithActiveCellsFromGridFile(
             new CellSetFromGridFileFactory(
@@ -288,7 +288,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         new FinalProcessFactory<>(
             new CsvTableWriterFactory(
                 new FishingActionListenerTableFactory(),
-                PathFactory.of("outputs", "fishing_actions.csv"),
+                PathFactory.of("western_med", "outputs", "fishing_actions.csv"),
                 true
             )
         );
@@ -412,7 +412,7 @@ public class WesternMedScenario extends ScenarioSupplier {
 
     public static void main(final String[] args) {
         final Scenario scenario = new WesternMedScenario().get();
-        final Path scenarioPath = Path.of("scenario.yaml");
+        final Path scenarioPath = Path.of("western_med", "scenario.yaml");
         new ScenarioWriter().write(scenario, scenarioPath);
         new QuickRunner(scenarioPath, Period.ofYears(1), List.of("eu.project.surimi")).run();
     }

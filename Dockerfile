@@ -18,7 +18,7 @@ COPY build/libs/SURIMI-POSEIDON-all.jar /app/POSEIDON.jar
 # Copy the scenario file and the data files
 # for the Western Med case study:
 COPY western_med/scenario.yaml /app/
-COPY western_med/data/ /app/data/
+COPY western_med/data/ /app/western_med/data/
 
 # Have POSEIDON run the scenario as the container's entry point:
 ENTRYPOINT ["java", "-Djava.util.logging.config.file=/app/logging.properties", "-jar", "/app/POSEIDON.jar", "-s", "scenario.yaml"]
