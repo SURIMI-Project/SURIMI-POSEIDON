@@ -276,7 +276,7 @@ public class WesternMedScenario extends ScenarioSupplier {
     private Factory<? extends MarketGrid<Biomass, ? extends Market<Biomass>>> marketGrid =
         new BiomassMarketGridPriceFileFactory(
             inputPath.plus("prices.csv"),
-            "port_code",
+            "market_code",
             "species_code",
             "price",
             "currency",
