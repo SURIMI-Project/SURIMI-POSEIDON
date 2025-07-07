@@ -28,8 +28,13 @@ import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.core.Simulation;
 
+import static java.lang.System.Logger.Level.INFO;
+
 public class FinaliseRequestHandler
     extends WithSimulationRequestHandler<FinaliseRequest, FinaliseResponse> {
+
+    private static final System.Logger logger =
+        System.getLogger(FinaliseRequestHandler.class.getName());
 
     public FinaliseRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
@@ -45,6 +50,7 @@ public class FinaliseRequestHandler
         final FinaliseRequest request,
         final Simulation simulation
     ) {
+        logger.log(INFO, "Finalising simulation {0}", request.getSimulationId());
         simulation.finish();
         final String simulationId = request.getSimulationId();
         simulationManager.remove(simulationId);

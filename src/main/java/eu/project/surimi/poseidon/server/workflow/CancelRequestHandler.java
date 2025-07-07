@@ -31,6 +31,9 @@ import uk.ac.ox.poseidon.core.Simulation;
 public class CancelRequestHandler
     extends WithSimulationRequestHandler<CancelRequest, CancelResponse> {
 
+    private static final System.Logger logger =
+        System.getLogger(CancelRequestHandler.class.getName());
+
     public CancelRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
@@ -45,6 +48,11 @@ public class CancelRequestHandler
         final CancelRequest request,
         final Simulation simulation
     ) {
+        logger.log(
+            System.Logger.Level.INFO,
+            "Cancelling simulation {0}",
+            request.getSimulationId()
+        );
         // Here, we only remove the simulation from the manager
         // without calling its finish method. If no one else is
         // holding on to a reference, it should be garbage collected.

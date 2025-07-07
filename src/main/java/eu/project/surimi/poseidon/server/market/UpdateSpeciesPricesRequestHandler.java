@@ -74,6 +74,7 @@ public class UpdateSpeciesPricesRequestHandler extends
         final UpdateSpeciesPricesRequest request,
         final Simulation simulation
     ) {
+        logger.log(INFO, "Price update received for simulation {0}", request.getSimulationId());
         final Map<String, Species> speciesByCode = getSpeciesByCode(simulation);
         final Map<String, BiomassMarket> marketsById = getBiomassMarketsById(simulation);
         request.getPricesList().forEach(price -> {

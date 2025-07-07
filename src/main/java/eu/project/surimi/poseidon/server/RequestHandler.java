@@ -30,8 +30,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Map;
 
 import static io.grpc.Status.NOT_FOUND;
-import static java.lang.System.Logger.Level.ERROR;
-import static java.lang.System.Logger.Level.WARNING;
+import static java.lang.System.Logger.Level.*;
 
 @RequiredArgsConstructor
 public abstract class RequestHandler<ReqT, RespT> {
@@ -59,6 +58,7 @@ public abstract class RequestHandler<ReqT, RespT> {
         final StreamObserver<RespT> responseObserver
     ) {
         try {
+            logger.log(DEBUG, "Received request:\n{0}", request);
             responseObserver.onNext(getResponse(request));
             responseObserver.onCompleted();
         } catch (final Exception e) {

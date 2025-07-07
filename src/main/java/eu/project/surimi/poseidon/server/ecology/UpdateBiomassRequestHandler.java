@@ -43,12 +43,16 @@ import java.util.NoSuchElementException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static io.grpc.Status.*;
+import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class UpdateBiomassRequestHandler extends
     WithSimulationRequestHandler<UpdateBiomassRequest, UpdateBiomassResponse> {
+
+    private static final System.Logger logger =
+        System.getLogger(UpdateBiomassRequestHandler.class.getName());
 
     public UpdateBiomassRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
@@ -83,6 +87,7 @@ public class UpdateBiomassRequestHandler extends
         final UpdateBiomassRequest request,
         final Simulation simulation
     ) {
+        logger.log(INFO, "Biomass update received for simulation {0}", request.getSimulationId());
         final BiomassSummary biomassSummary = request.getBiomassSummary();
         final Unit<Mass> massUnit = parseMassUnit(biomassSummary.getMeasurementUnit());
         final boolean isKg = massUnit.isEquivalentTo(KILOGRAM);

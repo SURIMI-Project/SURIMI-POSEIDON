@@ -36,10 +36,14 @@ import java.util.NoSuchElementException;
 
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.NOT_FOUND;
+import static java.lang.System.Logger.Level.INFO;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class GetBiomassRequestHandler extends
     WithSimulationRequestHandler<GetBiomassRequest, GetBiomassResponse> {
+
+    private static final System.Logger logger =
+        System.getLogger(GetBiomassRequestHandler.class.getName());
 
     public GetBiomassRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
@@ -65,6 +69,7 @@ public class GetBiomassRequestHandler extends
         final GetBiomassRequest request,
         final Simulation simulation
     ) {
+        logger.log(INFO, "Biomass requested for simulation {0}", request.getSimulationId());
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
         final BiomassSummary.Builder biomassSummaryBuilder =
             BiomassSummary

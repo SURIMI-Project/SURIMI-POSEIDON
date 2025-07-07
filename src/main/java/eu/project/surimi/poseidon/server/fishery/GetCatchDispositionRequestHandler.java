@@ -40,11 +40,15 @@ import java.util.List;
 import java.util.Map;
 
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
+import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class GetCatchDispositionRequestHandler
     extends WithSimulationRequestHandler<GetCatchDispositionRequest, GetCatchDispositionResponse> {
+
+    private static final System.Logger logger =
+        System.getLogger(GetCatchDispositionRequestHandler.class.getName());
 
     public GetCatchDispositionRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
@@ -136,6 +140,11 @@ public class GetCatchDispositionRequestHandler
         final GetCatchDispositionRequest request,
         final Simulation simulation
     ) {
+        logger.log(
+            INFO,
+            "Catch disposition requested for simulation {0}",
+            request.getSimulationId()
+        );
         final CatchDispositionSummary.Builder catchDispositionSummaryBuilder =
             CatchDispositionSummary
                 .newBuilder()

@@ -26,8 +26,11 @@ import build.buf.gen.surimi.v1.*;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -54,6 +57,28 @@ class WorkflowServiceTest extends ServiceTest {
         assertEquals(simulationId1, response1.getSimulationId());
         final InitialiseResponse response2 = initialiseSimulation(simulationId2);
         assertEquals(simulationId2, response2.getSimulationId());
+    }
+
+    @Test
+    void canStartManySimulations() {
+        final List<String> simulations = Stream
+            .generate(this::initialiseSimulation)
+            .limit(10)
+            .toList();
+
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    void canRunForALongTime() {
+        final String simulationId = initialiseSimulation();
+        final SimulateStepRequest simulateStepRequest = SimulateStepRequest
+            .newBuilder()
+            .setSimulationId(simulationId)
+            .build();
+        range(0, 50 * 12).forEach(i ->
+            workflowStub.simulateStep(simulateStepRequest)
+        );
     }
 
     @Test

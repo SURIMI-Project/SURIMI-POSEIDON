@@ -38,6 +38,9 @@ import static eu.project.surimi.poseidon.server.market.MarketService.getBiomassM
 public class GetSpeciesPricesRequestHandler extends
     WithSimulationRequestHandler<GetSpeciesPricesRequest, GetSpeciesPricesResponse> {
 
+    private static final System.Logger logger =
+        System.getLogger(GetSpeciesPricesRequestHandler.class.getName());
+
     public GetSpeciesPricesRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
@@ -52,6 +55,11 @@ public class GetSpeciesPricesRequestHandler extends
         final GetSpeciesPricesRequest request,
         final Simulation simulation
     ) {
+        logger.log(
+            System.Logger.Level.INFO,
+            "Prices requested for simulation {0}",
+            request.getSimulationId()
+        );
         final Map<String, BiomassMarket> marketsById = getBiomassMarketsById(simulation);
         final GetSpeciesPricesResponse.Builder responseBuilder =
             GetSpeciesPricesResponse
