@@ -30,7 +30,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
 import java.io.File;
@@ -38,6 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
+import java.util.Map;
 import java.util.UUID;
 
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
@@ -65,10 +65,12 @@ public class InitialiseRequestHandler
         }
         final Scenario scenario = scenarioLoader.load(scenarioFile);
         final LocalDateTime startDateTime = toLocalDateTime(request.getStartDateTime());
-        setScenarioProperty(
-            scenario,
-            "startingDateTime",
-            new ConstantFactory<>(startDateTime)
+        Map.of(
+            "year", startDateTime.getYear(),
+            "month", startDateTime.getMonthValue(),
+            "day", startDateTime.getDayOfMonth()
+        ).forEach((key, value) ->
+            setScenarioProperty(scenario, "startingDateTime." + key, value)
         );
         logger.log(INFO, "Scenario loaded: {0}", scenarioFile);
 
