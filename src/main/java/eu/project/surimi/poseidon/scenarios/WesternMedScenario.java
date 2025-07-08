@@ -67,6 +67,7 @@ import uk.ac.ox.poseidon.core.*;
 import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentDayOfWeekFactory;
 import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentTimeFactory;
 import uk.ac.ox.poseidon.core.aggregators.MaxFactory;
+import uk.ac.ox.poseidon.core.events.EventClearerFactory;
 import uk.ac.ox.poseidon.core.predicates.AdaptedPredicateFactory;
 import uk.ac.ox.poseidon.core.predicates.InSetFactory;
 import uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory;
@@ -77,15 +78,16 @@ import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
+import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.suppliers.ConstantDoubleSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
+import uk.ac.ox.poseidon.core.time.DateFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeAfterFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
-import uk.ac.ox.poseidon.examples.QuickRunner;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.adaptors.CellElevationFactory;
@@ -109,6 +111,7 @@ import java.time.Period;
 import java.util.List;
 
 import static java.time.DayOfWeek.*;
+import static java.util.stream.IntStream.range;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_DAY_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.time.PeriodFactory.DAILY;
@@ -129,6 +132,10 @@ public class WesternMedScenario extends ScenarioSupplier {
     private static final String VESSEL_SPEED = "9.5 kn"; // as per email on 2025-03-18 08:20
     private static final String VESSEL_HOLD_CAPACITY = "1 t";
     private static final String FLEET_ID = "F0";
+
+    public WesternMedScenario() {
+        super(new DateFactory(2013, 1, 1));
+    }
 
     private Factory<? extends BiomassGrowthRule> biomassGrowthRule =
         new LogisticGrowthRuleFactory(LOGISTIC_GROWTH_RATE);
@@ -208,7 +215,7 @@ public class WesternMedScenario extends ScenarioSupplier {
             pathFinder,
             distance
         );
-    private VesselScopeFactory<? extends FishingGear<Biomass>> fishingGear =
+    private Factory<? extends FishingGear<Biomass>> fishingGear =
         new FixedBiomassProportionGearFactory(
             "PS",
             CATCH_PROPORTION,
@@ -233,6 +240,10 @@ public class WesternMedScenario extends ScenarioSupplier {
             "species",
             species
         );
+    private Factory<? extends BiomassSaleAccumulator> biomassSaleAccumulator =
+        new BiomassSaleAccumulatorFactory();
+    private Factory<? extends FishingActionAccumulator> fishingActionAccumulator =
+        new FishingActionAccumulatorFactory();
     private Factory<? extends Steppable> dailyProcesses =
         new ScheduledRepeatingFactory<>(
             new DateTimeAfterFactory(
@@ -251,7 +262,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                     biomassGrids
                 )
             ),
-            0
+            -1
         );
     private Factory<? extends Steppable> monthlyProcesses =
         new ScheduledRepeatingFactory<>(
@@ -261,17 +272,21 @@ public class WesternMedScenario extends ScenarioSupplier {
             ),
             MONTHLY,
             new SteppableSequenceFactory(
-                new MappedFactory<>(
-                    new BiomassGrowerFactory(
-                        null,
-                        carryingCapacityGrid,
-                        biomassGrowthRule
-                    ),
-                    "biomassGrid",
-                    biomassGrids
-                )
+                new SteppableSequenceFactory(
+                    new MappedFactory<>(
+                        new BiomassGrowerFactory(
+                            null,
+                            carryingCapacityGrid,
+                            biomassGrowthRule
+                        ),
+                        "biomassGrid",
+                        biomassGrids
+                    )
+                ),
+                new EventClearerFactory(biomassSaleAccumulator),
+                new EventClearerFactory(fishingActionAccumulator)
             ),
-            0
+            -2
         );
     private Factory<? extends MarketGrid<Biomass, ? extends Market<Biomass>>> marketGrid =
         new BiomassMarketGridPriceFileFactory(
@@ -292,10 +307,6 @@ public class WesternMedScenario extends ScenarioSupplier {
                 true
             )
         );
-    private Factory<? extends BiomassSaleAccumulator> biomassSaleAccumulator =
-        new BiomassSaleAccumulatorFactory();
-    private Factory<? extends FishingActionAccumulator> fishingActionAccumulator =
-        new FishingActionAccumulatorFactory();
     private VesselScopeFactory<? extends Hold<Biomass>> hold = new StandardBiomassHoldFactory(
         MassFactory.of(VESSEL_HOLD_CAPACITY),
         MassFactory.of("1 kg")
@@ -411,9 +422,17 @@ public class WesternMedScenario extends ScenarioSupplier {
         );
 
     public static void main(final String[] args) {
+        final int numSteps = 12;
+        final Period stepSize = Period.ofMonths(1);
         final Scenario scenario = new WesternMedScenario().get();
         final Path scenarioPath = Path.of("western_med", "scenario.yaml");
         new ScenarioWriter().write(scenario, scenarioPath);
-        new QuickRunner(scenarioPath, Period.ofYears(1), List.of("eu.project.surimi")).run();
+        final Simulation simulation = scenario.newSimulation();
+        simulation.start();
+        final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
+        range(0, numSteps).forEach(__ ->
+            temporalSchedule.stepFor(simulation, stepSize)
+        );
+        simulation.finish();
     }
 }
