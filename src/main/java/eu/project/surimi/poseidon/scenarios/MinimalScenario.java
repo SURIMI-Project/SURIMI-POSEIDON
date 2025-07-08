@@ -186,14 +186,14 @@ public class MinimalScenario extends ScenarioSupplier {
             distance
         );
 
-    private VesselScopeFactory<? extends FishingGear<Biomass>> gear1 =
+    private Factory<? extends FishingGear<Biomass>> gear1 =
         new FixedBiomassProportionGearFactory(
             "G1",
             0.25,
             ONE_HOUR_DURATION_SUPPLIER
         );
 
-    private VesselScopeFactory<? extends FishingGear<Biomass>> gear2 =
+    private Factory<? extends FishingGear<Biomass>> gear2 =
         new FixedBiomassProportionGearFactory(
             "G2",
             0.5,
