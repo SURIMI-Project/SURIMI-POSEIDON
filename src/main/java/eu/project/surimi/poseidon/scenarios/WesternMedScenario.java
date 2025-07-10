@@ -100,6 +100,7 @@ import uk.ac.ox.poseidon.geography.paths.GridPathFinder;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFromFileFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
+import uk.ac.ox.poseidon.io.paths.PathFactory;
 import uk.ac.ox.poseidon.io.tables.CsvTableWriter;
 import uk.ac.ox.poseidon.io.tables.CsvTableWriterFactory;
 import uk.ac.ox.poseidon.regulations.ForbiddenIfFactory;
@@ -144,7 +145,9 @@ public class WesternMedScenario extends ScenarioSupplier {
             DIFFERENTIAL_PERCENTAGE_TO_MOVE,
             PERCENTAGE_LIMIT_ON_DAILY_MOVEMENT
         );
-    private PathFactory inputPath = PathFactory.of("western_med", "data");
+    private PathFactory rootPath = PathFactory.of("western_med");
+    private PathFactory inputPath = rootPath.plus("data");
+    private PathFactory outputPath = rootPath.plus("outputs").simulationFolder();
     private GlobalScopeFactory<? extends ModelGrid> modelGrid =
         new ModelGridWithActiveCellsFromGridFile(
             new CellSetFromGridFileFactory(
@@ -297,7 +300,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         new FinalProcessFactory<>(
             new CsvTableWriterFactory(
                 new FishingActionListenerTableFactory(),
-                PathFactory.of("western_med", "outputs", "fishing_actions.csv"),
+                outputPath.plus("fishing_actions.csv"),
                 true
             )
         );
