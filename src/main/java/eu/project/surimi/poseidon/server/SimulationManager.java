@@ -29,6 +29,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 import java.time.Period;
 import java.util.UUID;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.grpc.Status.*;
 
 public class SimulationManager {
@@ -38,7 +39,7 @@ public class SimulationManager {
 
     public static UUID parseId(final String id) {
         try {
-            return UUID.fromString(id);
+            return UUID.fromString(checkNotNull(id));
         } catch (final IllegalArgumentException e) {
             throw INVALID_ARGUMENT
                 .withDescription("Invalid UUID: " + id)

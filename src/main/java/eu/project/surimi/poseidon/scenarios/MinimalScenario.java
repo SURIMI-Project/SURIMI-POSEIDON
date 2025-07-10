@@ -58,7 +58,6 @@ import uk.ac.ox.poseidon.core.predicates.AlwaysTrueFactory;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.suppliers.ConstantDoubleSupplierFactory;
-import uk.ac.ox.poseidon.core.time.DateFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.core.utils.ListFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
@@ -77,6 +76,7 @@ import uk.ac.ox.poseidon.regulations.PermittedIfFactory;
 
 import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -274,6 +274,6 @@ public class MinimalScenario extends ScenarioSupplier {
         );
 
     public MinimalScenario() {
-        super(new DateFactory(2000, 1, 1));
+        super(LocalDate.of(2000, 1, 1));
     }
 }

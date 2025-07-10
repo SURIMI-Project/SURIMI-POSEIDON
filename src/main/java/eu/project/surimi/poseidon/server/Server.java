@@ -52,6 +52,7 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 
 import static eu.project.surimi.poseidon.server.OpenTelemetryConfiguration.openTelemetry;
@@ -145,7 +146,7 @@ public class Server {
         return new WorkflowService(
             new InitialiseRequestHandler(
                 simulationManager,
-                new ScenarioLoader("eu.project.surimi"),
+                new ScenarioLoader(),
                 scenarioPath.toFile()
             ),
             new SimulateStepRequestHandler(simulationManager),
@@ -154,13 +155,22 @@ public class Server {
         );
     }
 
+    public static Instant toInstant(
+        final Timestamp timestamp
+    ) {
+        return toOffsetDateTime(timestamp).toInstant();
+    }
+
+    private static OffsetDateTime toOffsetDateTime(final Timestamp timestamp) {
+        return Instant
+            .ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos())
+            .atOffset(UTC);
+    }
+
     public static LocalDateTime toLocalDateTime(
         final Timestamp timestamp
     ) {
-        return Instant
-            .ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos())
-            .atOffset(UTC)
-            .toLocalDateTime();
+        return toOffsetDateTime(timestamp).toLocalDateTime();
     }
 
     public static Timestamp toTimestamp(

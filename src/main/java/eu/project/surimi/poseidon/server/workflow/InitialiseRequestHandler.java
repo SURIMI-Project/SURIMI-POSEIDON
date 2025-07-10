@@ -30,17 +30,17 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
-import java.util.Map;
+import java.util.Date;
 import java.util.UUID;
 
-import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
+import static eu.project.surimi.poseidon.server.Server.toInstant;
 import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
 
@@ -64,23 +64,19 @@ public class InitialiseRequestHandler
                 .asRuntimeException();
         }
         final Scenario scenario = scenarioLoader.load(scenarioFile);
-        final LocalDateTime startDateTime = toLocalDateTime(request.getStartDateTime());
-        Map.of(
-            "year", startDateTime.getYear(),
-            "month", startDateTime.getMonthValue(),
-            "day", startDateTime.getDayOfMonth()
-        ).forEach((key, value) ->
-            setScenarioProperty(scenario, "startingDateTime." + key, value)
-        );
+        scenario.setStartingDateTime(Date.from(toInstant(request.getStartDateTime())));
+
         logger.log(INFO, "Scenario loaded: {0}", scenarioFile);
 
         final Simulation simulation = scenario.newSimulation();
         final Period stepSize = parsePeriod(request.getStepSize());
         simulation.start();
-        simulation.getTemporalSchedule().stepUntil(simulation, startDateTime);
+        final TemporalSchedule schedule = simulation.getTemporalSchedule();
+        schedule.stepUntil(simulation, schedule.getStartingDateTime());
         logger.log(
             INFO, "Simulation {0} started at {1}",
-            simulationId, simulation.getTemporalSchedule().getDateTime()
+            simulationId,
+            schedule.getDateTime()
         );
         simulationManager.put(
             simulationId,

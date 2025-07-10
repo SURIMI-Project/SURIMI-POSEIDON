@@ -84,8 +84,7 @@ import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
-import uk.ac.ox.poseidon.core.time.DateFactory;
-import uk.ac.ox.poseidon.core.time.DateTimeAfterFactory;
+import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
@@ -107,6 +106,7 @@ import uk.ac.ox.poseidon.regulations.ForbiddenIfFactory;
 import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFactory;
 
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 
@@ -134,7 +134,7 @@ public class WesternMedScenario extends ScenarioSupplier {
     private static final String FLEET_ID = "F0";
 
     public WesternMedScenario() {
-        super(new DateFactory(2013, 1, 1));
+        super(LocalDate.of(2013, 1, 1));
     }
 
     private Factory<? extends BiomassGrowthRule> biomassGrowthRule =
@@ -246,10 +246,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         new FishingActionAccumulatorFactory();
     private Factory<? extends Steppable> dailyProcesses =
         new ScheduledRepeatingFactory<>(
-            new DateTimeAfterFactory(
-                startingDateTime,
-                DAILY
-            ),
+            new DateTimeAfterStartingFactory(DAILY),
             DAILY,
             new SteppableSequenceFactory(
                 new MappedFactory<>(
@@ -266,10 +263,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         );
     private Factory<? extends Steppable> monthlyProcesses =
         new ScheduledRepeatingFactory<>(
-            new DateTimeAfterFactory(
-                startingDateTime,
-                MONTHLY
-            ),
+            new DateTimeAfterStartingFactory(MONTHLY),
             MONTHLY,
             new SteppableSequenceFactory(
                 new SteppableSequenceFactory(
