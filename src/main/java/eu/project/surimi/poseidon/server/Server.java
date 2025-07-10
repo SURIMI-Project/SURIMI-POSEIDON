@@ -146,7 +146,7 @@ public class Server {
         return new WorkflowService(
             new InitialiseRequestHandler(
                 simulationManager,
-                new ScenarioLoader(),
+                new ScenarioLoader("eu.project.surimi"),
                 scenarioPath.toFile()
             ),
             new SimulateStepRequestHandler(simulationManager),
