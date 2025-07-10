@@ -68,7 +68,7 @@ public class InitialiseRequestHandler
 
         logger.log(INFO, "Scenario loaded: {0}", scenarioFile);
 
-        final Simulation simulation = scenario.newSimulation();
+        final Simulation simulation = scenario.newSimulation(simulationId);
         final Period stepSize = parsePeriod(request.getStepSize());
         simulation.start();
         final TemporalSchedule schedule = simulation.getTemporalSchedule();
