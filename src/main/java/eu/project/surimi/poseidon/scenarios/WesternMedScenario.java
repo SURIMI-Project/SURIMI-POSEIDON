@@ -101,7 +101,6 @@ import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFromFileFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 import uk.ac.ox.poseidon.io.paths.PathFactory;
-import uk.ac.ox.poseidon.io.tables.CsvTableWriter;
 import uk.ac.ox.poseidon.io.tables.CsvTableWriterFactory;
 import uk.ac.ox.poseidon.regulations.ForbiddenIfFactory;
 import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFactory;
@@ -281,7 +280,13 @@ public class WesternMedScenario extends ScenarioSupplier {
                     )
                 ),
                 new EventClearerFactory(biomassSaleAccumulator),
-                new EventClearerFactory(fishingActionAccumulator)
+                new EventClearerFactory(fishingActionAccumulator),
+                new CsvTableWriterFactory(
+                    new FishingActionListenerTableFactory(),
+                    outputPath.plus("fishing_actions.csv"),
+                    true,
+                    true
+                )
             ),
             -2
         );
@@ -295,14 +300,6 @@ public class WesternMedScenario extends ScenarioSupplier {
             "measurement_unit",
             portGrid,
             species
-        );
-    private Factory<? extends CsvTableWriter> catchTableWriter =
-        new FinalProcessFactory<>(
-            new CsvTableWriterFactory(
-                new FishingActionListenerTableFactory(),
-                outputPath.plus("fishing_actions.csv"),
-                true
-            )
         );
     private VesselScopeFactory<? extends Hold<Biomass>> hold = new StandardBiomassHoldFactory(
         MassFactory.of(VESSEL_HOLD_CAPACITY),
