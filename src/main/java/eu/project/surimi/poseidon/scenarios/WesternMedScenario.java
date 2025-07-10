@@ -99,6 +99,7 @@ import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
 import uk.ac.ox.poseidon.geography.paths.GridPathFinder;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFromFileFactory;
+import uk.ac.ox.poseidon.io.DirectoryRemoverFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 import uk.ac.ox.poseidon.io.paths.PathFactory;
 import uk.ac.ox.poseidon.io.tables.CsvTableWriterFactory;
@@ -413,6 +414,11 @@ public class WesternMedScenario extends ScenarioSupplier {
                 vessels,
                 new VesselScopeAdaptor<>(new ConstantFactory<>(FLEET_ID))
             )
+        );
+
+    private Factory<Steppable> directoryRemover =
+        new FinalProcessFactory<>(
+            new DirectoryRemoverFactory(outputPath, false)
         );
 
     public static void main(final String[] args) {
