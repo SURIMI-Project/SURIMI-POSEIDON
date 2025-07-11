@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -64,25 +63,21 @@ class WorkflowServiceTest extends ServiceTest {
         assertEquals(simulationId2, response2.getSimulationId());
     }
 
-    @Test
-    void canStartManySimulations() {
-        final List<String> simulations = Stream
-            .generate(this::initialiseSimulation)
-            .limit(10)
-            .toList();
-
-    }
-
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
-    void canRunForALongTime() {
-        final String simulationId = initialiseSimulation();
-        final SimulateStepRequest simulateStepRequest = SimulateStepRequest
-            .newBuilder()
-            .setSimulationId(simulationId)
-            .build();
-        range(0, 50 * 12).forEach(i ->
-            workflowStub.simulateStep(simulateStepRequest)
+    void canStartAndStepManySimulations() {
+        final int numSimulations = 100;
+        final List<String> simulations = Stream
+            .generate(this::initialiseSimulation)
+            .limit(numSimulations)
+            .toList();
+        simulations.forEach(simulationId ->
+            workflowStub.simulateStep(
+                SimulateStepRequest
+                    .newBuilder()
+                    .setSimulationId(simulationId)
+                    .build()
+            )
         );
     }
 
