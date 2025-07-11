@@ -43,6 +43,7 @@ import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
 import static tech.units.indriya.unit.Units.KILOGRAM;
+import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class GetCatchDispositionRequestHandler
     extends WithSimulationRequestHandler<GetCatchDispositionRequest, GetCatchDispositionResponse> {
@@ -140,21 +141,11 @@ public class GetCatchDispositionRequestHandler
         final GetCatchDispositionRequest request,
         final Simulation simulation
     ) {
-        logger.log(
-            INFO,
-            "Catch disposition requested for simulation {0}",
-            request.getSimulationId()
-        );
+        log(logger, INFO, simulation, "Catch disposition requested");
         final CatchDispositionSummary.Builder catchDispositionSummaryBuilder =
             CatchDispositionSummary
                 .newBuilder()
                 .setMeasurementUnit(KILOGRAM.getSymbol());
-
-        final GetCatchDispositionResponse.Builder responseBuilder =
-            GetCatchDispositionResponse
-                .newBuilder()
-                .setSimulationId(request.getSimulationId())
-                .setCatchDispositionSummary(catchDispositionSummaryBuilder);
 
         extractFishingActionData(
             simulation,
@@ -178,7 +169,11 @@ public class GetCatchDispositionRequestHandler
                         .setDeadDiscards(disposition.deadDiscardsInKg));
             });
         });
-        return responseBuilder.build();
+        return GetCatchDispositionResponse
+            .newBuilder()
+            .setSimulationId(request.getSimulationId())
+            .setCatchDispositionSummary(catchDispositionSummaryBuilder)
+            .build();
     }
 
     record Disposition(

@@ -45,6 +45,7 @@ import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
 import static tech.units.indriya.unit.Units.KILOGRAM;
+import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class GetSalesRequestHandler extends
     WithSimulationRequestHandler<GetSalesRequest, GetSalesResponse> {
@@ -83,7 +84,7 @@ public class GetSalesRequestHandler extends
         final GetSalesRequest request,
         final Simulation simulation
     ) {
-        logger.log(INFO, "Sales requested for simulation {0}", request.getSimulationId());
+        log(logger, INFO, simulation, "Sales requested");
         final Range<LocalDateTime> dateTimeRange = Range.closed(
             toLocalDateTime(request.getStartDateTime()),
             toLocalDateTime(request.getEndDateTime())

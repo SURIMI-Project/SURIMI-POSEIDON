@@ -38,6 +38,7 @@ import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.INFO;
 import static tech.units.indriya.unit.Units.KILOGRAM;
+import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class GetBiomassRequestHandler extends
     WithSimulationRequestHandler<GetBiomassRequest, GetBiomassResponse> {
@@ -69,7 +70,7 @@ public class GetBiomassRequestHandler extends
         final GetBiomassRequest request,
         final Simulation simulation
     ) {
-        logger.log(INFO, "Biomass requested for simulation {0}", request.getSimulationId());
+        log(logger, INFO, simulation, "Biomass requested");
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
         final BiomassSummary.Builder biomassSummaryBuilder =
             BiomassSummary

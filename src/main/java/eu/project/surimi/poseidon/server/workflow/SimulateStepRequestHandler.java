@@ -27,13 +27,12 @@ import build.buf.gen.surimi.v1.SimulateStepResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 
-import java.time.LocalDateTime;
 import java.time.Period;
 
 import static java.lang.System.Logger.Level.INFO;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
+import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class SimulateStepRequestHandler extends
     WithSimulationRequestHandler<SimulateStepRequest, SimulateStepResponse> {
@@ -56,12 +55,15 @@ public class SimulateStepRequestHandler extends
         final Simulation simulation
     ) {
         final Period stepSize = simulationManager.getSimulationProperties(simulation).stepSize();
-        final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
-        temporalSchedule.stepFor(simulation, stepSize);
-        final LocalDateTime dateTime = temporalSchedule.getDateTime();
-        logger.log(
-            INFO, "Advanced simulation {0} by {1} to {2}\nMemory usage: {3}",
-            request.getSimulationId(), stepSize, dateTime, memoryUsage()
+        log(logger, INFO, simulation, "Step requested");
+        simulation.getTemporalSchedule().stepFor(simulation, stepSize);
+        log(
+            logger,
+            INFO,
+            simulation,
+            "Stepped by {0}\nMemory usage: {1}",
+            stepSize,
+            memoryUsage()
         );
         return SimulateStepResponse
             .newBuilder()

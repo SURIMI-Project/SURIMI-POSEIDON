@@ -30,7 +30,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
 import java.io.File;
@@ -43,6 +42,7 @@ import java.util.UUID;
 import static eu.project.surimi.poseidon.server.Server.toInstant;
 import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
+import static uk.ac.ox.poseidon.core.Simulation.log;
 
 @RequiredArgsConstructor
 public class InitialiseRequestHandler
@@ -66,18 +66,13 @@ public class InitialiseRequestHandler
         final Scenario scenario = scenarioLoader.load(scenarioFile);
         scenario.setStartingDateTime(Date.from(toInstant(request.getStartDateTime())));
 
-        logger.log(INFO, "Scenario loaded: {0}", scenarioFile);
+        logger.log(INFO, "Scenario loaded: {0}", scenarioFile.toPath().toAbsolutePath());
 
         final Simulation simulation = scenario.newSimulation(simulationId);
         final Period stepSize = parsePeriod(request.getStepSize());
         simulation.start();
-        final TemporalSchedule schedule = simulation.getTemporalSchedule();
-        schedule.stepUntil(simulation, schedule.getStartingDateTime());
-        logger.log(
-            INFO, "Simulation {0} started at {1}",
-            simulationId,
-            schedule.getDateTime()
-        );
+        simulation.schedule.step(simulation);
+        log(logger, INFO, simulation, "Simulation started");
         simulationManager.put(
             simulationId,
             simulation,
