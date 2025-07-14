@@ -79,7 +79,7 @@ public class MarketServiceTest extends ServiceTest {
             .collect(groupingBy(
                 SpeciesPrice::getMarketCode,
                 toMap(
-                    SpeciesPrice::getSpeciesCode,
+                    sp -> sp.getSpecies().getSpeciesCode(),
                     sp -> new Price(
                         Money.of(CurrencyUnit.of(sp.getCurrency()), sp.getPrice()),
                         parseMassUnit(sp.getMeasurementUnit())

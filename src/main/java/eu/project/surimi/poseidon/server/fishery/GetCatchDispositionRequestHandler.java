@@ -22,10 +22,7 @@
 
 package eu.project.surimi.poseidon.server.fishery;
 
-import build.buf.gen.surimi.v1.CatchDispositionSummary;
-import build.buf.gen.surimi.v1.DispositionGrid;
-import build.buf.gen.surimi.v1.GetCatchDispositionRequest;
-import build.buf.gen.surimi.v1.GetCatchDispositionResponse;
+import build.buf.gen.surimi.v1.*;
 import com.google.common.collect.Range;
 import com.google.protobuf.Timestamp;
 import eu.project.surimi.poseidon.server.SimulationManager;
@@ -157,8 +154,17 @@ public class GetCatchDispositionRequestHandler
                     dispositionGridsBuilder =
                     catchDispositionSummaryBuilder
                         .addDispositionGridsBuilder()
-                        .setGearCode(gearCode)
-                        .setSpeciesCode(species.getCode());
+                        .setFleetSegment(
+                            FleetSegment
+                                .newBuilder()
+                                .setGearCode(gearCode)
+                                .build()
+                        )
+                        .setSpecies(
+                            build.buf.gen.surimi.v1.Species
+                                .newBuilder()
+                                .setSpeciesCode(species.getCode())
+                        );
                 coordinateData.forEach((coordinate, disposition) ->
                     dispositionGridsBuilder
                         .addDispositionCellsBuilder()

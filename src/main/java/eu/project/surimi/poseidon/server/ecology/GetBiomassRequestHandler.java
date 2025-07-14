@@ -80,7 +80,11 @@ public class GetBiomassRequestHandler extends
             final build.buf.gen.surimi.v1.BiomassGrid.Builder gridBuilder =
                 build.buf.gen.surimi.v1.BiomassGrid
                     .newBuilder()
-                    .setSpeciesCode(grid.getSpecies().getCode());
+                    .setSpecies(
+                        build.buf.gen.surimi.v1.Species.newBuilder().setSpeciesCode(
+                            grid.getSpecies().getCode()
+                        )
+                    );
             bathymetricGrid.getActiveWaterCells().forEach(cell -> {
                 final Coordinate coordinate =
                     bathymetricGrid.getModelGrid().toCoordinate(cell);

@@ -85,7 +85,7 @@ public class UpdateSpeciesPricesRequestHandler extends
             );
             final Species species = getOrThrow(
                 speciesByCode,
-                price.getSpeciesCode(),
+                price.getSpecies().getSpeciesCode(),
                 "Species"
             );
             final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());

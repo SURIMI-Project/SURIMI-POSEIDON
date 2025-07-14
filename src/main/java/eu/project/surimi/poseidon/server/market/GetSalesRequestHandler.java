@@ -22,10 +22,7 @@
 
 package eu.project.surimi.poseidon.server.market;
 
-import build.buf.gen.surimi.v1.GetSalesRequest;
-import build.buf.gen.surimi.v1.GetSalesResponse;
-import build.buf.gen.surimi.v1.Sale;
-import build.buf.gen.surimi.v1.SalesSummary;
+import build.buf.gen.surimi.v1.*;
 import com.google.common.collect.Range;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
@@ -67,8 +64,11 @@ public class GetSalesRequestHandler extends
             .reduce(Money::plus)
             .map(money -> money.getAmount().doubleValue())
             .orElse(0.0);
+
         return Sale.newBuilder()
-            .setSpeciesCode(speciesCode)
+            .setSpecies(build.buf.gen.surimi.v1.Species.newBuilder().setSpeciesCode(speciesCode))
+            // TODO: the fleet segment should not just be a hardcoded gear code
+            .setFleetSegment(FleetSegment.newBuilder().setGearCode("PS").build())
             .setQuantity(totalKg)
             .setValue(totalValue)
             .build();
@@ -144,6 +144,11 @@ public class GetSalesRequestHandler extends
             .build();
     }
 
-    private record SaleEntry(Market<?> market, Species species, Biomass biomass, Money value) {}
+    private record SaleEntry(
+        Market<?> market,
+        Species species,
+        Biomass biomass,
+        Money value
+    ) {}
 
 }

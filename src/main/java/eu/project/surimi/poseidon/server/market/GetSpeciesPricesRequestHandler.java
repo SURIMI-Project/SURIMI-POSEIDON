@@ -70,7 +70,11 @@ public class GetSpeciesPricesRequestHandler extends
                 responseBuilder.addPrices(
                     SpeciesPrice.newBuilder()
                         .setMarketCode(marketCode)
-                        .setSpeciesCode(species.getCode())
+                        .setSpecies(
+                            build.buf.gen.surimi.v1.Species
+                                .newBuilder()
+                                .setSpeciesCode(species.getCode())
+                        )
                         .setCurrency(price.getAmount().getCurrencyUnit().getCode())
                         .setPrice(price.getAmount().getAmount().doubleValue())
                         .setMeasurementUnit(price.getBiomassUnit().getSymbol())

@@ -81,7 +81,10 @@ public class EcologyServiceTest extends ServiceTest {
             .getBiomassGridsList()
             .stream()
             .collect(toMap(
-                BiomassGrid::getSpeciesCode,
+                biomassGrid ->
+                    biomassGrid
+                        .getSpecies()
+                        .getSpeciesCode(),
                 biomassGrid ->
                     biomassGrid
                         .getBiomassCellsList()
@@ -109,7 +112,11 @@ public class EcologyServiceTest extends ServiceTest {
                             .addBiomassGrids(
                                 BiomassGrid
                                     .newBuilder()
-                                    .setSpeciesCode(SPECIES_CODES.getFirst())
+                                    .setSpecies(
+                                        Species
+                                            .newBuilder()
+                                            .setSpeciesCode(SPECIES_CODES.getFirst())
+                                    )
                                     .addBiomassCells(
                                         BiomassCell
                                             .newBuilder()
@@ -128,7 +135,9 @@ public class EcologyServiceTest extends ServiceTest {
                             .addBiomassGrids(
                                 BiomassGrid
                                     .newBuilder()
-                                    .setSpeciesCode(SPECIES_CODES.getLast())
+                                    .setSpecies(
+                                        Species.newBuilder().setSpeciesCode(SPECIES_CODES.getLast())
+                                    )
                                     .addBiomassCells(
                                         BiomassCell
                                             .newBuilder()
