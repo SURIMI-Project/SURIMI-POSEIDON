@@ -64,7 +64,7 @@ public class OpenTelemetryConfiguration {
             .builder()
             .addSpanProcessor(spanProcessor)
             .setResource(Resource.create(Attributes.of(
-                AttributeKey.stringKey("service.name"), "poseidon-server"
+                AttributeKey.stringKey("service.name"), "surimi-poseidon"
             )))
             .build();
     }
