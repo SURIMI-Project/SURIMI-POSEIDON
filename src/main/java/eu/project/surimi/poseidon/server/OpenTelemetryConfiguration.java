@@ -25,6 +25,8 @@ package eu.project.surimi.poseidon.server;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
@@ -43,12 +45,18 @@ public class OpenTelemetryConfiguration {
     public static final OpenTelemetry openTelemetry = initOpenTelemetry();
 
     public static OpenTelemetry initOpenTelemetry() {
+
         final SdkTracerProvider tracerProvider =
             Optional.ofNullable(System.getenv().get("OTEL_EXPORTER_OTLP_ENDPOINT"))
                 .map(OpenTelemetryConfiguration::createTracerProvider)
                 .orElseGet(() -> SdkTracerProvider.builder().build());
+
+        final ContextPropagators contextPropagators =
+            ContextPropagators.create(W3CTraceContextPropagator.getInstance());
+
         return OpenTelemetrySdk.builder()
             .setTracerProvider(tracerProvider)
+            .setPropagators(contextPropagators)
             .buildAndRegisterGlobal();
     }
 
