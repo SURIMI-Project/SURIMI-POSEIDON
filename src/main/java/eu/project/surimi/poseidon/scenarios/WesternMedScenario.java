@@ -84,6 +84,7 @@ import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
+import uk.ac.ox.poseidon.core.time.DateFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
@@ -231,7 +232,8 @@ public class WesternMedScenario extends ScenarioSupplier {
         new SpeciesFromFileFactory(
             inputPath.plus("species.csv"),
             "species_code",
-            "species_name"
+            "species_name",
+            "life_stage"
         );
     private Factory<List<BiomassGrid>> biomassGrids =
         new MappedFactory<>(
@@ -294,11 +296,15 @@ public class WesternMedScenario extends ScenarioSupplier {
     private Factory<? extends MarketGrid<Biomass, ? extends Market<Biomass>>> marketGrid =
         new BiomassMarketGridPriceFileFactory(
             inputPath.plus("prices.csv"),
+            "date",
             "market_code",
             "species_code",
+            "category_code",
             "price",
             "currency",
             "measurement_unit",
+            "PS",
+            new DateFactory(2013, 1, 1),
             portGrid,
             species
         );
