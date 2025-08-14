@@ -66,20 +66,24 @@ public class GetSpeciesPricesRequestHandler extends
                 .newBuilder()
                 .setSimulationId(request.getSimulationId());
         marketsById.forEach((marketCode, biomassMarket) ->
-            biomassMarket.getPrices().forEach((species, price) ->
-                responseBuilder.addPrices(
-                    SpeciesPrice.newBuilder()
-                        .setMarketCode(marketCode)
-                        .setSpecies(
-                            build.buf.gen.surimi.v1.Species
-                                .newBuilder()
-                                .setSpeciesCode(species.getCode())
-                        )
-                        .setCurrency(price.getAmount().getCurrencyUnit().getCode())
-                        .setPrice(price.getAmount().getAmount().doubleValue())
-                        .setMeasurementUnit(price.getBiomassUnit().getSymbol())
-                        .setGearCode("PS") // TODO
-                        .setTimestamp(toTimestamp(simulation.getTemporalSchedule().getDateTime()))
+            biomassMarket.getPrices().forEach((catchCategory, pricePerSpecies) ->
+                pricePerSpecies.forEach((species, price) ->
+                    responseBuilder.addPrices(
+                        SpeciesPrice.newBuilder()
+                            .setMarketCode(marketCode)
+                            .setSpecies(
+                                build.buf.gen.surimi.v1.Species
+                                    .newBuilder()
+                                    .setSpeciesCode(species.getCode())
+                            )
+                            .setCurrency(price.getAmount().getCurrencyUnit().getCode())
+                            .setPrice(price.getAmount().getAmount().doubleValue())
+                            .setMeasurementUnit(price.getBiomassUnit().getSymbol())
+                            .setGearCode(catchCategory.getCode())
+                            .setTimestamp(
+                                toTimestamp(simulation.getTemporalSchedule().getDateTime())
+                            )
+                    )
                 )
             )
         );

@@ -29,6 +29,7 @@ import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.IllegalCurrencyException;
 import org.joda.money.Money;
+import uk.ac.ox.poseidon.agents.catches.CatchCategory;
 import uk.ac.ox.poseidon.agents.market.BiomassMarket;
 import uk.ac.ox.poseidon.agents.market.Price;
 import uk.ac.ox.poseidon.biology.species.Species;
@@ -95,7 +96,7 @@ public class UpdateSpeciesPricesRequestHandler extends
                     Money.of(currencyUnit, price.getPrice(), RoundingMode.HALF_EVEN),
                     biomassUnit
                 );
-            market.setPrice(species, marketPrice);
+            market.setPrice(new CatchCategory(price.getGearCode()), species, marketPrice);
             logger.log(
                 INFO,
                 "Updated price of species {0} at port market {1} to {2}/{3}.",

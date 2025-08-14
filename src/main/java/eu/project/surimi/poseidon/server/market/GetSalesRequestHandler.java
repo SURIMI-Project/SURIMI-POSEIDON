@@ -97,14 +97,13 @@ public class GetSalesRequestHandler extends
                 .filter(sale -> dateTimeRange.contains(sale.getDateTime()))
                 .flatMap(sale ->
                     sale
-                        .getSold()
-                        .cellSet()
+                        .getItems()
                         .stream()
-                        .map(cell -> new SaleEntry(
+                        .map(item -> new SaleEntry(
                             sale.getMarket(),
-                            cell.getRowKey(),
-                            cell.getColumnKey(),
-                            cell.getValue()
+                            item.getSpecies(),
+                            item.getContent().asBiomass(),
+                            item.getPrice()
                         ))
                 ).collect(
                     groupingBy(

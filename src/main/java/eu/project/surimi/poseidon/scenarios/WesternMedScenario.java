@@ -45,6 +45,8 @@ import uk.ac.ox.poseidon.agents.behaviours.port.HomeBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.LandingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.strategy.ThereAndBackBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.travel.TravellingAlongPathBehaviourFactory;
+import uk.ac.ox.poseidon.agents.catches.CatchCategoryFactory;
+import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
@@ -84,7 +86,6 @@ import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
-import uk.ac.ox.poseidon.core.time.DateFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
@@ -134,6 +135,7 @@ public class WesternMedScenario extends ScenarioSupplier {
     private static final String VESSEL_SPEED = "9.5 kn"; // as per email on 2025-03-18 08:20
     private static final String VESSEL_HOLD_CAPACITY = "1 t";
     private static final String FLEET_ID = "F0";
+    private static final String PURSE_SEINE_GEAR_CODE = "PS";
 
     public WesternMedScenario() {
         super(LocalDate.of(2013, 1, 1));
@@ -221,7 +223,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         );
     private Factory<? extends FishingGear<Biomass>> fishingGear =
         new FixedBiomassProportionGearFactory(
-            "PS",
+            PURSE_SEINE_GEAR_CODE,
             CATCH_PROPORTION,
             ONE_HOUR_DURATION_SUPPLIER
         );
@@ -297,20 +299,19 @@ public class WesternMedScenario extends ScenarioSupplier {
         new BiomassMarketGridPriceFileFactory(
             inputPath.plus("prices.csv"),
             "date",
-            "market_code",
+            "port_code",
             "species_code",
             "category_code",
             "price",
             "currency",
             "measurement_unit",
-            "PS",
-            new DateFactory(2013, 1, 1),
             portGrid,
             species
         );
     private VesselScopeFactory<? extends Hold<Biomass>> hold = new StandardBiomassHoldFactory(
         MassFactory.of(VESSEL_HOLD_CAPACITY),
-        MassFactory.of("1 kg")
+        MassFactory.of("1 kg"),
+        new UniformCatchCategoriserFactory<>(new CatchCategoryFactory(PURSE_SEINE_GEAR_CODE))
     );
     private VesselScopeFactory<? extends MutableOptionValues<Int2D>> optionValues =
         new ExponentialMovingAverageOptionValuesFactory<>(LEARNING_ALPHA);
@@ -428,7 +429,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         );
 
     public static void main(final String[] args) {
-        final int numSteps = 12;
+        final int numSteps = 24;
         final Period stepSize = Period.ofMonths(1);
         final Scenario scenario = new WesternMedScenario().get();
         final Path scenarioPath = Path.of("western_med", "scenario.yaml");

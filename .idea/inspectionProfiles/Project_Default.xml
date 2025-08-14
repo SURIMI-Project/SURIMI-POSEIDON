@@ -8,6 +8,7 @@
           <option value="jakarta.*" />
           <option value="javax.*" />
           <option value="lombok.Data" />
+          <option value="lombok.Value" />
           <option value="org.springframework.*" />
         </list>
       </option>
