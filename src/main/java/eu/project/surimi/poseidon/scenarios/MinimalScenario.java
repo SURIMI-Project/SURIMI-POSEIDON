@@ -36,6 +36,8 @@ import uk.ac.ox.poseidon.agents.behaviours.port.HomeBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.LandingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.strategy.ThereAndBackBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.travel.TravellingAlongPathBehaviourFactory;
+import uk.ac.ox.poseidon.agents.catches.CatchCategoryFactory;
+import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
@@ -80,17 +82,20 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toMap;
+import static java.util.Collections.nCopies;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.*;
 
+@SuppressWarnings("SequencedCollectionMethodCanBeUsed")
 @Getter
 @Setter
 public class MinimalScenario extends ScenarioSupplier {
 
     public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
+    public static final List<String> GEAR_CODES = List.of("G1", "G2");
+    public static final int NUM_PRICES = GEAR_CODES.size() * SPECIES_CODES.size();
     public static final Quantity<Mass> CARRYING_CAPACITY = getQuantity(1, TONNE);
 
     ModelGridFactory modelGrid =
@@ -150,18 +155,45 @@ public class MinimalScenario extends ScenarioSupplier {
                 null,
                 null
             ),
-            List.of("port", "pricesPerSpecies"),
+            List.of("port", "marketCode", "pricesEntries"),
             List.of(
                 new ListFactory<>(port1, port2),
+                new ListFactory<>("M1", "M2"),
                 new ListFactory<>(
                     Stream.of(1, 2)
-                        .map(i ->
-                            new PricePerSpeciesFactory(
-                                species,
-                                range(0, SPECIES_CODES.size()).boxed().collect(toMap(
-                                    SPECIES_CODES::get,
-                                    j -> new PriceFactory(i + j * 0.1, "GBP", "kg")
-                                ))
+                        .map(portIndex ->
+                            new MappedFactory<>(
+                                new PriceEntryFactory(),
+                                List.of("catchCategory", "species", "price"),
+                                List.of(
+                                    new ListFactory<>(
+                                        GEAR_CODES
+                                            .stream()
+                                            .map(CatchCategoryFactory::new)
+                                            .flatMap(cc ->
+                                                nCopies(SPECIES_CODES.size(), cc).stream()
+                                            )
+                                            .toList()
+                                    ),
+                                    new ListFactory<>(
+                                        GEAR_CODES
+                                            .stream()
+                                            .flatMap(__ ->
+                                                SPECIES_CODES.stream().map(SpeciesFactory::new)
+                                            )
+                                            .toList()
+                                    ),
+                                    new ListFactory<>(
+                                        range(0, NUM_PRICES)
+                                            .boxed()
+                                            .map(i -> new PriceFactory(
+                                                portIndex + i * 0.1,
+                                                "GBP",
+                                                "kg"
+                                            ))
+                                            .toList()
+                                    )
+                                )
                             )
                         )
                         .toList()
@@ -171,7 +203,9 @@ public class MinimalScenario extends ScenarioSupplier {
     private Factory<? extends VesselField> vesselField =
         new VesselFieldFactory(modelGrid);
     private VesselScopeFactory<? extends Hold<Biomass>> hold =
-        new InfiniteBiomassHoldFactory();
+        new InfiniteBiomassHoldFactory(
+            new UniformCatchCategoriserFactory<>(new CatchCategoryFactory("X"))
+        );
     private Factory<? extends DistanceCalculator> distance =
         new HaversineDistanceCalculatorFactory(modelGrid);
     private Factory<? extends GridPathFinder> pathFinder =
@@ -188,14 +222,14 @@ public class MinimalScenario extends ScenarioSupplier {
 
     private Factory<? extends FishingGear<Biomass>> gear1 =
         new FixedBiomassProportionGearFactory(
-            "G1",
+            GEAR_CODES.get(0),
             0.25,
             ONE_HOUR_DURATION_SUPPLIER
         );
 
     private Factory<? extends FishingGear<Biomass>> gear2 =
         new FixedBiomassProportionGearFactory(
-            "G2",
+            GEAR_CODES.get(1),
             0.5,
             ONE_HOUR_DURATION_SUPPLIER
         );
