@@ -28,6 +28,7 @@ import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
+import uk.ac.ox.poseidon.agents.catches.CatchCategory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
 import uk.ac.ox.poseidon.agents.market.Market;
 import uk.ac.ox.poseidon.biology.biomass.Biomass;
@@ -55,7 +56,9 @@ public class GetSalesRequestHandler extends
     }
 
     private static Sale summariseSale(final List<SaleEntry> saleEntries) {
-        final String speciesCode = saleEntries.getFirst().species.getCode();
+        final SaleEntry firstEntry = saleEntries.getFirst();
+        final String speciesCode = firstEntry.species.getCode();
+        final String catchCategoryCode = firstEntry.catchCategory.getCode();
         final double totalKg = saleEntries.stream()
             .mapToDouble(saleEntry -> saleEntry.biomass.asKg())
             .sum();
@@ -64,11 +67,9 @@ public class GetSalesRequestHandler extends
             .reduce(Money::plus)
             .map(money -> money.getAmount().doubleValue())
             .orElse(0.0);
-
         return Sale.newBuilder()
             .setSpecies(build.buf.gen.surimi.v1.Species.newBuilder().setSpeciesCode(speciesCode))
-            // TODO: the fleet segment should not just be a hardcoded gear code
-            .setFleetSegment(FleetSegment.newBuilder().setGearCode("PS").build())
+            .setFleetSegment(FleetSegment.newBuilder().setGearCode(catchCategoryCode).build())
             .setQuantity(totalKg)
             .setValue(totalValue)
             .build();
@@ -89,7 +90,7 @@ public class GetSalesRequestHandler extends
             toLocalDateTime(request.getStartDateTime()),
             toLocalDateTime(request.getEndDateTime())
         );
-        record Key(Market<?> market, CurrencyUnit currencyUnit) {}
+        record Key(Market<?> market, CatchCategory catchCategory, CurrencyUnit currencyUnit) {}
         final List<SalesSummary> saleSummaries =
             simulation
                 .getComponent(BiomassSaleAccumulator.class)
@@ -101,6 +102,7 @@ public class GetSalesRequestHandler extends
                         .stream()
                         .map(item -> new SaleEntry(
                             sale.getMarket(),
+                            item.getCategory(),
                             item.getSpecies(),
                             item.getContent().asBiomass(),
                             item.getPrice()
@@ -109,6 +111,7 @@ public class GetSalesRequestHandler extends
                     groupingBy(
                         saleEntry -> new Key(
                             saleEntry.market,
+                            saleEntry.catchCategory,
                             saleEntry.value.getCurrencyUnit()
                         ),
                         collectingAndThen(
@@ -145,6 +148,7 @@ public class GetSalesRequestHandler extends
 
     private record SaleEntry(
         Market<?> market,
+        CatchCategory catchCategory,
         Species species,
         Biomass biomass,
         Money value
