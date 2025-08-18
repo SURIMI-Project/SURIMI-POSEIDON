@@ -32,6 +32,8 @@ import uk.ac.ox.poseidon.agents.behaviours.disposition.CompositeDispositionProce
 import uk.ac.ox.poseidon.agents.behaviours.disposition.GeneralDiscardMortalityFactory;
 import uk.ac.ox.poseidon.agents.behaviours.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.DefaultFishingBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulator;
+import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.HomeBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.LandingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.strategy.ThereAndBackBehaviourFactory;
@@ -93,6 +95,7 @@ import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.*;
 @Setter
 public class MinimalScenario extends ScenarioSupplier {
 
+    public static final LocalDate START_DATE = LocalDate.of(2000, 1, 1);
     public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
     public static final List<String> GEAR_CODES = List.of("G1", "G2");
     public static final int NUM_PRICES = GEAR_CODES.size() * SPECIES_CODES.size();
@@ -307,7 +310,10 @@ public class MinimalScenario extends ScenarioSupplier {
             )
         );
 
+    private Factory<? extends FishingActionAccumulator> fishingActionAccumulator =
+        new FishingActionAccumulatorFactory();
+
     public MinimalScenario() {
-        super(LocalDate.of(2000, 1, 1));
+        super(START_DATE);
     }
 }

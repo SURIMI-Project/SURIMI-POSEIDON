@@ -89,6 +89,14 @@ public abstract class ServiceTest {
         return initialiseSimulation(UUID.randomUUID().toString()).getSimulationId();
     }
 
+    protected SimulateStepResponse step(final String simulationId) {
+        final SimulateStepRequest simulateStepRequest = SimulateStepRequest
+            .newBuilder()
+            .setSimulationId(simulationId)
+            .build();
+        return workflowStub.simulateStep(simulateStepRequest);
+    }
+
     protected InitialiseResponse initialiseSimulation(final String simulationId) {
         return workflowStub.initialise(
             InitialiseRequest
