@@ -191,7 +191,7 @@ public class MinimalScenario extends ScenarioSupplier {
                                             .boxed()
                                             .map(i -> new PriceFactory(
                                                 portIndex + i * 0.1,
-                                                "EUR",
+                                                "GBP",
                                                 "kg"
                                             ))
                                             .toList()
@@ -290,7 +290,7 @@ public class MinimalScenario extends ScenarioSupplier {
                 null,
                 portGrid,
                 SpeedFactory.of("10 kn"),
-                "EUR"
+                "GBP"
             ),
             List.of(
                 "id",
