@@ -22,18 +22,21 @@
 
 package eu.project.surimi.poseidon.server;
 
-import build.buf.gen.surimi.v1.GetSpeciesPricesRequest;
-import build.buf.gen.surimi.v1.GetSpeciesPricesResponse;
-import build.buf.gen.surimi.v1.SpeciesPrice;
+import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.MinimalScenario;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.junit.jupiter.api.Test;
 import uk.ac.ox.poseidon.agents.market.Price;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static eu.project.surimi.poseidon.scenarios.MinimalScenario.GEAR_CODES;
+import static eu.project.surimi.poseidon.scenarios.MinimalScenario.SPECIES_CODES;
+import static eu.project.surimi.poseidon.server.Server.toTimestamp;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static tech.units.indriya.unit.Units.KILOGRAM;
@@ -96,5 +99,47 @@ public class MarketServiceTest extends ServiceTest {
                     )
                 )
             ));
+    }
+
+    @Test
+    void getSales() {
+        final String simulationId = initialiseSimulation();
+        step(simulationId);
+        final List<Sale> sales =
+            marketStub
+                .getSales(
+                    GetSalesRequest
+                        .newBuilder()
+                        .setSimulationId(simulationId)
+                        .setStartDateTime(
+                            toTimestamp(MinimalScenario.START_DATE.atStartOfDay())
+                        )
+                        .setEndDateTime(
+                            toTimestamp(MinimalScenario.START_DATE.plusMonths(1).atStartOfDay())
+                        )
+                        .build()
+                )
+                .getSalesSummariesList()
+                .stream()
+                .flatMap(salesSummary -> salesSummary.getSalesList().stream())
+                .toList();
+        // Just check that we get sales for each gear/species combination
+        assertEquals(
+            GEAR_CODES.stream().collect(toMap(
+                identity(),
+                gc -> Set.copyOf(SPECIES_CODES)
+            )),
+            sales
+                .stream()
+                .collect(
+                    groupingBy(
+                        sale -> sale.getFleetSegment().getGearCode(),
+                        mapping(
+                            sale -> sale.getSpecies().getSpeciesCode(),
+                            toSet()
+                        )
+                    )
+                )
+        );
     }
 }

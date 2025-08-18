@@ -191,7 +191,7 @@ public class MinimalScenario extends ScenarioSupplier {
                                             .boxed()
                                             .map(i -> new PriceFactory(
                                                 portIndex + i * 0.1,
-                                                "GBP",
+                                                "EUR",
                                                 "kg"
                                             ))
                                             .toList()
@@ -205,9 +205,13 @@ public class MinimalScenario extends ScenarioSupplier {
         );
     private Factory<? extends VesselField> vesselField =
         new VesselFieldFactory(modelGrid);
-    private VesselScopeFactory<? extends Hold<Biomass>> hold =
+    private VesselScopeFactory<? extends Hold<Biomass>> hold1 =
         new InfiniteBiomassHoldFactory(
-            new UniformCatchCategoriserFactory<>(new CatchCategoryFactory("X"))
+            new UniformCatchCategoriserFactory<>(new CatchCategoryFactory(GEAR_CODES.get(0)))
+        );
+    private VesselScopeFactory<? extends Hold<Biomass>> hold2 =
+        new InfiniteBiomassHoldFactory(
+            new UniformCatchCategoriserFactory<>(new CatchCategoryFactory(GEAR_CODES.get(1)))
         );
     private Factory<? extends DistanceCalculator> distance =
         new HaversineDistanceCalculatorFactory(modelGrid);
@@ -242,7 +246,7 @@ public class MinimalScenario extends ScenarioSupplier {
             new VesselFactory(
                 new HomeBehaviourFactory(
                     portGrid,
-                    hold,
+                    null,
                     new AlwaysTrueFactory(),
                     new ThereAndBackBehaviourFactory(
                         new ChoosingDestinationBehaviourFactory(
@@ -255,7 +259,7 @@ public class MinimalScenario extends ScenarioSupplier {
                         ),
                         new DefaultFishingBehaviourFactory<>(
                             null,
-                            hold,
+                            null,
                             new CurrentCellFisheableFactory<>(
                                 new BiomassGridsFactory(
                                     biomassGrids
@@ -278,7 +282,7 @@ public class MinimalScenario extends ScenarioSupplier {
                     ),
                     new WaitingBehaviourFactory(ONE_HOUR_DURATION_SUPPLIER),
                     travellingBehaviour,
-                    new LandingBehaviourFactory<>(marketGrid, hold, ONE_HOUR_DURATION_SUPPLIER)
+                    new LandingBehaviourFactory<>(marketGrid, null, ONE_HOUR_DURATION_SUPPLIER)
                 ),
                 null,
                 null,
@@ -292,26 +296,34 @@ public class MinimalScenario extends ScenarioSupplier {
                 "id",
                 "name",
                 "homePort",
+                "initialBehaviour.hold",
                 "initialBehaviour.behaviourIfReady.fishingBehaviour.fishingGear",
+                "initialBehaviour.behaviourIfReady.fishingBehaviour.hold",
                 "initialBehaviour.behaviourIfReady.fishingDestinationBehaviour" +
-                    ".destinationSupplier.coordinate"
+                    ".destinationSupplier.coordinate",
+                "initialBehaviour.landingBehaviour.hold"
             ),
             List.of(
                 new ListFactory<>("V1", "V2", "V3", "V4"),
                 new ListFactory<>("Vessel 1", "Vessel 2", "Vessel 3", "Vessel 4"),
                 new ListFactory<>(port1, port1, port2, port2),
+                new ListFactory<>(hold1, hold1, hold2, hold2),
                 new ListFactory<>(gear1, gear2, gear1, gear2),
+                new ListFactory<>(hold1, hold1, hold2, hold2),
                 new ListFactory<>(
                     new CoordinateFactory(-1, 1),
                     new CoordinateFactory(0, 0),
                     new CoordinateFactory(0, 0),
                     new CoordinateFactory(-1, -1)
-                )
+                ),
+                new ListFactory<>(hold1, hold1, hold2, hold2)
             )
         );
 
     private Factory<? extends FishingActionAccumulator> fishingActionAccumulator =
         new FishingActionAccumulatorFactory();
+    private Factory<? extends BiomassSaleAccumulator> biomassSaleAccumulator =
+        new BiomassSaleAccumulatorFactory();
 
     public MinimalScenario() {
         super(START_DATE);
