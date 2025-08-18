@@ -55,7 +55,7 @@ public class MarketServiceTest extends ServiceTest {
                     .setSimulationId(simulationId)
                     .build()
             );
-        final Map<String, Map<String, Price>> prices = readPricesResponse(response);
+        final Map<String, Map<String, Map<String, Price>>> prices = readPricesResponse(response);
         final CurrencyUnit gbp = CurrencyUnit.of("GBP");
         assertEquals(
             Set.of(KILOGRAM),
@@ -63,26 +63,36 @@ public class MarketServiceTest extends ServiceTest {
                 .values()
                 .stream()
                 .flatMap(m -> m.values().stream())
+                .flatMap(m -> m.values().stream())
                 .map(Price::getBiomassUnit)
                 .collect(toSet())
         );
-        assertEquals(Money.of(gbp, 1.00), prices.get("P1").get("A").getAmount());
-        assertEquals(Money.of(gbp, 1.10), prices.get("P1").get("B").getAmount());
-        assertEquals(Money.of(gbp, 1.20), prices.get("P1").get("C").getAmount());
-        assertEquals(Money.of(gbp, 2.00), prices.get("P2").get("A").getAmount());
-        assertEquals(Money.of(gbp, 2.10), prices.get("P2").get("B").getAmount());
-        assertEquals(Money.of(gbp, 2.20), prices.get("P2").get("C").getAmount());
+        assertEquals(Money.of(gbp, 1.00), prices.get("M1").get("G1").get("A").getAmount());
+        assertEquals(Money.of(gbp, 1.10), prices.get("M1").get("G1").get("B").getAmount());
+        assertEquals(Money.of(gbp, 1.20), prices.get("M1").get("G1").get("C").getAmount());
+        assertEquals(Money.of(gbp, 1.30), prices.get("M1").get("G2").get("A").getAmount());
+        assertEquals(Money.of(gbp, 1.40), prices.get("M1").get("G2").get("B").getAmount());
+        assertEquals(Money.of(gbp, 1.50), prices.get("M1").get("G2").get("C").getAmount());
+        assertEquals(Money.of(gbp, 2.00), prices.get("M2").get("G1").get("A").getAmount());
+        assertEquals(Money.of(gbp, 2.10), prices.get("M2").get("G1").get("B").getAmount());
+        assertEquals(Money.of(gbp, 2.20), prices.get("M2").get("G1").get("C").getAmount());
+        assertEquals(Money.of(gbp, 2.30), prices.get("M2").get("G2").get("A").getAmount());
+        assertEquals(Money.of(gbp, 2.40), prices.get("M2").get("G2").get("B").getAmount());
+        assertEquals(Money.of(gbp, 2.50), prices.get("M2").get("G2").get("C").getAmount());
     }
 
-    Map<String, Map<String, Price>> readPricesResponse(final GetSpeciesPricesResponse response) {
+    Map<String, Map<String, Map<String, Price>>> readPricesResponse(final GetSpeciesPricesResponse response) {
         return response.getPricesList().stream()
             .collect(groupingBy(
                 SpeciesPrice::getMarketCode,
-                toMap(
-                    sp -> sp.getSpecies().getSpeciesCode(),
-                    sp -> new Price(
-                        Money.of(CurrencyUnit.of(sp.getCurrency()), sp.getPrice()),
-                        parseMassUnit(sp.getMeasurementUnit())
+                groupingBy(
+                    SpeciesPrice::getGearCode,
+                    toMap(
+                        sp -> sp.getSpecies().getSpeciesCode(),
+                        sp -> new Price(
+                            Money.of(CurrencyUnit.of(sp.getCurrency()), sp.getPrice()),
+                            parseMassUnit(sp.getMeasurementUnit())
+                        )
                     )
                 )
             ));
