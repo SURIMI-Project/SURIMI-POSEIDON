@@ -98,6 +98,7 @@ public class MinimalScenario extends ScenarioSupplier {
     public static final LocalDate START_DATE = LocalDate.of(2000, 1, 1);
     public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
     public static final List<String> GEAR_CODES = List.of("G1", "G2");
+    public static final List<String> MARKET_CODES = List.of("M1", "M2");
     public static final int NUM_PRICES = GEAR_CODES.size() * SPECIES_CODES.size();
     public static final Quantity<Mass> CARRYING_CAPACITY = getQuantity(1, TONNE);
 
@@ -161,7 +162,7 @@ public class MinimalScenario extends ScenarioSupplier {
             List.of("port", "marketCode", "pricesEntries"),
             List.of(
                 new ListFactory<>(port1, port2),
-                new ListFactory<>("M1", "M2"),
+                new ListFactory<>(MARKET_CODES),
                 new ListFactory<>(
                     Stream.of(1, 2)
                         .map(portIndex ->
