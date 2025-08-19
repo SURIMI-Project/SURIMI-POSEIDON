@@ -5,6 +5,7 @@ opentelemetry-core = "1.49.0"
 opentelemetry-instrumentation = "2.14.0-alpha"
 spotbugs = "6.0.26"
 jcommander = "2.0"
+jqwik = "1.9.2"
 commons-beanutils = "1.11.0"
 commons-io = "2.19.0"
 
@@ -17,6 +18,7 @@ opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporte
 opentelemetry-grpc-server = { module = "io.opentelemetry.instrumentation:opentelemetry-grpc-1.6", version.ref = "opentelemetry-instrumentation" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk", version.ref = "opentelemetry-core" }
 jcommander = { module = "org.jcommander:jcommander", version.ref = "jcommander" }
+jqwik = { module = "net.jqwik:jqwik", version.ref = "jqwik" }
 grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
 grpc-services = { module = "io.grpc:grpc-services", version.ref = "grpc" }
 spotbugs-annotations = { module = "com.github.spotbugs:spotbugs-annotations" }
