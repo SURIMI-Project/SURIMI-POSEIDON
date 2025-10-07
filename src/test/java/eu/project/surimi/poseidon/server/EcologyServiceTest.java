@@ -30,10 +30,12 @@ import uk.ac.ox.poseidon.geography.Coordinate;
 
 import javax.measure.Unit;
 import javax.measure.quantity.Mass;
+import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.CARRYING_CAPACITY;
-import static eu.project.surimi.poseidon.scenarios.MinimalScenario.SPECIES_CODES;
+import static eu.project.surimi.poseidon.scenarios.MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections.CollectionUtils.isEqualCollection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,8 +53,22 @@ public class EcologyServiceTest extends ServiceTest {
     @Test
     void canGetBiomass() {
         final String simulationId = initialiseSimulation();
-        final Map<String, Map<Coordinate, ComparableQuantity<Mass>>> grids = getGrids(simulationId);
-        assertTrue(isEqualCollection(MinimalScenario.SPECIES_CODES, grids.keySet()));
+        final Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> grids =
+            getGrids(simulationId);
+        assertTrue(
+            isEqualCollection(
+                LIFE_STAGE_PER_SPECIES_CODE.stream().map(Map.Entry::getKey).toList(),
+                grids.keySet().stream().map(Species::getSpeciesCode).toList()
+            )
+        );
+        assertTrue(
+            isEqualCollection(
+                LIFE_STAGE_PER_SPECIES_CODE.stream().map(Map.Entry::getValue).toList(),
+                grids.keySet().stream().map(species ->
+                    Optional.of(species.getStage()).filter(s -> !s.isEmpty()).orElse(null)
+                ).toList()
+            )
+        );
         assertTrue(
             grids.values().stream().allMatch(grid ->
                 grid.values().stream().allMatch(biomass ->
@@ -62,7 +78,7 @@ public class EcologyServiceTest extends ServiceTest {
         );
     }
 
-    private Map<String, Map<Coordinate, ComparableQuantity<Mass>>> getGrids(final String simulationId) {
+    private Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> getGrids(final String simulationId) {
         final GetBiomassResponse response = ecologyStub.getBiomass(
             GetBiomassRequest
                 .newBuilder()
@@ -72,7 +88,7 @@ public class EcologyServiceTest extends ServiceTest {
         return readBiomassGrids(response.getBiomassSummary());
     }
 
-    Map<String, Map<Coordinate, ComparableQuantity<Mass>>> readBiomassGrids(
+    Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> readBiomassGrids(
         final BiomassSummary biomassSummary
     ) {
         final Unit<Mass> unit =
@@ -81,10 +97,7 @@ public class EcologyServiceTest extends ServiceTest {
             .getBiomassGridsList()
             .stream()
             .collect(toMap(
-                biomassGrid ->
-                    biomassGrid
-                        .getSpecies()
-                        .getSpeciesCode(),
+                BiomassGrid::getSpecies,
                 biomassGrid ->
                     biomassGrid
                         .getBiomassCellsList()
@@ -115,8 +128,11 @@ public class EcologyServiceTest extends ServiceTest {
                                     .setSpecies(
                                         Species
                                             .newBuilder()
-                                            .setSpeciesCode(SPECIES_CODES.getFirst())
-                                    )
+                                            .setSpeciesCode(
+                                                LIFE_STAGE_PER_SPECIES_CODE.getFirst().getKey()
+                                            ).setStage(
+                                                LIFE_STAGE_PER_SPECIES_CODE.getFirst().getValue()
+                                            ))
                                     .addBiomassCells(
                                         BiomassCell
                                             .newBuilder()
@@ -136,7 +152,11 @@ public class EcologyServiceTest extends ServiceTest {
                                 BiomassGrid
                                     .newBuilder()
                                     .setSpecies(
-                                        Species.newBuilder().setSpeciesCode(SPECIES_CODES.getLast())
+                                        Species
+                                            .newBuilder()
+                                            .setSpeciesCode(
+                                                LIFE_STAGE_PER_SPECIES_CODE.getLast().getKey()
+                                            )
                                     )
                                     .addBiomassCells(
                                         BiomassCell
@@ -150,19 +170,34 @@ public class EcologyServiceTest extends ServiceTest {
                     .build()
             );
         assertEquals(simulationId, updateBiomassResponse.getSimulationId());
-        final Map<String, Map<Coordinate, ComparableQuantity<Mass>>> grids = getGrids(simulationId);
+        final Map<Map.Entry<String, String>, Map<Coordinate, ComparableQuantity<Mass>>> grids =
+            getGrids(simulationId)
+                .entrySet()
+                .stream()
+                .collect(
+                    toMap(
+                        entry -> new AbstractMap.SimpleEntry<>(
+                            entry.getKey().getSpeciesCode(),
+                            Optional
+                                .of(entry.getKey().getStage())
+                                .filter(s -> !s.isEmpty())
+                                .orElse(null)
+                        ),
+                        Map.Entry::getValue
+                    )
+                );
         assertTrue(
-            grids.get(SPECIES_CODES.getFirst())
+            grids.get(LIFE_STAGE_PER_SPECIES_CODE.getFirst())
                 .get(new Coordinate(-1, -1))
                 .isEquivalentTo(getQuantity(10, unit))
         );
         assertTrue(
-            grids.get(SPECIES_CODES.getFirst())
+            grids.get(LIFE_STAGE_PER_SPECIES_CODE.getFirst())
                 .get(new Coordinate(0, -1))
                 .isEquivalentTo(getQuantity(20, unit))
         );
         assertTrue(
-            grids.get(SPECIES_CODES.getLast())
+            grids.get(LIFE_STAGE_PER_SPECIES_CODE.getLast())
                 .get(new Coordinate(-1, -1))
                 .isEquivalentTo(getQuantity(30, unit))
         );

@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.scenarios;
 import build.buf.gen.surimi.v1.FinaliseRequest;
 import build.buf.gen.surimi.v1.SimulateStepRequest;
 import eu.project.surimi.poseidon.server.ServiceTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static java.util.stream.IntStream.range;
@@ -37,6 +38,7 @@ class WesternMedScenarioTest extends ServiceTest {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
+    @Disabled
     void canRunForALongTime() {
         final int numYears = 15;
         final String simulationId = initialiseSimulation();

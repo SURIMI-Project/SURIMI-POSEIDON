@@ -33,6 +33,7 @@ import uk.ac.ox.poseidon.geography.Coordinate;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.NOT_FOUND;
@@ -81,9 +82,11 @@ public class GetBiomassRequestHandler extends
                 build.buf.gen.surimi.v1.BiomassGrid
                     .newBuilder()
                     .setSpecies(
-                        build.buf.gen.surimi.v1.Species.newBuilder().setSpeciesCode(
-                            grid.getSpecies().getCode()
-                        )
+                        build.buf.gen.surimi.v1.Species.newBuilder()
+                            .setSpeciesCode(grid.getSpecies().getCode())
+                            .setStage(
+                                Optional.ofNullable(grid.getSpecies().getLifeStage()).orElse("")
+                            )
                     );
             bathymetricGrid.getActiveWaterCells().forEach(cell -> {
                 final Coordinate coordinate =

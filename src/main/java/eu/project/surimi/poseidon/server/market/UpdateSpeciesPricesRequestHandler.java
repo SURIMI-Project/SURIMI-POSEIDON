@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.server.market;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.IllegalCurrencyException;
@@ -40,13 +41,13 @@ import javax.measure.Unit;
 import javax.measure.format.MeasurementParseException;
 import javax.measure.quantity.Mass;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static eu.project.surimi.poseidon.server.market.MarketService.getBiomassMarketsById;
 import static io.grpc.Status.INVALID_ARGUMENT;
 import static java.lang.System.Logger.Level.INFO;
-import static java.util.function.UnaryOperator.identity;
-import static java.util.stream.Collectors.toMap;
 
 public class UpdateSpeciesPricesRequestHandler extends
     WithSimulationRequestHandler<UpdateSpeciesPricesRequest, UpdateSpeciesPricesResponse> {
@@ -56,13 +57,6 @@ public class UpdateSpeciesPricesRequestHandler extends
 
     public UpdateSpeciesPricesRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
-    }
-
-    private static Map<String, Species> getSpeciesByCode(final Simulation simulation) {
-        return simulation
-            .getComponents(Species.class)
-            .stream()
-            .collect(toMap(Species::getCode, identity()));
     }
 
     @Override
@@ -76,7 +70,9 @@ public class UpdateSpeciesPricesRequestHandler extends
         final Simulation simulation
     ) {
         logger.log(INFO, "Price update received for simulation {0}", request.getSimulationId());
-        final Map<String, Species> speciesByCode = getSpeciesByCode(simulation);
+
+        final Set<Species> simulationSpecies = simulation.getComponents(Species.class);
+
         final Map<String, BiomassMarket> marketsById = getBiomassMarketsById(simulation);
         request.getPricesList().forEach(price -> {
             final BiomassMarket market = getOrThrow(
@@ -84,11 +80,7 @@ public class UpdateSpeciesPricesRequestHandler extends
                 price.getMarketCode(),
                 "Market"
             );
-            final Species species = getOrThrow(
-                speciesByCode,
-                price.getSpecies().getSpeciesCode(),
-                "Species"
-            );
+
             final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());
             final Unit<Mass> biomassUnit = parseMassUnit(price.getMeasurementUnit());
             final Price marketPrice =
@@ -96,15 +88,33 @@ public class UpdateSpeciesPricesRequestHandler extends
                     Money.of(currencyUnit, price.getPrice(), RoundingMode.HALF_EVEN),
                     biomassUnit
                 );
-            market.setPrice(new CatchCategory(price.getGearCode()), species, marketPrice);
-            logger.log(
-                INFO,
-                "Updated price of species {0} at port market {1} to {2}/{3}.",
-                species.getCode(),
-                market.getCode(),
-                marketPrice.getAmount(),
-                marketPrice.getBiomassUnit()
-            );
+
+            final Species requestSpecies =
+                SpeciesKey.from(price.getSpecies()).toSpecies();
+            final List<Species> coveredSpecies =
+                simulationSpecies.stream().filter(requestSpecies::covers).toList();
+
+            if (coveredSpecies.isEmpty()) {
+                throw INVALID_ARGUMENT
+                    .withDescription(
+                        "Species:\n%sdoesn't cover any species known in the simulation."
+                            .formatted(price.getSpecies())
+                    )
+                    .asRuntimeException();
+            }
+
+            coveredSpecies.forEach(species -> {
+                market.setPrice(new CatchCategory(price.getGearCode()), species, marketPrice);
+                logger.log(
+                    INFO,
+                    "Updated price of species {0} at port market {1} to {2}/{3}.",
+                    species.getCode(),
+                    market.getCode(),
+                    marketPrice.getAmount(),
+                    marketPrice.getBiomassUnit()
+                );
+            });
+
         });
         return UpdateSpeciesPricesResponse
             .newBuilder()

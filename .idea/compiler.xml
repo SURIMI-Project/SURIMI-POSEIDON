@@ -20,4 +20,32 @@
     </annotationProcessing>
     <bytecodeTargetLevel target="21" />
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="POSEIDON.agents" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.agents.main" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.agents.test" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.biology" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.biology.main" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.biology.test" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.core" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.core.main" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.core.test" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.examples" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.examples.main" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.examples.test" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.geography" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.geography.main" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.geography.test" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.gui" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.gui.main" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.gui.test" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.io" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.io.main" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.io.test" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.regulations" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.regulations.main" options="-Werror -Xlint:-processing" />
+      <module name="POSEIDON.regulations.test" options="-Werror -Xlint:-processing" />
+    </option>
+  </component>
 </project>

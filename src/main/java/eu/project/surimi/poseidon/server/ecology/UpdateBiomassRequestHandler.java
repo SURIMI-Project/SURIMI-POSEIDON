@@ -26,6 +26,7 @@ import build.buf.gen.surimi.v1.BiomassSummary;
 import build.buf.gen.surimi.v1.UpdateBiomassRequest;
 import build.buf.gen.surimi.v1.UpdateBiomassResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import sim.util.Int2D;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
@@ -91,16 +92,16 @@ public class UpdateBiomassRequestHandler extends
         final BiomassSummary biomassSummary = request.getBiomassSummary();
         final Unit<Mass> massUnit = parseMassUnit(biomassSummary.getMeasurementUnit());
         final boolean isKg = massUnit.isEquivalentTo(KILOGRAM);
-        final Map<String, BiomassGrid> simulationGrids =
+        final Map<SpeciesKey, BiomassGrid> simulationGrids =
             simulation.getComponents(BiomassGrid.class).stream().collect(toMap(
-                biomassGrid -> biomassGrid.getSpecies().getCode(),
+                grid -> SpeciesKey.from(grid.getSpecies()),
                 identity()
             ));
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
         biomassSummary.getBiomassGridsList().forEach(biomassGrid -> {
             final BiomassGrid simulationGrid = getOrThrow(
                 simulationGrids,
-                biomassGrid.getSpecies().getSpeciesCode(),
+                SpeciesKey.from(biomassGrid.getSpecies()),
                 "Biomass grid"
             );
             biomassGrid.getBiomassCellsList().forEach(biomassCell -> {

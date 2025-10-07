@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
+import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.Setter;
 import uk.ac.ox.poseidon.agents.behaviours.BehaviourFactory;
@@ -81,7 +82,9 @@ import uk.ac.ox.poseidon.regulations.PermittedIfFactory;
 import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
 import java.time.LocalDate;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static java.util.Collections.nCopies;
@@ -90,13 +93,28 @@ import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.*;
 
-@SuppressWarnings("SequencedCollectionMethodCanBeUsed")
+@SuppressWarnings({"SequencedCollectionMethodCanBeUsed", "UnstableApiUsage"})
 @Getter
 @Setter
 public class MinimalScenario extends ScenarioSupplier {
 
     public static final LocalDate START_DATE = LocalDate.of(2000, 1, 1);
     public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
+    public static final List<String> LIFE_STAGES = List.of("juvenile", "adult");
+
+    public static final List<SimpleEntry<String, String>> LIFE_STAGE_PER_SPECIES_CODE = Streams.zip(
+        // this is a just very roundabout way to generate Stream.of("A", "A", "B", "C")...
+        Stream.concat(
+            Stream.generate(SPECIES_CODES::getFirst).limit(LIFE_STAGES.size()),
+            SPECIES_CODES.stream().skip(1)
+        ),
+        Stream.concat(
+            LIFE_STAGES.stream(),
+            Stream.generate(() -> null)
+        ),
+        SimpleEntry::new
+    ).toList();
+
     public static final List<String> GEAR_CODES = List.of("G1", "G2");
     public static final List<String> MARKET_CODES = List.of("M1", "M2");
     public static final int NUM_PRICES = GEAR_CODES.size() * SPECIES_CODES.size();
@@ -127,8 +145,15 @@ public class MinimalScenario extends ScenarioSupplier {
     private Factory<List<Species>> species =
         new MappedFactory<>(
             new SpeciesFactory(),
-            "code",
-            new ConstantFactory<>(SPECIES_CODES)
+            List.of("code", "lifeStage"),
+            List.of(
+                new ConstantFactory<>(
+                    LIFE_STAGE_PER_SPECIES_CODE.stream().map(Map.Entry::getKey).toList()
+                ),
+                new ConstantFactory<>(
+                    LIFE_STAGE_PER_SPECIES_CODE.stream().map(Map.Entry::getValue).toList()
+                )
+            )
         );
 
     private Factory<List<BiomassGrid>> biomassGrids =
