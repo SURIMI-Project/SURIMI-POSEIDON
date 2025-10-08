@@ -22,17 +22,17 @@
 
 package eu.project.surimi.poseidon.server;
 
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 import uk.ac.ox.poseidon.biology.species.Species;
 
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.util.function.Predicate.not;
 
 @Value
-@AllArgsConstructor
 public class SpeciesKey {
 
     @NonNull String code;
@@ -43,8 +43,34 @@ public class SpeciesKey {
         this.lifeStage = null;
     }
 
+    public SpeciesKey(
+        @NonNull final String code,
+        final String lifeStage
+    ) {
+        this.code = code;
+        this.lifeStage = Optional
+            .ofNullable(lifeStage)
+            .filter(not(String::isBlank))
+            .orElse(null);
+    }
+
     public Species toSpecies() {
         return new Species(code, lifeStage);
+    }
+
+    public build.buf.gen.surimi.v1.Species toProtobufSpecies() {
+        final build.buf.gen.surimi.v1.Species.Builder builder =
+            build.buf.gen.surimi.v1.Species
+                .newBuilder()
+                .setSpeciesCode(code);
+        if (lifeStage != null) {
+            builder.setStage(lifeStage);
+        }
+        return builder.build();
+    }
+
+    public Map.Entry<String, String> toEntry() {
+        return new AbstractMap.SimpleEntry<>(code, lifeStage);
     }
 
     public static SpeciesKey from(final Species species) {
@@ -54,10 +80,7 @@ public class SpeciesKey {
     public static SpeciesKey from(final build.buf.gen.surimi.v1.Species species) {
         return new SpeciesKey(
             species.getSpeciesCode(),
-            Optional
-                .of(species.getStage())
-                .filter(not(String::isBlank))
-                .orElse(null)
+            species.getStage()
         );
     }
 }

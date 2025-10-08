@@ -30,8 +30,8 @@ import uk.ac.ox.poseidon.geography.Coordinate;
 
 import javax.measure.Unit;
 import javax.measure.quantity.Mass;
-import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.CARRYING_CAPACITY;
@@ -57,13 +57,13 @@ public class EcologyServiceTest extends ServiceTest {
             getGrids(simulationId);
         assertTrue(
             isEqualCollection(
-                LIFE_STAGE_PER_SPECIES_CODE.stream().map(Map.Entry::getKey).toList(),
+                LIFE_STAGE_PER_SPECIES_CODE.stream().map(Entry::getKey).toList(),
                 grids.keySet().stream().map(Species::getSpeciesCode).toList()
             )
         );
         assertTrue(
             isEqualCollection(
-                LIFE_STAGE_PER_SPECIES_CODE.stream().map(Map.Entry::getValue).toList(),
+                LIFE_STAGE_PER_SPECIES_CODE.stream().map(Entry::getValue).toList(),
                 grids.keySet().stream().map(species ->
                     Optional.of(species.getStage()).filter(s -> !s.isEmpty()).orElse(null)
                 ).toList()
@@ -170,20 +170,18 @@ public class EcologyServiceTest extends ServiceTest {
                     .build()
             );
         assertEquals(simulationId, updateBiomassResponse.getSimulationId());
-        final Map<Map.Entry<String, String>, Map<Coordinate, ComparableQuantity<Mass>>> grids =
+        final Map<Entry<String, String>, Map<Coordinate, ComparableQuantity<Mass>>> grids =
             getGrids(simulationId)
                 .entrySet()
                 .stream()
                 .collect(
                     toMap(
-                        entry -> new AbstractMap.SimpleEntry<>(
-                            entry.getKey().getSpeciesCode(),
-                            Optional
-                                .of(entry.getKey().getStage())
-                                .filter(s -> !s.isEmpty())
-                                .orElse(null)
-                        ),
-                        Map.Entry::getValue
+                        entry ->
+                            new SpeciesKey(
+                                entry.getKey().getSpeciesCode(),
+                                entry.getKey().getStage()
+                            ).toEntry(),
+                        Entry::getValue
                     )
                 );
         assertTrue(
@@ -201,7 +199,6 @@ public class EcologyServiceTest extends ServiceTest {
                 .get(new Coordinate(-1, -1))
                 .isEquivalentTo(getQuantity(30, unit))
         );
-
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

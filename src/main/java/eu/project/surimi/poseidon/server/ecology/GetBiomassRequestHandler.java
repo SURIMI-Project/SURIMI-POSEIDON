@@ -26,6 +26,7 @@ import build.buf.gen.surimi.v1.BiomassSummary;
 import build.buf.gen.surimi.v1.GetBiomassRequest;
 import build.buf.gen.surimi.v1.GetBiomassResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -33,7 +34,6 @@ import uk.ac.ox.poseidon.geography.Coordinate;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.NOT_FOUND;
@@ -81,13 +81,7 @@ public class GetBiomassRequestHandler extends
             final build.buf.gen.surimi.v1.BiomassGrid.Builder gridBuilder =
                 build.buf.gen.surimi.v1.BiomassGrid
                     .newBuilder()
-                    .setSpecies(
-                        build.buf.gen.surimi.v1.Species.newBuilder()
-                            .setSpeciesCode(grid.getSpecies().getCode())
-                            .setStage(
-                                Optional.ofNullable(grid.getSpecies().getLifeStage()).orElse("")
-                            )
-                    );
+                    .setSpecies(SpeciesKey.from(grid.getSpecies()).toProtobufSpecies());
             bathymetricGrid.getActiveWaterCells().forEach(cell -> {
                 final Coordinate coordinate =
                     bathymetricGrid.getModelGrid().toCoordinate(cell);
