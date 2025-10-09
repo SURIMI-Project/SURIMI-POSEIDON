@@ -299,7 +299,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         new BiomassMarketGridPriceFileFactory(
             inputPath.plus("prices.csv"),
             "date",
-            "port_code",
+            "market_code",
             "species_code",
             "category_code",
             "price",
