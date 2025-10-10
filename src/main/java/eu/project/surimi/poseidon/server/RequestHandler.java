@@ -45,7 +45,9 @@ public abstract class RequestHandler<ReqT, RespT> {
         final V v = map.get(key);
         if (v == null) {
             throw NOT_FOUND
-                .withDescription(name + " not found: " + key)
+                .withDescription(
+                    "%s not found: %s.%nKnown keys are:%n%s".formatted(name, key, map.keySet())
+                )
                 .asRuntimeException();
         }
         return v;
