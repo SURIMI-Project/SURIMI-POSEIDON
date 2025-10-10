@@ -40,8 +40,8 @@ public class WesternMedBiomassGridsTest extends ServiceTest {
     @Test
     void getBiomassGrids() {
         final String simulationId = initialiseSimulation();
-        final double lon = -0.8102499656385;
-        final double lat = 37.5553507693095;
+        final double lon = -0.8518999814987183;
+        final double lat = 37.59700012207031;
         // noinspection ResultOfMethodCallIgnored
         ecologyStub.updateBiomass(
             UpdateBiomassRequest
