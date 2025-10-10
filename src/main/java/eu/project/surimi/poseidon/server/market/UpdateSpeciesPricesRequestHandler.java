@@ -97,7 +97,7 @@ public class UpdateSpeciesPricesRequestHandler extends
             if (coveredSpecies.isEmpty()) {
                 throw INVALID_ARGUMENT
                     .withDescription(
-                        "Species:\n%sdoesn't cover any species known in the simulation."
+                        "Species:%n%sdoesn't cover any species known in the simulation."
                             .formatted(price.getSpecies())
                     )
                     .asRuntimeException();
