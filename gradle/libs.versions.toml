@@ -1,5 +1,5 @@
 [versions]
-grpc = "1.71.0"
+grpc = "1.75.0"
 lombok = "1.18.30"
 opentelemetry-core = "1.49.0"
 opentelemetry-instrumentation = "2.14.0-alpha"
