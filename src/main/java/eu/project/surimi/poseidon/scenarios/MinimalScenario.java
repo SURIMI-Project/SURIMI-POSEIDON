@@ -45,13 +45,12 @@ import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
 import uk.ac.ox.poseidon.agents.market.*;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.VesselFactory;
-import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactory;
-import uk.ac.ox.poseidon.agents.vessels.gears.FishingGear;
+import uk.ac.ox.poseidon.agents.vessels.*;
+import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
-import uk.ac.ox.poseidon.agents.vessels.hold.Hold;
-import uk.ac.ox.poseidon.agents.vessels.hold.InfiniteBiomassHoldFactory;
+import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
+import uk.ac.ox.poseidon.agents.vessels.holds.Hold;
+import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.*;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
@@ -77,6 +76,7 @@ import uk.ac.ox.poseidon.geography.ports.Port;
 import uk.ac.ox.poseidon.geography.ports.PortFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
+import uk.ac.ox.poseidon.io.sources.StringDataSourceFactory;
 import uk.ac.ox.poseidon.regulations.PermittedIfFactory;
 
 import javax.measure.Quantity;
@@ -231,13 +231,13 @@ public class MinimalScenario extends ScenarioSupplier {
         );
     private Factory<? extends VesselField> vesselField =
         new VesselFieldFactory(modelGrid);
-    private VesselScopeFactory<? extends Hold<Biomass>> hold1 =
+    private VesselScopeFactory<? extends Hold> hold1 =
         new InfiniteBiomassHoldFactory(
-            new UniformCatchCategoriserFactory<>(new CatchCategoryFactory(GEAR_CODES.get(0)))
+            new UniformCatchCategoriserFactory(new CatchCategoryFactory(GEAR_CODES.get(0)))
         );
-    private VesselScopeFactory<? extends Hold<Biomass>> hold2 =
+    private VesselScopeFactory<? extends Hold> hold2 =
         new InfiniteBiomassHoldFactory(
-            new UniformCatchCategoriserFactory<>(new CatchCategoryFactory(GEAR_CODES.get(1)))
+            new UniformCatchCategoriserFactory(new CatchCategoryFactory(GEAR_CODES.get(1)))
         );
     private Factory<? extends DistanceCalculator> distance =
         new HaversineDistanceCalculatorFactory(modelGrid);
@@ -253,98 +253,104 @@ public class MinimalScenario extends ScenarioSupplier {
             distance
         );
 
-    private Factory<? extends FishingGear<Biomass>> gear1 =
+    private VesselScopeFactory<? extends Gear> gear1 =
         new FixedBiomassProportionGearFactory(
             GEAR_CODES.get(0),
             0.25,
             ONE_HOUR_DURATION_SUPPLIER
         );
 
-    private Factory<? extends FishingGear<Biomass>> gear2 =
+    private VesselScopeFactory<? extends Gear> gear2 =
         new FixedBiomassProportionGearFactory(
             GEAR_CODES.get(1),
             0.5,
             ONE_HOUR_DURATION_SUPPLIER
         );
 
-    private Factory<List<Vessel>> vessels =
-        new MappedFactory<>(
-            new VesselFactory(
-                new HomeBehaviourFactory(
-                    portGrid,
-                    null,
-                    new AlwaysTrueFactory(),
-                    new ThereAndBackBehaviourFactory(
-                        new ChoosingDestinationBehaviourFactory(
-                            new ConstantDestinationSupplierFactory(
-                                modelGrid,
-                                null
-                            ),
-                            ONE_MINUTE_DURATION_SUPPLIER,
-                            new WaitingBehaviourFactory(ONE_SECOND_DURATION_SUPPLIER)
-                        ),
-                        new DefaultFishingBehaviourFactory<>(
-                            null,
-                            null,
-                            new CurrentCellFisheableFactory<>(
-                                new BiomassGridsFactory(
-                                    biomassGrids
-                                )
-                            ),
-                            new PermittedIfFactory(new AlwaysTrueFactory()),
-                            new CompositeDispositionProcessFactory<>(
-                                new SelectedSpeciesRetentionFactory<Biomass>(
-                                    new SpeciesByCodeFactory(
-                                        new ConstantFactory<>(List.of("A", "B")),
-                                        species
-                                    )
-                                ),
-                                new GeneralDiscardMortalityFactory(
-                                    new ConstantDoubleSupplierFactory(0.1)
-                                )
+    private BehaviourFactory<?> initialBehaviour =
+        new HomeBehaviourFactory(
+            new AlwaysTrueFactory(),
+            new ThereAndBackBehaviourFactory(
+                new ChoosingDestinationBehaviourFactory(
+                    new ConstantDestinationSupplierFactory(
+                        modelGrid,
+                        new CoordinateFactory()
+                    ),
+                    ONE_MINUTE_DURATION_SUPPLIER,
+                    new WaitingBehaviourFactory(ONE_SECOND_DURATION_SUPPLIER)
+                ),
+                new DefaultFishingBehaviourFactory(
+                    new CurrentCellFisheableFactory(
+                        new BiomassGridsFactory(
+                            biomassGrids
+                        )
+                    ),
+                    new PermittedIfFactory(new AlwaysTrueFactory()),
+                    new CompositeDispositionProcessFactory(
+                        new SelectedSpeciesRetentionFactory(
+                            new SpeciesByCodeFactory(
+                                new ConstantFactory<>(List.of("A", "B")),
+                                species
                             )
                         ),
-                        travellingBehaviour
-                    ),
-                    new WaitingBehaviourFactory(ONE_HOUR_DURATION_SUPPLIER),
-                    travellingBehaviour,
-                    new LandingBehaviourFactory<>(marketGrid, null, ONE_HOUR_DURATION_SUPPLIER)
+                        new GeneralDiscardMortalityFactory(
+                            new ConstantDoubleSupplierFactory(0.1)
+                        )
+                    )
                 ),
-                null,
-                null,
-                vesselField,
-                null,
-                portGrid,
-                SpeedFactory.of("10 kn"),
-                "GBP"
+                travellingBehaviour
             ),
-            List.of(
-                "id",
-                "name",
-                "homePort",
-                "initialBehaviour.hold",
-                "initialBehaviour.behaviourIfReady.fishingBehaviour.fishingGear",
-                "initialBehaviour.behaviourIfReady.fishingBehaviour.hold",
-                "initialBehaviour.behaviourIfReady.fishingDestinationBehaviour" +
-                    ".destinationSupplier.coordinate",
-                "initialBehaviour.landingBehaviour.hold"
-            ),
-            List.of(
-                new ListFactory<>("V1", "V2", "V3", "V4"),
-                new ListFactory<>("Vessel 1", "Vessel 2", "Vessel 3", "Vessel 4"),
-                new ListFactory<>(port1, port1, port2, port2),
-                new ListFactory<>(hold1, hold1, hold2, hold2),
-                new ListFactory<>(gear1, gear2, gear1, gear2),
-                new ListFactory<>(hold1, hold1, hold2, hold2),
-                new ListFactory<>(
-                    new CoordinateFactory(-1, 1),
-                    new CoordinateFactory(0, 0),
-                    new CoordinateFactory(0, 0),
-                    new CoordinateFactory(-1, -1)
-                ),
-                new ListFactory<>(hold1, hold1, hold2, hold2)
-            )
+            new WaitingBehaviourFactory(ONE_HOUR_DURATION_SUPPLIER),
+            travellingBehaviour,
+            new LandingBehaviourFactory(marketGrid, ONE_HOUR_DURATION_SUPPLIER)
         );
+
+    private static final String COORDINATE_PROPERTY_ADDRESS =
+        "initialBehaviour.behaviourIfReady.fishingDestinationBehaviour" +
+            ".destinationSupplier.coordinate";
+
+    private Factory<Fleet> fleet =
+        FleetFromVesselRegisterFactory
+            .builder()
+            .fleet(new FleetFactory(
+                vesselField,
+                portGrid
+            ))
+            .dataSource(new StringDataSourceFactory("""
+                cfr,name_of_vessel,place_of_registration,event,event_start_date,gear,hold,fav_lon,fav_lat
+                V1,Vessel 1,P1,CEN,2000-01-01,G1,H1,-1,-1
+                V2,Vessel 2,P1,CEN,2000-01-01,G2,H1,0,0
+                V3,Vessel 3,P2,CEN,2000-01-01,G1,H2,0,0
+                V4,Vessel 4,P2,CEN,2000-01-01,G2,H2,-1,-1
+                """
+            ))
+            .initialBehaviour(initialBehaviour)
+            .dataMapping(
+                COORDINATE_PROPERTY_ADDRESS + ".longitude",
+                "fav_lon"
+            )
+            .dataMapping(
+                COORDINATE_PROPERTY_ADDRESS + ".latitude",
+                "fav_lat"
+            )
+            .gear(
+                VesselScopeFactoriesByCode.<Gear>builder()
+                    .factory("G1", gear1)
+                    .factory("G2", gear2)
+                    .build()
+            )
+            .dataMapping("gear.code", "gear")
+            .hold(
+                new InfiniteBiomassHoldFactory(
+                    new UniformCatchCategoriserFactory(new CatchCategoryFactory())
+                )
+            )
+            .dataMapping(
+                "hold.catchCategoriser.catchCategory.code",
+                "gear"
+            )
+            .engine(new SimpleEngineFactory(SpeedFactory.of("10 kn")))
+            .build();
 
     private Factory<? extends FishingActionAccumulator> fishingActionAccumulator =
         new FishingActionAccumulatorFactory();

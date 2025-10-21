@@ -22,8 +22,6 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
-import eu.project.surimi.poseidon.components.FleetIdRegister;
-import eu.project.surimi.poseidon.components.FleetIdRegisterFactory;
 import lombok.Getter;
 import lombok.Setter;
 import sim.engine.Steppable;
@@ -50,17 +48,23 @@ import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
-import uk.ac.ox.poseidon.agents.market.*;
+import uk.ac.ox.poseidon.agents.market.BiomassMarketGridPriceFileFactory;
+import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
+import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
+import uk.ac.ox.poseidon.agents.market.MarketGrid;
 import uk.ac.ox.poseidon.agents.registers.DynamicRegisterFactory;
-import uk.ac.ox.poseidon.agents.registers.ImmutableRegisterFactory;
 import uk.ac.ox.poseidon.agents.registers.Register;
 import uk.ac.ox.poseidon.agents.regulations.*;
 import uk.ac.ox.poseidon.agents.tables.FishingActionListenerTableFactory;
-import uk.ac.ox.poseidon.agents.vessels.*;
-import uk.ac.ox.poseidon.agents.vessels.gears.FishingGear;
+import uk.ac.ox.poseidon.agents.vessels.AdaptedVesselPredicateFactory;
+import uk.ac.ox.poseidon.agents.vessels.Vessel;
+import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactory;
+import uk.ac.ox.poseidon.agents.vessels.VesselsFromFileFactory;
+import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
-import uk.ac.ox.poseidon.agents.vessels.hold.Hold;
-import uk.ac.ox.poseidon.agents.vessels.hold.StandardBiomassHoldFactory;
+import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
+import uk.ac.ox.poseidon.agents.vessels.holds.Hold;
+import uk.ac.ox.poseidon.agents.vessels.holds.StandardBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.*;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
@@ -221,7 +225,7 @@ public class WesternMedScenario extends ScenarioSupplier {
             pathFinder,
             distance
         );
-    private Factory<? extends FishingGear<Biomass>> fishingGear =
+    private VesselScopeFactory<? extends Gear> fishingGear =
         new FixedBiomassProportionGearFactory(
             PURSE_SEINE_GEAR_CODE,
             CATCH_PROPORTION,
@@ -295,7 +299,7 @@ public class WesternMedScenario extends ScenarioSupplier {
             ),
             -2
         );
-    private Factory<? extends MarketGrid<Biomass, ? extends Market<Biomass>>> marketGrid =
+    private Factory<? extends MarketGrid> marketGrid =
         new BiomassMarketGridPriceFileFactory(
             inputPath.plus("prices.csv"),
             "date",
@@ -308,119 +312,113 @@ public class WesternMedScenario extends ScenarioSupplier {
             portGrid,
             species
         );
-    private VesselScopeFactory<? extends Hold<Biomass>> hold = new StandardBiomassHoldFactory(
+    private VesselScopeFactory<? extends Hold> hold = new StandardBiomassHoldFactory(
         MassFactory.of(VESSEL_HOLD_CAPACITY),
         MassFactory.of("1 kg"),
-        new UniformCatchCategoriserFactory<>(new CatchCategoryFactory(PURSE_SEINE_GEAR_CODE))
+        new UniformCatchCategoriserFactory(new CatchCategoryFactory(PURSE_SEINE_GEAR_CODE))
     );
     private VesselScopeFactory<? extends MutableOptionValues<Int2D>> optionValues =
         new ExponentialMovingAverageOptionValuesFactory<>(LEARNING_ALPHA);
     private Factory<? extends Register<MutableOptionValues<Int2D>>> optionValuesRegister =
         new DynamicRegisterFactory<>(optionValues);
+
+    private BehaviourFactory<?> initialBehaviour =
+        new HomeBehaviourFactory(
+            new AllOfFactory<>(
+                new AdaptedVesselPredicateFactory<>(
+                    new CurrentTimeFactory(),
+                    new TimeIsAfterFactory(new TimeFactory(21, 59, 59))
+                ),
+                new AdaptedVesselPredicateFactory<>(
+                    new CurrentDayOfWeekFactory(),
+                    new InSetFactory<>(
+                        SUNDAY,
+                        MONDAY,
+                        TUESDAY,
+                        WEDNESDAY,
+                        THURSDAY
+                    )
+                )
+            ),
+            new ThereAndBackBehaviourFactory(
+                new ChoosingDestinationBehaviourFactory(
+                    new EpsilonGreedyDestinationSupplierFactory(
+                        EXPLORATION_PROBABILITY,
+                        optionValues,
+                        new NeighbourhoodGridExplorerFactory(
+                            optionValues,
+                            gearSpecificFishingLocationChecker,
+                            pathFinder,
+                            new ShiftedIntSupplierFactory(
+                                new PoissonIntSupplierFactory(MEAN_EXPLORATION_RADIUS),
+                                1
+                            )
+                        ),
+                        new ImitatingPickerFactory<>(
+                            optionValues,
+                            gearSpecificFishingLocationChecker,
+                            new BestOptionsFromFriendsSupplierFactory<>(
+                                5,
+                                optionValuesRegister
+                            )
+                        ),
+                        new TotalBiomassCaughtPerHourDestinationEvaluatorFactory(portGrid)
+                    ),
+                    ONE_HOUR_DURATION_SUPPLIER,
+                    new WaitingBehaviourFactory(ONE_DAY_DURATION_SUPPLIER)
+                ),
+                new DefaultFishingBehaviourFactory(
+                    new CurrentCellFisheableFactory(
+                        new BiomassGridsFactory(
+                            biomassGrids
+                        )
+                    ),
+                    regulations,
+                    new CompositeDispositionProcessFactory(
+                        new SelectedSpeciesRetentionFactory(
+                            new SpeciesByCodeFactory(
+                                new ConstantFactory<>(List.of("PIL", "ANE")),
+                                // TODO: we're currently restricting to a couple of species code
+                                //  for testing,  but, once we have the complete list of species
+                                //  for the  model (and not just the ones for which we currently
+                                //  have prices) we should (probably?) restrict to species
+                                //  that have a monetary value:
+                                // new StringColumnReaderFactory(inputPath.plus("prices.csv")
+                                // , "species_id"),
+                                species
+                            )
+                        ),
+                        new ProportionallyLimitingBiomassToHoldFactory(),
+                        new GeneralDiscardMortalityFactory(
+                            new ConstantDoubleSupplierFactory(0.1)
+                        )
+                    )
+                ),
+                travellingBehaviour
+            ),
+            new WaitingBehaviourFactory(
+                new DurationUntilSupplierFactory(
+                    new NextDayAtTimeSupplierFactory(
+                        new TimeFactory(22, 0, 0)
+                    )
+                )
+            ),
+            travellingBehaviour,
+            new LandingBehaviourFactory(marketGrid, ONE_HOUR_DURATION_SUPPLIER)
+        );
+
     private Factory<List<Vessel>> vessels =
         new VesselsFromFileFactory(
             inputPath.plus("vessels.csv"),
             "vessel_id",
             "vessel_name",
             "port_code",
-            new HomeBehaviourFactory(
-                portGrid,
-                hold,
-                new AllOfFactory<>(
-                    new AdaptedVesselPredicateFactory<>(
-                        new CurrentTimeFactory(),
-                        new TimeIsAfterFactory(new TimeFactory(21, 59, 59))
-                    ),
-                    new AdaptedVesselPredicateFactory<>(
-                        new CurrentDayOfWeekFactory(),
-                        new InSetFactory<>(
-                            SUNDAY,
-                            MONDAY,
-                            TUESDAY,
-                            WEDNESDAY,
-                            THURSDAY
-                        )
-                    )
-                ),
-                new ThereAndBackBehaviourFactory(
-                    new ChoosingDestinationBehaviourFactory(
-                        new EpsilonGreedyDestinationSupplierFactory(
-                            EXPLORATION_PROBABILITY,
-                            optionValues,
-                            new NeighbourhoodGridExplorerFactory(
-                                optionValues,
-                                gearSpecificFishingLocationChecker,
-                                pathFinder,
-                                new ShiftedIntSupplierFactory(
-                                    new PoissonIntSupplierFactory(MEAN_EXPLORATION_RADIUS),
-                                    1
-                                )
-                            ),
-                            new ImitatingPickerFactory<>(
-                                optionValues,
-                                gearSpecificFishingLocationChecker,
-                                new BestOptionsFromFriendsSupplierFactory<>(
-                                    5,
-                                    optionValuesRegister
-                                )
-                            ),
-                            new TotalBiomassCaughtPerHourDestinationEvaluatorFactory(portGrid)
-                        ),
-                        ONE_HOUR_DURATION_SUPPLIER,
-                        new WaitingBehaviourFactory(ONE_DAY_DURATION_SUPPLIER)
-                    ),
-                    new DefaultFishingBehaviourFactory<>(
-                        fishingGear,
-                        hold,
-                        new CurrentCellFisheableFactory<>(
-                            new BiomassGridsFactory(
-                                biomassGrids
-                            )
-                        ),
-                        regulations,
-                        new CompositeDispositionProcessFactory<>(
-                            new SelectedSpeciesRetentionFactory<Biomass>(
-                                new SpeciesByCodeFactory(
-                                    new ConstantFactory<>(List.of("PIL", "ANE")),
-                                    // TODO: we're currently restricting to a couple of species code
-                                    //  for testing,  but, once we have the complete list of species
-                                    //  for the  model (and not just the ones for which we currently
-                                    //  have prices) we should (probably?) restrict to species
-                                    //  that have a monetary value:
-                                    // new StringColumnReaderFactory(inputPath.plus("prices.csv")
-                                    // , "species_id"),
-                                    species
-                                )
-                            ),
-                            new ProportionallyLimitingBiomassToHoldFactory(),
-                            new GeneralDiscardMortalityFactory(
-                                new ConstantDoubleSupplierFactory(0.1)
-                            )
-                        )
-                    ),
-                    travellingBehaviour
-                ),
-                new WaitingBehaviourFactory(
-                    new DurationUntilSupplierFactory(
-                        new NextDayAtTimeSupplierFactory(
-                            new TimeFactory(22, 0, 0)
-                        )
-                    )
-                ),
-                travellingBehaviour,
-                new LandingBehaviourFactory<>(marketGrid, hold, ONE_HOUR_DURATION_SUPPLIER)
-            ),
+            initialBehaviour,
             vesselField,
             portGrid,
-            SpeedFactory.of(VESSEL_SPEED),
-            "EUR"
-        );
-    private Factory<? extends FleetIdRegister> fleetIdRegister =
-        new FleetIdRegisterFactory(
-            new ImmutableRegisterFactory<>(
-                vessels,
-                new VesselScopeAdaptor<>(new ConstantFactory<>(FLEET_ID))
-            )
+            hold,
+            fishingGear,
+            new SimpleEngineFactory(SpeedFactory.of(VESSEL_SPEED))
         );
 
     private Factory<Steppable> directoryRemover =

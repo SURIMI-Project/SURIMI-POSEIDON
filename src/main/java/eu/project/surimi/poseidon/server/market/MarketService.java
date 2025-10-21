@@ -27,6 +27,7 @@ import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import uk.ac.ox.poseidon.agents.market.BiomassMarket;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketGrid;
+import uk.ac.ox.poseidon.agents.market.Market;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.grids.ObjectGrid;
 
@@ -59,7 +60,9 @@ public class MarketService extends MarketServiceGrpc.MarketServiceImplBase {
         return getBiomassMarketGrids(simulation)
             .stream()
             .flatMap(ObjectGrid::stream)
-            .collect(toMap(BiomassMarket::getCode, identity()));
+            .filter(BiomassMarket.class::isInstance)
+            .map(BiomassMarket.class::cast)
+            .collect(toMap(Market::getCode, identity()));
     }
 
     @Override

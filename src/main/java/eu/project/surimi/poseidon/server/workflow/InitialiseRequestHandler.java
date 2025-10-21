@@ -71,7 +71,6 @@ public class InitialiseRequestHandler
         final Simulation simulation = scenario.newSimulation(simulationId);
         final Period stepSize = parsePeriod(request.getStepSize());
         simulation.start();
-        simulation.schedule.step(simulation);
         log(logger, INFO, simulation, "Simulation started");
         simulationManager.put(
             simulationId,

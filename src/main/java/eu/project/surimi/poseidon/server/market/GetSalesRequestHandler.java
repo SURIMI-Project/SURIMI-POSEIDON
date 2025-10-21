@@ -93,7 +93,7 @@ public class GetSalesRequestHandler extends
             toLocalDateTime(request.getStartDateTime()),
             toLocalDateTime(request.getEndDateTime())
         );
-        record Key(Market<?> market, CatchCategory catchCategory, CurrencyUnit currencyUnit) {}
+        record Key(Market market, CatchCategory catchCategory, CurrencyUnit currencyUnit) {}
         final List<SalesSummary> saleSummaries =
             simulation
                 .getComponent(BiomassSaleAccumulator.class)
@@ -150,7 +150,7 @@ public class GetSalesRequestHandler extends
     }
 
     private record SaleEntry(
-        Market<?> market,
+        Market market,
         CatchCategory catchCategory,
         Species species,
         Biomass biomass,

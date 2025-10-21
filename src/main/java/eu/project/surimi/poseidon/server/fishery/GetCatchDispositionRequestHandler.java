@@ -78,7 +78,7 @@ public class GetCatchDispositionRequestHandler
                     .entrySet()
                     .stream()
                     .map(entry -> new Row(
-                        fishingAction.getFishingGear().getCode(),
+                        fishingAction.getGear().getCode(),
                         entry.getKey(),
                         fishingAction.getEndCoordinate(),
                         new Disposition(
