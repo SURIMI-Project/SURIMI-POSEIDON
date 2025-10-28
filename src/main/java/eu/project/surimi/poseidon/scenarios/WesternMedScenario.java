@@ -48,7 +48,7 @@ import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
-import uk.ac.ox.poseidon.agents.market.BiomassMarketGridPriceFileFactory;
+import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.market.MarketGrid;
@@ -59,7 +59,7 @@ import uk.ac.ox.poseidon.agents.tables.FishingActionListenerTableFactory;
 import uk.ac.ox.poseidon.agents.vessels.AdaptedVesselPredicateFactory;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactory;
-import uk.ac.ox.poseidon.agents.vessels.VesselsFromFileFactory;
+import uk.ac.ox.poseidon.agents.vessels.VesselsFromDataFactory;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
@@ -68,7 +68,7 @@ import uk.ac.ox.poseidon.agents.vessels.holds.StandardBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.*;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
-import uk.ac.ox.poseidon.biology.species.SpeciesFromFileFactory;
+import uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory;
 import uk.ac.ox.poseidon.core.*;
 import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentDayOfWeekFactory;
 import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentTimeFactory;
@@ -104,10 +104,11 @@ import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFromGridFile;
 import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
 import uk.ac.ox.poseidon.geography.paths.GridPathFinder;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
-import uk.ac.ox.poseidon.geography.ports.PortGridFromFileFactory;
+import uk.ac.ox.poseidon.geography.ports.PortGridFromDataFactory;
 import uk.ac.ox.poseidon.io.DirectoryRemoverFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 import uk.ac.ox.poseidon.io.paths.PathFactory;
+import uk.ac.ox.poseidon.io.tables.CsvTableFactory;
 import uk.ac.ox.poseidon.io.tables.CsvTableWriterFactory;
 import uk.ac.ox.poseidon.regulations.ForbiddenIfFactory;
 import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFactory;
@@ -202,10 +203,10 @@ public class WesternMedScenario extends ScenarioSupplier {
     private Factory<? extends DistanceCalculator> distance =
         new HaversineDistanceCalculatorFactory(modelGrid);
     private Factory<? extends PortGrid> portGrid =
-        new PortGridFromFileFactory(
+        new PortGridFromDataFactory(
+            CsvTableFactory.fromFile(inputPath.plus("ports.csv")),
             bathymetricGrid,
             distance,
-            inputPath.plus("ports.csv"),
             "port_code", "port_name", "lon", "lat"
         );
     private Factory<? extends GridPathFinder> pathFinder =
@@ -235,8 +236,8 @@ public class WesternMedScenario extends ScenarioSupplier {
         gearSpecificFishingLocationChecker =
         new GearSpecificFishingLocationLegalityCheckerFactory(fishingGear, fishingLocationChecker);
     private Factory<? extends List<Species>> species =
-        new SpeciesFromFileFactory(
-            inputPath.plus("species.csv"),
+        new SpeciesFromDataFactory(
+            CsvTableFactory.fromFile(inputPath.plus("species.csv")),
             "species_code",
             "species_name",
             "life_stage"
@@ -300,8 +301,8 @@ public class WesternMedScenario extends ScenarioSupplier {
             -2
         );
     private Factory<? extends MarketGrid> marketGrid =
-        new BiomassMarketGridPriceFileFactory(
-            inputPath.plus("prices.csv"),
+        new BiomassMarketGridFromPriceTableFactory(
+            CsvTableFactory.fromFile(inputPath.plus("prices.csv")),
             "date",
             "market_code",
             "species_code",
@@ -408,8 +409,8 @@ public class WesternMedScenario extends ScenarioSupplier {
         );
 
     private Factory<List<Vessel>> vessels =
-        new VesselsFromFileFactory(
-            inputPath.plus("vessels.csv"),
+        new VesselsFromDataFactory(
+            CsvTableFactory.fromFile(inputPath.plus("vessels.csv")),
             "vessel_id",
             "vessel_name",
             "port_code",
