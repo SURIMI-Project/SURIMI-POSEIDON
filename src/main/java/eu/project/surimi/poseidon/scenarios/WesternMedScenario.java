@@ -56,15 +56,11 @@ import uk.ac.ox.poseidon.agents.registers.DynamicRegisterFactory;
 import uk.ac.ox.poseidon.agents.registers.Register;
 import uk.ac.ox.poseidon.agents.regulations.*;
 import uk.ac.ox.poseidon.agents.tables.FishingActionListenerTableFactory;
-import uk.ac.ox.poseidon.agents.vessels.AdaptedVesselPredicateFactory;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactory;
-import uk.ac.ox.poseidon.agents.vessels.VesselsFromDataFactory;
+import uk.ac.ox.poseidon.agents.vessels.*;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.agents.vessels.holds.Hold;
-import uk.ac.ox.poseidon.agents.vessels.holds.StandardBiomassHoldFactory;
+import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.*;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
@@ -138,8 +134,6 @@ public class WesternMedScenario extends ScenarioSupplier {
     private static final int MEAN_EXPLORATION_RADIUS = 1;
     private static final double CATCH_PROPORTION = 0.1;
     private static final String VESSEL_SPEED = "9.5 kn"; // as per email on 2025-03-18 08:20
-    private static final String VESSEL_HOLD_CAPACITY = "1 t";
-    private static final String FLEET_ID = "F0";
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
 
     public WesternMedScenario() {
@@ -313,11 +307,6 @@ public class WesternMedScenario extends ScenarioSupplier {
             portGrid,
             species
         );
-    private VesselScopeFactory<? extends Hold> hold = new StandardBiomassHoldFactory(
-        MassFactory.of(VESSEL_HOLD_CAPACITY),
-        MassFactory.of("1 kg"),
-        new UniformCatchCategoriserFactory(new CatchCategoryFactory(PURSE_SEINE_GEAR_CODE))
-    );
     private VesselScopeFactory<? extends MutableOptionValues<Int2D>> optionValues =
         new ExponentialMovingAverageOptionValuesFactory<>(LEARNING_ALPHA);
     private Factory<? extends Register<MutableOptionValues<Int2D>>> optionValuesRegister =
@@ -408,19 +397,24 @@ public class WesternMedScenario extends ScenarioSupplier {
             new LandingBehaviourFactory(marketGrid, ONE_HOUR_DURATION_SUPPLIER)
         );
 
-    private Factory<List<Vessel>> vessels =
-        new VesselsFromDataFactory(
-            CsvTableFactory.fromFile(inputPath.plus("vessels.csv")),
-            "vessel_id",
-            "vessel_name",
-            "port_code",
-            initialBehaviour,
-            vesselField,
-            portGrid,
-            hold,
-            fishingGear,
-            new SimpleEngineFactory(SpeedFactory.of(VESSEL_SPEED))
-        );
+    private Factory<Fleet> fleet =
+        FleetFromVesselRegisterFactory
+            .builder()
+            .fleet(new FleetFactory(vesselField, portGrid))
+            .data(CsvTableFactory.fromFile(inputPath.plus("fleet_register.csv")))
+            .initialBehaviour(initialBehaviour)
+            .hold(
+                new InfiniteBiomassHoldFactory(
+                    new UniformCatchCategoriserFactory(new CatchCategoryFactory())
+                )
+            )
+            .dataMapping(
+                "hold.catchCategoriser.catchCategory.code",
+                "main_fishing_gear"
+            ).gear(fishingGear)
+            .dataMapping("gear.code", "main_fishing_gear")
+            .engine(new SimpleEngineFactory(SpeedFactory.of(VESSEL_SPEED)))
+            .build();
 
     private Factory<Steppable> directoryRemover =
         new FinalProcessFactory<>(
