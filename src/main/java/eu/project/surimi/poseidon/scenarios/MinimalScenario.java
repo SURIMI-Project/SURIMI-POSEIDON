@@ -26,21 +26,21 @@ import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.Setter;
 import uk.ac.ox.poseidon.agents.behaviours.BehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.WaitingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.destination.ChoosingDestinationBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.destination.ConstantDestinationSupplierFactory;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.CompositeDispositionProcessFactory;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.GeneralDiscardMortalityFactory;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.DefaultFishingBehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulator;
-import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.HomeBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.LandingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.strategy.ThereAndBackBehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.travel.TravellingAlongPathBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.tasks.fishing.FishingEventAccumulator;
+import uk.ac.ox.poseidon.agents.behaviours.tasks.fishing.FishingEventAccumulatorFactory;
+import uk.ac.ox.poseidon.agents.behaviours.tasks.general.WaitFactory;
+import uk.ac.ox.poseidon.agents.behaviours.tasks.travel.TravelAlongPathFactory;
 import uk.ac.ox.poseidon.agents.catches.CatchCategoryFactory;
 import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
+import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
+import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFactory;
+import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
@@ -248,7 +248,7 @@ public class MinimalScenario extends ScenarioSupplier {
             distance
         );
     private BehaviourFactory<?> travellingBehaviour =
-        new TravellingAlongPathBehaviourFactory(
+        new TravelAlongPathFactory(
             pathFinder,
             distance
         );
@@ -277,7 +277,7 @@ public class MinimalScenario extends ScenarioSupplier {
                         new CoordinateFactory()
                     ),
                     ONE_MINUTE_DURATION_SUPPLIER,
-                    new WaitingBehaviourFactory(ONE_SECOND_DURATION_SUPPLIER)
+                    new WaitFactory(ONE_SECOND_DURATION_SUPPLIER)
                 ),
                 new DefaultFishingBehaviourFactory(
                     new CurrentCellFisheableFactory(
@@ -300,7 +300,7 @@ public class MinimalScenario extends ScenarioSupplier {
                 ),
                 travellingBehaviour
             ),
-            new WaitingBehaviourFactory(ONE_HOUR_DURATION_SUPPLIER),
+            new WaitFactory(ONE_HOUR_DURATION_SUPPLIER),
             travellingBehaviour,
             new LandingBehaviourFactory(marketGrid, ONE_HOUR_DURATION_SUPPLIER)
         );
@@ -352,8 +352,8 @@ public class MinimalScenario extends ScenarioSupplier {
             .engine(new SimpleEngineFactory(SpeedFactory.of("10 kn")))
             .build();
 
-    private Factory<? extends FishingActionAccumulator> fishingActionAccumulator =
-        new FishingActionAccumulatorFactory();
+    private Factory<? extends FishingEventAccumulator> fishingActionAccumulator =
+        new FishingEventAccumulatorFactory();
     private Factory<? extends BiomassSaleAccumulator> biomassSaleAccumulator =
         new BiomassSaleAccumulatorFactory();
 

@@ -27,24 +27,24 @@ import lombok.Setter;
 import sim.engine.Steppable;
 import sim.util.Int2D;
 import uk.ac.ox.poseidon.agents.behaviours.BehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.WaitingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.choices.BestOptionsFromFriendsSupplierFactory;
 import uk.ac.ox.poseidon.agents.behaviours.choices.ExponentialMovingAverageOptionValuesFactory;
 import uk.ac.ox.poseidon.agents.behaviours.choices.MutableOptionValues;
 import uk.ac.ox.poseidon.agents.behaviours.destination.*;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.CompositeDispositionProcessFactory;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.GeneralDiscardMortalityFactory;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.ProportionallyLimitingBiomassToHoldFactory;
-import uk.ac.ox.poseidon.agents.behaviours.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.behaviours.fishing.DefaultFishingBehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulator;
-import uk.ac.ox.poseidon.agents.behaviours.fishing.FishingActionAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.HomeBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.port.LandingBehaviourFactory;
 import uk.ac.ox.poseidon.agents.behaviours.strategy.ThereAndBackBehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.travel.TravellingAlongPathBehaviourFactory;
+import uk.ac.ox.poseidon.agents.behaviours.tasks.fishing.FishingEventAccumulator;
+import uk.ac.ox.poseidon.agents.behaviours.tasks.fishing.FishingEventAccumulatorFactory;
+import uk.ac.ox.poseidon.agents.behaviours.tasks.general.WaitFactory;
+import uk.ac.ox.poseidon.agents.behaviours.tasks.travel.TravelAlongPathFactory;
 import uk.ac.ox.poseidon.agents.catches.CatchCategoryFactory;
 import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
+import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
+import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFactory;
+import uk.ac.ox.poseidon.agents.catches.disposition.ProportionallyLimitingBiomassToHoldFactory;
+import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
@@ -210,7 +210,7 @@ public class WesternMedScenario extends ScenarioSupplier {
             distance
         );
     private BehaviourFactory<?> travellingBehaviour =
-        new TravellingAlongPathBehaviourFactory(
+        new TravelAlongPathFactory(
             pathFinder,
             distance
         );
@@ -248,8 +248,8 @@ public class WesternMedScenario extends ScenarioSupplier {
         );
     private Factory<? extends BiomassSaleAccumulator> biomassSaleAccumulator =
         new BiomassSaleAccumulatorFactory();
-    private Factory<? extends FishingActionAccumulator> fishingActionAccumulator =
-        new FishingActionAccumulatorFactory();
+    private Factory<? extends FishingEventAccumulator> fishingActionAccumulator =
+        new FishingEventAccumulatorFactory();
     private Factory<? extends Steppable> dailyProcesses =
         new ScheduledRepeatingFactory<>(
             new DateTimeAfterStartingFactory(DAILY),
@@ -355,7 +355,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                         new TotalBiomassCaughtPerHourDestinationEvaluatorFactory(portGrid)
                     ),
                     ONE_HOUR_DURATION_SUPPLIER,
-                    new WaitingBehaviourFactory(ONE_DAY_DURATION_SUPPLIER)
+                    new WaitFactory(ONE_DAY_DURATION_SUPPLIER)
                 ),
                 new DefaultFishingBehaviourFactory(
                     new CurrentCellFisheableFactory(
@@ -386,7 +386,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                 ),
                 travellingBehaviour
             ),
-            new WaitingBehaviourFactory(
+            new WaitFactory(
                 new DurationUntilSupplierFactory(
                     new NextDayAtTimeSupplierFactory(
                         new TimeFactory(22, 0, 0)
