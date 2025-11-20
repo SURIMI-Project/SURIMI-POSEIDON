@@ -27,7 +27,7 @@ import com.google.common.collect.Range;
 import com.google.protobuf.Timestamp;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
-import uk.ac.ox.poseidon.agents.behaviours.tasks.fishing.FishingEventAccumulator;
+import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.Coordinate;
