@@ -4,10 +4,13 @@
     <inspection_tool class="ClassCanBeRecord" enabled="true" level="WEAK WARNING" enabled_by_default="true">
       <option name="myIgnoredAnnotations">
         <list>
+          <option value="Getter" />
           <option value="io.micronaut.*" />
           <option value="jakarta.*" />
           <option value="javax.*" />
           <option value="lombok.Data" />
+          <option value="lombok.Getter" />
+          <option value="lombok.RequiredArgsConstructor" />
           <option value="lombok.Value" />
           <option value="org.springframework.*" />
         </list>

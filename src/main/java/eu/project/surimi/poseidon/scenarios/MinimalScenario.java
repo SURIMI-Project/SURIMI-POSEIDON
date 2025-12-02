@@ -25,11 +25,6 @@ package eu.project.surimi.poseidon.scenarios;
 import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.Setter;
-import uk.ac.ox.poseidon.agents.behaviours.BehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.destination.ChoosingDestinationBehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.fishing.DefaultFishingBehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.port.LandingBehaviourFactory;
-import uk.ac.ox.poseidon.agents.behaviours.strategy.ThereAndBackBehaviourFactory;
 import uk.ac.ox.poseidon.agents.catches.CatchCategoryFactory;
 import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
@@ -40,9 +35,14 @@ import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
 import uk.ac.ox.poseidon.agents.market.*;
+import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
+import uk.ac.ox.poseidon.agents.tasks.branches.SequenceTaskFactory;
+import uk.ac.ox.poseidon.agents.tasks.destinations.ChooseDestinationFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
-import uk.ac.ox.poseidon.agents.tasks.general.WaitFactory;
+import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
+import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
+import uk.ac.ox.poseidon.agents.tasks.travel.RoundTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
 import uk.ac.ox.poseidon.agents.vessels.*;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
@@ -57,7 +57,6 @@ import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.ScenarioSupplier;
-import uk.ac.ox.poseidon.core.predicates.AlwaysTrueFactory;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.suppliers.ConstantDoubleSupplierFactory;
@@ -76,7 +75,6 @@ import uk.ac.ox.poseidon.geography.ports.PortFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 import uk.ac.ox.poseidon.io.tables.CsvTableFactory;
-import uk.ac.ox.poseidon.regulations.PermittedIfFactory;
 
 import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
@@ -90,7 +88,7 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
-import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.*;
+import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 
 @SuppressWarnings({"SequencedCollectionMethodCanBeUsed", "UnstableApiUsage"})
 @Getter
@@ -246,11 +244,6 @@ public class MinimalScenario extends ScenarioSupplier {
             portGrid,
             distance
         );
-    private BehaviourFactory<?> travellingBehaviour =
-        new TravelAlongPathFactory(
-            pathFinder,
-            distance
-        );
 
     private VesselScopeFactory<? extends Gear> gear1 =
         new FixedBiomassProportionGearFactory(
@@ -266,42 +259,65 @@ public class MinimalScenario extends ScenarioSupplier {
             ONE_HOUR_DURATION_SUPPLIER
         );
 
-    private BehaviourFactory<?> initialBehaviour =
-        new HomeBehaviourFactory(
-            new AlwaysTrueFactory(),
-            new ThereAndBackBehaviourFactory(
-                new ChoosingDestinationBehaviourFactory(
-                    new ConstantDestinationSupplierFactory(
-                        modelGrid,
-                        new CoordinateFactory()
-                    ),
-                    ONE_MINUTE_DURATION_SUPPLIER,
-                    new WaitFactory(ONE_SECOND_DURATION_SUPPLIER)
-                ),
-                new DefaultFishingBehaviourFactory(
-                    new CurrentCellFisheableFactory(
-                        new BiomassGridsFactory(
-                            biomassGrids
-                        )
-                    ),
-                    new PermittedIfFactory(new AlwaysTrueFactory()),
-                    new CompositeDispositionProcessFactory(
-                        new SelectedSpeciesRetentionFactory(
-                            new SpeciesByCodeFactory(
-                                new ConstantFactory<>(List.of("A", "B")),
-                                species
+    private FishingFactory fishingFactory = new FishingFactory(
+        new CurrentCellFisheableFactory(
+            new BiomassGridsFactory(
+                biomassGrids
+            )
+        ),
+        new CompositeDispositionProcessFactory(
+            new SelectedSpeciesRetentionFactory(
+                new SpeciesByCodeFactory(
+                    new ConstantFactory<>(List.of("A", "B")),
+                    species
+                )
+            ),
+            new GeneralDiscardMortalityFactory(
+                new ConstantDoubleSupplierFactory(0.1)
+            )
+        )
+    );
+
+    private BehaviourFactory behaviour =
+        new BehaviourFactory(
+            SequenceTaskFactory
+                .builder()
+                .child(
+                    new RoundTripFactory(
+                        new ChooseDestinationFactory(
+                            new ConstantDestinationSupplierFactory(
+                                modelGrid,
+                                new CoordinateFactory()
                             )
                         ),
-                        new GeneralDiscardMortalityFactory(
-                            new ConstantDoubleSupplierFactory(0.1)
+                        new TravelAlongPathFactory(
+                            pathFinder,
+                            distance
+                        ),
+                        new FishingFactory(
+                            new CurrentCellFisheableFactory(
+                                new BiomassGridsFactory(
+                                    biomassGrids
+                                )
+                            ),
+                            new CompositeDispositionProcessFactory(
+                                new SelectedSpeciesRetentionFactory(
+                                    new SpeciesByCodeFactory(
+                                        new ConstantFactory<>(List.of("A", "B")),
+                                        species
+                                    )
+                                ),
+                                new GeneralDiscardMortalityFactory(
+                                    new ConstantDoubleSupplierFactory(0.1)
+                                )
+                            )
+                        ),
+                        new LandCatchesFactory(
+                            ONE_HOUR_DURATION_SUPPLIER
                         )
                     )
-                ),
-                travellingBehaviour
-            ),
-            new WaitFactory(ONE_HOUR_DURATION_SUPPLIER),
-            travellingBehaviour,
-            new LandingBehaviourFactory(marketGrid, ONE_HOUR_DURATION_SUPPLIER)
+                )
+                .build()
         );
 
     private static final String COORDINATE_PROPERTY_ADDRESS =
@@ -313,7 +329,8 @@ public class MinimalScenario extends ScenarioSupplier {
             .builder()
             .fleet(new FleetFactory(
                 vesselField,
-                portGrid
+                portGrid,
+                marketGrid
             ))
             .data(CsvTableFactory.fromString("""
                 cfr,name_of_vessel,place_of_registration,event,event_start_date,gear,hold,fav_lon,fav_lat
@@ -323,7 +340,7 @@ public class MinimalScenario extends ScenarioSupplier {
                 V4,Vessel 4,P2,CEN,2000-01-01,G2,H2,-1,-1
                 """
             ))
-            .initialBehaviour(initialBehaviour)
+            .behaviour(behaviour)
             .dataMapping(
                 COORDINATE_PROPERTY_ADDRESS + ".longitude",
                 "fav_lon"

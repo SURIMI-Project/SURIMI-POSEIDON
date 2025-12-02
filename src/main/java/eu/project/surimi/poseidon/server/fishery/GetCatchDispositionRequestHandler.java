@@ -71,25 +71,27 @@ public class GetCatchDispositionRequestHandler
         return simulation
             .getComponent(FishingEventAccumulator.class)
             .getEvents()
-            .filter(fishingAction -> dateTimeRange.contains(fishingAction.getEndDateTime()))
-            .flatMap(fishingAction ->
-                fishingAction.getGrossCatch()
+            .filter(fishingEvent -> dateTimeRange.contains(fishingEvent.getEndDateTime()))
+            .flatMap(fishingEvent ->
+                fishingEvent.getOutcome().getGrossCatch()
                     .getMap()
                     .entrySet()
                     .stream()
                     .map(entry -> new Row(
-                        fishingAction.getGear().getCode(),
+                        fishingEvent.getAction().getGear().getCode(),
                         entry.getKey(),
-                        fishingAction.getEndCoordinate(),
+                        fishingEvent.getAction().getEndCoordinate(),
                         new Disposition(
                             entry.getValue().asBiomass().asKg(),
-                            fishingAction
+                            fishingEvent
+                                .getOutcome()
                                 .getDisposition()
                                 .getDiscardedAlive()
                                 .getContent(entry.getKey())
                                 .map(c -> c.asBiomass().asKg())
                                 .orElse(0.0),
-                            fishingAction
+                            fishingEvent
+                                .getOutcome()
                                 .getDisposition()
                                 .getDiscardedDead()
                                 .getContent(entry.getKey())
