@@ -321,7 +321,7 @@ public class MinimalScenario extends ScenarioSupplier {
         );
 
     private static final String COORDINATE_PROPERTY_ADDRESS =
-        "initialBehaviour.behaviourIfReady.fishingDestinationBehaviour" +
+        "behaviour.rootTask.children[0].chooseDestinationTask" +
             ".destinationSupplier.coordinate";
 
     private Factory<Fleet> fleet =
