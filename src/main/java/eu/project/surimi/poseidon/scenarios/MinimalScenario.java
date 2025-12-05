@@ -37,7 +37,7 @@ import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
 import uk.ac.ox.poseidon.agents.market.*;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.branches.SequenceTaskFactory;
-import uk.ac.ox.poseidon.agents.tasks.destinations.ChooseDestinationFactory;
+import uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
@@ -284,7 +284,7 @@ public class MinimalScenario extends ScenarioSupplier {
                 .builder()
                 .child(
                     new RoundTripFactory(
-                        new ChooseDestinationFactory(
+                        new StartTripFactory(
                             new ConstantDestinationSupplierFactory(
                                 modelGrid,
                                 new CoordinateFactory()

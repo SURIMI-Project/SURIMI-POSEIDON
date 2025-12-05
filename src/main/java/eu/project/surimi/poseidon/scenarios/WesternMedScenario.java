@@ -33,6 +33,8 @@ import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFacto
 import uk.ac.ox.poseidon.agents.catches.disposition.ProportionallyLimitingBiomassToHoldFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.choices.*;
+import uk.ac.ox.poseidon.agents.choices.evaluation.TotalBiomassCaughtPerHourDestinationEvaluationProviderFactory;
+import uk.ac.ox.poseidon.agents.choices.evaluation.TripEvaluatorFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselField;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
@@ -50,7 +52,7 @@ import uk.ac.ox.poseidon.agents.tables.FishingEventListenerTableFactory;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.TaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.branches.SequenceTaskFactory;
-import uk.ac.ox.poseidon.agents.tasks.destinations.ChooseDestinationFactory;
+import uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.Fishing;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
@@ -61,7 +63,6 @@ import uk.ac.ox.poseidon.agents.tasks.general.WaitFactory;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.EndTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
-import uk.ac.ox.poseidon.agents.tasks.travel.StartTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
 import uk.ac.ox.poseidon.agents.vessels.*;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
@@ -311,7 +312,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         );
     private VesselScopeFactory<? extends MutableOptionValues<Int2D>> optionValues =
         new ExponentialMovingAverageOptionValuesFactory<>(LEARNING_ALPHA);
-    private Factory<? extends Register<MutableOptionValues<Int2D>>> optionValuesRegister =
+    private Factory<? extends Register<OptionValues<Int2D>>> optionValuesRegister =
         new DynamicRegisterFactory<>(optionValues);
 
     private TaskFactory<?> readyForDeparture =
@@ -343,11 +344,16 @@ public class WesternMedScenario extends ScenarioSupplier {
             )
         );
 
-    private TaskFactory<?> chooseDestination =
-        new ChooseDestinationFactory(
+    private TripEvaluatorFactory tripEvaluator =
+        new TripEvaluatorFactory(
+            optionValues,
+            new TotalBiomassCaughtPerHourDestinationEvaluationProviderFactory()
+        );
+
+    private TaskFactory<?> startTrip =
+        new StartTripFactory(
             new EpsilonGreedyDestinationSupplierFactory(
                 EXPLORATION_PROBABILITY,
-                optionValues,
                 new NeighbourhoodGridExplorerFactory(
                     optionValues,
                     gearSpecificFishingLocationChecker,
@@ -364,8 +370,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                         5,
                         optionValuesRegister
                     )
-                ),
-                new TotalBiomassCaughtPerHourDestinationEvaluatorFactory(portGrid)
+                )
             )
         );
 
@@ -405,15 +410,15 @@ public class WesternMedScenario extends ScenarioSupplier {
                         SequenceTaskFactory
                             .builder()
                             .child(readyForDeparture)
-                            .child(chooseDestination)
+                            .child(startTrip)
                             .build(),
                         waitUntilNextEvening
                     )
                 )
-                .child(new StartTripFactory())
                 .child(new TravelAlongPathFactory(pathFinder, distance))
                 .child(fishingTask)
                 .child(new SetDestinationToOriginFactory())
+                .child(new TravelAlongPathFactory(pathFinder, distance))
                 .child(new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER))
                 .child(new EndTripFactory())
                 .build()

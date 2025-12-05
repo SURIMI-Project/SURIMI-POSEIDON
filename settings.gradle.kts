@@ -70,5 +70,6 @@ dependencyResolutionManagement {
             name = "buf"
             url = uri("https://buf.build/gen/maven")
         }
+        maven("https://jitpack.io")
     }
 }
