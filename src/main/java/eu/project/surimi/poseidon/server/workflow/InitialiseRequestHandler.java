@@ -30,8 +30,12 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.utils.Measurements;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
+import javax.measure.Unit;
+import javax.measure.format.MeasurementParseException;
+import javax.measure.quantity.Mass;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Period;
@@ -39,6 +43,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.UUID;
 
+import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
 import static eu.project.surimi.poseidon.server.Server.toInstant;
 import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
@@ -64,23 +69,66 @@ public class InitialiseRequestHandler
                 .asRuntimeException();
         }
         final Scenario scenario = scenarioLoader.load(scenarioFile);
-        scenario.setStartingDateTime(Date.from(toInstant(request.getStartDateTime())));
+        scenario.setStartingDateTime(
+            Date.from(toInstant(request.getSimulation().getStartDateTime()))
+        );
 
         logger.log(INFO, "Scenario loaded: {0}", scenarioFile.toPath().toAbsolutePath());
 
+        final Period stepSize = parsePeriod(request.getSimulation().getTimeStep());
+        final Unit<Mass> massUnit = getMassUnit(request);
+
+        validateContract(request);
+
         final Simulation simulation = scenario.newSimulation(simulationId);
-        final Period stepSize = parsePeriod(request.getStepSize());
         simulation.start();
         log(logger, INFO, simulation, "Simulation started");
         simulationManager.put(
             simulationId,
             simulation,
-            new SimulationManager.SimulationProperties(stepSize)
+            new SimulationManager.SimulationProperties(stepSize, massUnit)
         );
         return InitialiseResponse
             .newBuilder()
             .setSimulationId(simulationId.toString())
             .build();
+    }
+
+    private void validateContract(final InitialiseRequest request) {
+        final boolean isRasterCellOriginCentroid = request
+            .getSimulation()
+            .getGeography()
+            .getRasterCellOrigin()
+            .equals(RASTER_CELL_ORIGIN_CENTROID);
+        if (!isRasterCellOriginCentroid) {
+            throw FAILED_PRECONDITION
+                .withDescription("Only centroid raster cell origin is supported.")
+                .asRuntimeException();
+        }
+    }
+
+    private static Unit<Mass> getMassUnit(final InitialiseRequest request) {
+        return request.getSimulation()
+            .getStandards()
+            .getMeasurements()
+            .getUnitsList()
+            .stream()
+            .filter(unit -> unit.getQuantity().equals("mass"))
+            .findFirst()
+            .map(unit -> parseMassUnit(unit.getUnit()))
+            .orElseThrow(() ->
+                NOT_FOUND
+                    .withDescription("Standard unit for mass not found.")
+                    .asRuntimeException()
+            );
+    }
+
+    private static Unit<Mass> parseMassUnit(final String massUnit) {
+        try {
+            return Measurements.parseMassUnit(massUnit);
+        } catch (final MeasurementParseException e) {
+            throw wrap(INVALID_ARGUMENT, e);
+        }
     }
 
     @SuppressWarnings("SameParameterValue")

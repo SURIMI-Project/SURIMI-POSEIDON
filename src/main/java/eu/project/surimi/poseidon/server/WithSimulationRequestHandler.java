@@ -35,8 +35,10 @@ public abstract class WithSimulationRequestHandler<ReqT, RespT>
     @Override
     protected RespT getResponse(final ReqT request) {
         final Simulation simulation = simulationManager.getSimulation(getSimulationId(request));
+        final SimulationManager.SimulationProperties simulationProperties =
+            simulationManager.getSimulationProperties(simulation);
         synchronized (simulation.schedule) {
-            return getResponseWithSimulation(request, simulation);
+            return getResponseWithSimulation(request, simulation, simulationProperties);
         }
     }
 
@@ -44,7 +46,8 @@ public abstract class WithSimulationRequestHandler<ReqT, RespT>
 
     protected abstract RespT getResponseWithSimulation(
         final ReqT request,
-        final Simulation simulation
+        final Simulation simulation,
+        SimulationManager.SimulationProperties simulationProperties
     );
 
 }

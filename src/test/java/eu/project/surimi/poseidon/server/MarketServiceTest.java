@@ -40,7 +40,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static tech.units.indriya.unit.Units.KILOGRAM;
-import static uk.ac.ox.poseidon.core.utils.Measurements.parseMassUnit;
 
 public class MarketServiceTest extends ServiceTest {
 
@@ -94,7 +93,7 @@ public class MarketServiceTest extends ServiceTest {
                         sp -> sp.getSpecies().getSpeciesCode(),
                         sp -> new Price(
                             Money.of(CurrencyUnit.of(sp.getCurrency()), sp.getPrice()),
-                            parseMassUnit(sp.getMeasurementUnit())
+                            MASS_UNIT
                         )
                     )
                 )

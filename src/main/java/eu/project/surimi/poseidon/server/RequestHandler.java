@@ -90,7 +90,7 @@ public abstract class RequestHandler<ReqT, RespT> {
     }
 
     @SuppressWarnings("SameParameterValue")
-    protected StatusRuntimeException wrap(
+    protected static StatusRuntimeException wrap(
         final Status status,
         final Exception e
     ) {

@@ -42,7 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.GRAM;
-import static uk.ac.ox.poseidon.core.utils.Measurements.parseMassUnit;
 
 public class EcologyServiceTest extends ServiceTest {
 
@@ -53,6 +52,7 @@ public class EcologyServiceTest extends ServiceTest {
     @Test
     void canGetBiomass() {
         final String simulationId = initialiseSimulation();
+
         final Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> grids =
             getGrids(simulationId);
         assertTrue(
@@ -65,7 +65,7 @@ public class EcologyServiceTest extends ServiceTest {
             isEqualCollection(
                 LIFE_STAGE_PER_SPECIES_CODE.stream().map(Entry::getValue).toList(),
                 grids.keySet().stream().map(species ->
-                    Optional.of(species.getStage()).filter(s -> !s.isEmpty()).orElse(null)
+                    Optional.of(species.getLifeStage()).filter(s -> !s.isEmpty()).orElse(null)
                 ).toList()
             )
         );
@@ -85,14 +85,13 @@ public class EcologyServiceTest extends ServiceTest {
                 .setSimulationId(simulationId)
                 .build()
         );
+
         return readBiomassGrids(response.getBiomassSummary());
     }
 
     Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> readBiomassGrids(
         final BiomassSummary biomassSummary
     ) {
-        final Unit<Mass> unit =
-            parseMassUnit(biomassSummary.getMeasurementUnit());
         return biomassSummary
             .getBiomassGridsList()
             .stream()
@@ -104,7 +103,7 @@ public class EcologyServiceTest extends ServiceTest {
                         .stream()
                         .collect(toMap(
                             cell -> new Coordinate(cell.getLongitude(), cell.getLatitude()),
-                            cell -> getQuantity(cell.getBiomass(), unit)
+                            cell -> getQuantity(cell.getBiomass(), MASS_UNIT)
                         ))
             ));
     }
@@ -121,7 +120,6 @@ public class EcologyServiceTest extends ServiceTest {
                     .setBiomassSummary(
                         BiomassSummary
                             .newBuilder()
-                            .setMeasurementUnit(unit.toString())
                             .addBiomassGrids(
                                 BiomassGrid
                                     .newBuilder()
@@ -130,7 +128,7 @@ public class EcologyServiceTest extends ServiceTest {
                                             .newBuilder()
                                             .setSpeciesCode(
                                                 LIFE_STAGE_PER_SPECIES_CODE.getFirst().getKey()
-                                            ).setStage(
+                                            ).setLifeStage(
                                                 LIFE_STAGE_PER_SPECIES_CODE.getFirst().getValue()
                                             ))
                                     .addBiomassCells(
@@ -179,7 +177,7 @@ public class EcologyServiceTest extends ServiceTest {
                         entry ->
                             new SpeciesKey(
                                 entry.getKey().getSpeciesCode(),
-                                entry.getKey().getStage()
+                                entry.getKey().getLifeStage()
                             ).toEntry(),
                         Entry::getValue
                     )
@@ -187,17 +185,17 @@ public class EcologyServiceTest extends ServiceTest {
         assertTrue(
             grids.get(LIFE_STAGE_PER_SPECIES_CODE.getFirst())
                 .get(new Coordinate(-1, -1))
-                .isEquivalentTo(getQuantity(10, unit))
+                .isEquivalentTo(getQuantity(10_000, unit))
         );
         assertTrue(
             grids.get(LIFE_STAGE_PER_SPECIES_CODE.getFirst())
                 .get(new Coordinate(0, -1))
-                .isEquivalentTo(getQuantity(20, unit))
+                .isEquivalentTo(getQuantity(20_000, unit))
         );
         assertTrue(
             grids.get(LIFE_STAGE_PER_SPECIES_CODE.getLast())
                 .get(new Coordinate(-1, -1))
-                .isEquivalentTo(getQuantity(30, unit))
+                .isEquivalentTo(getQuantity(30_000, unit))
         );
     }
 

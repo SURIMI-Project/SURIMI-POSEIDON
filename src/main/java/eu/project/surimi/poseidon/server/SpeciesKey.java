@@ -35,19 +35,19 @@ import static java.util.function.Predicate.not;
 @Value
 public class SpeciesKey {
 
-    @NonNull String code;
+    @NonNull String speciesCode;
     String lifeStage;
 
-    public SpeciesKey(final @NonNull String code) {
-        this.code = code;
+    public SpeciesKey(final @NonNull String speciesCode) {
+        this.speciesCode = speciesCode;
         this.lifeStage = null;
     }
 
     public SpeciesKey(
-        @NonNull final String code,
+        @NonNull final String speciesCode,
         final String lifeStage
     ) {
-        this.code = code;
+        this.speciesCode = speciesCode;
         this.lifeStage = Optional
             .ofNullable(lifeStage)
             .filter(not(String::isBlank))
@@ -55,22 +55,22 @@ public class SpeciesKey {
     }
 
     public Species toSpecies() {
-        return new Species(code, lifeStage);
+        return new Species(speciesCode, lifeStage);
     }
 
     public build.buf.gen.surimi.v1.Species toProtobufSpecies() {
         final build.buf.gen.surimi.v1.Species.Builder builder =
             build.buf.gen.surimi.v1.Species
                 .newBuilder()
-                .setSpeciesCode(code);
+                .setSpeciesCode(speciesCode);
         if (lifeStage != null) {
-            builder.setStage(lifeStage);
+            builder.setLifeStage(lifeStage);
         }
         return builder.build();
     }
 
     public Map.Entry<String, String> toEntry() {
-        return new AbstractMap.SimpleEntry<>(code, lifeStage);
+        return new AbstractMap.SimpleEntry<>(speciesCode, lifeStage);
     }
 
     public static SpeciesKey from(final Species species) {
@@ -80,7 +80,7 @@ public class SpeciesKey {
     public static SpeciesKey from(final build.buf.gen.surimi.v1.Species species) {
         return new SpeciesKey(
             species.getSpeciesCode(),
-            species.getStage()
+            species.getLifeStage()
         );
     }
 }

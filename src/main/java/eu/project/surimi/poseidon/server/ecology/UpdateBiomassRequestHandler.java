@@ -31,23 +31,19 @@ import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import sim.util.Int2D;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.utils.Measurements;
 import uk.ac.ox.poseidon.geography.Coordinate;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
-import javax.measure.Unit;
-import javax.measure.format.MeasurementParseException;
-import javax.measure.quantity.Mass;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.grpc.Status.*;
+import static io.grpc.Status.FAILED_PRECONDITION;
+import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
-import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class UpdateBiomassRequestHandler extends
     WithSimulationRequestHandler<UpdateBiomassRequest, UpdateBiomassResponse> {
@@ -86,12 +82,11 @@ public class UpdateBiomassRequestHandler extends
     @Override
     protected UpdateBiomassResponse getResponseWithSimulation(
         final UpdateBiomassRequest request,
-        final Simulation simulation
+        final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties
     ) {
         logger.log(INFO, "Biomass update received for simulation {0}", request.getSimulationId());
         final BiomassSummary biomassSummary = request.getBiomassSummary();
-        final Unit<Mass> massUnit = parseMassUnit(biomassSummary.getMeasurementUnit());
-        final boolean isKg = massUnit.isEquivalentTo(KILOGRAM);
         final Map<SpeciesKey, BiomassGrid> simulationGrids =
             simulation.getComponents(BiomassGrid.class).stream().collect(toMap(
                 grid -> SpeciesKey.from(grid.getSpecies()),
@@ -106,30 +101,16 @@ public class UpdateBiomassRequestHandler extends
             );
             biomassGrid.getBiomassCellsList().forEach(biomassCell -> {
                 final Int2D cell = getSimulationCell(biomassCell, bathymetricGrid);
-                if (isKg)
-                    simulationGrid.setBiomass(cell, biomassCell.getBiomass());
-                else
-                    simulationGrid.setBiomass(
-                        cell,
-                        new uk.ac.ox.poseidon.biology.biomass.Biomass(
-                            biomassCell.getBiomass(),
-                            massUnit
-                        )
-                    );
+                simulationGrid.setBiomass(
+                    cell,
+                    simulationProperties.convertMassInStandardUnitToKg(biomassCell.getBiomass())
+                );
             });
         });
         return UpdateBiomassResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
             .build();
-    }
-
-    private Unit<Mass> parseMassUnit(final String massUnit) {
-        try {
-            return Measurements.parseMassUnit(massUnit);
-        } catch (final MeasurementParseException e) {
-            throw wrap(INVALID_ARGUMENT, e);
-        }
     }
 
     private BathymetricGrid getBathymetricGrid(final Simulation simulation) {

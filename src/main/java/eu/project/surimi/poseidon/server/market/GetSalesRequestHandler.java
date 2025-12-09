@@ -43,7 +43,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
-import static tech.units.indriya.unit.Units.KILOGRAM;
 import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class GetSalesRequestHandler extends
@@ -84,7 +83,8 @@ public class GetSalesRequestHandler extends
     @Override
     protected GetSalesResponse getResponseWithSimulation(
         final GetSalesRequest request,
-        final Simulation simulation
+        final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties
     ) {
         log(logger, INFO, simulation, "Sales requested");
         checkArgument(request.hasStartDateTime(), "Start date time is required.");
@@ -135,7 +135,6 @@ public class GetSalesRequestHandler extends
                     SalesSummary
                         .newBuilder()
                         .setMarketCode(entry.getKey().market().getCode())
-                        .setMeasurementUnit(KILOGRAM.getSymbol())
                         .setCurrency(entry.getKey().currencyUnit().getCode())
                         .addAllSales(entry.getValue())
                         .build()

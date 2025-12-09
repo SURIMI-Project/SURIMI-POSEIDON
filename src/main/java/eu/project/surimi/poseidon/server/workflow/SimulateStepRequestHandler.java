@@ -52,9 +52,10 @@ public class SimulateStepRequestHandler extends
     @Override
     protected SimulateStepResponse getResponseWithSimulation(
         final SimulateStepRequest request,
-        final Simulation simulation
+        final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties
     ) {
-        final Period stepSize = simulationManager.getSimulationProperties(simulation).stepSize();
+        final Period stepSize = simulationManager.getSimulationProperties(simulation).getStepSize();
         log(logger, INFO, simulation, "Step requested");
         simulation.getTemporalSchedule().stepFor(simulation, stepSize);
         log(

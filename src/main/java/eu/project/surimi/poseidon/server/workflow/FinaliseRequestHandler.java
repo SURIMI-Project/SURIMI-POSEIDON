@@ -48,7 +48,8 @@ public class FinaliseRequestHandler
     @Override
     protected FinaliseResponse getResponseWithSimulation(
         final FinaliseRequest request,
-        final Simulation simulation
+        final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties
     ) {
         logger.log(INFO, "Finalising simulation {0}", request.getSimulationId());
         simulation.finish();

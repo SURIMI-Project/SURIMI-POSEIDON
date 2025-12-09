@@ -35,10 +35,8 @@ import uk.ac.ox.poseidon.agents.market.BiomassMarket;
 import uk.ac.ox.poseidon.agents.market.Price;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.utils.Measurements;
 
 import javax.measure.Unit;
-import javax.measure.format.MeasurementParseException;
 import javax.measure.quantity.Mass;
 import java.math.RoundingMode;
 import java.util.List;
@@ -67,7 +65,8 @@ public class UpdateSpeciesPricesRequestHandler extends
     @Override
     protected UpdateSpeciesPricesResponse getResponseWithSimulation(
         final UpdateSpeciesPricesRequest request,
-        final Simulation simulation
+        final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties
     ) {
         logger.log(INFO, "Price update received for simulation {0}", request.getSimulationId());
 
@@ -82,7 +81,7 @@ public class UpdateSpeciesPricesRequestHandler extends
             );
 
             final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());
-            final Unit<Mass> biomassUnit = parseMassUnit(price.getMeasurementUnit());
+            final Unit<Mass> biomassUnit = simulationProperties.getStandardMassUnit();
             final Price marketPrice =
                 new Price(
                     Money.of(currencyUnit, price.getPrice(), RoundingMode.HALF_EVEN),
@@ -126,14 +125,6 @@ public class UpdateSpeciesPricesRequestHandler extends
         try {
             return CurrencyUnit.of(currency);
         } catch (final IllegalCurrencyException e) {
-            throw wrap(INVALID_ARGUMENT, e);
-        }
-    }
-
-    private Unit<Mass> parseMassUnit(final String massUnit) {
-        try {
-            return Measurements.parseMassUnit(massUnit);
-        } catch (final MeasurementParseException e) {
             throw wrap(INVALID_ARGUMENT, e);
         }
     }

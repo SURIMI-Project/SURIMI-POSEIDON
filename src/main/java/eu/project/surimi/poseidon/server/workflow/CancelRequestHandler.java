@@ -46,7 +46,8 @@ public class CancelRequestHandler
     @Override
     protected CancelResponse getResponseWithSimulation(
         final CancelRequest request,
-        final Simulation simulation
+        final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties
     ) {
         logger.log(
             System.Logger.Level.INFO,

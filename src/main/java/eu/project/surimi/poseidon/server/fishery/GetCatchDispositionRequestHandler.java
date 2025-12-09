@@ -40,7 +40,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
-import static tech.units.indriya.unit.Units.KILOGRAM;
 import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class GetCatchDispositionRequestHandler
@@ -139,16 +138,14 @@ public class GetCatchDispositionRequestHandler
     @Override
     protected GetCatchDispositionResponse getResponseWithSimulation(
         final GetCatchDispositionRequest request,
-        final Simulation simulation
+        final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties
     ) {
         log(logger, INFO, simulation, "Catch disposition requested");
         checkArgument(request.hasStartDateTime(), "Start date time is required.");
         checkArgument(request.hasEndDateTime(), "End date time is required.");
         final CatchDispositionSummary.Builder catchDispositionSummaryBuilder =
-            CatchDispositionSummary
-                .newBuilder()
-                .setMeasurementUnit(KILOGRAM.getSymbol());
-
+            CatchDispositionSummary.newBuilder();
         extractFishingActionData(
             simulation,
             request.getStartDateTime(),
@@ -175,9 +172,16 @@ public class GetCatchDispositionRequestHandler
                         .addDispositionCellsBuilder()
                         .setLongitude(coordinate.lon)
                         .setLatitude(coordinate.lat)
-                        .setGrossCatch(disposition.grossCatchInKg)
-                        .setLiveDiscards(disposition.liveDiscardsInKg)
-                        .setDeadDiscards(disposition.deadDiscardsInKg));
+                        .setGrossCatch(
+                            simulationProperties.convertKgToStandardMassUnit(disposition.grossCatchInKg)
+                        )
+                        .setLiveDiscards(
+                            simulationProperties.convertKgToStandardMassUnit(disposition.liveDiscardsInKg)
+                        )
+                        .setDeadDiscards(
+                            simulationProperties.convertKgToStandardMassUnit(disposition.deadDiscardsInKg)
+                        )
+                );
             });
         });
         return GetCatchDispositionResponse

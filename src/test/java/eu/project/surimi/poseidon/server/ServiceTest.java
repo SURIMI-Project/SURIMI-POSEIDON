@@ -32,14 +32,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import uk.ac.ox.poseidon.core.ScenarioSupplier;
 
+import javax.measure.quantity.Mass;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.lang.System.Logger.Level.INFO;
+import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public abstract class ServiceTest {
 
@@ -49,6 +52,7 @@ public abstract class ServiceTest {
         this.scenarioSupplierClass = scenarioSupplierClass;
     }
 
+    static final javax.measure.Unit<Mass> MASS_UNIT = KILOGRAM;
     private static final String STEP_SIZE = "P1M";
     private static final LocalDateTime START_DATE_TIME =
         LocalDate.of(2000, 1, 1).atStartOfDay();
@@ -73,6 +77,7 @@ public abstract class ServiceTest {
             ecologyStub = EcologyServiceGrpc.newBlockingStub(channel);
             fisheryStub = FisheryServiceGrpc.newBlockingStub(channel);
             marketStub = MarketServiceGrpc.newBlockingStub(channel);
+
         } catch (final InterruptedException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -103,8 +108,31 @@ public abstract class ServiceTest {
                 .newBuilder()
                 .setSimulationId(simulationId)
                 .setScenarioId(scenarioSupplierClass.getSimpleName())
-                .setStartDateTime(toTimestamp(START_DATE_TIME))
-                .setStepSize(STEP_SIZE)
+                .setSimulation(
+                    Simulation
+                        .newBuilder()
+                        .setStartDateTime(toTimestamp(START_DATE_TIME))
+                        .setTimeStep(STEP_SIZE)
+                        .setGeography(
+                            Geography
+                                .newBuilder()
+                                .setRasterCellOrigin(RASTER_CELL_ORIGIN_CENTROID)
+                        )
+                        .setStandards(
+                            Standards
+                                .newBuilder()
+                                .setMeasurements(
+                                    Measurement
+                                        .newBuilder()
+                                        .addUnits(
+                                            Unit
+                                                .newBuilder()
+                                                .setQuantity("mass")
+                                                .setUnit(KILOGRAM.getSymbol())
+                                        )
+                                )
+                        )
+                )
                 .build()
         );
     }

@@ -38,7 +38,6 @@ import java.util.NoSuchElementException;
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.INFO;
-import static tech.units.indriya.unit.Units.KILOGRAM;
 import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class GetBiomassRequestHandler extends
@@ -69,14 +68,13 @@ public class GetBiomassRequestHandler extends
     @Override
     protected GetBiomassResponse getResponseWithSimulation(
         final GetBiomassRequest request,
-        final Simulation simulation
+        final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties
     ) {
         log(logger, INFO, simulation, "Biomass requested");
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
         final BiomassSummary.Builder biomassSummaryBuilder =
-            BiomassSummary
-                .newBuilder()
-                .setMeasurementUnit(KILOGRAM.getSymbol());
+            BiomassSummary.newBuilder();
         simulation.getComponents(BiomassGrid.class).forEach(grid -> {
             final build.buf.gen.surimi.v1.BiomassGrid.Builder gridBuilder =
                 build.buf.gen.surimi.v1.BiomassGrid
@@ -85,12 +83,14 @@ public class GetBiomassRequestHandler extends
             bathymetricGrid.getActiveWaterCells().forEach(cell -> {
                 final Coordinate coordinate =
                     bathymetricGrid.getModelGrid().toCoordinate(cell);
+                final double biomass =
+                    simulationProperties.convertKgToStandardMassUnit(grid.getDouble(cell));
                 gridBuilder.addBiomassCells(
                     build.buf.gen.surimi.v1.BiomassCell
                         .newBuilder()
                         .setLongitude(coordinate.getLon())
                         .setLatitude(coordinate.getLat())
-                        .setBiomass(grid.getDouble(cell))
+                        .setBiomass(biomass)
                         .build()
                 );
             });

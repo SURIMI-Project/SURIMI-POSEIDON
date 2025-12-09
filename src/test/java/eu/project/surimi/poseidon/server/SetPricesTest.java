@@ -75,7 +75,6 @@ public class SetPricesTest extends ServiceTest {
                         .setGearCode(gearCode)
                         .setSpecies(Species.newBuilder().setSpeciesCode(speciesCode).build())
                         .setPrice(price)
-                        .setMeasurementUnit("kg")
                         .build()
                 )
                 .build()

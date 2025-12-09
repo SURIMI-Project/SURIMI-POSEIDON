@@ -53,7 +53,8 @@ public class GetSpeciesPricesRequestHandler extends
     @Override
     protected GetSpeciesPricesResponse getResponseWithSimulation(
         final GetSpeciesPricesRequest request,
-        final Simulation simulation
+        final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties
     ) {
         logger.log(
             System.Logger.Level.INFO,
@@ -78,7 +79,6 @@ public class GetSpeciesPricesRequestHandler extends
                             )
                             .setCurrency(price.getAmount().getCurrencyUnit().getCode())
                             .setPrice(price.getAmount().getAmount().doubleValue())
-                            .setMeasurementUnit(price.getBiomassUnit().getSymbol())
                             .setGearCode(catchCategory.getCode())
                             .setTimestamp(
                                 toTimestamp(simulation.getTemporalSchedule().getDateTime())

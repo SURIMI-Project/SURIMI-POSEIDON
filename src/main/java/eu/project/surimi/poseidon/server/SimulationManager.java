@@ -24,13 +24,20 @@ package eu.project.surimi.poseidon.server;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
 import uk.ac.ox.poseidon.core.Simulation;
 
+import javax.measure.Unit;
+import javax.measure.quantity.Mass;
 import java.time.Period;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.grpc.Status.*;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class SimulationManager {
     private final Cache<UUID, Simulation> simulations = CacheBuilder.newBuilder().build();
@@ -86,7 +93,35 @@ public class SimulationManager {
         simulationProperties.put(simulation, properties);
     }
 
-    public record SimulationProperties(Period stepSize) {
+    @Data
+    public static class SimulationProperties {
+
+        private final Period stepSize;
+        private final Unit<Mass> standardMassUnit;
+        @Getter(AccessLevel.NONE) private final boolean massUnitIsKg;
+
+        public SimulationProperties(
+            final Period stepSize,
+            final Unit<Mass> standardMassUnit
+        ) {
+            this.stepSize = stepSize;
+            this.standardMassUnit = standardMassUnit;
+            this.massUnitIsKg = standardMassUnit.isEquivalentTo(KILOGRAM);
+        }
+
+        public double convertKgToStandardMassUnit(final double valueInKg) {
+            return massUnitIsKg
+                ? valueInKg
+                : getQuantity(valueInKg, standardMassUnit)
+                    .getValue()
+                    .doubleValue();
+        }
+
+        public double convertMassInStandardUnitToKg(final double mass) {
+            return massUnitIsKg
+                ? mass
+                : getQuantity(mass, standardMassUnit).to(KILOGRAM).getValue().doubleValue();
+        }
     }
 
     public void remove(final String simulationId) {
