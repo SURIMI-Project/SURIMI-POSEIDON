@@ -67,7 +67,7 @@ application {
     mainClass = "eu.project.surimi.poseidon.server.Server"
 }
 
-tasks.shadowJar {
+val shadowJar = tasks.shadowJar {
     mergeServiceFiles {
         // those exclusions prevent GeoTools from trying to load the CLib plugin, which crashes:
         exclude("com/sun/media/imageioimpl/plugins/jpeg/CLib*")
@@ -75,13 +75,24 @@ tasks.shadowJar {
     }
 }
 
-tasks.register("buildDockerImage", Exec::class) {
-    dependsOn(tasks.named("shadowJar"))
+val writeWesternMedScenario = tasks.register("writeWesternMedScenario", JavaExec::class) {
+    dependsOn("classes")
+    mainClass.set("uk.ac.ox.poseidon.io.ScenarioWriter")
+    classpath = sourceSets["main"].runtimeClasspath
+    args(
+        "-c", "eu.project.surimi.poseidon.scenarios.WesternMedScenario",
+        "-s", "western_med/scenario.yaml"
+    )
+}
+
+val buildDockerImage = tasks.register("buildDockerImage", Exec::class) {
+    dependsOn(shadowJar)
+    dependsOn(writeWesternMedScenario)
     commandLine("docker", "build", "-t", "nicolaspayette/poseidon:latest", ".")
 }
 
 tasks.register("pushDockerImage", Exec::class) {
-    dependsOn(tasks.named("buildDockerImage"))
+    dependsOn(buildDockerImage)
     commandLine("docker", "push", "nicolaspayette/poseidon:latest")
 }
 
