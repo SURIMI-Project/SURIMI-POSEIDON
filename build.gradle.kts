@@ -23,7 +23,6 @@
 plugins {
     application
     jacoco
-    alias(libs.plugins.shadow)
     alias(libs.plugins.spotbugs)
 }
 
@@ -67,14 +66,6 @@ application {
     mainClass = "eu.project.surimi.poseidon.server.Server"
 }
 
-val shadowJar = tasks.shadowJar {
-    mergeServiceFiles {
-        // those exclusions prevent GeoTools from trying to load the CLib plugin, which crashes:
-        exclude("com/sun/media/imageioimpl/plugins/jpeg/CLib*")
-        exclude("META-INF/services/javax.imageio.spi.*")
-    }
-}
-
 val writeWesternMedScenario = tasks.register("writeWesternMedScenario", JavaExec::class) {
     dependsOn("classes")
     mainClass.set("uk.ac.ox.poseidon.io.ScenarioWriter")
@@ -85,9 +76,23 @@ val writeWesternMedScenario = tasks.register("writeWesternMedScenario", JavaExec
     )
 }
 
+val stageForImage = tasks.register<Copy>("stageForImage") {
+    val imageDir = layout.buildDirectory.dir("image")
+    into(imageDir)
+    dependsOn(tasks.named("jar"), writeWesternMedScenario)
+    from(tasks.named<Jar>("jar"))
+    from(configurations.runtimeClasspath) {
+        into("lib")
+    }
+    from("logging.properties")
+    from("western_med/scenario.yaml")
+    from("western_med/data") {
+        into("western_med/data")
+    }
+}
+
 val buildDockerImage = tasks.register("buildDockerImage", Exec::class) {
-    dependsOn(shadowJar)
-    dependsOn(writeWesternMedScenario)
+    dependsOn(stageForImage)
     commandLine("docker", "build", "-t", "nicolaspayette/poseidon:latest", ".")
 }
 
