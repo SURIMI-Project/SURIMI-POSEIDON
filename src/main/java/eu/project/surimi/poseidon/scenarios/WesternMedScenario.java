@@ -126,16 +126,12 @@ import java.util.List;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
-import static uk.ac.ox.poseidon.core.time.PeriodFactory.DAILY;
 import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
 
 @Getter
 @Setter
 public class WesternMedScenario extends ScenarioSupplier {
 
-    private static final double DIFFERENTIAL_PERCENTAGE_TO_MOVE = 0.05;
-    private static final double PERCENTAGE_LIMIT_ON_DAILY_MOVEMENT = 0.1;
-    private static final double LOGISTIC_GROWTH_RATE = 0.00001;
     private static final String CARRYING_CAPACITY = "10 kg";
     private static final double LEARNING_ALPHA = 1;
     private static final double EXPLORATION_PROBABILITY = 0.2;
@@ -148,13 +144,6 @@ public class WesternMedScenario extends ScenarioSupplier {
         super(LocalDate.of(2013, 1, 1));
     }
 
-    private Factory<? extends BiomassGrowthRule> biomassGrowthRule =
-        new LogisticGrowthRuleFactory(LOGISTIC_GROWTH_RATE);
-    private Factory<? extends BiomassDiffusionRule> biomassDiffusionRule =
-        new SmoothBiomassDiffusionRuleFactory(
-            DIFFERENTIAL_PERCENTAGE_TO_MOVE,
-            PERCENTAGE_LIMIT_ON_DAILY_MOVEMENT
-        );
     private PathFactory rootPath = PathFactory.of("western_med");
     private PathFactory inputPath = rootPath.plus("data");
     private PathFactory outputPath = rootPath.plus("outputs").simulationFolder();
@@ -253,39 +242,12 @@ public class WesternMedScenario extends ScenarioSupplier {
         new BiomassSaleAccumulatorFactory();
     private Factory<? extends FishingEventAccumulator> fishingActionAccumulator =
         new FishingEventAccumulatorFactory();
-    private Factory<? extends Steppable> dailyProcesses =
-        new ScheduledRepeatingFactory<>(
-            new DateTimeAfterStartingFactory(DAILY),
-            DAILY,
-            new SteppableSequenceFactory(
-                new MappedFactory<>(
-                    new BiomassDiffuserFactory(
-                        null,
-                        carryingCapacityGrid,
-                        biomassDiffusionRule
-                    ),
-                    "biomassGrid",
-                    biomassGrids
-                )
-            ),
-            -1
-        );
+
     private Factory<? extends Steppable> monthlyProcesses =
         new ScheduledRepeatingFactory<>(
             new DateTimeAfterStartingFactory(MONTHLY),
             MONTHLY,
             new SteppableSequenceFactory(
-                new SteppableSequenceFactory(
-                    new MappedFactory<>(
-                        new BiomassGrowerFactory(
-                            null,
-                            carryingCapacityGrid,
-                            biomassGrowthRule
-                        ),
-                        "biomassGrid",
-                        biomassGrids
-                    )
-                ),
                 new EventClearerFactory(biomassSaleAccumulator),
                 new EventClearerFactory(fishingActionAccumulator),
                 new CsvTableWriterFactory(
