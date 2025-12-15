@@ -68,6 +68,7 @@ import uk.ac.ox.poseidon.agents.vessels.*;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
+import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.*;
 import uk.ac.ox.poseidon.biology.species.Species;
@@ -139,6 +140,7 @@ public class WesternMedScenario extends ScenarioSupplier {
     private static final double CATCH_PROPORTION = 0.1;
     private static final String VESSEL_SPEED = "9.5 kn"; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
+    private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
 
     public WesternMedScenario() {
         super(LocalDate.of(2013, 1, 1));
@@ -212,12 +214,30 @@ public class WesternMedScenario extends ScenarioSupplier {
             pathFinder,
             distance
         );
-    private VesselScopeFactory<? extends Gear> fishingGear =
-        new FixedBiomassProportionGearFactory(
-            PURSE_SEINE_GEAR_CODE,
-            CATCH_PROPORTION,
-            ONE_HOUR_DURATION_SUPPLIER
-        );
+    private VesselScopeFactory<Gear> fishingGear =
+        VesselScopeFactoriesByCode.<Gear>builder()
+            .factory(
+                PURSE_SEINE_GEAR_CODE,
+                new FixedBiomassProportionGearFactory(
+                    PURSE_SEINE_GEAR_CODE,
+                    CATCH_PROPORTION,
+                    ONE_HOUR_DURATION_SUPPLIER
+                )
+            )
+            .factory(
+                BOTTOM_TRAWLER_GEAR_CODE,
+                new FixedBiomassProportionGearFactory(
+                    BOTTOM_TRAWLER_GEAR_CODE,
+                    CATCH_PROPORTION,
+                    ONE_HOUR_DURATION_SUPPLIER
+                )
+            )
+            .factory("GNS", new InactiveGearFactory("GNS"))
+            .factory("NK", new InactiveGearFactory("NK"))
+            .factory("NO", new InactiveGearFactory("NO"))
+            .factory("LLD", new InactiveGearFactory("LLD"))
+            .factory("LLS", new InactiveGearFactory("LLS"))
+            .build();
     private VesselScopeFactory<? extends GearSpecificFishingLocationLegalityChecker>
         gearSpecificFishingLocationChecker =
         new GearSpecificFishingLocationLegalityCheckerFactory(fishingGear, fishingLocationChecker);
@@ -400,7 +420,8 @@ public class WesternMedScenario extends ScenarioSupplier {
             .dataMapping(
                 "hold.catchCategoriser.catchCategory.code",
                 "main_fishing_gear"
-            ).gear(fishingGear)
+            )
+            .gear(fishingGear)
             .dataMapping("gear.code", "main_fishing_gear")
             .engine(new SimpleEngineFactory(SpeedFactory.of(VESSEL_SPEED)))
             .build();
@@ -416,8 +437,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         final Scenario scenario = new WesternMedScenario().get();
         final Path scenarioPath = Path.of("western_med", "scenario.yaml");
         new ScenarioWriter().write(scenario, scenarioPath);
-        final Simulation simulation = scenario.newSimulation();
-        simulation.start();
+        final Simulation simulation = scenario.startNewSimulation();
         final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
         range(0, numSteps).forEach(__ ->
             temporalSchedule.stepFor(simulation, stepSize)

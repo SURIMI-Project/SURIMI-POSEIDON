@@ -80,8 +80,7 @@ public class InitialiseRequestHandler
 
         validateContract(request);
 
-        final Simulation simulation = scenario.newSimulation(simulationId);
-        simulation.start();
+        final Simulation simulation = scenario.startNewSimulation(simulationId);
         log(logger, INFO, simulation, "Simulation started");
         simulationManager.put(
             simulationId,
