@@ -234,11 +234,7 @@ public class WesternMedScenario extends ScenarioSupplier {
                     ONE_HOUR_DURATION_SUPPLIER
                 )
             )
-            .factory("GNS", new InactiveGearFactory("GNS"))
-            .factory("NK", new InactiveGearFactory("NK"))
-            .factory("NO", new InactiveGearFactory("NO"))
-            .factory("LLD", new InactiveGearFactory("LLD"))
-            .factory("LLS", new InactiveGearFactory("LLS"))
+            .defaultFactory(new InactiveGearFactory())
             .build();
     private VesselScopeFactory<? extends GearSpecificFishingLocationLegalityChecker>
         gearSpecificFishingLocationChecker =
@@ -457,6 +453,7 @@ public class WesternMedScenario extends ScenarioSupplier {
             )
             .gear(fishingGear)
             .dataMapping("gear.code", "main_fishing_gear")
+            .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
             .engine(new SimpleEngineFactory(SpeedFactory.of(VESSEL_SPEED)))
             .build();
 
