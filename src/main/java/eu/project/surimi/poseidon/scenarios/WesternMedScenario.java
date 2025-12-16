@@ -49,7 +49,9 @@ import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactor
 import uk.ac.ox.poseidon.agents.regulations.GearSpecificFishingLocationLegalityChecker;
 import uk.ac.ox.poseidon.agents.regulations.GearSpecificFishingLocationLegalityCheckerFactory;
 import uk.ac.ox.poseidon.agents.tables.FishingEventListenerTableFactory;
+import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
+import uk.ac.ox.poseidon.agents.tasks.InactiveBehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.TaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.branches.SequenceTaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory;
@@ -383,7 +385,7 @@ public class WesternMedScenario extends ScenarioSupplier {
         )
     );
 
-    private BehaviourFactory behaviour =
+    private BehaviourFactory purseSeinerBehaviour =
         new BehaviourFactory(
             SequenceTaskFactory
                 .builder()
@@ -406,12 +408,44 @@ public class WesternMedScenario extends ScenarioSupplier {
                 .build()
         );
 
+    private BehaviourFactory bottomTrawlerBehaviour =
+        new BehaviourFactory(
+            SequenceTaskFactory
+                .builder()
+                .child(
+                    new SucceedOrWaitTaskFactory(
+                        SequenceTaskFactory
+                            .builder()
+                            .child(readyForDeparture)
+                            .child(startTrip)
+                            .build(),
+                        waitUntilNextEvening
+                    )
+                )
+                .child(new TravelAlongPathFactory(pathFinder, distance))
+                .child(fishingTask)
+                .child(new SetDestinationToOriginFactory())
+                .child(new TravelAlongPathFactory(pathFinder, distance))
+                .child(new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER))
+                .child(new EndTripFactory())
+                .build()
+        );
+
+    private VesselScopeFactory<Behaviour<Vessel>> behaviour =
+        VesselScopeFactoriesByCode
+            .<Behaviour<Vessel>>builder()
+            .factory(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour)
+            .factory(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
+            .defaultFactory(new InactiveBehaviourFactory())
+            .build();
+
     private Factory<Fleet> fleet =
         FleetFromVesselRegisterFactory
             .builder()
             .fleet(new FleetFactory(vesselField, portGrid, marketGrid))
             .data(CsvTableFactory.fromFile(inputPath.plus("fleet_register.csv")))
             .behaviour(behaviour)
+            .dataMapping("behaviour.code", "main_fishing_gear")
             .hold(
                 new InfiniteBiomassHoldFactory(
                     new UniformCatchCategoriserFactory(new CatchCategoryFactory())
