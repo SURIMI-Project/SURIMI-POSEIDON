@@ -25,31 +25,33 @@ package eu.project.surimi.poseidon.scenarios;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import uk.ac.ox.poseidon.core.ScenarioSupplier;
+import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 public final class ScenarioFilesForTesting {
 
-    private static final LoadingCache<Class<? extends ScenarioSupplier>, Path> paths =
+    private static final LoadingCache<Class<? extends Supplier<Scenario>>, Path> paths =
         CacheBuilder
             .newBuilder()
             .build(CacheLoader.from(ScenarioFilesForTesting::writeScenarioFile));
 
     private ScenarioFilesForTesting() {}
 
-    private static Path writeScenarioFile(final Class<? extends ScenarioSupplier> scenarioClass) {
+    private static Path writeScenarioFile(final Class<? extends Supplier<Scenario>> scenarioClass) {
         final Path scenarioPath = Path.of(
             "build", "tmp", "test", scenarioClass.getSimpleName() + ".yaml"
         );
         try {
             final Path parent = scenarioPath.getParent();
             if (parent != null) Files.createDirectories(parent);
-            final ScenarioSupplier scenario = scenarioClass.getDeclaredConstructor().newInstance();
+            final Supplier<Scenario> scenario =
+                scenarioClass.getDeclaredConstructor().newInstance();
             new ScenarioWriter().write(scenario.get(), scenarioPath);
         } catch (final IOException e) {
             throw new RuntimeException("Failed to write minimal scenario", e);
@@ -62,7 +64,7 @@ public final class ScenarioFilesForTesting {
         return scenarioPath;
     }
 
-    public static Path getPath(final Class<? extends ScenarioSupplier> scenarioClass) {
+    public static Path getPath(final Class<? extends Supplier<Scenario>> scenarioClass) {
         return paths.getUnchecked(scenarioClass);
     }
 }

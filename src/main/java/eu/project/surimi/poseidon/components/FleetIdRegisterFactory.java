@@ -23,25 +23,27 @@
 package eu.project.surimi.poseidon.components;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import uk.ac.ox.poseidon.agents.registers.Register;
 import uk.ac.ox.poseidon.core.Factory;
-import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.SimulationScopeFactory;
+import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 
-@Getter
-@Setter
+@Data
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class FleetIdRegisterFactory extends SimulationScopeFactory<FleetIdRegister> {
 
-    private Factory<? extends Register<String>> delegateRegister;
+    private Factory<? super SimulationScope, ? extends Register<String>> delegateRegister;
 
     @Override
-    protected FleetIdRegister newInstance(final Simulation simulation) {
-        return new FleetIdRegister(delegateRegister.get(simulation));
+    protected FleetIdRegister newInstance(final SimulationScope scope) {
+        return new FleetIdRegister(delegateRegister.get(scope));
     }
 
 }

@@ -37,7 +37,7 @@ import java.util.Optional;
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.CARRYING_CAPACITY;
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.collections.CollectionUtils.isEqualCollection;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
@@ -55,20 +55,20 @@ public class EcologyServiceTest extends ServiceTest {
 
         final Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> grids =
             getGrids(simulationId);
-        assertTrue(
-            isEqualCollection(
-                LIFE_STAGE_PER_SPECIES_CODE.stream().map(Entry::getKey).toList(),
-                grids.keySet().stream().map(Species::getSpeciesCode).toList()
-            )
+        assertThat(
+            grids.keySet().stream().map(Species::getSpeciesCode).toList()
+        ).containsExactlyInAnyOrderElementsOf(
+            LIFE_STAGE_PER_SPECIES_CODE.stream().map(Entry::getKey)::iterator
         );
-        assertTrue(
-            isEqualCollection(
-                LIFE_STAGE_PER_SPECIES_CODE.stream().map(Entry::getValue).toList(),
-                grids.keySet().stream().map(species ->
-                    Optional.of(species.getLifeStage()).filter(s -> !s.isEmpty()).orElse(null)
-                ).toList()
-            )
+
+        assertThat(
+            grids.keySet().stream().map(species ->
+                Optional.of(species.getLifeStage()).filter(s -> !s.isEmpty()).orElse(null)
+            ).toList()
+        ).containsExactlyInAnyOrderElementsOf(
+            LIFE_STAGE_PER_SPECIES_CODE.stream().map(Entry::getValue)::iterator
         );
+
         assertTrue(
             grids.values().stream().allMatch(grid ->
                 grid.values().stream().allMatch(biomass ->

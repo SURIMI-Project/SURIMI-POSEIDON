@@ -30,7 +30,7 @@ import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import uk.ac.ox.poseidon.core.ScenarioSupplier;
+import uk.ac.ox.poseidon.core.Scenario;
 
 import javax.measure.quantity.Mass;
 import java.io.IOException;
@@ -38,6 +38,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
@@ -46,9 +47,9 @@ import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public abstract class ServiceTest {
 
-    private final Class<? extends ScenarioSupplier> scenarioSupplierClass;
+    private final Class<? extends Supplier<Scenario>> scenarioSupplierClass;
 
-    public ServiceTest(final Class<? extends ScenarioSupplier> scenarioSupplierClass) {
+    public ServiceTest(final Class<? extends Supplier<Scenario>> scenarioSupplierClass) {
         this.scenarioSupplierClass = scenarioSupplierClass;
     }
 
