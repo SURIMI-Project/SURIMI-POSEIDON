@@ -341,7 +341,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
-        final var tripEvaluator = // TODO: this should be referenced somewhere!!!
+        final var tripEvaluator =
             new TripEvaluatorFactory(
                 optionValues,
                 new TotalBiomassCaughtPerHourDestinationEvaluationProviderFactory()
@@ -473,6 +473,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .dataMapping("gear.code", "main_fishing_gear")
                 .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
                 .engine(new SimpleEngineFactory<>(SpeedFactory.of(VESSEL_SPEED)))
+                .extraFactory(tripEvaluator)
                 .build();
 
         final var directoryRemover =
