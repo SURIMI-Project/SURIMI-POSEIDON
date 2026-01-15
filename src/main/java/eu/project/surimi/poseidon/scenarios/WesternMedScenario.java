@@ -122,6 +122,7 @@ import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
 
 public class WesternMedScenario implements Supplier<Scenario> {
 
+    private static final Path INPUT_PATH = Path.of("inputs", "western_med");
     private static final String CARRYING_CAPACITY = "10 kg";
     private static final double LEARNING_ALPHA = 1;
     private static final double EXPLORATION_PROBABILITY = 0.2;
@@ -136,7 +137,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final int numSteps = 12;
         final Period stepSize = Period.ofMonths(1);
         final Scenario scenario = new WesternMedScenario().get();
-        final Path scenarioPath = Path.of("western_med", "scenario.yaml");
+        final Path scenarioPath = INPUT_PATH.resolve("scenario.yaml");
         new ScenarioWriter().write(scenario, scenarioPath);
         final Simulation simulation = scenario.startNewSimulation();
         final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
@@ -150,9 +151,8 @@ public class WesternMedScenario implements Supplier<Scenario> {
     public Scenario get() {
         final Scenario.ScenarioBuilder builder = Scenario.builder();
 
-        final var rootPath = PathFactory.of("western_med");
-        final var inputPath = rootPath.plus("data");
-        final var outputPath = new SimulationFolderFactory(rootPath.plus("outputs"));
+        final var inputPath = PathFactory.of(INPUT_PATH);
+        final var outputPath = new SimulationFolderFactory(PathFactory.of("outputs"));
 
         final var modelGrid =
             new ModelGridWithActiveCellsFromGridFile<>(

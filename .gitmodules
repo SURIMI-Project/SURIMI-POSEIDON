@@ -2,6 +2,6 @@
   path = POSEIDON
   url = https://github.com/poseidon-fisheries/POSEIDON.git
   branch = SURIMI
-[submodule "western_med"]
-  path = western_med
-  url = https://github.com/Official-EwE/SURIMI-western_med.git
+[submodule "SURIMI-POSEIDON_inputs"]
+	path = inputs
+	url = https://github.com/Official-EwE/SURIMI-POSEIDON_inputs.git
