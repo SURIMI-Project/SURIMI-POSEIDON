@@ -38,7 +38,6 @@ import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.registers.DynamicRegisterFactory;
 import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactory;
-import uk.ac.ox.poseidon.agents.tables.FishingEventListenerTableFactory;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.InactiveBehaviourFactory;
@@ -60,7 +59,7 @@ import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
-import uk.ac.ox.poseidon.biology.biomass.BiomassGridsFactory;
+import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.biomass.FullBiomassAllocatorFactory;
 import uk.ac.ox.poseidon.biology.biomass.UniformCarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
@@ -105,7 +104,6 @@ import uk.ac.ox.poseidon.io.ScenarioWriter;
 import uk.ac.ox.poseidon.io.paths.PathFactory;
 import uk.ac.ox.poseidon.io.paths.SimulationFolderFactory;
 import uk.ac.ox.poseidon.io.tables.CsvTableFactory;
-import uk.ac.ox.poseidon.io.tables.CsvTableWriterFactory;
 import uk.ac.ox.poseidon.regulations.ForbiddenIfFactory;
 import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFactory;
 
@@ -281,13 +279,13 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 MONTHLY,
                 new SteppableSequenceFactory(
                     new EventClearerFactory(biomassSaleAccumulator),
-                    new EventClearerFactory(fishingActionAccumulator),
-                    new CsvTableWriterFactory<>(
-                        new FishingEventListenerTableFactory(),
-                        outputPath.plus("fishing_actions.csv"),
-                        true,
-                        true
-                    )
+                    new EventClearerFactory(fishingActionAccumulator)//,
+//                     new CsvTableWriterFactory<>(
+//                         new FishingEventListenerTableFactory(),
+//                         outputPath.plus("fishing_actions.csv"),
+//                         true,
+//                         true
+//                     )
                 ),
                 -2
             );
@@ -373,7 +371,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var fishingTask = new FishingFactory(
             new CurrentCellFisheableFactory(
-                new BiomassGridsFactory(
+                new FisheableBiomassGridsFactory(
                     biomassGrids
                 )
             ),

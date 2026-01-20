@@ -48,7 +48,7 @@ import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
-import uk.ac.ox.poseidon.biology.biomass.BiomassGridsFactory;
+import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.biomass.FullBiomassAllocatorFactory;
 import uk.ac.ox.poseidon.biology.biomass.UniformCarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
@@ -249,7 +249,7 @@ public class MinimalScenario implements Supplier<Scenario> {
 
         final var fishingFactory = new FishingFactory(
             new CurrentCellFisheableFactory(
-                new BiomassGridsFactory(
+                new FisheableBiomassGridsFactory(
                     biomassGrids
                 )
             ),
@@ -284,7 +284,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                             ),
                             new FishingFactory(
                                 new CurrentCellFisheableFactory(
-                                    new BiomassGridsFactory(
+                                    new FisheableBiomassGridsFactory(
                                         biomassGrids
                                     )
                                 ),
