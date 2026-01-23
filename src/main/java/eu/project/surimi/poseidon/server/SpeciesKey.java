@@ -55,7 +55,7 @@ public class SpeciesKey {
     }
 
     public Species toSpecies() {
-        return new Species(speciesCode, lifeStage);
+        return new Species(speciesCode, lifeStage, null);
     }
 
     public build.buf.gen.surimi.v1.Species toProtobufSpecies() {
