@@ -132,7 +132,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
     private static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
 
     public static void main(final String[] args) {
-        final int numSteps = 12;
+        final int numSteps = 12 * 10;
         final Period stepSize = Period.ofMonths(1);
         final Scenario scenario = new WesternMedScenario().get();
         final Path scenarioPath = INPUT_PATH.resolve("scenario.yaml");
