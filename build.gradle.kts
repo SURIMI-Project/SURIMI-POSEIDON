@@ -73,7 +73,7 @@ val writeWesternMedScenario = tasks.register("writeWesternMedScenario", JavaExec
     classpath = sourceSets["main"].runtimeClasspath
     args(
         "-c", "eu.project.surimi.poseidon.scenarios.WesternMedScenario",
-        "-s", "western_med/scenario.yaml"
+        "-s", "inputs/western_med/scenario.yaml"
     )
 }
 
@@ -86,9 +86,8 @@ val stageForImage = tasks.register<Copy>("stageForImage") {
         into("lib")
     }
     from("logging.properties")
-    from("western_med/scenario.yaml")
-    from("western_med/data") {
-        into("western_med/data")
+    from("inputs/western_med/") {
+        into("inputs/western_med/")
     }
 }
 
