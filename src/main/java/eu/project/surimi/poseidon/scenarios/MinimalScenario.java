@@ -247,25 +247,6 @@ public class MinimalScenario implements Supplier<Scenario> {
                 ONE_HOUR_DURATION_SUPPLIER
             );
 
-        final var fishingFactory = new FishingFactory(
-            new CurrentCellFisheableFactory(
-                new FisheableBiomassGridsFactory(
-                    biomassGrids
-                )
-            ),
-            new CompositeDispositionProcessFactory<>(
-                new SelectedSpeciesRetentionFactory<>(
-                    new SpeciesByCodeFactory<>(
-                        new ConstantFactory<>(List.of("A", "B")),
-                        species
-                    )
-                ),
-                new GeneralDiscardMortalityFactory<>(
-                    new ConstantDoubleSupplierFactory(0.1)
-                )
-            )
-        );
-
         final var behaviour =
             new BehaviourFactory(
                 SequenceTaskFactory
