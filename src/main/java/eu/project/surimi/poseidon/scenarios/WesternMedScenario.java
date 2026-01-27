@@ -125,7 +125,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
     private static final double LEARNING_ALPHA = 1;
     private static final double EXPLORATION_PROBABILITY = 0.2;
     private static final int MEAN_EXPLORATION_RADIUS = 1;
-    private static final double CATCH_PROPORTION = 0.1;
+    private static final double DEFAULT_CATCH_PROPORTION = 0.1;
     private static final String VESSEL_SPEED = "9.5 kn"; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
@@ -246,7 +246,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         PURSE_SEINE_GEAR_CODE,
                         ONE_HOUR_DURATION_SUPPLIER,
                         species,
-                        0.1
+                        DEFAULT_CATCH_PROPORTION
                     )
                 )
                 .factory(
@@ -258,7 +258,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         BOTTOM_TRAWLER_GEAR_CODE,
                         ONE_HOUR_DURATION_SUPPLIER,
                         species,
-                        0.1
+                        DEFAULT_CATCH_PROPORTION
                     )
                 )
                 .defaultFactory(new InactiveGearFactory())
