@@ -54,7 +54,7 @@ import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
 import uk.ac.ox.poseidon.agents.vessels.*;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
-import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
+import uk.ac.ox.poseidon.agents.vessels.gears.BiomassProportionPerSpeciesGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
@@ -227,27 +227,6 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 distance
             );
 
-        final var fishingGear =
-            VesselScopeFactoriesByCode.<Gear>builder()
-                .factory(
-                    PURSE_SEINE_GEAR_CODE,
-                    new FixedBiomassProportionGearFactory(
-                        PURSE_SEINE_GEAR_CODE,
-                        CATCH_PROPORTION,
-                        ONE_HOUR_DURATION_SUPPLIER
-                    )
-                )
-                .factory(
-                    BOTTOM_TRAWLER_GEAR_CODE,
-                    new FixedBiomassProportionGearFactory(
-                        BOTTOM_TRAWLER_GEAR_CODE,
-                        CATCH_PROPORTION,
-                        ONE_HOUR_DURATION_SUPPLIER
-                    )
-                )
-                .defaultFactory(new InactiveGearFactory())
-                .build();
-
         final var species =
             new SpeciesFromDataFactory<>(
                 CsvTableFactory.fromFile(inputPath.plus("species.csv")),
@@ -255,6 +234,35 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 "species_name",
                 "life_stage"
             );
+
+        final var fishingGear =
+            VesselScopeFactoriesByCode.<Gear>builder()
+                .factory(
+                    PURSE_SEINE_GEAR_CODE,
+                    BiomassProportionPerSpeciesGearFactory.fromFile(
+                        INPUT_PATH.resolve("species.csv"),
+                        "species_code",
+                        "life_stage",
+                        PURSE_SEINE_GEAR_CODE,
+                        ONE_HOUR_DURATION_SUPPLIER,
+                        species,
+                        0.1
+                    )
+                )
+                .factory(
+                    BOTTOM_TRAWLER_GEAR_CODE,
+                    BiomassProportionPerSpeciesGearFactory.fromFile(
+                        INPUT_PATH.resolve("species.csv"),
+                        "species_code",
+                        "life_stage",
+                        BOTTOM_TRAWLER_GEAR_CODE,
+                        ONE_HOUR_DURATION_SUPPLIER,
+                        species,
+                        0.1
+                    )
+                )
+                .defaultFactory(new InactiveGearFactory())
+                .build();
 
         final var biomassGrids =
             new MappedFactory<>(
@@ -371,9 +379,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var fishingTask = new FishingFactory(
             new CurrentCellFisheableFactory(
-                new FisheableBiomassGridsFactory(
-                    biomassGrids
-                )
+                new FisheableBiomassGridsFactory(biomassGrids)
             ),
             new CompositeDispositionProcessFactory<>(
                 new SelectedSpeciesRetentionFactory<>(
