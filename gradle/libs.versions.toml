@@ -1,5 +1,5 @@
 [versions]
-assertj = "3.27.6"
+assertj = "3.27.7"
 grpc = "1.75.0"
 lombok = "1.18.30"
 opentelemetry-core = "1.49.0"
