@@ -67,23 +67,21 @@ public class GetSpeciesPricesRequestHandler extends
                 .newBuilder()
                 .setSimulationId(request.getSimulationId());
         marketsById.forEach((marketCode, biomassMarket) ->
-            biomassMarket.getPrices().forEach((catchCategory, pricePerSpecies) ->
-                pricePerSpecies.forEach((species, price) ->
-                    responseBuilder.addPrices(
-                        SpeciesPrice.newBuilder()
-                            .setMarketCode(marketCode)
-                            .setSpecies(
-                                build.buf.gen.surimi.v1.Species
-                                    .newBuilder()
-                                    .setSpeciesCode(species.getCode())
-                            )
-                            .setCurrency(price.getAmount().getCurrencyUnit().getCode())
-                            .setPrice(price.getAmount().getAmount().doubleValue())
-                            .setGearCode(catchCategory.getCode())
-                            .setTimestamp(
-                                toTimestamp(simulation.getTemporalSchedule().getDateTime())
-                            )
-                    )
+            biomassMarket.forEachPrice((catchCategory, species, price) ->
+                responseBuilder.addPrices(
+                    SpeciesPrice.newBuilder()
+                        .setMarketCode(marketCode)
+                        .setSpecies(
+                            build.buf.gen.surimi.v1.Species
+                                .newBuilder()
+                                .setSpeciesCode(species.getCode())
+                        )
+                        .setCurrency(price.getAmount().getCurrencyUnit().getCode())
+                        .setPrice(price.getAmount().getAmount().doubleValue())
+                        .setGearCode(catchCategory.getCode())
+                        .setTimestamp(
+                            toTimestamp(simulation.getTemporalSchedule().getDateTime())
+                        )
                 )
             )
         );

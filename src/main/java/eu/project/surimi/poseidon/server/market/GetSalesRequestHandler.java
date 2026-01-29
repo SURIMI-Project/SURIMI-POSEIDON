@@ -108,7 +108,7 @@ public class GetSalesRequestHandler extends
                             item.getCategory(),
                             item.getSpecies(),
                             item.getContent().asBiomass(),
-                            item.getPrice()
+                            item.getSaleValue()
                         ))
                 ).collect(
                     groupingBy(
