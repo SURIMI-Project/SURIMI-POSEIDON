@@ -26,9 +26,9 @@ import sim.util.Int2D;
 import uk.ac.ox.poseidon.agents.catches.CatchCategoryFactory;
 import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
-import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.ProportionallyLimitingBiomassToHoldFactory;
-import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
+import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardMortalityRatesFactory;
+import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardRatesFactory;
 import uk.ac.ox.poseidon.agents.choices.*;
 import uk.ac.ox.poseidon.agents.choices.evaluation.TotalBiomassCaughtPerHourDestinationEvaluationProviderFactory;
 import uk.ac.ox.poseidon.agents.choices.evaluation.TripEvaluatorFactory;
@@ -55,7 +55,7 @@ import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
 import uk.ac.ox.poseidon.agents.vessels.*;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
-import uk.ac.ox.poseidon.agents.vessels.gears.BiomassProportionPerSpeciesGearFactory;
+import uk.ac.ox.poseidon.agents.vessels.gears.SpeciesSpecificBiomassCatchabilityGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
@@ -63,7 +63,6 @@ import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.biomass.FullBiomassAllocatorFactory;
 import uk.ac.ox.poseidon.biology.biomass.UniformCarryingCapacityGridFactory;
-import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory;
 import uk.ac.ox.poseidon.core.FinalProcessFactory;
 import uk.ac.ox.poseidon.core.MappedFactory;
@@ -85,7 +84,6 @@ import uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.GlobalScope;
-import uk.ac.ox.poseidon.core.suppliers.ConstantDoubleSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
@@ -127,6 +125,10 @@ public class WesternMedScenario implements Supplier<Scenario> {
     private static final double EXPLORATION_PROBABILITY = 0.2;
     private static final int MEAN_EXPLORATION_RADIUS = 1;
     private static final double DEFAULT_CATCH_PROPORTION = 0.1;
+    private static final double DEFAULT_PURSE_SEINE_DISCARD_RATE = 0.05;
+    private static final double DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE = 0.2;
+    private static final double DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE = 0.1;
+    private static final double DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE = 0.3;
     private static final String VESSEL_SPEED = "9.5 kn"; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
@@ -240,7 +242,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             VesselScopeFactoriesByCode.<Gear>builder()
                 .factory(
                     PURSE_SEINE_GEAR_CODE,
-                    BiomassProportionPerSpeciesGearFactory.fromFile(
+                    SpeciesSpecificBiomassCatchabilityGearFactory.fromFile(
                         INPUT_PATH.resolve("species.csv"),
                         "species_code",
                         "life_stage",
@@ -252,7 +254,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 )
                 .factory(
                     BOTTOM_TRAWLER_GEAR_CODE,
-                    BiomassProportionPerSpeciesGearFactory.fromFile(
+                    SpeciesSpecificBiomassCatchabilityGearFactory.fromFile(
                         INPUT_PATH.resolve("species.csv"),
                         "species_code",
                         "life_stage",
@@ -381,29 +383,57 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
-        final var fishingTask = new FishingFactory(
+        final var purseSeineDiscardRates =
+            SpeciesSpecificDiscardRatesFactory.fromFile(
+                INPUT_PATH.resolve("species.csv"),
+                "species_code",
+                "life_stage",
+                species,
+                DEFAULT_PURSE_SEINE_DISCARD_RATE
+            );
+        final var purseSeineDiscardMortalityRates =
+            SpeciesSpecificDiscardMortalityRatesFactory.fromFile(
+                INPUT_PATH.resolve("species.csv"),
+                "species_code",
+                "life_stage",
+                species,
+                DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE
+            );
+        final var bottomTrawlerDiscardRates =
+            SpeciesSpecificDiscardRatesFactory.fromFile(
+                INPUT_PATH.resolve("species.csv"),
+                "species_code",
+                "life_stage",
+                species,
+                DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE
+            );
+        final var bottomTrawlerDiscardMortalityRates =
+            SpeciesSpecificDiscardMortalityRatesFactory.fromFile(
+                INPUT_PATH.resolve("species.csv"),
+                "species_code",
+                "life_stage",
+                species,
+                DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE
+            );
+
+        final var purseSeinerFishingTask = new FishingFactory(
             new CurrentCellFisheableFactory(
                 new FisheableBiomassGridsFactory(biomassGrids)
             ),
             new CompositeDispositionProcessFactory<>(
-                new SelectedSpeciesRetentionFactory<>(
-                    new SpeciesByCodeFactory<>(
-                        new ConstantFactory<>(List.of("PIL", "ANE")),
-                        // TODO: we're currently restricting to a couple of species code
-                        //  for testing,  but, once we have the complete list of species
-                        //  for the  model (and not just the ones for which we currently
-                        //  have prices) we should (probably?) restrict to species
-                        //  that have a monetary value.
-                        //  Preferably, we should copy what the EwE model does.
-                        // new StringColumnReaderFactory(inputPath.plus("prices.csv")
-                        // , "species_id"),
-                        species
-                    )
-                ),
+                purseSeineDiscardRates,
                 new ProportionallyLimitingBiomassToHoldFactory(),
-                new GeneralDiscardMortalityFactory<>(
-                    new ConstantDoubleSupplierFactory(0.1)
-                )
+                purseSeineDiscardMortalityRates
+            )
+        );
+        final var bottomTrawlerFishingTask = new FishingFactory(
+            new CurrentCellFisheableFactory(
+                new FisheableBiomassGridsFactory(biomassGrids)
+            ),
+            new CompositeDispositionProcessFactory<>(
+                bottomTrawlerDiscardRates,
+                new ProportionallyLimitingBiomassToHoldFactory(),
+                bottomTrawlerDiscardMortalityRates
             )
         );
 
@@ -422,7 +452,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         )
                     )
                     .child(new TravelAlongPathFactory(pathFinder, distance))
-                    .child(fishingTask)
+                    .child(purseSeinerFishingTask)
                     .child(new SetDestinationToOriginFactory())
                     .child(new TravelAlongPathFactory(pathFinder, distance))
                     .child(new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER))
@@ -445,7 +475,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         )
                     )
                     .child(new TravelAlongPathFactory(pathFinder, distance))
-                    .child(fishingTask)
+                    .child(bottomTrawlerFishingTask)
                     .child(new SetDestinationToOriginFactory())
                     .child(new TravelAlongPathFactory(pathFinder, distance))
                     .child(new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER))
