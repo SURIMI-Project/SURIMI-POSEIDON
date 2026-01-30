@@ -32,11 +32,12 @@ import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFact
 import uk.ac.ox.poseidon.agents.choices.*;
 import uk.ac.ox.poseidon.agents.choices.evaluation.TotalBiomassCaughtPerHourDestinationEvaluationProviderFactory;
 import uk.ac.ox.poseidon.agents.choices.evaluation.TripEvaluatorFactory;
+import uk.ac.ox.poseidon.agents.components.ComponentFactory;
+import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
-import uk.ac.ox.poseidon.agents.registers.DynamicRegisterFactory;
 import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactory;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
@@ -312,11 +313,14 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 species
             );
 
-        final var optionValues =
-            new ExponentialMovingAverageOptionValuesFactory<Int2D>(LEARNING_ALPHA);
-
         final var optionValuesRegister =
-            new DynamicRegisterFactory<>(optionValues);
+            new ComponentRegisterFactory<MutableOptionValues<Int2D>>();
+
+        final var optionValues =
+            new ComponentFactory<>(
+                new ExponentialMovingAverageOptionValuesFactory<>(LEARNING_ALPHA),
+                optionValuesRegister
+            );
 
         final var readyForDeparture =
             new VesselPredicateTaskFactory(
