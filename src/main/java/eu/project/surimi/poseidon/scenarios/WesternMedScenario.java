@@ -55,19 +55,16 @@ import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
 import uk.ac.ox.poseidon.agents.vessels.*;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
-import uk.ac.ox.poseidon.agents.vessels.gears.SpeciesSpecificBiomassCatchabilityGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
+import uk.ac.ox.poseidon.agents.vessels.gears.SpeciesSpecificBiomassCatchabilityGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.biomass.FullBiomassAllocatorFactory;
 import uk.ac.ox.poseidon.biology.biomass.UniformCarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory;
-import uk.ac.ox.poseidon.core.FinalProcessFactory;
-import uk.ac.ox.poseidon.core.MappedFactory;
-import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.*;
 import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentDayOfWeekFactory;
 import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentTimeFactory;
 import uk.ac.ox.poseidon.core.aggregators.MaxFactory;
@@ -90,14 +87,14 @@ import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
-import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.adaptors.CellElevationFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.CellSetFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFromGridFile;
 import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
-import uk.ac.ox.poseidon.geography.ports.PortGridFromDataFactory;
+import uk.ac.ox.poseidon.geography.ports.ImmutablePortGridFromDataFactory;
+import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.io.DirectoryRemoverFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 import uk.ac.ox.poseidon.io.paths.PathFactory;
@@ -109,7 +106,6 @@ import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFacto
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.List;
 import java.util.function.Supplier;
 
 import static java.time.DayOfWeek.*;
@@ -208,8 +204,8 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var distance =
             new HaversineDistanceCalculatorFactory<>(modelGrid);
 
-        final var portGrid =
-            new PortGridFromDataFactory(
+        final Factory<GlobalScope, ? extends PortGrid> portGrid =
+            new ImmutablePortGridFromDataFactory<>(
                 CsvTableFactory.fromFile(inputPath.plus("ports.csv")),
                 bathymetricGrid,
                 distance,
