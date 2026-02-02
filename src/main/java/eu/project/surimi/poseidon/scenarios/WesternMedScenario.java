@@ -481,7 +481,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var behaviour =
             VesselScopeFactoriesByCode
-                .<Behaviour<Vessel>>builder()
+                .<Behaviour>builder()
                 .factory(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour)
                 .factory(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
                 .defaultFactory(new InactiveBehaviourFactory())
