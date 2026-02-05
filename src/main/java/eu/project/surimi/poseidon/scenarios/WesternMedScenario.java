@@ -91,7 +91,8 @@ import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory
 import uk.ac.ox.poseidon.geography.bathymetry.adaptors.CellElevationFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.CellSetFromGridFileFactory;
-import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFromGridFile;
+import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
+import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
 import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
 import uk.ac.ox.poseidon.geography.ports.ImmutablePortGridFromDataFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
@@ -150,9 +151,11 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var inputPath = PathFactory.of(INPUT_PATH);
         final var outputPath = new SimulationFolderFactory(PathFactory.of("outputs"));
+        final var bathymetricGridPath = inputPath.plus("bathymetry_grid.asc");
 
         final var modelGrid =
-            new ModelGridWithActiveCellsFromGridFile<>(
+            new ModelGridWithActiveCellsFactory<>(
+                new ModelGridFromGridFile<>(bathymetricGridPath),
                 new CellSetFromGridFileFactory<>(
                     inputPath.plus("exclusion_grid.asc"),
                     0
@@ -161,7 +164,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var bathymetricGrid =
             new BathymetricGridFromGridFileFactory<>(
-                inputPath.plus("bathymetry_grid.asc"),
+                bathymetricGridPath,
                 modelGrid,
                 new MaxFactory(),
                 false
