@@ -60,9 +60,8 @@ import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.SpeciesSpecificBiomassCatchabilityGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
+import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
-import uk.ac.ox.poseidon.biology.biomass.FullBiomassAllocatorFactory;
-import uk.ac.ox.poseidon.biology.biomass.UniformCarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory;
 import uk.ac.ox.poseidon.core.*;
 import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentDayOfWeekFactory;
@@ -80,7 +79,7 @@ import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
-import uk.ac.ox.poseidon.core.scopes.GlobalScope;
+import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
@@ -111,6 +110,7 @@ import java.util.function.Supplier;
 
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
+import static uk.ac.ox.poseidon.biology.allocators.ConstantProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
 
@@ -171,16 +171,17 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var carryingCapacityGrid =
-            new UniformCarryingCapacityGridFactory(
+            CarryingCapacityGridFactory.ofUniformCapacity(
+                modelGrid,
                 bathymetricGrid,
                 MassFactory.of(CARRYING_CAPACITY)
             );
 
         final var biomassAllocator =
-            new FullBiomassAllocatorFactory(carryingCapacityGrid);
+            fullCarryingCapacityAllocator(carryingCapacityGrid);
 
         @SuppressWarnings("MagicNumber") final var regulations =
-            new ForbiddenIfFactory<GlobalScope, Vessel>(
+            new ForbiddenIfFactory<Scope, Vessel>(
                 new AnyOfFactory<>(
                     new ActionCellPredicateFactory<>(
                         modelGrid,
@@ -207,7 +208,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var distance =
             new HaversineDistanceCalculatorFactory<>(modelGrid);
 
-        final Factory<GlobalScope, ? extends PortGrid> portGrid =
+        final Factory<Scope, ? extends PortGrid> portGrid =
             new ImmutablePortGridFromDataFactory<>(
                 CsvTableFactory.fromFile(inputPath.plus("ports.csv")),
                 bathymetricGrid,

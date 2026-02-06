@@ -48,9 +48,8 @@ import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
+import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
-import uk.ac.ox.poseidon.biology.biomass.FullBiomassAllocatorFactory;
-import uk.ac.ox.poseidon.biology.biomass.UniformCarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.MappedFactory;
@@ -82,6 +81,7 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static uk.ac.ox.poseidon.biology.allocators.ConstantProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -126,14 +126,16 @@ public class MinimalScenario implements Supplier<Scenario> {
                     -1, -1, 0
                 )
             );
+
         final var carryingCapacityGrid =
-            new UniformCarryingCapacityGridFactory(
+            CarryingCapacityGridFactory.ofUniformCapacity(
+                modelGrid,
                 bathymetricGrid,
                 MassFactory.of(CARRYING_CAPACITY)
             );
 
         final var biomassAllocator =
-            new FullBiomassAllocatorFactory(carryingCapacityGrid);
+            fullCarryingCapacityAllocator(carryingCapacityGrid);
 
         final var species =
             new MappedFactory<>(
@@ -234,14 +236,14 @@ public class MinimalScenario implements Supplier<Scenario> {
             );
 
         final var gear1 =
-            new FixedBiomassProportionGearFactory(
+            new FixedBiomassProportionGearFactory<>(
                 GEAR_CODES.get(0),
                 0.25,
                 ONE_HOUR_DURATION_SUPPLIER
             );
 
         final var gear2 =
-            new FixedBiomassProportionGearFactory(
+            new FixedBiomassProportionGearFactory<>(
                 GEAR_CODES.get(1),
                 0.5,
                 ONE_HOUR_DURATION_SUPPLIER

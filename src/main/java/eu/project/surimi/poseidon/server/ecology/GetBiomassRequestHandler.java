@@ -84,7 +84,7 @@ public class GetBiomassRequestHandler extends
                 final Coordinate coordinate =
                     bathymetricGrid.getModelGrid().toCoordinate(cell);
                 final double biomass =
-                    simulationProperties.convertKgToStandardMassUnit(grid.getDouble(cell));
+                    simulationProperties.convertKgToStandardMassUnit(grid.getValue(cell));
                 gridBuilder.addBiomassCells(
                     build.buf.gen.surimi.v1.BiomassCell
                         .newBuilder()
