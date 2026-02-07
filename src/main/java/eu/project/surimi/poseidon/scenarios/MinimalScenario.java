@@ -56,16 +56,16 @@ import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
-import uk.ac.ox.poseidon.core.suppliers.ConstantDoubleSupplierFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.core.utils.ListFactory;
+import uk.ac.ox.poseidon.core.utils.PairFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
 import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
-import uk.ac.ox.poseidon.geography.ports.MutablePortGridFactory;
 import uk.ac.ox.poseidon.geography.ports.PortFactory;
+import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 import uk.ac.ox.poseidon.io.tables.CsvTableFactory;
 
 import javax.measure.Quantity;
@@ -81,8 +81,9 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
-import static uk.ac.ox.poseidon.biology.allocators.ConstantProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
+import static uk.ac.ox.poseidon.core.suppliers.SupplierFactories.constantDouble;
 
 @SuppressWarnings("UnstableApiUsage")
 public class MinimalScenario implements Supplier<Scenario> {
@@ -161,12 +162,23 @@ public class MinimalScenario implements Supplier<Scenario> {
                 "species",
                 species
             );
+        final var distance =
+            new HaversineDistanceCalculatorFactory<>(modelGrid);
+
+        final var port1 = new PortFactory("P1", "Port 1");
+        final var port2 = new PortFactory("P2", "Port 2");
+
         final var portGrid =
-            new MutablePortGridFactory(bathymetricGrid);
-        final var port1 =
-            new PortFactory(portGrid, "P1", "Port 1", new CoordinateFactory(1, 1));
-        final var port2 =
-            new PortFactory(portGrid, "P2", "Port 2", new CoordinateFactory(1, -1));
+            new PortGridFactory<>(
+                new ListFactory<>(
+                    List.of(
+                        new PairFactory<>(port1, new CoordinateFactory(1, 1)),
+                        new PairFactory<>(port2, new CoordinateFactory(1, -1))
+                    )
+                ),
+                bathymetricGrid,
+                distance
+            );
 
         final var marketGrid =
             new BiomassMarketGridFactory(portGrid);
@@ -181,16 +193,16 @@ public class MinimalScenario implements Supplier<Scenario> {
                 ),
                 List.of("port", "marketCode", "pricesEntries"),
                 List.of(
-                    new ListFactory<>(port1, port2),
-                    new ListFactory<>(MARKET_CODES),
-                    new ListFactory<>(
+                    new ListFactory<>(List.of(port1, port2)),
+                    ConstantFactory.of(MARKET_CODES),
+                    ConstantFactory.of(
                         Stream.of(1, 2)
                             .map(portIndex ->
                                 new MappedFactory<>(
                                     new PriceEntryFactory<>(),
                                     List.of("catchCategory", "species", "price"),
                                     List.of(
-                                        new ListFactory<>(
+                                        ConstantFactory.of(
                                             GEAR_CODES
                                                 .stream()
                                                 .map(CatchCategoryFactory::new)
@@ -199,15 +211,16 @@ public class MinimalScenario implements Supplier<Scenario> {
                                                 )
                                                 .toList()
                                         ),
-                                        new ListFactory<>(
+                                        ConstantFactory.of(
                                             GEAR_CODES
                                                 .stream()
                                                 .flatMap(__ ->
-                                                    SPECIES_CODES.stream().map(SpeciesFactory::new)
+                                                    SPECIES_CODES.stream().map
+                                                        (SpeciesFactory::new)
                                                 )
                                                 .toList()
                                         ),
-                                        new ListFactory<>(
+                                        ConstantFactory.of(
                                             range(0, NUM_PRICES)
                                                 .boxed()
                                                 .map(i -> new PriceFactory(
@@ -226,8 +239,6 @@ public class MinimalScenario implements Supplier<Scenario> {
             );
         final var vesselField =
             new VesselFieldFactory(modelGrid);
-        final var distance =
-            new HaversineDistanceCalculatorFactory<>(modelGrid);
         final var pathFinder =
             new DefaultPathFinderFactory<>(
                 bathymetricGrid,
@@ -279,7 +290,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                                         )
                                     ),
                                     new GeneralDiscardMortalityFactory<>(
-                                        new ConstantDoubleSupplierFactory(0.1)
+                                        constantDouble(0.1)
                                     )
                                 )
                             ),

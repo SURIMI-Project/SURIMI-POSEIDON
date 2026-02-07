@@ -93,8 +93,9 @@ import uk.ac.ox.poseidon.geography.grids.CellSetFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
 import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
-import uk.ac.ox.poseidon.geography.ports.ImmutablePortGridFromDataFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
+import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
+import uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory;
 import uk.ac.ox.poseidon.io.DirectoryRemoverFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 import uk.ac.ox.poseidon.io.paths.PathFactory;
@@ -110,7 +111,7 @@ import java.util.function.Supplier;
 
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
-import static uk.ac.ox.poseidon.biology.allocators.ConstantProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
 
@@ -209,11 +210,13 @@ public class WesternMedScenario implements Supplier<Scenario> {
             new HaversineDistanceCalculatorFactory<>(modelGrid);
 
         final Factory<Scope, ? extends PortGrid> portGrid =
-            new ImmutablePortGridFromDataFactory<>(
-                CsvTableFactory.fromFile(inputPath.plus("ports.csv")),
+            new PortGridFactory<>(
+                new PortsFromTableFactory<>(
+                    CsvTableFactory.fromFile(inputPath.plus("ports.csv")),
+                    "port_code", "port_name", "lon", "lat"
+                ),
                 bathymetricGrid,
-                distance,
-                "port_code", "port_name", "lon", "lat"
+                distance
             );
 
         final var pathFinder =
