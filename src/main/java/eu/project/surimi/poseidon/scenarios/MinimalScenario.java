@@ -169,11 +169,9 @@ public class MinimalScenario implements Supplier<Scenario> {
 
         final var portGrid =
             new PortGridFactory<>(
-                new ListFactory<>(
-                    List.of(
-                        new PairFactory<>(port1, new CoordinateFactory(1, 1)),
-                        new PairFactory<>(port2, new CoordinateFactory(1, -1))
-                    )
+                ListFactory.from(
+                    new PairFactory<>(port1, new CoordinateFactory(1, 1)),
+                    new PairFactory<>(port2, new CoordinateFactory(1, -1))
                 ),
                 bathymetricGrid,
                 distance
@@ -218,7 +216,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                     null
                 ),
                 Map.of(
-                    "port", new ListFactory<>(List.of(port1, port2)),
+                    "port", ListFactory.from(port1, port2),
                     "marketCode", Factory.of(MARKET_CODES),
                     "pricesEntries", priceEntries
                 )
