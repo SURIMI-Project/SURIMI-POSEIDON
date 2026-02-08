@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static eu.project.surimi.poseidon.server.market.MarketService.getBiomassMarketsById;
+import static eu.project.surimi.poseidon.server.market.MarketService.getMarketsById;
 import static io.grpc.Status.INVALID_ARGUMENT;
 import static java.lang.System.Logger.Level.INFO;
 
@@ -72,7 +72,7 @@ public class UpdateSpeciesPricesRequestHandler extends
 
         final Set<Species> simulationSpecies = simulation.getComponents(Species.class);
 
-        final Map<String, BiomassMarket> marketsById = getBiomassMarketsById(simulation);
+        final Map<String, BiomassMarket> marketsById = getMarketsById(simulation);
         request.getPricesList().forEach(price -> {
             final BiomassMarket market = getOrThrow(
                 marketsById,

@@ -179,9 +179,6 @@ public class MinimalScenario implements Supplier<Scenario> {
                 distance
             );
 
-        final var marketGrid =
-            new BiomassMarketGridFactory(portGrid);
-
         final ConstantFactory<List<MappedFactory<Scope, PriceEntry>>> priceEntries =
             Factory.of(
                 Stream.of(1, 2).map(portIndex ->
@@ -216,7 +213,6 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var markets =
             new MappedFactory<>(
                 new BiomassMarketFactory(
-                    marketGrid,
                     null,
                     null,
                     null
@@ -227,6 +223,8 @@ public class MinimalScenario implements Supplier<Scenario> {
                     "pricesEntries", priceEntries
                 )
             );
+        final var marketGrid = new MarketGridFactory<>(portGrid, markets);
+
         final var vesselField =
             new VesselFieldFactory(modelGrid);
         final var pathFinder =

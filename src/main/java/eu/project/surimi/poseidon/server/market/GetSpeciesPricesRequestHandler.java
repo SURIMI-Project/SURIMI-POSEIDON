@@ -33,7 +33,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 import java.util.Map;
 
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
-import static eu.project.surimi.poseidon.server.market.MarketService.getBiomassMarketsById;
+import static eu.project.surimi.poseidon.server.market.MarketService.getMarketsById;
 
 public class GetSpeciesPricesRequestHandler extends
     WithSimulationRequestHandler<GetSpeciesPricesRequest, GetSpeciesPricesResponse> {
@@ -61,7 +61,7 @@ public class GetSpeciesPricesRequestHandler extends
             "Prices requested for simulation {0}",
             request.getSimulationId()
         );
-        final Map<String, BiomassMarket> marketsById = getBiomassMarketsById(simulation);
+        final Map<String, BiomassMarket> marketsById = getMarketsById(simulation);
         final GetSpeciesPricesResponse.Builder responseBuilder =
             GetSpeciesPricesResponse
                 .newBuilder()
