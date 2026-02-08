@@ -30,6 +30,7 @@ import uk.ac.ox.poseidon.gui.ScenarioWithUI;
 import uk.ac.ox.poseidon.gui.portrayals.*;
 
 import java.util.List;
+import java.util.Map;
 
 import static java.awt.Color.WHITE;
 import static uk.ac.ox.poseidon.gui.palettes.PaletteColorMap.IMOLA;
@@ -65,8 +66,10 @@ public class WesternMedScenarioWithUI extends ScenarioWithUI {
                                 scenario.component("carryingCapacityGrid"),
                                 false
                             ),
-                            "biomassGrid",
-                            scenario.<List<BiomassGrid>>component("biomassGrids")
+                            Map.of(
+                                "biomassGrid",
+                                scenario.<List<BiomassGrid>>component("biomassGrids")
+                            )
                         ),
                         new SimpleFieldPortrayalFactory(
                             "Markets",

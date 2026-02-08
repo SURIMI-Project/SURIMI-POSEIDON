@@ -25,9 +25,8 @@ package eu.project.surimi.poseidon.server;
 import lombok.NonNull;
 import lombok.Value;
 import uk.ac.ox.poseidon.biology.species.Species;
+import uk.ac.ox.poseidon.core.utils.Pair;
 
-import java.util.AbstractMap;
-import java.util.Map;
 import java.util.Optional;
 
 import static java.util.function.Predicate.not;
@@ -69,8 +68,8 @@ public class SpeciesKey {
         return builder.build();
     }
 
-    public Map.Entry<String, String> toEntry() {
-        return new AbstractMap.SimpleEntry<>(speciesCode, lifeStage);
+    public Pair<String, String> toPair() {
+        return Pair.of(speciesCode, lifeStage);
     }
 
     public static SpeciesKey from(final Species species) {

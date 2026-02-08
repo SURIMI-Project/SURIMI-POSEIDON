@@ -26,6 +26,7 @@ import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.MinimalScenario;
 import org.junit.jupiter.api.Test;
 import tech.units.indriya.ComparableQuantity;
+import uk.ac.ox.poseidon.core.utils.Pair;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
 import javax.measure.Unit;
@@ -58,7 +59,7 @@ public class EcologyServiceTest extends ServiceTest {
         assertThat(
             grids.keySet().stream().map(Species::getSpeciesCode).toList()
         ).containsExactlyInAnyOrderElementsOf(
-            LIFE_STAGE_PER_SPECIES_CODE.stream().map(Entry::getKey)::iterator
+            LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst)::iterator
         );
 
         assertThat(
@@ -66,7 +67,7 @@ public class EcologyServiceTest extends ServiceTest {
                 Optional.of(species.getLifeStage()).filter(s -> !s.isEmpty()).orElse(null)
             ).toList()
         ).containsExactlyInAnyOrderElementsOf(
-            LIFE_STAGE_PER_SPECIES_CODE.stream().map(Entry::getValue)::iterator
+            LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getSecond)::iterator
         );
 
         assertTrue(
@@ -127,9 +128,9 @@ public class EcologyServiceTest extends ServiceTest {
                                         Species
                                             .newBuilder()
                                             .setSpeciesCode(
-                                                LIFE_STAGE_PER_SPECIES_CODE.getFirst().getKey()
+                                                LIFE_STAGE_PER_SPECIES_CODE.getFirst().getFirst()
                                             ).setLifeStage(
-                                                LIFE_STAGE_PER_SPECIES_CODE.getFirst().getValue()
+                                                LIFE_STAGE_PER_SPECIES_CODE.getFirst().getSecond()
                                             ))
                                     .addBiomassCells(
                                         BiomassCell
@@ -153,7 +154,7 @@ public class EcologyServiceTest extends ServiceTest {
                                         Species
                                             .newBuilder()
                                             .setSpeciesCode(
-                                                LIFE_STAGE_PER_SPECIES_CODE.getLast().getKey()
+                                                LIFE_STAGE_PER_SPECIES_CODE.getLast().getFirst()
                                             )
                                     )
                                     .addBiomassCells(
@@ -168,7 +169,7 @@ public class EcologyServiceTest extends ServiceTest {
                     .build()
             );
         assertEquals(simulationId, updateBiomassResponse.getSimulationId());
-        final Map<Entry<String, String>, Map<Coordinate, ComparableQuantity<Mass>>> grids =
+        final Map<Pair<String, String>, Map<Coordinate, ComparableQuantity<Mass>>> grids =
             getGrids(simulationId)
                 .entrySet()
                 .stream()
@@ -178,7 +179,7 @@ public class EcologyServiceTest extends ServiceTest {
                             new SpeciesKey(
                                 entry.getKey().getSpeciesCode(),
                                 entry.getKey().getLifeStage()
-                            ).toEntry(),
+                            ).toPair(),
                         Entry::getValue
                     )
                 );

@@ -107,6 +107,7 @@ import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFacto
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static java.time.DayOfWeek.*;
@@ -277,8 +278,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     null,
                     biomassAllocator
                 ),
-                "species",
-                species
+                Map.of("species", species)
             );
 
         final var biomassSaleAccumulator =

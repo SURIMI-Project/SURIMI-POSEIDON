@@ -52,12 +52,15 @@ import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
+import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
+import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.core.utils.ListFactory;
+import uk.ac.ox.poseidon.core.utils.Pair;
 import uk.ac.ox.poseidon.core.utils.PairFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
@@ -71,7 +74,6 @@ import uk.ac.ox.poseidon.io.tables.CsvTableFactory;
 import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
 import java.time.LocalDate;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -92,7 +94,7 @@ public class MinimalScenario implements Supplier<Scenario> {
     public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
     public static final List<String> LIFE_STAGES = List.of("juvenile", "adult");
 
-    public static final List<SimpleEntry<String, String>> LIFE_STAGE_PER_SPECIES_CODE = Streams.zip(
+    public static final List<Pair<String, String>> LIFE_STAGE_PER_SPECIES_CODE = Streams.zip(
         // this is a just very roundabout way to generate Stream.of("A", "A", "B", "C")...
         Stream.concat(
             Stream.generate(SPECIES_CODES::getFirst).limit(LIFE_STAGES.size()),
@@ -102,7 +104,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             LIFE_STAGES.stream(),
             Stream.generate(() -> null)
         ),
-        SimpleEntry::new
+        Pair::of
     ).toList();
 
     public static final List<String> GEAR_CODES = List.of("G1", "G2");
@@ -141,14 +143,11 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var species =
             new MappedFactory<>(
                 new SpeciesFactory(),
-                List.of("code", "lifeStage"),
-                List.of(
-                    new ConstantFactory<>(
-                        LIFE_STAGE_PER_SPECIES_CODE.stream().map(Map.Entry::getKey).toList()
-                    ),
-                    new ConstantFactory<>(
-                        LIFE_STAGE_PER_SPECIES_CODE.stream().map(Map.Entry::getValue).toList()
-                    )
+                Map.of(
+                    "code",
+                    Factory.of(LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst)),
+                    "lifeStage",
+                    Factory.of(LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getSecond))
                 )
             );
 
@@ -159,9 +158,9 @@ public class MinimalScenario implements Supplier<Scenario> {
                     null,
                     biomassAllocator
                 ),
-                "species",
-                species
+                Map.of("species", species)
             );
+
         final var distance =
             new HaversineDistanceCalculatorFactory<>(modelGrid);
 
@@ -183,6 +182,37 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var marketGrid =
             new BiomassMarketGridFactory(portGrid);
 
+        final ConstantFactory<List<MappedFactory<Scope, PriceEntry>>> priceEntries =
+            Factory.of(
+                Stream.of(1, 2).map(portIndex ->
+                    new MappedFactory<>(
+                        new PriceEntryFactory<>(),
+                        Map.of(
+                            "catchCategory", Factory.of(
+                                GEAR_CODES
+                                    .stream()
+                                    .map(CatchCategoryFactory::new)
+                                    .flatMap(cc -> nCopies(SPECIES_CODES.size(), cc).stream())
+                            ),
+                            "species", Factory.of(
+                                GEAR_CODES
+                                    .stream()
+                                    .flatMap(__ -> SPECIES_CODES.stream().map(SpeciesFactory::new))
+                            ),
+                            "price", Factory.of(
+                                range(0, NUM_PRICES)
+                                    .boxed()
+                                    .map(i -> new PriceFactory(
+                                        portIndex + i * 0.1,
+                                        "GBP",
+                                        "kg"
+                                    ))
+                            )
+                        )
+                    )
+                )
+            );
+
         final var markets =
             new MappedFactory<>(
                 new BiomassMarketFactory(
@@ -191,50 +221,10 @@ public class MinimalScenario implements Supplier<Scenario> {
                     null,
                     null
                 ),
-                List.of("port", "marketCode", "pricesEntries"),
-                List.of(
-                    new ListFactory<>(List.of(port1, port2)),
-                    ConstantFactory.of(MARKET_CODES),
-                    ConstantFactory.of(
-                        Stream.of(1, 2)
-                            .map(portIndex ->
-                                new MappedFactory<>(
-                                    new PriceEntryFactory<>(),
-                                    List.of("catchCategory", "species", "price"),
-                                    List.of(
-                                        ConstantFactory.of(
-                                            GEAR_CODES
-                                                .stream()
-                                                .map(CatchCategoryFactory::new)
-                                                .flatMap(cc ->
-                                                    nCopies(SPECIES_CODES.size(), cc).stream()
-                                                )
-                                                .toList()
-                                        ),
-                                        ConstantFactory.of(
-                                            GEAR_CODES
-                                                .stream()
-                                                .flatMap(__ ->
-                                                    SPECIES_CODES.stream().map
-                                                        (SpeciesFactory::new)
-                                                )
-                                                .toList()
-                                        ),
-                                        ConstantFactory.of(
-                                            range(0, NUM_PRICES)
-                                                .boxed()
-                                                .map(i -> new PriceFactory(
-                                                    portIndex + i * 0.1,
-                                                    "GBP",
-                                                    "kg"
-                                                ))
-                                                .toList()
-                                        )
-                                    )
-                                )
-                            )
-                            .toList()
-                    )
+                Map.of(
+                    "port", new ListFactory<>(List.of(port1, port2)),
+                    "marketCode", Factory.of(MARKET_CODES),
+                    "pricesEntries", priceEntries
                 )
             );
         final var vesselField =
