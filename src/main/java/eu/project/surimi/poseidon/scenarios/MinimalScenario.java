@@ -58,6 +58,7 @@ import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.time.DateTimeFactory;
 import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.core.utils.ListFactory;
 import uk.ac.ox.poseidon.core.utils.Pair;
@@ -342,7 +343,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             new BiomassSaleAccumulatorFactory();
 
         return Scenario.builder()
-            .startingDateTime(START_DATE)
+            .startingDateTime(DateTimeFactory.of(START_DATE))
             .component("modelGrid", modelGrid)
             .component("species", species)
             .component("biomassGrids", biomassGrids)

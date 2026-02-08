@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.time.DateTimeFactory;
 import uk.ac.ox.poseidon.core.utils.Measurements;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
@@ -40,11 +41,10 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
-import java.util.Date;
 import java.util.UUID;
 
 import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
-import static eu.project.surimi.poseidon.server.Server.toInstant;
+import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
 import static uk.ac.ox.poseidon.core.Simulation.log;
@@ -70,7 +70,7 @@ public class InitialiseRequestHandler
         }
         final Scenario scenario = scenarioLoader.load(scenarioFile);
         scenario.setStartingDateTime(
-            Date.from(toInstant(request.getSimulation().getStartDateTime()))
+            DateTimeFactory.of(toLocalDateTime(request.getSimulation().getStartDateTime()))
         );
 
         logger.log(INFO, "Scenario loaded: {0}", scenarioFile.toPath().toAbsolutePath());

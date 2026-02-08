@@ -85,6 +85,7 @@ import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
+import uk.ac.ox.poseidon.core.time.DateTimeFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.adaptors.CellElevationFactory;
@@ -523,7 +524,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         builder
-            .startingDateTime(START_DATE)
+            .startingDateTime(DateTimeFactory.of(START_DATE))
             .component("species", species)
             .component("bathymetricGrid", bathymetricGrid)
             .component("carryingCapacityGrid", carryingCapacityGrid)
