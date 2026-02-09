@@ -52,15 +52,14 @@ import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
-import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.time.DateTimeFactory;
-import uk.ac.ox.poseidon.core.utils.ConstantFactory;
 import uk.ac.ox.poseidon.core.utils.ListFactory;
+import uk.ac.ox.poseidon.core.utils.ObjectFactory;
 import uk.ac.ox.poseidon.core.utils.Pair;
 import uk.ac.ox.poseidon.core.utils.PairFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
@@ -86,7 +85,8 @@ import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
-import static uk.ac.ox.poseidon.core.suppliers.SupplierFactories.constantDouble;
+import static uk.ac.ox.poseidon.core.suppliers.Factories.constantDouble;
+import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 
 @SuppressWarnings("UnstableApiUsage")
 public class MinimalScenario implements Supplier<Scenario> {
@@ -146,9 +146,9 @@ public class MinimalScenario implements Supplier<Scenario> {
                 new SpeciesFactory(),
                 Map.of(
                     "code",
-                    Factory.of(LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst)),
+                    listOf(LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst)),
                     "lifeStage",
-                    Factory.of(LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getSecond))
+                    listOf(LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getSecond))
                 )
             );
 
@@ -178,24 +178,24 @@ public class MinimalScenario implements Supplier<Scenario> {
                 distance
             );
 
-        final ConstantFactory<List<MappedFactory<Scope, PriceEntry>>> priceEntries =
-            Factory.of(
+        final ObjectFactory<List<MappedFactory<Scope, PriceEntry>>> priceEntries =
+            listOf(
                 Stream.of(1, 2).map(portIndex ->
                     new MappedFactory<>(
                         new PriceEntryFactory<>(),
                         Map.of(
-                            "catchCategory", Factory.of(
+                            "catchCategory", listOf(
                                 GEAR_CODES
                                     .stream()
                                     .map(CatchCategoryFactory::new)
                                     .flatMap(cc -> nCopies(SPECIES_CODES.size(), cc).stream())
                             ),
-                            "species", Factory.of(
+                            "species", listOf(
                                 GEAR_CODES
                                     .stream()
                                     .flatMap(__ -> SPECIES_CODES.stream().map(SpeciesFactory::new))
                             ),
-                            "price", Factory.of(
+                            "price", listOf(
                                 range(0, NUM_PRICES)
                                     .boxed()
                                     .map(i -> new PriceFactory(
@@ -218,7 +218,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                 ),
                 Map.of(
                     "port", ListFactory.from(port1, port2),
-                    "marketCode", Factory.of(MARKET_CODES),
+                    "marketCode", listOf(MARKET_CODES),
                     "pricesEntries", priceEntries
                 )
             );
@@ -272,7 +272,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                                 new CompositeDispositionProcessFactory<>(
                                     new SelectedSpeciesRetentionFactory<>(
                                         new SpeciesByCodeFactory<>(
-                                            new ConstantFactory<>(List.of("A", "B")),
+                                            new ObjectFactory<>(List.of("A", "B")),
                                             species
                                         )
                                     ),

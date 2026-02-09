@@ -68,11 +68,7 @@ import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentDayOfWeekFactory;
 import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentTimeFactory;
 import uk.ac.ox.poseidon.core.aggregators.MaxFactory;
 import uk.ac.ox.poseidon.core.events.EventClearerFactory;
-import uk.ac.ox.poseidon.core.predicates.AdaptedPredicateFactory;
 import uk.ac.ox.poseidon.core.predicates.InSetFactory;
-import uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory;
-import uk.ac.ox.poseidon.core.predicates.logical.AnyOfFactory;
-import uk.ac.ox.poseidon.core.predicates.numeric.AboveFactory;
 import uk.ac.ox.poseidon.core.predicates.temporal.TimeIsAfterFactory;
 import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
@@ -88,7 +84,6 @@ import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
-import uk.ac.ox.poseidon.geography.bathymetry.adaptors.CellElevationFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.CellSetFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
@@ -114,8 +109,15 @@ import java.util.function.Supplier;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.core.predicates.Factories.adaptedPredicate;
+import static uk.ac.ox.poseidon.core.predicates.Factories.in;
+import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
+import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
+import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.above;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
+import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
+import static uk.ac.ox.poseidon.geography.grids.adaptors.Factories.cellValue;
 
 public class WesternMedScenario implements Supplier<Scenario> {
 
@@ -148,6 +150,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
         simulation.finish();
     }
 
+    @SuppressWarnings("ExtractMethodRecommender")
     @Override
     public Scenario get() {
         final Scenario.ScenarioBuilder builder = Scenario.builder();
@@ -185,12 +188,12 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         @SuppressWarnings("MagicNumber") final var regulations =
             new ForbiddenIfFactory<Scope, Vessel>(
-                new AnyOfFactory<>(
+                anyOf(
                     new ActionCellPredicateFactory<>(
                         modelGrid,
-                        new AdaptedPredicateFactory<>(
-                            new CellElevationFactory<>(bathymetricGrid),
-                            new AboveFactory(-35)
+                        adaptedPredicate(
+                            cellValue(bathymetricGrid),
+                            above(-35.0)
                         )
                     ),
                     new ActionCellPredicateFactory<>(
@@ -330,20 +333,20 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var readyForDeparture =
             new VesselPredicateTaskFactory(
-                new AllOfFactory<>(
+                allOf(
                     new AdaptedVesselPredicateFactory<>(
                         new CurrentTimeFactory(),
                         new TimeIsAfterFactory<>(new TimeFactory(21, 59, 59))
                     ),
                     new AdaptedVesselPredicateFactory<>(
                         new CurrentDayOfWeekFactory(),
-                        InSetFactory.of(
+                        in(setOf(
                             SUNDAY,
                             MONDAY,
                             TUESDAY,
                             WEDNESDAY,
                             THURSDAY
-                        )
+                        ))
                     )
                 )
             );
