@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static eu.project.surimi.poseidon.server.ecology.EcologyService.checkRequestDateWithinOneDayOfSimulation;
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.INFO;
@@ -86,6 +87,8 @@ public class UpdateBiomassRequestHandler extends
         final SimulationManager.SimulationProperties simulationProperties
     ) {
         logger.log(INFO, "Biomass update received for simulation {0}", request.getSimulationId());
+        checkRequestDateWithinOneDayOfSimulation(request.getDateTime(), simulation);
+
         final BiomassSummary biomassSummary = request.getBiomassSummary();
         final Map<SpeciesKey, BiomassGrid> simulationGrids =
             simulation.getComponents(BiomassGrid.class).stream().collect(toMap(

@@ -55,7 +55,7 @@ public abstract class ServiceTest {
 
     static final javax.measure.Unit<Mass> MASS_UNIT = KILOGRAM;
     private static final String STEP_SIZE = "P1M";
-    private static final LocalDateTime START_DATE_TIME =
+    static final LocalDateTime START_DATE_TIME =
         LocalDate.of(2000, 1, 1).atStartOfDay();
     private static final System.Logger logger =
         System.getLogger(WorkflowServiceTest.class.getName());

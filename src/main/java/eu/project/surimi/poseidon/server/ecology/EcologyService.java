@@ -23,8 +23,16 @@
 package eu.project.surimi.poseidon.server.ecology;
 
 import build.buf.gen.surimi.v1.*;
+import com.google.protobuf.Timestamp;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
+import uk.ac.ox.poseidon.core.Simulation;
+
+import java.time.LocalDate;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
+import static java.time.temporal.ChronoUnit.DAYS;
 
 @RequiredArgsConstructor
 public class EcologyService extends EcologyServiceGrpc.EcologyServiceImplBase {
@@ -46,5 +54,22 @@ public class EcologyService extends EcologyServiceGrpc.EcologyServiceImplBase {
         final StreamObserver<GetBiomassResponse> responseObserver
     ) {
         getBiomassRequestHandler.handle(request, responseObserver);
+    }
+
+    static void checkRequestDateWithinOneDayOfSimulation(
+        final Timestamp requestTimestamp,
+        final Simulation simulation
+    ) {
+        final LocalDate requestDate =
+            toLocalDateTime(requestTimestamp).toLocalDate();
+        final LocalDate simulationDate =
+            simulation.getTemporalSchedule().getDateTime().toLocalDate();
+        checkArgument(
+            DAYS.between(requestDate, simulationDate) <= 1,
+            "Request date %s is more than one day away from current simulation date %s.".formatted(
+                requestDate,
+                simulationDate
+            )
+        );
     }
 }

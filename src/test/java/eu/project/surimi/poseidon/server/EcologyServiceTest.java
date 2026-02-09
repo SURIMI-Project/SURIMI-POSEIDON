@@ -31,12 +31,14 @@ import uk.ac.ox.poseidon.geography.Coordinate;
 
 import javax.measure.Unit;
 import javax.measure.quantity.Mass;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.CARRYING_CAPACITY;
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE;
+import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,7 +57,7 @@ public class EcologyServiceTest extends ServiceTest {
         final String simulationId = initialiseSimulation();
 
         final Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> grids =
-            getGrids(simulationId);
+            getGrids(simulationId, START_DATE_TIME);
         assertThat(
             grids.keySet().stream().map(Species::getSpeciesCode).toList()
         ).containsExactlyInAnyOrderElementsOf(
@@ -79,10 +81,14 @@ public class EcologyServiceTest extends ServiceTest {
         );
     }
 
-    private Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> getGrids(final String simulationId) {
+    private Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> getGrids(
+        final String simulationId,
+        final LocalDateTime dateTime
+    ) {
         final GetBiomassResponse response = ecologyStub.getBiomass(
             GetBiomassRequest
                 .newBuilder()
+                .setDateTime(toTimestamp(dateTime))
                 .setSimulationId(simulationId)
                 .build()
         );
@@ -118,6 +124,7 @@ public class EcologyServiceTest extends ServiceTest {
                 UpdateBiomassRequest
                     .newBuilder()
                     .setSimulationId(simulationId)
+                    .setDateTime(toTimestamp(START_DATE_TIME))
                     .setBiomassSummary(
                         BiomassSummary
                             .newBuilder()
@@ -170,7 +177,7 @@ public class EcologyServiceTest extends ServiceTest {
             );
         assertEquals(simulationId, updateBiomassResponse.getSimulationId());
         final Map<Pair<String, String>, Map<Coordinate, ComparableQuantity<Mass>>> grids =
-            getGrids(simulationId)
+            getGrids(simulationId, START_DATE_TIME)
                 .entrySet()
                 .stream()
                 .collect(
@@ -204,14 +211,14 @@ public class EcologyServiceTest extends ServiceTest {
     @Test
     void someBiomassGetsRemovedAfterAStep() {
         final String simulationId = initialiseSimulation();
-        final var initialGrids = getGrids(simulationId);
+        final var initialGrids = getGrids(simulationId, START_DATE_TIME);
         workflowStub.simulateStep(
             SimulateStepRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
                 .build()
         );
-        final var updatedGrids = getGrids(simulationId);
+        final var updatedGrids = getGrids(simulationId, START_DATE_TIME.plusMonths(1));
         initialGrids.forEach((speciesCode, initialGrid) -> {
             final var updatedGrid = updatedGrids.get(speciesCode);
             // Check that no cell has seen an increase in biomass

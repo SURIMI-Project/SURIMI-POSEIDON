@@ -35,6 +35,8 @@ import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 
 import java.util.NoSuchElementException;
 
+import static eu.project.surimi.poseidon.server.Server.toTimestamp;
+import static eu.project.surimi.poseidon.server.ecology.EcologyService.checkRequestDateWithinOneDayOfSimulation;
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.INFO;
@@ -72,6 +74,7 @@ public class GetBiomassRequestHandler extends
         final SimulationManager.SimulationProperties simulationProperties
     ) {
         log(logger, INFO, simulation, "Biomass requested");
+        checkRequestDateWithinOneDayOfSimulation(request.getDateTime(), simulation);
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
         final BiomassSummary.Builder biomassSummaryBuilder =
             BiomassSummary.newBuilder();
@@ -99,6 +102,7 @@ public class GetBiomassRequestHandler extends
         return GetBiomassResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
+            .setDateTime(toTimestamp(simulation.getTemporalSchedule().getDateTime()))
             .setBiomassSummary(biomassSummaryBuilder)
             .build();
     }
