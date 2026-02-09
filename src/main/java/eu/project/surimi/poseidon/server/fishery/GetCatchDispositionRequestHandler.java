@@ -187,6 +187,8 @@ public class GetCatchDispositionRequestHandler
         return GetCatchDispositionResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
+            .setStartDateTime(request.getStartDateTime())
+            .setEndDateTime(request.getEndDateTime())
             .setCatchDispositionSummary(catchDispositionSummaryBuilder)
             .build();
     }

@@ -144,6 +144,8 @@ public class GetSalesRequestHandler extends
         return GetSalesResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
+            .setStartDateTime(request.getStartDateTime())
+            .setEndDateTime(request.getEndDateTime())
             .addAllSalesSummaries(saleSummaries)
             .build();
     }
