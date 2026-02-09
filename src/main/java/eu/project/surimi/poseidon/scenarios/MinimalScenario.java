@@ -87,6 +87,7 @@ import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityA
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
+import static uk.ac.ox.poseidon.core.utils.Factories.object;
 
 @SuppressWarnings("UnstableApiUsage")
 public class MinimalScenario implements Supplier<Scenario> {
@@ -218,7 +219,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                 ),
                 Map.of(
                     "port", ListFactory.from(port1, port2),
-                    "marketCode", listOf(MARKET_CODES),
+                    "marketCode", object(MARKET_CODES),
                     "pricesEntries", priceEntries
                 )
             );
