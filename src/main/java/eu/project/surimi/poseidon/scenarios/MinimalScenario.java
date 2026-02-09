@@ -33,7 +33,6 @@ import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
 import uk.ac.ox.poseidon.agents.market.*;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
-import uk.ac.ox.poseidon.agents.tasks.branches.SequenceTaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
@@ -54,7 +53,6 @@ import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.time.DateTimeFactory;
@@ -84,6 +82,7 @@ import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
@@ -136,7 +135,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             CarryingCapacityGridFactory.ofUniformCapacity(
                 modelGrid,
                 bathymetricGrid,
-                MassFactory.of(CARRYING_CAPACITY)
+                massOf(CARRYING_CAPACITY)
             );
 
         final var biomassAllocator =
@@ -250,48 +249,43 @@ public class MinimalScenario implements Supplier<Scenario> {
 
         final var behaviour =
             new BehaviourFactory(
-                SequenceTaskFactory
-                    .builder()
-                    .child(
-                        new RoundTripFactory(
-                            new StartTripFactory(
-                                new ConstantDestinationSupplierFactory(
-                                    modelGrid,
-                                    new CoordinateFactory()
+                new RoundTripFactory(
+                    new StartTripFactory(
+                        new ConstantDestinationSupplierFactory(
+                            modelGrid,
+                            new CoordinateFactory()
+                        )
+                    ),
+                    new TravelAlongPathFactory(
+                        pathFinder,
+                        distance
+                    ),
+                    new FishingFactory(
+                        new CurrentCellFisheableFactory(
+                            new FisheableBiomassGridsFactory(
+                                biomassGrids
+                            )
+                        ),
+                        new CompositeDispositionProcessFactory<>(
+                            new SelectedSpeciesRetentionFactory<>(
+                                new SpeciesByCodeFactory<>(
+                                    new ObjectFactory<>(List.of("A", "B")),
+                                    species
                                 )
                             ),
-                            new TravelAlongPathFactory(
-                                pathFinder,
-                                distance
-                            ),
-                            new FishingFactory(
-                                new CurrentCellFisheableFactory(
-                                    new FisheableBiomassGridsFactory(
-                                        biomassGrids
-                                    )
-                                ),
-                                new CompositeDispositionProcessFactory<>(
-                                    new SelectedSpeciesRetentionFactory<>(
-                                        new SpeciesByCodeFactory<>(
-                                            new ObjectFactory<>(List.of("A", "B")),
-                                            species
-                                        )
-                                    ),
-                                    new GeneralDiscardMortalityFactory<>(
-                                        constantDouble(0.1)
-                                    )
-                                )
-                            ),
-                            new LandCatchesFactory(
-                                ONE_HOUR_DURATION_SUPPLIER
+                            new GeneralDiscardMortalityFactory<>(
+                                constantDouble(0.1)
                             )
                         )
+                    ),
+                    new LandCatchesFactory(
+                        ONE_HOUR_DURATION_SUPPLIER
                     )
-                    .build()
+                )
             );
 
         final var COORDINATE_PROPERTY_ADDRESS =
-            "behaviour.rootTask.children[0].startTripTask" +
+            "behaviour.rootTask.startTripTask" +
                 ".destinationSupplier.coordinate";
 
         final var fleet =

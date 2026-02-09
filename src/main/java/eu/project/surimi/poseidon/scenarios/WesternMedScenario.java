@@ -48,7 +48,7 @@ import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
 import uk.ac.ox.poseidon.agents.tasks.general.SucceedOrWaitTaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.general.VesselPredicateTaskFactory;
-import uk.ac.ox.poseidon.agents.tasks.general.WaitFactory;
+import uk.ac.ox.poseidon.agents.tasks.general.WaitForFactory;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.EndTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
@@ -70,7 +70,6 @@ import uk.ac.ox.poseidon.core.aggregators.MaxFactory;
 import uk.ac.ox.poseidon.core.events.EventClearerFactory;
 import uk.ac.ox.poseidon.core.predicates.InSetFactory;
 import uk.ac.ox.poseidon.core.predicates.temporal.TimeIsAfterFactory;
-import uk.ac.ox.poseidon.core.quantities.MassFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
@@ -108,12 +107,14 @@ import java.util.function.Supplier;
 
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
+import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.predicates.Factories.adaptedPredicate;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.above;
+import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
@@ -180,7 +181,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             CarryingCapacityGridFactory.ofUniformCapacity(
                 modelGrid,
                 bathymetricGrid,
-                MassFactory.of(CARRYING_CAPACITY)
+                massOf(CARRYING_CAPACITY)
             );
 
         final var biomassAllocator =
@@ -352,7 +353,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var waitUntilNextEvening =
-            new WaitFactory(
+            new WaitForFactory(
                 new DurationUntilSupplierFactory(
                     new NextDayAtTimeSupplierFactory(
                         new TimeFactory(22, 0, 0)
@@ -446,48 +447,42 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var purseSeinerBehaviour =
             new BehaviourFactory(
-                SequenceTaskFactory
-                    .builder()
-                    .child(
-                        new SucceedOrWaitTaskFactory(
-                            SequenceTaskFactory
-                                .builder()
-                                .child(readyForDeparture)
-                                .child(startTrip)
-                                .build(),
-                            waitUntilNextEvening
-                        )
-                    )
-                    .child(new TravelAlongPathFactory(pathFinder, distance))
-                    .child(purseSeinerFishingTask)
-                    .child(new SetDestinationToOriginFactory())
-                    .child(new TravelAlongPathFactory(pathFinder, distance))
-                    .child(new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER))
-                    .child(new EndTripFactory())
-                    .build()
+                sequenceTask(
+                    new SucceedOrWaitTaskFactory(
+                        SequenceTaskFactory
+                            .builder()
+                            .child(readyForDeparture)
+                            .child(startTrip)
+                            .build(),
+                        waitUntilNextEvening
+                    ),
+                    new TravelAlongPathFactory(pathFinder, distance),
+                    purseSeinerFishingTask,
+                    new SetDestinationToOriginFactory(),
+                    new TravelAlongPathFactory(pathFinder, distance),
+                    new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER),
+                    new EndTripFactory()
+                )
             );
 
         final var bottomTrawlerBehaviour =
             new BehaviourFactory(
-                SequenceTaskFactory
-                    .builder()
-                    .child(
-                        new SucceedOrWaitTaskFactory(
-                            SequenceTaskFactory
-                                .builder()
-                                .child(readyForDeparture)
-                                .child(startTrip)
-                                .build(),
-                            waitUntilNextEvening
-                        )
-                    )
-                    .child(new TravelAlongPathFactory(pathFinder, distance))
-                    .child(bottomTrawlerFishingTask)
-                    .child(new SetDestinationToOriginFactory())
-                    .child(new TravelAlongPathFactory(pathFinder, distance))
-                    .child(new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER))
-                    .child(new EndTripFactory())
-                    .build()
+                sequenceTask(
+                    new SucceedOrWaitTaskFactory(
+                        SequenceTaskFactory
+                            .builder()
+                            .child(readyForDeparture)
+                            .child(startTrip)
+                            .build(),
+                        waitUntilNextEvening
+                    ),
+                    new TravelAlongPathFactory(pathFinder, distance),
+                    bottomTrawlerFishingTask,
+                    new SetDestinationToOriginFactory(),
+                    new TravelAlongPathFactory(pathFinder, distance),
+                    new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER),
+                    new EndTripFactory()
+                )
             );
 
         final var behaviour =
