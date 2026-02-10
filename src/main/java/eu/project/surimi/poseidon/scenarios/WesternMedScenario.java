@@ -47,13 +47,15 @@ import uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
 import uk.ac.ox.poseidon.agents.tasks.general.SucceedOrWaitTaskFactory;
-import uk.ac.ox.poseidon.agents.tasks.general.VesselPredicateTaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.general.WaitForFactory;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.EndTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
-import uk.ac.ox.poseidon.agents.vessels.*;
+import uk.ac.ox.poseidon.agents.vessels.FleetFactory;
+import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
+import uk.ac.ox.poseidon.agents.vessels.Vessel;
+import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
@@ -64,12 +66,9 @@ import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory;
 import uk.ac.ox.poseidon.core.*;
-import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentDayOfWeekFactory;
-import uk.ac.ox.poseidon.core.adaptors.temporal.CurrentTimeFactory;
 import uk.ac.ox.poseidon.core.aggregators.MaxFactory;
 import uk.ac.ox.poseidon.core.events.EventClearerFactory;
 import uk.ac.ox.poseidon.core.predicates.InSetFactory;
-import uk.ac.ox.poseidon.core.predicates.temporal.TimeIsAfterFactory;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
@@ -105,15 +104,20 @@ import java.util.function.Supplier;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
+import static uk.ac.ox.poseidon.agents.tasks.general.Factories.vesselPredicate;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.core.adaptors.temporal.Factories.currentDayOfWeek;
+import static uk.ac.ox.poseidon.core.adaptors.temporal.Factories.currentTime;
 import static uk.ac.ox.poseidon.core.predicates.Factories.adaptedPredicate;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.above;
+import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.timeIsAfter;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
+import static uk.ac.ox.poseidon.core.time.Factories.time;
 import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
 import static uk.ac.ox.poseidon.geography.grids.adaptors.Factories.cellValue;
@@ -333,14 +337,14 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var readyForDeparture =
-            new VesselPredicateTaskFactory(
+            vesselPredicate(
                 allOf(
-                    new AdaptedVesselPredicateFactory<>(
-                        new CurrentTimeFactory(),
-                        new TimeIsAfterFactory<>(new TimeFactory(21, 59, 59))
+                    adaptedPredicate(
+                        currentTime(),
+                        timeIsAfter(time(21, 59, 59))
                     ),
-                    new AdaptedVesselPredicateFactory<>(
-                        new CurrentDayOfWeekFactory(),
+                    adaptedPredicate(
+                        currentDayOfWeek(),
                         in(setOf(
                             SUNDAY,
                             MONDAY,
