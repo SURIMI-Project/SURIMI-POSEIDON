@@ -80,7 +80,6 @@ import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
-import uk.ac.ox.poseidon.core.time.DateTimeFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
@@ -93,9 +92,7 @@ import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 import uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory;
 import uk.ac.ox.poseidon.io.DirectoryRemoverFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
-import uk.ac.ox.poseidon.io.paths.PathFactory;
 import uk.ac.ox.poseidon.io.paths.SimulationFolderFactory;
-import uk.ac.ox.poseidon.io.tables.CsvTableFactory;
 import uk.ac.ox.poseidon.regulations.ForbiddenIfFactory;
 import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFactory;
 
@@ -116,9 +113,12 @@ import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.above;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
+import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
 import static uk.ac.ox.poseidon.geography.grids.adaptors.Factories.cellValue;
+import static uk.ac.ox.poseidon.io.paths.Factories.path;
+import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromFile;
 
 public class WesternMedScenario implements Supplier<Scenario> {
 
@@ -156,8 +156,8 @@ public class WesternMedScenario implements Supplier<Scenario> {
     public Scenario get() {
         final Scenario.ScenarioBuilder builder = Scenario.builder();
 
-        final var inputPath = PathFactory.of(INPUT_PATH);
-        final var outputPath = new SimulationFolderFactory(PathFactory.of("outputs"));
+        final var inputPath = path(INPUT_PATH);
+        final var outputPath = new SimulationFolderFactory(path("outputs"));
         final var bathymetricGridPath = inputPath.plus("bathymetry_grid.asc");
 
         final var modelGrid =
@@ -218,7 +218,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final Factory<Scope, ? extends PortGrid> portGrid =
             new PortGridFactory<>(
                 new PortsFromTableFactory<>(
-                    CsvTableFactory.fromFile(inputPath.plus("ports.csv")),
+                    csvTableFromFile(inputPath.plus("ports.csv")),
                     "port_code", "port_name", "lon", "lat"
                 ),
                 bathymetricGrid,
@@ -241,7 +241,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var species =
             new SpeciesFromDataFactory<>(
-                CsvTableFactory.fromFile(inputPath.plus("species.csv")),
+                csvTableFromFile(inputPath.plus("species.csv")),
                 "species_code",
                 "species_name",
                 "life_stage"
@@ -311,7 +311,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var marketGrid =
             new BiomassMarketGridFromPriceTableFactory(
-                CsvTableFactory.fromFile(inputPath.plus("prices.csv")),
+                csvTableFromFile(inputPath.plus("prices.csv")),
                 "date",
                 "market_code",
                 "species_code",
@@ -497,7 +497,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             FleetFromVesselRegisterFactory
                 .builder()
                 .fleet(new FleetFactory(vesselField, portGrid, marketGrid))
-                .data(CsvTableFactory.fromFile(inputPath.plus("fleet_register.csv")))
+                .data(csvTableFromFile(inputPath.plus("fleet_register.csv")))
                 .behaviour(behaviour)
                 .dataMapping("behaviour.code", "main_fishing_gear")
                 .hold(
@@ -522,7 +522,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         builder
-            .startingDateTime(DateTimeFactory.of(START_DATE))
+            .startingDateTime(startOf(START_DATE))
             .component("species", species)
             .component("bathymetricGrid", bathymetricGrid)
             .component("carryingCapacityGrid", carryingCapacityGrid)

@@ -55,7 +55,6 @@ import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.time.DateTimeFactory;
 import uk.ac.ox.poseidon.core.utils.ListFactory;
 import uk.ac.ox.poseidon.core.utils.ObjectFactory;
 import uk.ac.ox.poseidon.core.utils.Pair;
@@ -67,7 +66,6 @@ import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
 import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
 import uk.ac.ox.poseidon.geography.ports.PortFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
-import uk.ac.ox.poseidon.io.tables.CsvTableFactory;
 
 import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
@@ -85,8 +83,10 @@ import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityA
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constantDouble;
+import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.object;
+import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromString;
 
 @SuppressWarnings("UnstableApiUsage")
 public class MinimalScenario implements Supplier<Scenario> {
@@ -296,7 +296,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                     portGrid,
                     marketGrid
                 ))
-                .data(CsvTableFactory.fromString("""
+                .data(csvTableFromString("""
                     cfr,name_of_vessel,place_of_registration,event,event_start_date,gear,hold,fav_lon,fav_lat
                     V1,Vessel 1,P1,CEN,2000-01-01,G1,H1,-1,-1
                     V2,Vessel 2,P1,CEN,2000-01-01,G2,H1,0,0
@@ -338,7 +338,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             new BiomassSaleAccumulatorFactory();
 
         return Scenario.builder()
-            .startingDateTime(DateTimeFactory.of(START_DATE))
+            .startingDateTime(startOf(START_DATE))
             .component("modelGrid", modelGrid)
             .component("species", species)
             .component("biomassGrids", biomassGrids)

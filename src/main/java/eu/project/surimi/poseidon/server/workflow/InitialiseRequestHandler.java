@@ -30,7 +30,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.time.DateTimeFactory;
 import uk.ac.ox.poseidon.core.utils.Measurements;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
@@ -48,6 +47,7 @@ import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
 import static uk.ac.ox.poseidon.core.Simulation.log;
+import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
 
 @RequiredArgsConstructor
 public class InitialiseRequestHandler
@@ -70,7 +70,7 @@ public class InitialiseRequestHandler
         }
         final Scenario scenario = scenarioLoader.load(scenarioFile);
         scenario.setStartingDateTime(
-            DateTimeFactory.of(toLocalDateTime(request.getSimulation().getStartDateTime()))
+            dateTime(toLocalDateTime(request.getSimulation().getStartDateTime()))
         );
 
         logger.log(INFO, "Scenario loaded: {0}", scenarioFile.toPath().toAbsolutePath());
