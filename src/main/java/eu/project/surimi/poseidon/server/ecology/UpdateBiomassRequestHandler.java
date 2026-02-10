@@ -97,18 +97,17 @@ public class UpdateBiomassRequestHandler extends
             ));
         final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
         biomassSummary.getBiomassGridsList().forEach(biomassGrid -> {
-            final BiomassGrid simulationGrid = getOrThrow(
-                simulationGrids,
-                SpeciesKey.from(biomassGrid.getSpecies()),
-                "Biomass grid"
-            );
-            biomassGrid.getBiomassCellsList().forEach(biomassCell -> {
-                final Int2D cell = getSimulationCell(biomassCell, bathymetricGrid);
-                simulationGrid.setBiomass(
-                    cell,
-                    simulationProperties.convertMassInStandardUnitToKg(biomassCell.getBiomass())
-                );
-            });
+            final BiomassGrid simulationGrid =
+                simulationGrids.get(SpeciesKey.from(biomassGrid.getSpecies()));
+            if (simulationGrid != null) {
+                biomassGrid.getBiomassCellsList().forEach(biomassCell -> {
+                    final Int2D cell = getSimulationCell(biomassCell, bathymetricGrid);
+                    simulationGrid.setBiomass(
+                        cell,
+                        simulationProperties.convertMassInStandardUnitToKg(biomassCell.getBiomass())
+                    );
+                });
+            }
         });
         return UpdateBiomassResponse
             .newBuilder()
