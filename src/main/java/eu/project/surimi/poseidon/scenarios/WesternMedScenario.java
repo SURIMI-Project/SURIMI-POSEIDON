@@ -104,7 +104,7 @@ import java.util.function.Supplier;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
-import static uk.ac.ox.poseidon.agents.tasks.general.Factories.vesselPredicate;
+import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.adaptors.temporal.Factories.currentDayOfWeek;
 import static uk.ac.ox.poseidon.core.adaptors.temporal.Factories.currentTime;
@@ -337,7 +337,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var readyForDeparture =
-            vesselPredicate(
+            checkThat(
                 allOf(
                     adaptedPredicate(
                         currentTime(),
