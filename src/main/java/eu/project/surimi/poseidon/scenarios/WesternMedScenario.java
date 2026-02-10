@@ -106,21 +106,21 @@ import static java.util.stream.IntStream.range;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
-import static uk.ac.ox.poseidon.core.adaptors.temporal.Factories.currentDayOfWeek;
-import static uk.ac.ox.poseidon.core.adaptors.temporal.Factories.currentTime;
-import static uk.ac.ox.poseidon.core.predicates.Factories.adaptedPredicate;
+import static uk.ac.ox.poseidon.core.extractors.temporal.Factories.currentDayOfWeek;
+import static uk.ac.ox.poseidon.core.extractors.temporal.Factories.currentTime;
+import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
-import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.above;
-import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.timeIsAfter;
+import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
+import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.time.Factories.time;
 import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
-import static uk.ac.ox.poseidon.geography.grids.adaptors.Factories.cellValue;
+import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromFile;
 
@@ -155,7 +155,6 @@ public class WesternMedScenario implements Supplier<Scenario> {
         simulation.finish();
     }
 
-    @SuppressWarnings("ExtractMethodRecommender")
     @Override
     public Scenario get() {
         final Scenario.ScenarioBuilder builder = Scenario.builder();
@@ -196,9 +195,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 anyOf(
                     new ActionCellPredicateFactory<>(
                         modelGrid,
-                        adaptedPredicate(
+                        condition(
                             cellValue(bathymetricGrid),
-                            above(-35.0)
+                            greaterThan(-35.0)
                         )
                     ),
                     new ActionCellPredicateFactory<>(
@@ -302,13 +301,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 MONTHLY,
                 new SteppableSequenceFactory(
                     new EventClearerFactory(biomassSaleAccumulator),
-                    new EventClearerFactory(fishingActionAccumulator)//,
-//                     new CsvTableWriterFactory<>(
-//                         new FishingEventListenerTableFactory(),
-//                         outputPath.plus("fishing_actions.csv"),
-//                         true,
-//                         true
-//                     )
+                    new EventClearerFactory(fishingActionAccumulator)
                 ),
                 -2
             );
@@ -339,19 +332,13 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var readyForDeparture =
             checkThat(
                 allOf(
-                    adaptedPredicate(
+                    condition(
                         currentTime(),
-                        timeIsAfter(time(21, 59, 59))
+                        afterTime(time(21, 59, 59))
                     ),
-                    adaptedPredicate(
+                    condition(
                         currentDayOfWeek(),
-                        in(setOf(
-                            SUNDAY,
-                            MONDAY,
-                            TUESDAY,
-                            WEDNESDAY,
-                            THURSDAY
-                        ))
+                        in(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY))
                     )
                 )
             );
@@ -538,6 +525,8 @@ public class WesternMedScenario implements Supplier<Scenario> {
             .component("modelGrid", modelGrid)
             .component("monthlyProcesses", monthlyProcesses)
             .component("fleet", fleet)
+            .component("fishingActionAccumulator", fishingActionAccumulator)
+            .component("biomassSaleAccumulator", biomassSaleAccumulator)
             .component("directoryRemover", directoryRemover);
 
         return builder.build();
