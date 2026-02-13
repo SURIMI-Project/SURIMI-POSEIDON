@@ -1,5 +1,6 @@
 [versions]
 assertj = "3.27.7"
+caffeine = "3.2.3"
 grpc = "1.75.0"
 lombok = "1.18.30"
 opentelemetry-core = "1.49.0"
@@ -12,6 +13,7 @@ commons-io = "2.19.0"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 commons-beanutils = { module = "commons-beanutils:commons-beanutils", version.ref = "commons-beanutils" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }

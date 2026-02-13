@@ -81,8 +81,9 @@ import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
-import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
+import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constantDouble;
+import static uk.ac.ox.poseidon.core.time.Factories.hours;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.object;
@@ -237,14 +238,14 @@ public class MinimalScenario implements Supplier<Scenario> {
             new FixedBiomassProportionGearFactory<>(
                 GEAR_CODES.get(0),
                 0.25,
-                ONE_HOUR_DURATION_SUPPLIER
+                constant(hours(1))
             );
 
         final var gear2 =
             new FixedBiomassProportionGearFactory<>(
                 GEAR_CODES.get(1),
                 0.5,
-                ONE_HOUR_DURATION_SUPPLIER
+                constant(hours(1))
             );
 
         final var behaviour =
@@ -278,9 +279,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                             )
                         )
                     ),
-                    new LandCatchesFactory(
-                        ONE_HOUR_DURATION_SUPPLIER
-                    )
+                    new LandCatchesFactory(constant(hours(1)))
                 )
             );
 

@@ -24,6 +24,8 @@ package eu.project.surimi.poseidon.server.market;
 
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesResponse;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
@@ -53,6 +55,24 @@ public class UpdateSpeciesPricesRequestHandler extends
     private static final System.Logger logger =
         System.getLogger(UpdateSpeciesPricesRequestHandler.class.getName());
 
+    private final LoadingCache<Simulation, LoadingCache<SpeciesKey, List<Species>>>
+        coveredSpeciesCache =
+        Caffeine
+            .newBuilder()
+            .weakKeys()
+            .build(simulation -> {
+                final Set<Species> simulationSpecies = simulation.getComponents(Species.class);
+                return Caffeine
+                    .newBuilder()
+                    .build(speciesKey -> {
+                        Species requestSpecies = speciesKey.toSpecies();
+                        return simulationSpecies
+                            .stream()
+                            .filter(requestSpecies::covers)
+                            .toList();
+                    });
+            });
+
     public UpdateSpeciesPricesRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
@@ -70,8 +90,6 @@ public class UpdateSpeciesPricesRequestHandler extends
     ) {
         logger.log(INFO, "Price update received for simulation {0}", request.getSimulationId());
 
-        final Set<Species> simulationSpecies = simulation.getComponents(Species.class);
-
         final Map<String, BiomassMarket> marketsById = getMarketsById(simulation);
         request.getPricesList().forEach(price -> {
             final BiomassMarket market = getOrThrow(
@@ -88,31 +106,20 @@ public class UpdateSpeciesPricesRequestHandler extends
                     biomassUnit
                 );
 
-            final Species requestSpecies =
-                SpeciesKey.from(price.getSpecies()).toSpecies();
-            final List<Species> coveredSpecies =
-                simulationSpecies.stream().filter(requestSpecies::covers).toList();
-
-            if (coveredSpecies.isEmpty()) {
-                throw INVALID_ARGUMENT
-                    .withDescription(
-                        "Species:%n%sdoesn't cover any species known in the simulation."
-                            .formatted(price.getSpecies())
-                    )
-                    .asRuntimeException();
-            }
-
-            coveredSpecies.forEach(species -> {
-                market.setPrice(new CatchCategory(price.getGearCode()), species, marketPrice);
-                logger.log(
-                    INFO,
-                    "Updated price of species {0} at port market {1} to {2}/{3}.",
-                    species.getCode(),
-                    market.getCode(),
-                    marketPrice.getAmount(),
-                    marketPrice.getBiomassUnit()
-                );
-            });
+            coveredSpeciesCache
+                .get(simulation)
+                .get(SpeciesKey.from(price.getSpecies()))
+                .forEach(species -> {
+                    market.setPrice(new CatchCategory(price.getGearCode()), species, marketPrice);
+                    logger.log(
+                        INFO,
+                        "Updated price of species {0} at port market {1} to {2}/{3}.",
+                        species.getCode(),
+                        market.getCode(),
+                        marketPrice.getAmount(),
+                        marketPrice.getBiomassUnit()
+                    );
+                });
 
         });
         return UpdateSpeciesPricesResponse

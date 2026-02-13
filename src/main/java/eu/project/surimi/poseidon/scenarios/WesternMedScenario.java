@@ -115,10 +115,8 @@ import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
-import static uk.ac.ox.poseidon.core.suppliers.ConstantDurationSuppliers.ONE_HOUR_DURATION_SUPPLIER;
-import static uk.ac.ox.poseidon.core.time.Factories.startOf;
-import static uk.ac.ox.poseidon.core.time.Factories.time;
-import static uk.ac.ox.poseidon.core.time.PeriodFactory.MONTHLY;
+import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
+import static uk.ac.ox.poseidon.core.time.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
@@ -259,7 +257,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         "species_code",
                         "life_stage",
                         PURSE_SEINE_GEAR_CODE,
-                        ONE_HOUR_DURATION_SUPPLIER,
+                        constant(hours(1)),
                         species,
                         DEFAULT_CATCH_PROPORTION
                     )
@@ -271,7 +269,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         "species_code",
                         "life_stage",
                         BOTTOM_TRAWLER_GEAR_CODE,
-                        ONE_HOUR_DURATION_SUPPLIER,
+                        constant(hours(1)),
                         species,
                         DEFAULT_CATCH_PROPORTION
                     )
@@ -451,7 +449,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     purseSeinerFishingTask,
                     new SetDestinationToOriginFactory(),
                     new TravelAlongPathFactory(pathFinder, distance),
-                    new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER),
+                    new LandCatchesFactory(constant(hours(1))),
                     new EndTripFactory()
                 )
             );
@@ -471,7 +469,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     bottomTrawlerFishingTask,
                     new SetDestinationToOriginFactory(),
                     new TravelAlongPathFactory(pathFinder, distance),
-                    new LandCatchesFactory(ONE_HOUR_DURATION_SUPPLIER),
+                    new LandCatchesFactory(constant(hours(1))),
                     new EndTripFactory()
                 )
             );

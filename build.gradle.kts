@@ -37,6 +37,7 @@ dependencies {
     implementation("POSEIDON:io")
     implementation(libs.lombok)
     annotationProcessor(libs.lombok)
+    implementation(libs.caffeine)
     implementation(libs.grpc.services)
     implementation(libs.jcommander)
     implementation(libs.grpc.netty.shaded)
