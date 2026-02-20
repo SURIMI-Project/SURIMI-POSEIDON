@@ -53,7 +53,6 @@ import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.utils.ListFactory;
 import uk.ac.ox.poseidon.core.utils.ObjectFactory;
@@ -79,8 +78,10 @@ import static java.util.Collections.nCopies;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static tech.units.indriya.unit.Units.LITRE;
+import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
-import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
+import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.time.Factories.hours;
@@ -328,7 +329,13 @@ public class MinimalScenario implements Supplier<Scenario> {
                     "hold.catchCategoriser.catchCategory.code",
                     "gear"
                 )
-                .engine(new SimpleEngineFactory<>(SpeedFactory.of("10 kn")))
+                .engine(
+                    new SimpleEngineFactory<>(
+                        fullTank(volumeOf(100000, LITRE)),
+                        speedOf("10 kn"),
+                        volumeOf(3, LITRE)
+                    )
+                )
                 .build();
 
         final var fishingActionAccumulator =

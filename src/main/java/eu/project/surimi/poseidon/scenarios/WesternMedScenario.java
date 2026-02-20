@@ -69,7 +69,6 @@ import uk.ac.ox.poseidon.core.*;
 import uk.ac.ox.poseidon.core.aggregators.MaxFactory;
 import uk.ac.ox.poseidon.core.events.EventClearerFactory;
 import uk.ac.ox.poseidon.core.predicates.InSetFactory;
-import uk.ac.ox.poseidon.core.quantities.SpeedFactory;
 import uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
@@ -103,8 +102,10 @@ import java.util.function.Supplier;
 
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
+import static tech.units.indriya.unit.Units.LITRE;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
+import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.extractors.temporal.Factories.currentDayOfWeek;
 import static uk.ac.ox.poseidon.core.extractors.temporal.Factories.currentTime;
@@ -114,7 +115,7 @@ import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
-import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
+import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
@@ -501,7 +502,14 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .gear(fishingGear)
                 .dataMapping("gear.code", "main_fishing_gear")
                 .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
-                .engine(new SimpleEngineFactory<>(SpeedFactory.of(VESSEL_SPEED)))
+                .engine(
+                    new SimpleEngineFactory<>(
+                        // TODO: do we need a realistic value for tank volume?
+                        fullTank(volumeOf(100_000, LITRE)),
+                        speedOf(VESSEL_SPEED),
+                        volumeOf(3, LITRE) // TODO: find realistic value here
+                    )
+                )
                 .extraFactory(tripEvaluator)
                 .build();
 
