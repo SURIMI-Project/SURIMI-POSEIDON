@@ -4,6 +4,8 @@ COPY build/image/ /app/
 RUN mkdir -p /app/outputs
 ENTRYPOINT [ \
   "java", \
+  "-Xms1g", \
+  "-Xmx8g", \
   "-Djava.util.logging.config.file=/app/logging.properties", \
   "-cp", "/app/SURIMI-POSEIDON.jar:/app/lib/*", \
   "eu.project.surimi.poseidon.server.Server", \
