@@ -26,11 +26,14 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
+import sim.engine.SimState;
+import uk.ac.ox.poseidon.core.Simulation;
 
 import java.util.Map;
 
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.*;
+import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
 @RequiredArgsConstructor
 public abstract class RequestHandler<ReqT, RespT> {
@@ -100,4 +103,24 @@ public abstract class RequestHandler<ReqT, RespT> {
             .asRuntimeException();
     }
 
+    protected void log(
+        final System.Logger.Level level,
+        final SimState simState,
+        final String format,
+        final Object... args
+    ) {
+        Simulation.log(logger, level, simState, format, args);
+    }
+
+    protected void logMemoryUsage(
+        final SimState simState
+    ) {
+        log(INFO, simState, "Memory usage: {1}", memoryUsage());
+    }
+
+    private static String memoryUsage() {
+        final Runtime rt = Runtime.getRuntime();
+        return byteCountToDisplaySize(rt.totalMemory() - rt.freeMemory()) +
+            " / " + byteCountToDisplaySize(rt.maxMemory());
+    }
 }
