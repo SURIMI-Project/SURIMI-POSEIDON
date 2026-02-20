@@ -43,7 +43,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
-import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class GetSalesRequestHandler extends
     WithSimulationRequestHandler<GetSalesRequest, GetSalesResponse> {
@@ -86,7 +85,7 @@ public class GetSalesRequestHandler extends
         final Simulation simulation,
         final SimulationManager.SimulationProperties simulationProperties
     ) {
-        log(logger, INFO, simulation, "Sales requested");
+        log(INFO, simulation, "Sales requested");
         checkArgument(request.hasStartDateTime(), "Start date time is required.");
         checkArgument(request.hasEndDateTime(), "End date time is required.");
         final Range<LocalDateTime> dateTimeRange = Range.closed(

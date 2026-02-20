@@ -40,7 +40,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
-import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class GetCatchDispositionRequestHandler
     extends WithSimulationRequestHandler<GetCatchDispositionRequest, GetCatchDispositionResponse> {
@@ -141,7 +140,7 @@ public class GetCatchDispositionRequestHandler
         final Simulation simulation,
         final SimulationManager.SimulationProperties simulationProperties
     ) {
-        log(logger, INFO, simulation, "Catch disposition requested");
+        log(INFO, simulation, "Catch disposition requested");
         checkArgument(request.hasStartDateTime(), "Start date time is required.");
         checkArgument(request.hasEndDateTime(), "End date time is required.");
         final CatchDispositionSummary.Builder catchDispositionSummaryBuilder =

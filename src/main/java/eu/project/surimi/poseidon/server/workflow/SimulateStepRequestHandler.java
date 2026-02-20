@@ -31,8 +31,6 @@ import uk.ac.ox.poseidon.core.Simulation;
 import java.time.Period;
 
 import static java.lang.System.Logger.Level.INFO;
-import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
-import static uk.ac.ox.poseidon.core.Simulation.log;
 
 public class SimulateStepRequestHandler extends
     WithSimulationRequestHandler<SimulateStepRequest, SimulateStepResponse> {
@@ -56,25 +54,13 @@ public class SimulateStepRequestHandler extends
         final SimulationManager.SimulationProperties simulationProperties
     ) {
         final Period stepSize = simulationManager.getSimulationProperties(simulation).getStepSize();
-        log(logger, INFO, simulation, "Step requested");
+        log(INFO, simulation, "Step requested");
         simulation.getTemporalSchedule().stepFor(simulation, stepSize);
-        log(
-            logger,
-            INFO,
-            simulation,
-            "Stepped by {0}\nMemory usage: {1}",
-            stepSize,
-            memoryUsage()
-        );
+        log(INFO, simulation, "Stepped by {0}", stepSize);
+        logMemoryUsage(simulation);
         return SimulateStepResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
             .build();
-    }
-
-    private static String memoryUsage() {
-        final Runtime rt = Runtime.getRuntime();
-        return byteCountToDisplaySize(rt.totalMemory() - rt.freeMemory()) +
-            " / " + byteCountToDisplaySize(rt.maxMemory());
     }
 }

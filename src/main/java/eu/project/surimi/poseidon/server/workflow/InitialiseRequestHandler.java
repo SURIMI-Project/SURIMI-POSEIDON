@@ -46,7 +46,6 @@ import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTRO
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
-import static uk.ac.ox.poseidon.core.Simulation.log;
 import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
 
 @RequiredArgsConstructor
@@ -81,7 +80,8 @@ public class InitialiseRequestHandler
         validateContract(request);
 
         final Simulation simulation = scenario.startNewSimulation(simulationId);
-        log(logger, INFO, simulation, "Simulation started");
+        log(INFO, simulation, "Simulation started");
+        logMemoryUsage(simulation);
         simulationManager.put(
             simulationId,
             simulation,
