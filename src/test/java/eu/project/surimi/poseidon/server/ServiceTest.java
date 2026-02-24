@@ -59,7 +59,7 @@ public abstract class ServiceTest {
         LocalDate.of(2000, 1, 1).atStartOfDay();
     private static final System.Logger logger =
         System.getLogger(WorkflowServiceTest.class.getName());
-    private static final int PORT = 50051;
+    private static final int PORT = 0;
     io.grpc.Server server;
     ManagedChannel channel;
     protected WorkflowServiceGrpc.WorkflowServiceBlockingStub workflowStub;
@@ -72,8 +72,9 @@ public abstract class ServiceTest {
         try {
             final Path scenarioPath = ScenarioFilesForTesting.getPath(scenarioSupplierClass);
             server = new Server(scenarioPath, PORT).startServer();
+            final int boundPort = server.getPort();
             final ChannelCredentials credentials = InsecureChannelCredentials.create();
-            channel = Grpc.newChannelBuilder("localhost:" + PORT, credentials).build();
+            channel = Grpc.newChannelBuilder("localhost:" + boundPort, credentials).build();
             workflowStub = WorkflowServiceGrpc.newBlockingStub(channel);
             ecologyStub = EcologyServiceGrpc.newBlockingStub(channel);
             fisheryStub = FisheryServiceGrpc.newBlockingStub(channel);
@@ -87,8 +88,12 @@ public abstract class ServiceTest {
     @AfterEach
     void tearDown() {
         logger.log(INFO, "Shutting down server");
-        channel.shutdown();
-        server.shutdown();
+        if (channel != null) {
+            channel.shutdown();
+        }
+        if (server != null) {
+            server.shutdown();
+        }
     }
 
     protected String initialiseSimulation() {
