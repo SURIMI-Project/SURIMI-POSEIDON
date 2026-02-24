@@ -36,6 +36,8 @@ import uk.ac.ox.poseidon.agents.components.ComponentFactory;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
+import uk.ac.ox.poseidon.agents.fuel.FuelStationGridFactory;
+import uk.ac.ox.poseidon.agents.fuel.OneFuelStationPerPortFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactory;
@@ -103,8 +105,10 @@ import java.util.function.Supplier;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static tech.units.indriya.unit.Units.LITRE;
+import static uk.ac.ox.poseidon.agents.money.Factories.money;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.refuel;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.extractors.temporal.Factories.currentDayOfWeek;
@@ -435,6 +439,15 @@ public class WesternMedScenario implements Supplier<Scenario> {
             )
         );
 
+        final var fuelStationGrid = new FuelStationGridFactory<>(
+            portGrid,
+            new OneFuelStationPerPortFactory(
+                portGrid,
+                money(1.50, "EUR"),
+                400
+            )
+        );
+
         final var purseSeinerBehaviour =
             new BehaviourFactory(
                 sequenceTask(
@@ -451,6 +464,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     new SetDestinationToOriginFactory(),
                     new TravelAlongPathFactory(pathFinder, distance),
                     new LandCatchesFactory(constant(hours(1))),
+                    refuel(fuelStationGrid),
                     new EndTripFactory()
                 )
             );
@@ -471,6 +485,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     new SetDestinationToOriginFactory(),
                     new TravelAlongPathFactory(pathFinder, distance),
                     new LandCatchesFactory(constant(hours(1))),
+                    refuel(fuelStationGrid),
                     new EndTripFactory()
                 )
             );
