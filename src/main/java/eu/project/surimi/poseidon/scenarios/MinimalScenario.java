@@ -333,7 +333,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                     new SimpleEngineFactory<>(
                         fullTank(volumeOf(100000, LITRE)),
                         speedOf("10 kn"),
-                        volumeOf(3, LITRE)
+                        volumeOf(0, LITRE) // don't consume any fuel
                     )
                 )
                 .build();
