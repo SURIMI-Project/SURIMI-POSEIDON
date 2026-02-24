@@ -115,7 +115,7 @@ public abstract class RequestHandler<ReqT, RespT> {
     protected void logMemoryUsage(
         final SimState simState
     ) {
-        log(INFO, simState, "Memory usage: {1}", memoryUsage());
+        log(INFO, simState, "Memory usage: {0}", memoryUsage());
     }
 
     private static String memoryUsage() {
