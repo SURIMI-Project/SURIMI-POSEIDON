@@ -55,38 +55,42 @@ public abstract class ServiceTest {
 
     static final javax.measure.Unit<Mass> MASS_UNIT = KILOGRAM;
     private static final String STEP_SIZE = "P1M";
-    static final LocalDateTime START_DATE_TIME =
+    protected static final LocalDateTime START_DATE_TIME =
         LocalDate.of(2000, 1, 1).atStartOfDay();
     private static final System.Logger logger =
         System.getLogger(WorkflowServiceTest.class.getName());
     private static final int PORT = 0;
+    protected SimulationManager simulationManager;
     io.grpc.Server server;
     ManagedChannel channel;
     protected WorkflowServiceGrpc.WorkflowServiceBlockingStub workflowStub;
-    protected EcologyServiceGrpc.EcologyServiceBlockingStub ecologyStub;
-    protected FisheryServiceGrpc.FisheryServiceBlockingStub fisheryStub;
-    protected MarketServiceGrpc.MarketServiceBlockingStub marketStub;
+    protected CatchProviderServiceGrpc.CatchProviderServiceBlockingStub catchProviderStub;
+    protected EcologyConsumerServiceGrpc.EcologyConsumerServiceBlockingStub ecologyConsumerStub;
+    protected SalesProviderServiceGrpc.SalesProviderServiceBlockingStub salesProviderStub;
+    protected SpeciesPriceConsumerServiceGrpc.SpeciesPriceConsumerServiceBlockingStub
+        speciesPriceConsumerStub;
 
     @BeforeEach
-    void setUp() {
+    protected void setUp() {
         try {
             final Path scenarioPath = ScenarioFilesForTesting.getPath(scenarioSupplierClass);
-            server = new Server(scenarioPath, PORT).startServer();
+            simulationManager = new SimulationManager();
+            server = new Server(scenarioPath, PORT).startServer(simulationManager);
             final int boundPort = server.getPort();
             final ChannelCredentials credentials = InsecureChannelCredentials.create();
             channel = Grpc.newChannelBuilder("localhost:" + boundPort, credentials).build();
             workflowStub = WorkflowServiceGrpc.newBlockingStub(channel);
-            ecologyStub = EcologyServiceGrpc.newBlockingStub(channel);
-            fisheryStub = FisheryServiceGrpc.newBlockingStub(channel);
-            marketStub = MarketServiceGrpc.newBlockingStub(channel);
-
+            catchProviderStub = CatchProviderServiceGrpc.newBlockingStub(channel);
+            ecologyConsumerStub = EcologyConsumerServiceGrpc.newBlockingStub(channel);
+            salesProviderStub = SalesProviderServiceGrpc.newBlockingStub(channel);
+            speciesPriceConsumerStub = SpeciesPriceConsumerServiceGrpc.newBlockingStub(channel);
         } catch (final InterruptedException | IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @AfterEach
-    void tearDown() {
+    protected void tearDown() {
         logger.log(INFO, "Shutting down server");
         if (channel != null) {
             channel.shutdown();

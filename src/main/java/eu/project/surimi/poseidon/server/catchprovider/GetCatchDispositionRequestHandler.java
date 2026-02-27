@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server.fishery;
+package eu.project.surimi.poseidon.server.catchprovider;
 
 import build.buf.gen.surimi.v1.*;
 import com.google.common.collect.Range;

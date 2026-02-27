@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -20,20 +20,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.prices;
 
-import build.buf.gen.surimi.v1.GetSpeciesPricesRequest;
 import build.buf.gen.surimi.v1.Species;
 import build.buf.gen.surimi.v1.SpeciesPrice;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
 import eu.project.surimi.poseidon.scenarios.MinimalScenario;
+import eu.project.surimi.poseidon.server.ServiceTest;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.DoubleRange;
 import net.jqwik.api.lifecycle.AfterProperty;
 import net.jqwik.api.lifecycle.BeforeProperty;
+import uk.ac.ox.poseidon.agents.catches.CatchCategory;
 
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler.getMarketsById;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class SetPricesTest extends ServiceTest {
     public SetPricesTest() {
@@ -43,14 +45,14 @@ public class SetPricesTest extends ServiceTest {
     private String simulationId;
 
     @BeforeProperty
-    void setUp() {
+    protected void setUp() {
         super.setUp();
         simulationId = initialiseSimulation();
         step(simulationId);
     }
 
     @AfterProperty
-    void tearDown() {
+    protected void tearDown() {
         super.tearDown();
     }
 
@@ -63,7 +65,7 @@ public class SetPricesTest extends ServiceTest {
         @ForAll("speciesCodes") final String speciesCode
     ) {
         // noinspection ResultOfMethodCallIgnored
-        marketStub.updateSpeciesPrices(
+        speciesPriceConsumerStub.updateSpeciesPrices(
             UpdateSpeciesPricesRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
@@ -79,21 +81,17 @@ public class SetPricesTest extends ServiceTest {
                 )
                 .build()
         );
-        assertTrue(
-            marketStub
-                .getSpeciesPrices(
-                    GetSpeciesPricesRequest.newBuilder().setSimulationId(simulationId).build()
-                )
-                .getPricesList()
-                .stream()
-                .anyMatch(speciesPrice ->
-                    speciesPrice.getMarketCode().equals(marketCode) &&
-                        speciesPrice.getCurrency().equals(currencyCode) &&
-                        speciesPrice.getGearCode().equals(gearCode) &&
-                        speciesPrice.getSpecies().getSpeciesCode().equals(speciesCode) &&
-                        speciesPrice.getPrice() == price
-                )
-        );
+        // TODO: test currency code
+        final double priceInSimulation =
+            getMarketsById(simulationManager.getSimulation(simulationId))
+                .get(marketCode)
+                .getPrices()
+                .get(new CatchCategory(gearCode))
+                .get(new uk.ac.ox.poseidon.biology.species.Species(speciesCode, null, null))
+                .getAmount()
+                .getAmount()
+                .doubleValue();
+        assertThat(priceInSimulation).isEqualTo(price);
     }
 
     @Provide

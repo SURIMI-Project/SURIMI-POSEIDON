@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -20,97 +20,59 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server;
+package eu.project.surimi.poseidon.server.ecology;
 
 import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.MinimalScenario;
+import eu.project.surimi.poseidon.server.ServiceTest;
+import eu.project.surimi.poseidon.server.SpeciesKey;
 import org.junit.jupiter.api.Test;
 import tech.units.indriya.ComparableQuantity;
+import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.utils.Pair;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
 import javax.measure.Unit;
 import javax.measure.quantity.Mass;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 
-import static eu.project.surimi.poseidon.scenarios.MinimalScenario.CARRYING_CAPACITY;
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.stream.Collectors.toMap;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.GRAM;
+import static tech.units.indriya.unit.Units.KILOGRAM;
 
-public class EcologyServiceTest extends ServiceTest {
+public class EcologyConsumerServiceTest extends ServiceTest {
 
-    public EcologyServiceTest() {
+    public EcologyConsumerServiceTest() {
         super(MinimalScenario.class);
     }
 
-    @Test
-    void canGetBiomass() {
-        final String simulationId = initialiseSimulation();
-
-        final Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> grids =
-            getGrids(simulationId, START_DATE_TIME);
-        assertThat(
-            grids.keySet().stream().map(Species::getSpeciesCode).toList()
-        ).containsExactlyInAnyOrderElementsOf(
-            LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst)::iterator
-        );
-
-        assertThat(
-            grids.keySet().stream().map(species ->
-                Optional.of(species.getLifeStage()).filter(s -> !s.isEmpty()).orElse(null)
-            ).toList()
-        ).containsExactlyInAnyOrderElementsOf(
-            LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getSecond)::iterator
-        );
-
-        assertTrue(
-            grids.values().stream().allMatch(grid ->
-                grid.values().stream().allMatch(biomass ->
-                    biomass.isEquivalentTo(CARRYING_CAPACITY)
-                )
-            )
-        );
-    }
-
     private Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> getGrids(
-        final String simulationId,
-        final LocalDateTime dateTime
+        final String simulationId
     ) {
-        final GetBiomassResponse response = ecologyStub.getBiomass(
-            GetBiomassRequest
-                .newBuilder()
-                .setDateTime(toTimestamp(dateTime))
-                .setSimulationId(simulationId)
-                .build()
-        );
-
-        return readBiomassGrids(response.getBiomassSummary());
-    }
-
-    Map<Species, Map<Coordinate, ComparableQuantity<Mass>>> readBiomassGrids(
-        final BiomassSummary biomassSummary
-    ) {
-        return biomassSummary
-            .getBiomassGridsList()
+        final Simulation simulation = simulationManager.getSimulation(simulationId);
+        return simulation
+            .getComponents(uk.ac.ox.poseidon.biology.biomass.BiomassGrid.class)
             .stream()
             .collect(toMap(
-                BiomassGrid::getSpecies,
-                biomassGrid ->
-                    biomassGrid
-                        .getBiomassCellsList()
+                grid -> new SpeciesKey(
+                    grid.getSpecies().getCode(),
+                    grid.getSpecies().getLifeStage()
+                ).toProtobufSpecies(),
+                grid ->
+                    grid
+                        .getModelGrid()
+                        .getActiveCells()
                         .stream()
+                        .filter(cell -> Double.isFinite(grid.getValue(cell)))
                         .collect(toMap(
-                            cell -> new Coordinate(cell.getLongitude(), cell.getLatitude()),
-                            cell -> getQuantity(cell.getBiomass(), MASS_UNIT)
+                            grid.getModelGrid()::toCoordinate,
+                            cell -> getQuantity(grid.getValue(cell), KILOGRAM)
                         ))
             ));
     }
@@ -120,7 +82,7 @@ public class EcologyServiceTest extends ServiceTest {
         final Unit<Mass> unit = GRAM;
         final String simulationId = initialiseSimulation();
         final UpdateBiomassResponse updateBiomassResponse =
-            ecologyStub.updateBiomass(
+            ecologyConsumerStub.updateBiomass(
                 UpdateBiomassRequest
                     .newBuilder()
                     .setSimulationId(simulationId)
@@ -177,7 +139,7 @@ public class EcologyServiceTest extends ServiceTest {
             );
         assertEquals(simulationId, updateBiomassResponse.getSimulationId());
         final Map<Pair<String, String>, Map<Coordinate, ComparableQuantity<Mass>>> grids =
-            getGrids(simulationId, START_DATE_TIME)
+            getGrids(simulationId)
                 .entrySet()
                 .stream()
                 .collect(
@@ -211,14 +173,14 @@ public class EcologyServiceTest extends ServiceTest {
     @Test
     void someBiomassGetsRemovedAfterAStep() {
         final String simulationId = initialiseSimulation();
-        final var initialGrids = getGrids(simulationId, START_DATE_TIME);
+        final var initialGrids = getGrids(simulationId);
         workflowStub.simulateStep(
             SimulateStepRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
                 .build()
         );
-        final var updatedGrids = getGrids(simulationId, START_DATE_TIME.plusMonths(1));
+        final var updatedGrids = getGrids(simulationId);
         initialGrids.forEach((speciesCode, initialGrid) -> {
             final var updatedGrid = updatedGrids.get(speciesCode);
             // Check that no cell has seen an increase in biomass

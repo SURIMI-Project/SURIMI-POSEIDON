@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static eu.project.surimi.poseidon.server.ecology.EcologyService.checkRequestDateWithinOneDayOfSimulation;
+import static eu.project.surimi.poseidon.server.ecology.EcologyConsumerService.checkRequestDateWithinOneDayOfSimulation;
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.INFO;

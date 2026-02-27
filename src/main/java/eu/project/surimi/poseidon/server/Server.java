@@ -29,15 +29,14 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.google.protobuf.Timestamp;
-import eu.project.surimi.poseidon.server.ecology.EcologyService;
-import eu.project.surimi.poseidon.server.ecology.GetBiomassRequestHandler;
+import eu.project.surimi.poseidon.server.catchprovider.CatchProviderService;
+import eu.project.surimi.poseidon.server.catchprovider.GetCatchDispositionRequestHandler;
+import eu.project.surimi.poseidon.server.ecology.EcologyConsumerService;
 import eu.project.surimi.poseidon.server.ecology.UpdateBiomassRequestHandler;
-import eu.project.surimi.poseidon.server.fishery.FisheryService;
-import eu.project.surimi.poseidon.server.fishery.GetCatchDispositionRequestHandler;
-import eu.project.surimi.poseidon.server.market.GetSalesRequestHandler;
-import eu.project.surimi.poseidon.server.market.GetSpeciesPricesRequestHandler;
-import eu.project.surimi.poseidon.server.market.MarketService;
-import eu.project.surimi.poseidon.server.market.UpdateSpeciesPricesRequestHandler;
+import eu.project.surimi.poseidon.server.prices.SpeciesPriceConsumerService;
+import eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler;
+import eu.project.surimi.poseidon.server.sales.GetSalesRequestHandler;
+import eu.project.surimi.poseidon.server.sales.SalesProviderService;
 import eu.project.surimi.poseidon.server.workflow.*;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionServiceV1;
@@ -89,15 +88,15 @@ public class Server {
             .build();
         try {
             jCommander.parse(args);
-            final io.grpc.Server grpcServer = server.startServer();
+            final io.grpc.Server grpcServer = server.startServer(new SimulationManager());
             grpcServer.awaitTermination();
         } catch (final ParameterException | IOException | InterruptedException e) {
             System.err.println(e.getMessage());
         }
     }
 
-    io.grpc.Server startServer() throws IOException, InterruptedException {
-        final SimulationManager simulationManager = new SimulationManager();
+    io.grpc.Server startServer(final SimulationManager simulationManager) throws IOException,
+        InterruptedException {
         final io.grpc.Server grpcServer = NettyServerBuilder
             // Bind to 0.0.0.0 so the server listens on all network interfaces
             .forAddress(new InetSocketAddress("0.0.0.0", this.port))
@@ -107,9 +106,10 @@ public class Server {
             .intercept(new ExceptionInterceptor())
             .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
             .addService(createWorkflowService(simulationManager))
+            .addService(createSalesProviderService(simulationManager))
+            .addService(createSpeciesPriceConsumerService(simulationManager))
             .addService(createFisheryService(simulationManager))
-            .addService(createEcologyService(simulationManager))
-            .addService(createMarketService(simulationManager))
+            .addService(createEcologyConsumerService(simulationManager))
             .build();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.log(INFO, "Shutting down gRPC server...");
@@ -121,23 +121,30 @@ public class Server {
         return grpcServer;
     }
 
-    private MarketService createMarketService(final SimulationManager simulationManager) {
-        return new MarketService(
-            new GetSalesRequestHandler(simulationManager),
-            new GetSpeciesPricesRequestHandler(simulationManager),
+    private SalesProviderService createSalesProviderService(
+        final SimulationManager simulationManager
+    ) {
+        return new SalesProviderService(
+            new GetSalesRequestHandler(simulationManager)
+        );
+    }
+
+    private SpeciesPriceConsumerService createSpeciesPriceConsumerService(
+        final SimulationManager simulationManager
+    ) {
+        return new SpeciesPriceConsumerService(
             new UpdateSpeciesPricesRequestHandler(simulationManager)
         );
     }
 
-    private FisheryService createFisheryService(final SimulationManager simulationManager) {
-        return new FisheryService(
+    private CatchProviderService createFisheryService(final SimulationManager simulationManager) {
+        return new CatchProviderService(
             new GetCatchDispositionRequestHandler(simulationManager)
         );
     }
 
-    private EcologyService createEcologyService(final SimulationManager simulationManager) {
-        return new EcologyService(
-            new GetBiomassRequestHandler(simulationManager),
+    private EcologyConsumerService createEcologyConsumerService(final SimulationManager simulationManager) {
+        return new EcologyConsumerService(
             new UpdateBiomassRequestHandler(simulationManager)
         );
     }

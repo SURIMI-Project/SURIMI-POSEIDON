@@ -22,7 +22,9 @@
 
 package eu.project.surimi.poseidon.server.ecology;
 
-import build.buf.gen.surimi.v1.*;
+import build.buf.gen.surimi.v1.EcologyConsumerServiceGrpc;
+import build.buf.gen.surimi.v1.UpdateBiomassRequest;
+import build.buf.gen.surimi.v1.UpdateBiomassResponse;
 import com.google.protobuf.Timestamp;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +37,8 @@ import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 @RequiredArgsConstructor
-public class EcologyService extends EcologyServiceGrpc.EcologyServiceImplBase {
+public class EcologyConsumerService extends EcologyConsumerServiceGrpc.EcologyConsumerServiceImplBase {
 
-    private final GetBiomassRequestHandler getBiomassRequestHandler;
     private final UpdateBiomassRequestHandler updateBiomassRequestHandler;
 
     @Override
@@ -46,14 +47,6 @@ public class EcologyService extends EcologyServiceGrpc.EcologyServiceImplBase {
         final StreamObserver<UpdateBiomassResponse> responseObserver
     ) {
         updateBiomassRequestHandler.handle(request, responseObserver);
-    }
-
-    @Override
-    public void getBiomass(
-        final GetBiomassRequest request,
-        final StreamObserver<GetBiomassResponse> responseObserver
-    ) {
-        getBiomassRequestHandler.handle(request, responseObserver);
     }
 
     static void checkRequestDateWithinOneDayOfSimulation(

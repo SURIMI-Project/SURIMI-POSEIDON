@@ -22,15 +22,12 @@
 
 package eu.project.surimi.poseidon.server;
 
-import build.buf.gen.surimi.v1.*;
+import build.buf.gen.surimi.v1.GetSalesRequest;
+import build.buf.gen.surimi.v1.Sale;
 import eu.project.surimi.poseidon.scenarios.MinimalScenario;
-import org.joda.money.CurrencyUnit;
-import org.joda.money.Money;
 import org.junit.jupiter.api.Test;
-import uk.ac.ox.poseidon.agents.market.Price;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static eu.project.surimi.poseidon.scenarios.MinimalScenario.GEAR_CODES;
@@ -39,65 +36,11 @@ import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static tech.units.indriya.unit.Units.KILOGRAM;
 
-public class MarketServiceTest extends ServiceTest {
+public class SalesProviderServiceTest extends ServiceTest {
 
-    public MarketServiceTest() {
+    public SalesProviderServiceTest() {
         super(MinimalScenario.class);
-    }
-
-    @Test
-    void getPrices() {
-        final String simulationId = initialiseSimulation();
-        final GetSpeciesPricesResponse response =
-            marketStub.getSpeciesPrices(
-                GetSpeciesPricesRequest
-                    .newBuilder()
-                    .setSimulationId(simulationId)
-                    .build()
-            );
-        final Map<String, Map<String, Map<String, Price>>> prices = readPricesResponse(response);
-        final CurrencyUnit gbp = CurrencyUnit.of("GBP");
-        assertEquals(
-            Set.of(KILOGRAM),
-            prices
-                .values()
-                .stream()
-                .flatMap(m -> m.values().stream())
-                .flatMap(m -> m.values().stream())
-                .map(Price::getBiomassUnit)
-                .collect(toSet())
-        );
-        assertEquals(Money.of(gbp, 1.00), prices.get("M1").get("G1").get("A").getAmount());
-        assertEquals(Money.of(gbp, 1.10), prices.get("M1").get("G1").get("B").getAmount());
-        assertEquals(Money.of(gbp, 1.20), prices.get("M1").get("G1").get("C").getAmount());
-        assertEquals(Money.of(gbp, 1.30), prices.get("M1").get("G2").get("A").getAmount());
-        assertEquals(Money.of(gbp, 1.40), prices.get("M1").get("G2").get("B").getAmount());
-        assertEquals(Money.of(gbp, 1.50), prices.get("M1").get("G2").get("C").getAmount());
-        assertEquals(Money.of(gbp, 2.00), prices.get("M2").get("G1").get("A").getAmount());
-        assertEquals(Money.of(gbp, 2.10), prices.get("M2").get("G1").get("B").getAmount());
-        assertEquals(Money.of(gbp, 2.20), prices.get("M2").get("G1").get("C").getAmount());
-        assertEquals(Money.of(gbp, 2.30), prices.get("M2").get("G2").get("A").getAmount());
-        assertEquals(Money.of(gbp, 2.40), prices.get("M2").get("G2").get("B").getAmount());
-        assertEquals(Money.of(gbp, 2.50), prices.get("M2").get("G2").get("C").getAmount());
-    }
-
-    Map<String, Map<String, Map<String, Price>>> readPricesResponse(final GetSpeciesPricesResponse response) {
-        return response.getPricesList().stream()
-            .collect(groupingBy(
-                SpeciesPrice::getMarketCode,
-                groupingBy(
-                    SpeciesPrice::getGearCode,
-                    toMap(
-                        sp -> sp.getSpecies().getSpeciesCode(),
-                        sp -> new Price(
-                            Money.of(CurrencyUnit.of(sp.getCurrency()), sp.getPrice()),
-                            MASS_UNIT
-                        )
-                    )
-                )
-            ));
     }
 
     @Test
@@ -105,7 +48,7 @@ public class MarketServiceTest extends ServiceTest {
         final String simulationId = initialiseSimulation();
         step(simulationId);
         final List<Sale> sales =
-            marketStub
+            salesProviderStub
                 .getSales(
                     GetSalesRequest
                         .newBuilder()

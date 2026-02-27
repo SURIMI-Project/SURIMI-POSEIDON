@@ -37,8 +37,8 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FisheryServiceTest extends ServiceTest {
-    public FisheryServiceTest() {
+public class CatchProviderServiceTest extends ServiceTest {
+    public CatchProviderServiceTest() {
         super(MinimalScenario.class);
     }
 
@@ -47,7 +47,7 @@ public class FisheryServiceTest extends ServiceTest {
         final String simulationId = initialiseSimulation();
         step(simulationId);
         final List<DispositionGrid> dispositionGrids =
-            fisheryStub
+            catchProviderStub
                 .getCatchDisposition(
                     GetCatchDispositionRequest
                         .newBuilder()
