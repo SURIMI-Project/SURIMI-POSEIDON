@@ -35,6 +35,9 @@ import eu.project.surimi.poseidon.server.ecology.EcologyConsumerService;
 import eu.project.surimi.poseidon.server.ecology.UpdateBiomassRequestHandler;
 import eu.project.surimi.poseidon.server.prices.SpeciesPriceConsumerService;
 import eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler;
+import eu.project.surimi.poseidon.server.regulations.GetFishingActivityRequestHandler;
+import eu.project.surimi.poseidon.server.regulations.RegulationsConsumerService;
+import eu.project.surimi.poseidon.server.regulations.UpdateRegulationsRequestHandler;
 import eu.project.surimi.poseidon.server.sales.GetSalesRequestHandler;
 import eu.project.surimi.poseidon.server.sales.SalesProviderService;
 import eu.project.surimi.poseidon.server.workflow.*;
@@ -110,6 +113,7 @@ public class Server {
             .addService(createSpeciesPriceConsumerService(simulationManager))
             .addService(createFisheryService(simulationManager))
             .addService(createEcologyConsumerService(simulationManager))
+            .addService(createRegulationsConsumerService(simulationManager))
             .build();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.log(INFO, "Shutting down gRPC server...");
@@ -159,6 +163,13 @@ public class Server {
             new SimulateStepRequestHandler(simulationManager),
             new FinaliseRequestHandler(simulationManager),
             new CancelRequestHandler(simulationManager)
+        );
+    }
+
+    public RegulationsConsumerService createRegulationsConsumerService(final SimulationManager simulationManager) {
+        return new RegulationsConsumerService(
+            new UpdateRegulationsRequestHandler(simulationManager),
+            new GetFishingActivityRequestHandler(simulationManager)
         );
     }
 
