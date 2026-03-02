@@ -44,7 +44,6 @@ import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactor
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.InactiveBehaviourFactory;
-import uk.ac.ox.poseidon.agents.tasks.branches.SequenceTaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
@@ -452,11 +451,10 @@ public class WesternMedScenario implements Supplier<Scenario> {
             new BehaviourFactory(
                 sequenceTask(
                     new SucceedOrWaitTaskFactory(
-                        SequenceTaskFactory
-                            .builder()
-                            .child(readyForDeparture)
-                            .child(startTrip)
-                            .build(),
+                        sequenceTask(
+                            readyForDeparture,
+                            startTrip
+                        ),
                         waitUntilNextEvening
                     ),
                     new TravelAlongPathFactory(pathFinder, distance),
@@ -473,11 +471,10 @@ public class WesternMedScenario implements Supplier<Scenario> {
             new BehaviourFactory(
                 sequenceTask(
                     new SucceedOrWaitTaskFactory(
-                        SequenceTaskFactory
-                            .builder()
-                            .child(readyForDeparture)
-                            .child(startTrip)
-                            .build(),
+                        sequenceTask(
+                            readyForDeparture,
+                            startTrip
+                        ),
                         waitUntilNextEvening
                     ),
                     new TravelAlongPathFactory(pathFinder, distance),
