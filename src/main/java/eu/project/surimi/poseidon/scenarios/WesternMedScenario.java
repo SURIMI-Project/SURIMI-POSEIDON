@@ -91,7 +91,6 @@ import uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory;
 import uk.ac.ox.poseidon.io.DirectoryRemoverFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 import uk.ac.ox.poseidon.io.paths.SimulationFolderFactory;
-import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFactory;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -124,6 +123,7 @@ import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromFile;
 import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
+import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionCellPredicate;
 
 public class WesternMedScenario implements Supplier<Scenario> {
 
@@ -194,14 +194,14 @@ public class WesternMedScenario implements Supplier<Scenario> {
         @SuppressWarnings("MagicNumber") final var regulations =
             forbiddenIf(
                 anyOf(
-                    new ActionCellPredicateFactory<>(
+                    actionCellPredicate(
                         modelGrid,
                         condition(
                             cellValue(bathymetricGrid),
                             greaterThan(-35.0)
                         )
                     ),
-                    new ActionCellPredicateFactory<>(
+                    actionCellPredicate(
                         modelGrid,
                         new InSetFactory<>(
                             new CellSetFromGridFileFactory<>(
