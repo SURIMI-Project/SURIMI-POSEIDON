@@ -40,6 +40,7 @@ import uk.ac.ox.poseidon.agents.fuel.FuelStationGridFactory;
 import uk.ac.ox.poseidon.agents.fuel.OneFuelStationPerPortFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
+import uk.ac.ox.poseidon.agents.regulations.ExtendedFishingAction;
 import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactory;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
@@ -193,7 +194,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             fullCarryingCapacityAllocator(carryingCapacityGrid);
 
         @SuppressWarnings("MagicNumber") final var regulations =
-            new ForbiddenIfFactory<Scope, Vessel>(
+            new ForbiddenIfFactory<Scope, Vessel, ExtendedFishingAction>(
                 anyOf(
                     new ActionCellPredicateFactory<>(
                         modelGrid,
