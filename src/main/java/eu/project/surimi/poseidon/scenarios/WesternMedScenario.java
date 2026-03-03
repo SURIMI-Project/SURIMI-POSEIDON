@@ -56,7 +56,6 @@ import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
 import uk.ac.ox.poseidon.agents.vessels.FleetFactory;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
@@ -93,7 +92,6 @@ import uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory;
 import uk.ac.ox.poseidon.io.DirectoryRemoverFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 import uk.ac.ox.poseidon.io.paths.SimulationFolderFactory;
-import uk.ac.ox.poseidon.regulations.ForbiddenIfFactory;
 import uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFactory;
 
 import java.nio.file.Path;
@@ -126,6 +124,7 @@ import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromFile;
+import static uk.ac.ox.poseidon.regulations.predicates.Factories.forbiddenIf;
 
 public class WesternMedScenario implements Supplier<Scenario> {
 
@@ -194,7 +193,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             fullCarryingCapacityAllocator(carryingCapacityGrid);
 
         @SuppressWarnings("MagicNumber") final var regulations =
-            new ForbiddenIfFactory<Scope, Vessel, ExtendedFishingAction>(
+            forbiddenIf(
                 anyOf(
                     new ActionCellPredicateFactory<>(
                         modelGrid,

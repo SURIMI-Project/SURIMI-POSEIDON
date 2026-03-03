@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -93,10 +94,20 @@ public abstract class ServiceTest {
     protected void tearDown() {
         logger.log(INFO, "Shutting down server");
         if (channel != null) {
-            channel.shutdown();
+            channel.shutdownNow();
+            try {
+                channel.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
         if (server != null) {
-            server.shutdown();
+            server.shutdownNow();
+            try {
+                server.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
