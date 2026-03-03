@@ -40,7 +40,6 @@ import uk.ac.ox.poseidon.agents.fuel.FuelStationGridFactory;
 import uk.ac.ox.poseidon.agents.fuel.OneFuelStationPerPortFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
-import uk.ac.ox.poseidon.agents.regulations.ExtendedFishingAction;
 import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactory;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
@@ -124,7 +123,7 @@ import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromFile;
-import static uk.ac.ox.poseidon.regulations.predicates.Factories.forbiddenIf;
+import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
 
 public class WesternMedScenario implements Supplier<Scenario> {
 
