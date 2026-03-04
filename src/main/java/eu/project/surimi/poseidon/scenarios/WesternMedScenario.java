@@ -32,7 +32,6 @@ import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardRatesF
 import uk.ac.ox.poseidon.agents.choices.*;
 import uk.ac.ox.poseidon.agents.choices.evaluation.TotalBiomassCaughtPerHourDestinationEvaluationProviderFactory;
 import uk.ac.ox.poseidon.agents.choices.evaluation.TripEvaluatorFactory;
-import uk.ac.ox.poseidon.agents.components.ComponentFactory;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
@@ -68,7 +67,6 @@ import uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory;
 import uk.ac.ox.poseidon.core.*;
 import uk.ac.ox.poseidon.core.aggregators.MaxFactory;
 import uk.ac.ox.poseidon.core.events.EventClearerFactory;
-import uk.ac.ox.poseidon.core.predicates.InSetFactory;
 import uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
@@ -81,7 +79,6 @@ import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
-import uk.ac.ox.poseidon.geography.grids.CellSetFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
 import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
@@ -90,7 +87,6 @@ import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 import uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory;
 import uk.ac.ox.poseidon.io.DirectoryRemoverFactory;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
-import uk.ac.ox.poseidon.io.paths.SimulationFolderFactory;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -101,6 +97,7 @@ import java.util.function.Supplier;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static tech.units.indriya.unit.Units.LITRE;
+import static uk.ac.ox.poseidon.agents.components.Factories.component;
 import static uk.ac.ox.poseidon.agents.money.Factories.money;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
@@ -119,8 +116,10 @@ import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
+import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
+import static uk.ac.ox.poseidon.io.paths.Factories.simulationFolder;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromFile;
 import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
 import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionCellPredicate;
@@ -137,6 +136,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
     private static final double DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE = 0.2;
     private static final double DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE = 0.1;
     private static final double DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE = 0.3;
+    private static final double PURSE_SEINER_DEPTH_THRESHOLD = -35.0;
     private static final String VESSEL_SPEED = "9.5 kn"; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
@@ -161,13 +161,13 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final Scenario.ScenarioBuilder builder = Scenario.builder();
 
         final var inputPath = path(INPUT_PATH);
-        final var outputPath = new SimulationFolderFactory(path("outputs"));
+        final var outputPath = simulationFolder(path("outputs"));
         final var bathymetricGridPath = inputPath.plus("bathymetry_grid.asc");
 
         final var modelGrid =
             new ModelGridWithActiveCellsFactory<>(
                 new ModelGridFromGridFile<>(bathymetricGridPath),
-                new CellSetFromGridFileFactory<>(
+                cellSetFromGridFile(
                     inputPath.plus("exclusion_grid.asc"),
                     0
                 )
@@ -191,20 +191,20 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var biomassAllocator =
             fullCarryingCapacityAllocator(carryingCapacityGrid);
 
-        @SuppressWarnings("MagicNumber") final var regulations =
+        final var regulations =
             forbiddenIf(
                 anyOf(
                     actionCellPredicate(
                         modelGrid,
                         condition(
                             cellValue(bathymetricGrid),
-                            greaterThan(-35.0)
+                            greaterThan(PURSE_SEINER_DEPTH_THRESHOLD)
                         )
                     ),
                     actionCellPredicate(
                         modelGrid,
-                        new InSetFactory<>(
-                            new CellSetFromGridFileFactory<>(
+                        in(
+                            cellSetFromGridFile(
                                 inputPath.plus("french_eez.asc"),
                                 1
                             )
@@ -325,7 +325,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             new ComponentRegisterFactory<MutableOptionValues<Int2D>>();
 
         final var optionValues =
-            new ComponentFactory<>(
+            component(
                 new ExponentialMovingAverageOptionValuesFactory<>(LEARNING_ALPHA),
                 optionValuesRegister
             );
