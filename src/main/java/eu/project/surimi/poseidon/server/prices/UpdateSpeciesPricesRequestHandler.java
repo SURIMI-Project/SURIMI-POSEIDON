@@ -25,7 +25,6 @@ package eu.project.surimi.poseidon.server.prices;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
-import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.IllegalCurrencyException;
@@ -49,6 +48,7 @@ import static io.grpc.Status.INVALID_ARGUMENT;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
+import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 
 public class UpdateSpeciesPricesRequestHandler extends
     WithSimulationRequestHandler<UpdateSpeciesPricesRequest, UpdateSpeciesPricesResponse> {
@@ -89,7 +89,7 @@ public class UpdateSpeciesPricesRequestHandler extends
                     biomassUnit
                 );
             final CatchCategory catchCategory = new CatchCategory(price.getGearCode());
-            final Species requestSpecies = SpeciesKey.from(price.getSpecies()).toSpecies();
+            final Species requestSpecies = toPoseidonSpecies(price.getSpecies());
             validateNoGenericStagedConflict(market, catchCategory, requestSpecies);
 
             market.setPrice(catchCategory, requestSpecies, marketPrice);

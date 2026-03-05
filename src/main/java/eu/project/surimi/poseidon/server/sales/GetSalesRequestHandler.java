@@ -41,6 +41,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
+import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpecies;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
 
@@ -56,7 +57,6 @@ public class GetSalesRequestHandler extends
 
     private static Sale summariseSale(final List<SaleEntry> saleEntries) {
         final SaleEntry firstEntry = saleEntries.getFirst();
-        final String speciesCode = firstEntry.species.getCode();
         final String catchCategoryCode = firstEntry.catchCategory.getCode();
         final double totalKg = saleEntries.stream()
             .mapToDouble(saleEntry -> saleEntry.biomass.asKg())
@@ -67,7 +67,7 @@ public class GetSalesRequestHandler extends
             .map(money -> money.getAmount().doubleValue())
             .orElse(0.0);
         return Sale.newBuilder()
-            .setSpecies(build.buf.gen.surimi.v1.Species.newBuilder().setSpeciesCode(speciesCode))
+            .setSpecies(toProtoSpecies(firstEntry.species))
             .setFleetSegment(FleetSegment.newBuilder().setGearCode(catchCategoryCode).build())
             .setQuantity(totalKg)
             .setValue(totalValue)

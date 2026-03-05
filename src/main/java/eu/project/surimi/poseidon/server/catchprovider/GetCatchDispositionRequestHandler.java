@@ -38,6 +38,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
+import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpecies;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
 
@@ -161,11 +162,7 @@ public class GetCatchDispositionRequestHandler
                                 .setGearCode(gearCode)
                                 .build()
                         )
-                        .setSpecies(
-                            build.buf.gen.surimi.v1.Species
-                                .newBuilder()
-                                .setSpeciesCode(species.getCode())
-                        );
+                        .setSpecies(toProtoSpecies(species));
                 coordinateData.forEach((coordinate, disposition) ->
                     dispositionGridsBuilder
                         .addDispositionCellsBuilder()
