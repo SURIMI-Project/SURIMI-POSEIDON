@@ -50,8 +50,6 @@ public class UpdateRegulationsRequestHandler extends
         return UpdateRegulationsResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
-            .setStartDateTime(request.getStartDateTime())
-            .setEndDateTime(request.getEndDateTime())
             .build();
     }
 }
