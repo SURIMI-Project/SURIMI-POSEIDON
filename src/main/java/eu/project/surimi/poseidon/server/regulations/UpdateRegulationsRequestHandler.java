@@ -24,9 +24,15 @@ package eu.project.surimi.poseidon.server.regulations;
 
 import build.buf.gen.surimi.v1.UpdateRegulationsRequest;
 import build.buf.gen.surimi.v1.UpdateRegulationsResponse;
+import eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
+import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.core.Simulation;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static eu.project.surimi.poseidon.server.Server.toInstant;
+import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 
 public class UpdateRegulationsRequestHandler extends
     WithSimulationRequestHandler<UpdateRegulationsRequest, UpdateRegulationsResponse> {
@@ -46,7 +52,37 @@ public class UpdateRegulationsRequestHandler extends
         final Simulation simulation,
         final SimulationManager.SimulationProperties simulationProperties
     ) {
-        // TODO: implement this
+        checkArgument(request.hasStartDateTime(), "Start date time is required.");
+        checkArgument(request.hasEndDateTime(), "End date time is required.");
+        checkArgument(request.hasRegulationsSummary(), "Regulations summary is required.");
+        final var startInstant = toInstant(request.getStartDateTime());
+        final var endInstant = toInstant(request.getEndDateTime());
+        checkArgument(
+            !endInstant.isBefore(startInstant),
+            "End date time must be on or after start date time."
+        );
+        final Interval interval = Interval.of(startInstant, endInstant);
+        final TotalAllowableCatchQuotas totalAllowableCatchQuotas =
+            simulation.getComponent(TotalAllowableCatchQuotas.class);
+        request
+            .getRegulationsSummary()
+            .getTotalAllowableCatchesList()
+            .forEach(totalAllowableCatch -> {
+                checkArgument(
+                    totalAllowableCatch.hasSpecies(),
+                    "Each TAC entry must include a species."
+                );
+                final double quotaInKg =
+                    simulationProperties
+                        .convertMassInStandardUnitToKg(
+                            totalAllowableCatch.getCatch()
+                        );
+                totalAllowableCatchQuotas.setQuota(
+                    interval,
+                    toPoseidonSpecies(totalAllowableCatch.getSpecies()),
+                    quotaInKg
+                );
+            });
         return UpdateRegulationsResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
