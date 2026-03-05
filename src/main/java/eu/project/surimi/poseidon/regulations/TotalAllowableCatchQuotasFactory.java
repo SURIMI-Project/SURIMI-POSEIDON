@@ -39,6 +39,8 @@ public class TotalAllowableCatchQuotasFactory
 
     @Override
     protected TotalAllowableCatchQuotas newInstance(final SimulationScope scope) {
-        return new TotalAllowableCatchQuotas();
+        final TotalAllowableCatchQuotas regulation = new TotalAllowableCatchQuotas();
+        scope.getSimulation().getEventManager().addListener(regulation);
+        return regulation;
     }
 }
