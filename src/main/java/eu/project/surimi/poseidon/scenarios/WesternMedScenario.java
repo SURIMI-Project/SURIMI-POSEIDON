@@ -39,7 +39,7 @@ import uk.ac.ox.poseidon.agents.fuel.FuelStationGridFactory;
 import uk.ac.ox.poseidon.agents.fuel.OneFuelStationPerPortFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
-import uk.ac.ox.poseidon.agents.regulations.FishingLocationLegalityCheckerFactory;
+import uk.ac.ox.poseidon.agents.regulations.predicates.FishingLocationLegalityCheckerFactory;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.InactiveBehaviourFactory;
