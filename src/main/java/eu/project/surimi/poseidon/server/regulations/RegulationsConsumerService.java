@@ -42,7 +42,7 @@ public class RegulationsConsumerService extends RegulationsConsumerServiceImplBa
         final UpdateRegulationsRequest request,
         final StreamObserver<UpdateRegulationsResponse> responseObserver
     ) {
-        super.updateRegulations(request, responseObserver);
+        updateRegulationsRequestHandler.handle(request, responseObserver);
     }
 
     @Override
@@ -50,6 +50,6 @@ public class RegulationsConsumerService extends RegulationsConsumerServiceImplBa
         final GetFishingActivityRequest request,
         final StreamObserver<GetFishingActivityResponse> responseObserver
     ) {
-        super.getFishingActivity(request, responseObserver);
+        getFishingActivityRequestHandler.handle(request, responseObserver);
     }
 }
