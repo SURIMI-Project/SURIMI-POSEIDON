@@ -22,14 +22,23 @@
 
 package eu.project.surimi.poseidon.regulations;
 
-import uk.ac.ox.poseidon.agents.regulations.FishingAction;
-import uk.ac.ox.poseidon.regulations.Regulations;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import uk.ac.ox.poseidon.core.SimulationScopeFactory;
+import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 
-public class TotalAllowableCatch implements Regulations<FishingAction> {
+/**
+ * Factory for {@link TotalAllowableCatchQuotas} in simulation scope.
+ */
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class TotalAllowableCatchQuotasFactory
+    extends SimulationScopeFactory<TotalAllowableCatchQuotas> {
 
     @Override
-    public boolean isPermitted(final FishingAction action) {
-        return false;
+    protected TotalAllowableCatchQuotas newInstance(final SimulationScope scope) {
+        return new TotalAllowableCatchQuotas();
     }
-
 }
