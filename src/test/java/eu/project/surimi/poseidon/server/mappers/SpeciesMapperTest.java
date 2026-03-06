@@ -37,24 +37,24 @@ class SpeciesMapperTest {
             build.buf.gen.surimi.v1.Species
                 .newBuilder()
                 .setSpeciesCode("HKE")
-                .setLifeStage("JUV")
+                .setLifeStage("juvenile")
                 .build();
 
         final Species poseidonSpecies = toPoseidonSpecies(protoSpecies);
 
         assertThat(poseidonSpecies.getCode()).isEqualTo("HKE");
-        assertThat(poseidonSpecies.getLifeStage()).isEqualTo("JUV");
+        assertThat(poseidonSpecies.getLifeStage()).isEqualTo("juvenile");
     }
 
     @Test
     void toProtoSpeciesMapsCodeAndLifeStage() {
-        final Species poseidonSpecies = new Species("HKE", "JUV", null);
+        final Species poseidonSpecies = new Species("HKE", "juvenile", null);
 
         final build.buf.gen.surimi.v1.Species protoSpecies =
             toProtoSpecies(poseidonSpecies);
 
         assertThat(protoSpecies.getSpeciesCode()).isEqualTo("HKE");
-        assertThat(protoSpecies.getLifeStage()).isEqualTo("JUV");
+        assertThat(protoSpecies.getLifeStage()).isEqualTo("juvenile");
     }
 
     @Test

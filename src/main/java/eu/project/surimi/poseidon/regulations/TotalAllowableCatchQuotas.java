@@ -29,8 +29,9 @@ import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.events.Listener;
 import uk.ac.ox.poseidon.regulations.Regulations;
 
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -40,27 +41,51 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.time.ZoneOffset.UTC;
 
 /**
- * Total Allowable Catch (TAC) regulation with interval-based closure.
+ * Total Allowable Catch (TAC) regulation for a simplified fishery-wide closure model.
  * <p>
- * This regulation consumes {@link Sale} events and tracks cumulative landed biomass per interval
- * and per quota-species. Fishing is permitted unless the requested fishing action overlaps at least
- * one interval that has been closed due to quota exhaustion.
+ * This regulation consumes {@link Sale} events and accumulates landed biomass per quota interval
+ * and per quota-species. Fishing is permitted unless a requested fishing action overlaps a closed
+ * portion of at least one configured TAC interval.
  * <p>
- * Closure policy implemented here is fishery-wide at interval level: if any configured
- * quota-species for an interval reaches or exceeds its quota, that whole interval is closed.
+ * Model assumptions implemented here:
+ * <ul>
+ *     <li>TAC scope is limited to species plus time. Area, stock, fleet-segment, and actor-level
+ *     dimensions are intentionally out of scope for now.</li>
+ *     <li>{@link Sale} is the accounting trigger. In the current toy model, sale time is used as
+ *     a proxy for immediate landing and quota visibility.</li>
+ *     <li>Both sold and unsold biomass count against TAC. Unsold biomass is assumed to mean landed
+ *     but not marketed, not discarded.</li>
+ *     <li>Closure is fishery-wide within each quota interval: once any configured quota-species
+ *     reaches or exceeds its limit at time {@code t}, fishing is closed from {@code t} until the
+ *     end of that quota interval.</li>
+ *     <li>Closure is sticky. Once an interval closes, later events do not reopen it.</li>
+ *     <li>Overlapping quota intervals are allowed. A sale contributes to every configured interval
+ *     whose time window contains the sale timestamp.</li>
+ * </ul>
  * <p>
- * Species matching uses {@link Species#covers(Species)} semantics, not strict equality: a quota
- * configured for a species code without life stage (for example "HKE") also counts catches for
- * matching life-stage species (for example "HKE;JUV").
- * <p>
- * Notes on accounting semantics:
+ * Quota definition rules:
  * <ul>
  *     <li>Quota units are kilograms.</li>
- *     <li>Sales are mapped to intervals by sale timestamp containment.</li>
- *     <li>Both sold and unsold biomass in each {@link Sale} are counted against quotas.</li>
- *     <li>A single sold/unsold species entry may contribute to multiple quota entries if more
- *     than one quota species covers it.</li>
- *     <li>Intervals are treated independently; closures are not global across time.</li>
+ *     <li>Quota definitions are immutable per interval/species pair. Re-setting the same pair is
+ *     rejected.</li>
+ *     <li>Overlapping quota-species definitions within the same interval are rejected. For
+ *     example, defining both a generic species quota and a stage-specific quota for the same
+ *     species code in one interval is not allowed.</li>
+ *     <li>Species matching for catch accounting uses {@link Species#covers(Species)} semantics,
+ *     not strict equality. A generic quota such as "HKE" therefore counts staged catches such as
+ *     "HKE;juvenile", provided no overlapping quota definition for that species code exists in the
+ *     same interval.</li>
+ * </ul>
+ * <p>
+ * Internal representation notes:
+ * <ul>
+ *     <li>Configured quotas are stored by parent quota interval and quota-species.</li>
+ *     <li>Accumulated catches are stored by parent quota interval and matched quota-species.</li>
+ *     <li>Closures are stored by parent quota interval plus the first exhaustion timestamp.
+ *     Effective closed sub-intervals are derived as needed as
+ *     {@code [closureStart, quotaIntervalEnd)}.</li>
+ *     <li>Intervals are treated independently; closure in one interval does not imply closure in
+ *     another unless a fishing action overlaps both.</li>
  * </ul>
  */
 public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAction>, Listener<Sale> {
@@ -79,28 +104,28 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
     private final Map<Interval, Map<Species, Double>> catches = new HashMap<>();
 
     /**
-     * Intervals that are currently closed due to at least one reached/exceeded quota.
+     * Closure start instants keyed by their parent quota interval.
      */
-    private final List<Interval> closedIntervals = new ArrayList<>();
+    private final Map<Interval, Instant> closureInstants = new LinkedHashMap<>();
 
     /**
      * Returns whether a fishing action is permitted in time.
      * <p>
-     * The action is rejected if its interval overlaps any closed TAC interval.
+     * The action is rejected if its interval overlaps any effective closure interval.
      *
      * @param action fishing action to evaluate
      * @return {@code true} when the action does not overlap any closed interval
      */
     @Override
     public boolean isPermitted(final TemporalFishingAction action) {
-        return closedIntervals.stream().noneMatch(action.getInterval()::overlaps);
+        return getEffectiveClosureIntervals().stream().noneMatch(action.getInterval()::overlaps);
     }
 
     /**
-     * Sets or replaces a quota for a given interval/species pair.
+     * Sets a quota for a given interval/species pair.
      * <p>
-     * This method also re-evaluates closure immediately. This matters when updating a quota
-     * downward after catches have already accumulated.
+     * Quota definitions are immutable once set for a given interval/species pair. Overlapping
+     * quota-species definitions within the same interval are also rejected.
      *
      * @param interval  interval to which the quota applies
      * @param species   quota-species key
@@ -112,12 +137,12 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
         final double quotaInKg
     ) {
         checkArgument(quotaInKg >= 0.0, "Quota must be non-negative");
-        final Interval nonNullInterval = checkNotNull(interval);
-        final Species nonNullSpecies = checkNotNull(species);
-        quotas
-            .computeIfAbsent(nonNullInterval, ignored -> new HashMap<>())
-            .put(nonNullSpecies, quotaInKg);
-        closeIntervalIfAnyQuotaReached(nonNullInterval);
+        final Interval quotaInterval = checkNotNull(interval);
+        final Species quotaSpecies = checkNotNull(species);
+        final Map<Species, Double> intervalQuotas =
+            quotas.computeIfAbsent(quotaInterval, ignored -> new HashMap<>());
+        validateNewQuotaDefinition(quotaInterval, intervalQuotas, quotaSpecies);
+        intervalQuotas.put(quotaSpecies, quotaInKg);
     }
 
     @Override
@@ -144,33 +169,107 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
     public void receive(final Sale event) {
         final Sale sale = checkNotNull(event);
         final var saleInstant = sale.getDateTime().toInstant(UTC);
-        final List<Interval> relevantIntervals = quotas
-            .keySet()
-            .stream()
-            .filter(interval -> interval.contains(saleInstant))
-            .toList();
-        for (final Interval interval : relevantIntervals) {
-            final Map<Species, Double> intervalQuotas = quotas.get(interval);
+        for (final Interval quotaInterval : relevantIntervalsFor(saleInstant)) {
+            final Map<Species, Double> intervalQuotas = quotas.get(quotaInterval);
             if (intervalQuotas == null || intervalQuotas.isEmpty()) continue;
             final Map<Species, Double> intervalCatches =
-                catches.computeIfAbsent(interval, ignored -> new HashMap<>());
-            for (final Sale.Item item : sale.getItems()) {
-                final Species caughtSpecies = item.getSpecies();
-                final double caughtKg = item.getContent().asKg();
-                matchingQuotaSpecies(intervalQuotas, caughtSpecies).forEach(
-                    quotaSpecies -> intervalCatches.merge(quotaSpecies, caughtKg, Double::sum)
-                );
-            }
-            sale.getUnsold().getBuckets().values().forEach(bucket ->
-                bucket.forEach((caughtSpecies, content) ->
-                    matchingQuotaSpecies(intervalQuotas, caughtSpecies).forEach(
-                        quotaSpecies ->
-                            intervalCatches.merge(quotaSpecies, content.asKg(), Double::sum)
-                    )
-                )
-            );
-            closeIntervalIfAnyQuotaReached(interval);
+                catches.computeIfAbsent(quotaInterval, ignored -> new HashMap<>());
+            recordSoldCatch(sale, intervalQuotas, intervalCatches);
+            recordUnsoldCatch(sale, intervalQuotas, intervalCatches);
+            recordClosureIfAnyQuotaReached(quotaInterval, saleInstant);
         }
+    }
+
+    /**
+     * Returns effective closure intervals derived from the recorded exhaustion timestamps.
+     *
+     * @return closed sub-intervals in insertion order
+     */
+    public List<Interval> getEffectiveClosureIntervals() {
+        return closureInstants
+            .entrySet()
+            .stream()
+            .map(entry -> Interval.of(entry.getValue(), entry.getKey().getEnd()))
+            .toList();
+    }
+
+    private List<Interval> relevantIntervalsFor(final Instant instant) {
+        return quotas
+            .keySet()
+            .stream()
+            .filter(quotaInterval -> quotaInterval.contains(instant))
+            .toList();
+    }
+
+    private static void validateNewQuotaDefinition(
+        final Interval quotaInterval,
+        final Map<Species, Double> intervalQuotas,
+        final Species quotaSpecies
+    ) {
+        if (intervalQuotas.containsKey(quotaSpecies)) {
+            throw new IllegalArgumentException(
+                "Quota already defined for interval %s and species '%s'. Existing quota cannot be replaced."
+                    .formatted(quotaInterval, quotaSpecies)
+            );
+        }
+        final Species conflictingSpecies = intervalQuotas
+            .keySet()
+            .stream()
+            .filter(existingSpecies -> quotaSpeciesOverlap(existingSpecies, quotaSpecies))
+            .findFirst()
+            .orElse(null);
+        if (conflictingSpecies != null) {
+            throw new IllegalArgumentException(
+                "Cannot define quota for species '%s' in interval %s because overlapping quota species '%s' is already configured."
+                    .formatted(
+                        quotaSpecies,
+                        quotaInterval,
+                        conflictingSpecies
+                    )
+            );
+        }
+    }
+
+    private static boolean quotaSpeciesOverlap(
+        final Species firstSpecies,
+        final Species secondSpecies
+    ) {
+        return firstSpecies.covers(secondSpecies) || secondSpecies.covers(firstSpecies);
+    }
+
+    private static void recordSoldCatch(
+        final Sale sale,
+        final Map<Species, Double> intervalQuotas,
+        final Map<Species, Double> intervalCatches
+    ) {
+        for (final Sale.Item item : sale.getItems()) {
+            recordCatch(intervalQuotas, intervalCatches, item.getSpecies(), item.getContent().asKg());
+        }
+    }
+
+    private static void recordUnsoldCatch(
+        final Sale sale,
+        final Map<Species, Double> intervalQuotas,
+        final Map<Species, Double> intervalCatches
+    ) {
+        for (final var bucket : sale.getUnsold().getBuckets().values()) {
+            bucket.forEach((caughtSpecies, content) ->
+                recordCatch(intervalQuotas, intervalCatches, caughtSpecies, content.asKg())
+            );
+        }
+    }
+
+    private static void recordCatch(
+        final Map<Species, Double> intervalQuotas,
+        final Map<Species, Double> intervalCatches,
+        final Species caughtSpecies,
+        final double caughtKg
+    ) {
+        final List<Species> matchedQuotaSpecies = matchingQuotaSpecies(intervalQuotas, caughtSpecies)
+            .toList();
+        matchedQuotaSpecies.forEach(
+            quotaSpecies -> intervalCatches.merge(quotaSpecies, caughtKg, Double::sum)
+        );
     }
 
     private static Stream<Species> matchingQuotaSpecies(
@@ -184,14 +283,19 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
     }
 
     /**
-     * Closes an interval if at least one configured quota has been reached or exceeded.
+     * Records closure start for an interval if at least one configured quota has been reached or
+     * exceeded.
      *
-     * @param interval interval to evaluate
+     * @param quotaInterval quota interval to evaluate
+     * @param closureStart start instant of the effective closed sub-interval
      */
-    private void closeIntervalIfAnyQuotaReached(final Interval interval) {
-        final Map<Species, Double> intervalQuotas = quotas.get(interval);
+    private void recordClosureIfAnyQuotaReached(
+        final Interval quotaInterval,
+        final Instant closureStart
+    ) {
+        final Map<Species, Double> intervalQuotas = quotas.get(quotaInterval);
         if (intervalQuotas == null || intervalQuotas.isEmpty()) return;
-        final Map<Species, Double> intervalCatches = catches.get(interval);
+        final Map<Species, Double> intervalCatches = catches.get(quotaInterval);
         if (intervalCatches == null || intervalCatches.isEmpty()) return;
         final boolean anyQuotaReached = intervalQuotas
             .entrySet()
@@ -199,8 +303,8 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
             .anyMatch(entry ->
                 intervalCatches.getOrDefault(entry.getKey(), 0.0) >= entry.getValue()
             );
-        if (anyQuotaReached && !closedIntervals.contains(interval)) {
-            closedIntervals.add(interval);
+        if (anyQuotaReached && !closureInstants.containsKey(quotaInterval)) {
+            closureInstants.put(quotaInterval, closureStart);
         }
     }
 }
