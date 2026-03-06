@@ -1,6 +1,7 @@
 package eu.project.surimi.poseidon.server.fleet;
 
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
+import uk.ac.ox.poseidon.core.utils.NumericIntervalMapper;
 
 /**
  * Maps a {@link Vessel} to the server-side {@link FleetSegment} domain object.
@@ -11,8 +12,8 @@ import uk.ac.ox.poseidon.agents.vessels.Vessel;
  * <p>What this mapper should do:
  *
  * <ul>
- * <li>Read fleet-segment inputs from a vessel, mostly via vessel tags rather than
- * first-class vessel properties.</li>
+ * <li>Read fleet-segment inputs from a vessel using both first-class vessel state
+ * and vessel tags.</li>
  * <li>Produce the server/domain {@link FleetSegment} type, not the generated protobuf
  * message of the same conceptual name.</li>
  * <li>Build the result dynamically for a given vessel rather than storing a fleet
@@ -34,8 +35,8 @@ import uk.ac.ox.poseidon.agents.vessels.Vessel;
  * {@code FleetSegmentMapperFactory}:
  *
  * <ul>
- * <li>The vessel tag name used for gear code, likely {@code main_fishing_gear} in
- * the Western Med register.</li>
+ * <li>Gear code should come from the vessel's actual gear via {@code vessel.getGear().getCode()},
+ * not from a register tag.</li>
  * <li>The vessel tag name used for country code, likely
  * {@code country_of_registration}.</li>
  * <li>The vessel tag name used for vessel length, expected to be {@code loa}
@@ -83,7 +84,7 @@ import uk.ac.ox.poseidon.agents.vessels.Vessel;
  * <p>Likely first tests when implementation starts:
  *
  * <ul>
- * <li>maps gear code from a configured vessel tag</li>
+ * <li>maps gear code from the vessel's actual gear</li>
  * <li>maps country code from a configured vessel tag</li>
  * <li>maps {@code loa} through the numeric interval mapper to a DCF vessel length class</li>
  * <li>uses configured constants for {@code scale} and {@code model}</li>
@@ -92,4 +93,18 @@ import uk.ac.ox.poseidon.agents.vessels.Vessel;
  * </ul>
  */
 public class FleetSegmentMapper {
+
+    public FleetSegmentMapper(
+        final String countryCodeTag,
+        final String vesselLengthTag,
+        final NumericIntervalMapper<String> vesselLengthClassMapper,
+        final String scale,
+        final String model
+    ) {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    public FleetSegment getFleetSegment(final Vessel vessel) {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
 }
