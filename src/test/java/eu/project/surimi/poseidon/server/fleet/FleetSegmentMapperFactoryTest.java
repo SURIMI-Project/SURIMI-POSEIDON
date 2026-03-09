@@ -4,28 +4,27 @@ import org.junit.jupiter.api.Test;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static uk.ac.ox.poseidon.core.scopes.Scope.GLOBAL_SCOPE;
 import static uk.ac.ox.poseidon.core.utils.Factories.numericIntervalToStringMapper;
+import static uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory.interval;
 
 class FleetSegmentMapperFactoryTest {
 
     @Test
     void buildsMapperFromConfiguredValues() {
-        final FleetSegmentMapperFactory<Scope> factory = new FleetSegmentMapperFactory<>();
-        factory.setCountryCodeTag("country_of_registration");
-        factory.setVesselLengthTag("loa");
-        factory.setScale("Industrial");
-        factory.setModel("POSEIDON");
-        factory.setVesselLengthClassMapper(
-            numericIntervalToStringMapper(
-                NumericIntervalToStringMapperFactory.interval(0.0, 12.0, "VL0612")
-            )
-        );
+        final FleetSegmentMapperFactory<Scope> factory =
+            fleetSegmentMapper(
+                "country_of_registration",
+                "loa",
+                numericIntervalToStringMapper(interval(0.0, 12.0, "VL0612")),
+                "Industrial",
+                "POSEIDON"
+            );
 
         final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
 
@@ -35,16 +34,14 @@ class FleetSegmentMapperFactoryTest {
 
     @Test
     void supportsAlternativeConfiguredValues() {
-        final FleetSegmentMapperFactory<Scope> factory = new FleetSegmentMapperFactory<>();
-        factory.setCountryCodeTag("flag_state");
-        factory.setVesselLengthTag("lbp");
-        factory.setScale("Artisanal");
-        factory.setModel("ALT_MODEL");
-        factory.setVesselLengthClassMapper(
-            numericIntervalToStringMapper(
-                NumericIntervalToStringMapperFactory.interval(12.0, 18.0, "VL1218")
-            )
-        );
+        final FleetSegmentMapperFactory<Scope> factory =
+            fleetSegmentMapper(
+                "flag_state",
+                "lbp",
+                numericIntervalToStringMapper(interval(12.0, 18.0, "VL1218")),
+                "Artisanal",
+                "ALT_MODEL"
+            );
 
         final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
 

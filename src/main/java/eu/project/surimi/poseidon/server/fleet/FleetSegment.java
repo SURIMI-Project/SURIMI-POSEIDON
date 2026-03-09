@@ -28,7 +28,23 @@ public class FleetSegment {
             covers(model, other.model);
     }
 
+    /**
+     * Returns true when this segment and {@code other} share at least one common concrete
+     * fleet-segment combination under the null-as-wildcard semantics.
+     */
+    public boolean overlaps(final FleetSegment other) {
+        return overlaps(gearCode, other.gearCode) &&
+            overlaps(vesselLengthClass, other.vesselLengthClass) &&
+            overlaps(scale, other.scale) &&
+            overlaps(countryCode, other.countryCode) &&
+            overlaps(model, other.model);
+    }
+
     private static boolean covers(final Object expected, final Object actual) {
         return expected == null || Objects.equals(expected, actual);
+    }
+
+    private static boolean overlaps(final Object first, final Object second) {
+        return first == null || second == null || Objects.equals(first, second);
     }
 }

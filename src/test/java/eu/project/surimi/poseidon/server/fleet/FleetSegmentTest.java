@@ -47,4 +47,26 @@ class FleetSegmentTest {
 
         assertThat(quotaSegment.covers(otherCountrySegment)).isFalse();
     }
+
+    @Test
+    void overlapsAllowsIntersectingWildcardSegmentsWithoutCoverage() {
+        final FleetSegment countryScopedSegment = new FleetSegment(
+            "OTB",
+            null,
+            "Industrial",
+            "ESP",
+            "POSEIDON"
+        );
+        final FleetSegment lengthScopedSegment = new FleetSegment(
+            "OTB",
+            "VL1824",
+            "Industrial",
+            null,
+            "POSEIDON"
+        );
+
+        assertThat(countryScopedSegment.overlaps(lengthScopedSegment)).isTrue();
+        assertThat(countryScopedSegment.covers(lengthScopedSegment)).isFalse();
+        assertThat(lengthScopedSegment.covers(countryScopedSegment)).isFalse();
+    }
 }

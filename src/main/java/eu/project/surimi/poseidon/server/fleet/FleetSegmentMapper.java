@@ -40,13 +40,13 @@ public class FleetSegmentMapper implements Function<Vessel, FleetSegment> {
 
     @Override
     public FleetSegment apply(final Vessel vessel) {
-        final Vessel checkedVessel = checkNotNull(vessel);
+        checkNotNull(vessel);
 
         return new FleetSegment(
-            getGearCode(checkedVessel),
-            getVesselLengthClass(checkedVessel),
+            getGearCode(vessel),
+            getVesselLengthClass(vessel),
             scale,
-            getStringTag(checkedVessel, countryCodeTag),
+            getStringTag(vessel, countryCodeTag),
             model
         );
     }
