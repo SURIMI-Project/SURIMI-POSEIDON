@@ -8,6 +8,7 @@ opentelemetry-instrumentation = "2.14.0-alpha"
 spotbugs = "6.4.8"
 jcommander = "2.0"
 jqwik = "1.9.2"
+mockito = "5.14.0"
 commons-beanutils = "1.11.0"
 commons-io = "2.19.0"
 
@@ -23,6 +24,7 @@ opentelemetry-grpc-server = { module = "io.opentelemetry.instrumentation:opentel
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk", version.ref = "opentelemetry-core" }
 jcommander = { module = "org.jcommander:jcommander", version.ref = "jcommander" }
 jqwik = { module = "net.jqwik:jqwik", version.ref = "jqwik" }
+mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
 grpc-services = { module = "io.grpc:grpc-services", version.ref = "grpc" }
 spotbugs-annotations = { module = "com.github.spotbugs:spotbugs-annotations" }

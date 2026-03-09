@@ -48,6 +48,7 @@ dependencies {
     implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.79.0.2.20260305115002.a96da7ac6992")
     testImplementation(libs.jqwik)
     testImplementation(libs.assertj)
+    testImplementation(libs.mockito)
 }
 
 testing {
