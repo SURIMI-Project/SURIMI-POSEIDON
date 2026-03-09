@@ -22,6 +22,10 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
+import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.scopes.SimulationScope;
+
 public class Factories {
 
     private Factories() {
@@ -29,5 +33,11 @@ public class Factories {
 
     public static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotas() {
         return new TotalAllowableCatchQuotasFactory();
+    }
+
+    public static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotas(
+        final Factory<? super SimulationScope, ? extends FleetSegmentMapper> fleetSegmentMapper
+    ) {
+        return new TotalAllowableCatchQuotasFactory(fleetSegmentMapper);
     }
 }

@@ -22,24 +22,36 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.SimulationScopeFactory;
 import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Factory for {@link TotalAllowableCatchQuotas} in simulation scope.
+ * <p>
+ * The regulation depends on a {@link FleetSegmentMapper}, but its lifetime remains pinned to the
+ * simulation regardless of the mapper factory's own scope.
  */
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class TotalAllowableCatchQuotasFactory
     extends SimulationScopeFactory<TotalAllowableCatchQuotas> {
 
+    private Factory<? super SimulationScope, ? extends FleetSegmentMapper> fleetSegmentMapper;
+
     @Override
     protected TotalAllowableCatchQuotas newInstance(final SimulationScope scope) {
-        final TotalAllowableCatchQuotas regulation = new TotalAllowableCatchQuotas();
+        final TotalAllowableCatchQuotas regulation =
+            new TotalAllowableCatchQuotas(checkNotNull(fleetSegmentMapper).get(scope));
         scope.getSimulation().getEventManager().addListener(regulation);
         return regulation;
     }
