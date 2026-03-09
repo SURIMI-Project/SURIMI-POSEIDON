@@ -29,7 +29,7 @@ class FleetSegmentMapperFactoryTest {
 
         final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
 
-        assertThat(mapper.getFleetSegment(vessel("OTB", "country_of_registration", "ESP", "loa", 6.5)))
+        assertThat(mapper.apply(vessel("OTB", "country_of_registration", "ESP", "loa", 6.5)))
             .isEqualTo(new FleetSegment("OTB", "VL0612", "Industrial", "ESP", "POSEIDON"));
     }
 
@@ -48,7 +48,7 @@ class FleetSegmentMapperFactoryTest {
 
         final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
 
-        assertThat(mapper.getFleetSegment(vessel("PS", "flag_state", "FRA", "lbp", 13.0)))
+        assertThat(mapper.apply(vessel("PS", "flag_state", "FRA", "lbp", 13.0)))
             .isEqualTo(new FleetSegment("PS", "VL1218", "Artisanal", "FRA", "ALT_MODEL"));
     }
 

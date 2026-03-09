@@ -93,7 +93,7 @@ public class FleetSegmentMapper implements Function<Vessel, FleetSegment> {
     }
 
     private static Double toDouble(final Object value) {
-        if (value instanceof Number number) {
+        if (value instanceof final Number number) {
             final double doubleValue = number.doubleValue();
             return Double.isFinite(doubleValue) ? doubleValue : null;
         }

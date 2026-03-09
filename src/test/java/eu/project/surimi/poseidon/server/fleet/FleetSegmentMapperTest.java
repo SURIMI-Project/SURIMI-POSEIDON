@@ -35,7 +35,7 @@ class FleetSegmentMapperTest {
         when(vessel.getTag("country_of_registration")).thenReturn(java.util.Optional.of("ESP"));
         when(vessel.getTag("loa")).thenReturn(java.util.Optional.of(18.5));
 
-        final FleetSegment fleetSegment = mapper.getFleetSegment(vessel);
+        final FleetSegment fleetSegment = mapper.apply(vessel);
 
         assertThat(fleetSegment).isEqualTo(
             new FleetSegment("OTB", "VL1824", "Industrial", "ESP", "POSEIDON")
@@ -55,7 +55,7 @@ class FleetSegmentMapperTest {
         when(vessel.getTag("country_of_registration")).thenReturn(java.util.Optional.empty());
         when(vessel.getTag("loa")).thenReturn(java.util.Optional.empty());
 
-        final FleetSegment fleetSegment = mapper.getFleetSegment(vessel);
+        final FleetSegment fleetSegment = mapper.apply(vessel);
 
         assertThat(fleetSegment).isEqualTo(
             new FleetSegment(null, null, "Industrial", null, "POSEIDON")
@@ -75,7 +75,7 @@ class FleetSegmentMapperTest {
         when(vessel.getTag("country_of_registration")).thenReturn(java.util.Optional.of(" NA "));
         when(vessel.getTag("loa")).thenReturn(java.util.Optional.of("not-a-number"));
 
-        final FleetSegment fleetSegment = mapper.getFleetSegment(vessel);
+        final FleetSegment fleetSegment = mapper.apply(vessel);
 
         assertThat(fleetSegment.getCountryCode()).isNull();
         assertThat(fleetSegment.getVesselLengthClass()).isNull();
@@ -94,7 +94,7 @@ class FleetSegmentMapperTest {
         when(vessel.getTag("country_of_registration")).thenReturn(java.util.Optional.of("ESP"));
         when(vessel.getTag("loa")).thenReturn(java.util.Optional.of(9.0));
 
-        final FleetSegment fleetSegment = mapper.getFleetSegment(vessel);
+        final FleetSegment fleetSegment = mapper.apply(vessel);
 
         assertThat(fleetSegment.getCountryCode()).isEqualTo("ESP");
         assertThat(fleetSegment.getVesselLengthClass()).isNull();
