@@ -77,7 +77,6 @@ import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
 import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
-import uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
@@ -95,6 +94,7 @@ import java.time.Period;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static tech.units.indriya.unit.Units.LITRE;
@@ -116,9 +116,9 @@ import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
-import static uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.core.utils.Factories.numericIntervalToStringMapper;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
+import static uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
@@ -254,14 +254,20 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 "life_stage"
             );
 
-        final var vesselLengthClassMapper =
-            numericIntervalToStringMapper(
-                interval(0.0, 6.0, "VL0006"),
-                interval(6.0, 12.0, "VL0612"),
-                interval(12.0, 18.0, "VL1218"),
-                interval(18.0, 24.0, "VL1824"),
-                interval(24.0, 40.0, "VL2440"),
-                interval(40.0, null, "VL40XX")
+        final var fleetSegmentMapper =
+            fleetSegmentMapper(
+                "country_of_registration",
+                "loa",
+                numericIntervalToStringMapper(
+                    interval(0.0, 6.0, "VL0006"),
+                    interval(6.0, 12.0, "VL0612"),
+                    interval(12.0, 18.0, "VL1218"),
+                    interval(18.0, 24.0, "VL1824"),
+                    interval(24.0, 40.0, "VL2440"),
+                    interval(40.0, null, "VL40XX")
+                ),
+                "Industrial",
+                "POSEIDON"
             );
 
         final var fishingGear =
