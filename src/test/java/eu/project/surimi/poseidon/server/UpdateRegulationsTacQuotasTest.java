@@ -66,7 +66,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
     private static final Interval INTERVAL = Interval.of(START.toInstant(UTC), END.toInstant(UTC));
     private static final double COD_QUOTA = 100.0;
     private static final FleetSegment POSEIDON_FLEET_SEGMENT =
-        new FleetSegment("OTB", "VL1824", "Industrial", "ESP", "POSEIDON");
+        new FleetSegment("OTB", null, "Industrial", "ESP", "POSEIDON");
     private static final FleetSegment WILDCARD_COUNTRY_AND_LENGTH_SEGMENT =
         new FleetSegment("OTB", null, "Industrial", null, "POSEIDON");
 
@@ -174,7 +174,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
     @Test
     void updateRegulationsRejectsOverlappingQuotaSpeciesWithinOverlappingIntervals() {
-        // Verifies gRPC updates reject ambiguous overlapping TAC definitions.
+        // Verifies gRPC updates reject overlapping TAC intervals within one fleet segment.
         final String simulationId = initialiseSimulation();
         final Species hakeAllStages = new Species("HKE", null, null);
         final Species hakeJuvenile = new Species("HKE", "juvenile", null);
@@ -212,7 +212,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         assertThat(((StatusRuntimeException) thrown).getStatus().getCode())
             .isEqualTo(Status.Code.INVALID_ARGUMENT);
         assertThat(((StatusRuntimeException) thrown).getStatus().getDescription())
-            .contains("Overlapping TAC definition")
+            .contains("Overlapping TAC interval definition")
             .contains("species 'COD'");
     }
 
@@ -250,7 +250,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         assertThat(((StatusRuntimeException) thrown).getStatus().getCode())
             .isEqualTo(Status.Code.INVALID_ARGUMENT);
         assertThat(((StatusRuntimeException) thrown).getStatus().getDescription())
-            .contains("Overlapping TAC definition")
+            .contains("Overlapping TAC interval definition")
             .contains("species 'COD'");
     }
 
@@ -420,13 +420,9 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         final Gear gear = vessel.getGear();
         final String gearCode = gear == null ? null : gear.getCode();
         final Object countryCode = vessel.getTag("country_of_registration").orElse(null);
-        final Object vesselLength = vessel.getTag("loa").orElse(null);
-        final String vesselLengthClass = vesselLength instanceof Number number && number.doubleValue() < 18.0
-            ? "VL1218"
-            : "VL1824";
         return new FleetSegment(
             gearCode,
-            vesselLengthClass,
+            null,
             "Industrial",
             countryCode == null ? null : countryCode.toString(),
             "POSEIDON"

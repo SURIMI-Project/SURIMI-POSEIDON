@@ -67,7 +67,7 @@ class TotalAllowableCatchQuotasTest {
 
     @Test
     void closesFisheryWhenQuotaIsReachedForExactSpecies() {
-        // Verifies exact-species catch closes the fishery once quota is reached.
+        // Verifies exact-species catch closes the interval for that fleet segment once quota is reached.
         final TotalAllowableCatchQuotas tac = new TotalAllowableCatchQuotas(FLEET_SEGMENT_MAPPER);
         final Species cod = new Species("COD", null, null);
         final LocalDateTime start = LocalDateTime.of(2026, 1, 1, 0, 0);
@@ -221,7 +221,7 @@ class TotalAllowableCatchQuotasTest {
 
     @Test
     void exhaustingEitherSpeciesQuotaClosesSharedInterval() {
-        // Verifies exhausting any quota-species closes the shared interval fishery-wide.
+        // Verifies exhausting any quota-species closes the shared interval for that fleet segment.
         final TotalAllowableCatchQuotas tac = new TotalAllowableCatchQuotas(FLEET_SEGMENT_MAPPER);
         final Species cod = new Species("COD", null, null);
         final Species haddock = new Species("HAD", null, null);
@@ -277,7 +277,7 @@ class TotalAllowableCatchQuotasTest {
 
     @Test
     void rejectsOverlappingQuotaSpeciesWithinOverlappingIntervals() {
-        // Verifies ambiguous overlapping TAC definitions are rejected at definition time.
+        // Verifies overlapping quota species scopes are rejected within the same interval and fleet segment.
         final TotalAllowableCatchQuotas tac = new TotalAllowableCatchQuotas(FLEET_SEGMENT_MAPPER);
         final Species hakeAllStages = new Species("HKE", null, null);
         final Species hakeJuvenile = new Species("HKE", "juvenile", null);
@@ -360,7 +360,7 @@ class TotalAllowableCatchQuotasTest {
 
         assertThatThrownBy(() -> tac.setQuota(lateInterval, quotaSegment(vessel()), cod, 100.0))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Overlapping TAC definition")
+            .hasMessageContaining("Overlapping TAC interval definition")
             .hasMessageContaining("species 'COD'");
     }
 
@@ -413,19 +413,49 @@ class TotalAllowableCatchQuotasTest {
     }
 
     @Test
+    void rejectsOverlappingIntervalsForSameFleetSegmentAcrossDifferentSpecies() {
+        final TotalAllowableCatchQuotas tac = new TotalAllowableCatchQuotas(FLEET_SEGMENT_MAPPER);
+        final Species cod = new Species("COD", null, null);
+        final Species haddock = new Species("HAD", null, null);
+        final FleetSegment fleetSegment = quotaSegment(vessel());
+        final LocalDateTime start = LocalDateTime.of(2027, 4, 1, 0, 0);
+        final Interval firstInterval = interval(start, start.plusDays(20));
+        final Interval secondInterval = interval(start.plusDays(10), start.plusDays(30));
+
+        tac.setQuota(firstInterval, fleetSegment, cod, 100.0);
+
+        assertThatThrownBy(() -> tac.setQuota(secondInterval, fleetSegment, haddock, 50.0))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Overlapping TAC interval definition")
+            .hasMessageContaining("species 'HAD'");
+    }
+
+    @Test
+    void rejectsEmptyFishingActivityQueryInterval() {
+        final TotalAllowableCatchQuotas tac = new TotalAllowableCatchQuotas(FLEET_SEGMENT_MAPPER);
+
+        assertThatThrownBy(() -> tac.getFishingActivityRatios(interval(
+            LocalDateTime.of(2027, 4, 1, 0, 0),
+            LocalDateTime.of(2027, 4, 1, 0, 0)
+        )))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Fishing activity query interval must be non-empty.");
+    }
+
+    @Test
     void rejectsOverlappingFleetSegmentsForSameSpeciesInOverlappingIntervals() {
         final TotalAllowableCatchQuotas tac = new TotalAllowableCatchQuotas(FLEET_SEGMENT_MAPPER);
         final Species cod = new Species("COD", null, null);
         final LocalDateTime start = LocalDateTime.of(2027, 5, 1, 0, 0);
         final Interval interval = interval(start, start.plusDays(30));
 
-        tac.setQuota(interval, BROAD_OTB_ESP_SEGMENT, cod, 100.0);
+        tac.setQuota(interval, new FleetSegment("OTB", null, "Industrial", null, "POSEIDON"), cod, 100.0);
 
         assertThatThrownBy(() ->
-            tac.setQuota(interval, new FleetSegment("OTB", "VL1824", "Industrial", "ESP", "POSEIDON"), cod, 50.0)
+            tac.setQuota(interval, BROAD_OTB_ESP_SEGMENT, cod, 50.0)
         )
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Overlapping TAC definition");
+            .hasMessageContaining("Overlapping TAC interval definition");
     }
 
     @Test
@@ -555,7 +585,16 @@ class TotalAllowableCatchQuotasTest {
     }
 
     private static FleetSegment quotaSegment(final Vessel vessel) {
-        return FLEET_SEGMENT_MAPPER.apply(vessel);
+        final Gear gear = vessel.getGear();
+        final String gearCode = gear == null ? null : gear.getCode();
+        final Object countryCode = vessel.getTag("country_of_registration").orElse(null);
+        return new FleetSegment(
+            gearCode,
+            null,
+            "Industrial",
+            countryCode == null ? null : countryCode.toString(),
+            "POSEIDON"
+        );
     }
 
     private static Vessel vessel() {

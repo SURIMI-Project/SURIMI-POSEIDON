@@ -22,11 +22,19 @@
 
 package eu.project.surimi.poseidon.server.regulations;
 
+import build.buf.gen.surimi.v1.FishingActivity;
+import build.buf.gen.surimi.v1.FishingActivitySummary;
 import build.buf.gen.surimi.v1.GetFishingActivityRequest;
 import build.buf.gen.surimi.v1.GetFishingActivityResponse;
+import eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
+import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.core.Simulation;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static eu.project.surimi.poseidon.server.Server.toInstant;
+import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toProtoFleetSegment;
 
 public class GetFishingActivityRequestHandler extends
     WithSimulationRequestHandler<GetFishingActivityRequest, GetFishingActivityResponse> {
@@ -46,12 +54,41 @@ public class GetFishingActivityRequestHandler extends
         final Simulation simulation,
         final SimulationManager.SimulationProperties simulationProperties
     ) {
-        // TODO: implement this
+        checkArgument(request.hasStartDateTime(), "Get fishing activity request is missing a start date time.");
+        checkArgument(request.hasEndDateTime(), "Get fishing activity request is missing an end date time.");
+        final var startInstant = toInstant(request.getStartDateTime());
+        final var endInstant = toInstant(request.getEndDateTime());
+        checkArgument(
+            endInstant.isAfter(startInstant),
+            "End date time must be after start date time."
+        );
+        final Interval queryInterval = Interval.of(startInstant, endInstant);
+        final TotalAllowableCatchQuotas totalAllowableCatchQuotas =
+            simulation.getComponent(TotalAllowableCatchQuotas.class);
         return GetFishingActivityResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
             .setStartDateTime(request.getStartDateTime())
             .setEndDateTime(request.getEndDateTime())
+            .setFishingActivitySummary(
+                FishingActivitySummary
+                    .newBuilder()
+                    .addAllFishingActivities(
+                        totalAllowableCatchQuotas
+                            .getFishingActivityRatios(queryInterval)
+                            .entrySet()
+                            .stream()
+                            .map(entry ->
+                                FishingActivity
+                                    .newBuilder()
+                                    .setFleetSegment(toProtoFleetSegment(entry.getKey()))
+                                    .setFishingActivityRatio(entry.getValue())
+                                    .build()
+                            )
+                            .toList()
+                    )
+                    .build()
+            )
             .build();
     }
 }

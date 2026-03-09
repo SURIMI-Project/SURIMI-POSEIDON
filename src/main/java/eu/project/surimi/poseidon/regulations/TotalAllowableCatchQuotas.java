@@ -34,6 +34,7 @@ import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.events.Listener;
 import uk.ac.ox.poseidon.regulations.Regulations;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -49,9 +50,9 @@ import static java.time.ZoneOffset.UTC;
  * Total Allowable Catch (TAC) regulation defined by interval, fleet segment, and species.
  * <p>
  * This regulation consumes {@link Sale} events and accumulates landed biomass per fleet-quota
- * interval, where a fleet-quota interval is a fleet segment plus an interval. Fishing is
- * permitted unless a requested fishing action overlaps a closed portion of at least one
- * fleet-quota interval that covers the acting vessel's fleet segment.
+ * interval, where a fleet-quota interval is a fleet segment plus an interval. Fishing is permitted
+ * unless a requested fishing action overlaps a closed portion of at least one fleet-quota interval
+ * that covers the acting vessel's fleet segment.
  * <p>
  * Model assumptions implemented here:
  * <ul>
@@ -75,16 +76,14 @@ import static java.time.ZoneOffset.UTC;
  *     <li>Quota units are kilograms.</li>
  *     <li>Quota definitions are immutable per interval/fleet-segment/species combination.
  *     Re-setting the same combination is rejected.</li>
- *     <li>Overlapping TAC definitions are rejected whenever their intervals overlap, their fleet
- *     segments overlap, and their species definitions overlap.</li>
- *     <li>Overlapping quota-species definitions within overlapping fleet-segment combinations in the
- *     overlapping time window are rejected. For example, defining both a generic species quota and a
- *     stage-specific quota for the same species code in overlapping intervals is not allowed when the
- *     fleet-segment definitions intersect.</li>
+ *     <li>Overlapping TAC definitions are rejected whenever their intervals overlap and their
+ *     fleet segments overlap, regardless of species.</li>
+ *     <li>Within one fleet segment, all quota-species must therefore be defined on the same
+ *     non-overlapping interval partition.</li>
  *     <li>Species matching for catch accounting uses {@link Species#covers(Species)} semantics,
  *     not strict equality. A generic quota such as "HKE" therefore counts staged catches such as
- *     "HKE;juvenile", provided no overlapping quota definition for that species code exists in an
- *     overlapping interval and fleet-segment combination.</li>
+ *     "HKE;juvenile", provided no overlapping TAC interval already exists for that fleet
+ *     segment.</li>
  * </ul>
  * <p>
  * Internal representation notes:
@@ -99,7 +98,8 @@ import static java.time.ZoneOffset.UTC;
  * </ul>
  */
 @RequiredArgsConstructor
-public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAction>, Listener<Sale> {
+public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAction>,
+    Listener<Sale> {
 
     private final @NonNull FleetSegmentMapper fleetSegmentMapper;
 
@@ -134,7 +134,10 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
     public boolean isPermitted(final TemporalFishingAction action) {
         checkNotNull(action);
         final FleetSegment vesselFleetSegment =
-            fleetSegmentMapper.apply(checkNotNull(action.getAgent(), "Fishing action agent is required."));
+            fleetSegmentMapper.apply(checkNotNull(
+                action.getAgent(),
+                "Fishing action agent is required."
+            ));
         return relevantFleetQuotaIntervalsFor(action.getInterval(), vesselFleetSegment)
             .noneMatch(fleetQuotaInterval ->
                 effectiveClosureInterval(fleetQuotaInterval).overlaps(action.getInterval())
@@ -145,13 +148,13 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
      * Sets a quota for a given interval/fleet-segment/species combination.
      * <p>
      * Quota definitions are immutable once set for a given fleet-quota interval and species.
-     * Overlapping TAC definitions are also rejected when interval, fleet segment, and species
-     * applicability overlap.
+     * Overlapping TAC definitions are also rejected when interval and fleet-segment applicability
+     * overlap, regardless of species.
      *
-     * @param interval interval to which the quota applies
+     * @param interval     interval to which the quota applies
      * @param fleetSegment fleet segment to which the quota applies
-     * @param species quota-species key
-     * @param quotaInKg allowed biomass in kilograms (must be non-negative)
+     * @param species      quota-species key
+     * @param quotaInKg    allowed biomass in kilograms (must be non-negative)
      */
     public void setQuota(
         final Interval interval,
@@ -180,7 +183,8 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
      * Workflow:
      * <ul>
      *     <li>Map the sale vessel to a fleet segment.</li>
-     *     <li>Select all fleet-quota intervals whose interval contains the sale timestamp and whose fleet
+     *     <li>Select all fleet-quota intervals whose interval contains the sale timestamp and
+     *     whose fleet
      *     segment covers the vessel fleet segment.</li>
      *     <li>For each sold item, add sold kilograms to every quota-species that covers the
      *     sold species.</li>
@@ -228,6 +232,36 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
             .toList();
     }
 
+    /**
+     * Returns the proportion of a query interval during which fishing is permitted for each fleet
+     * segment with TAC definitions overlapping that interval.
+     *
+     * @param queryInterval interval to query
+     * @return permitted fishing ratio per fleet segment in sorted order
+     */
+    public Map<FleetSegment, Double> getFishingActivityRatios(final Interval queryInterval) {
+        checkNotNull(queryInterval, "Query interval is required.");
+        checkArgument(
+            Duration.between(queryInterval.getStart(), queryInterval.getEnd()).getSeconds() > 0L,
+            "Fishing activity query interval must be non-empty."
+        );
+        final Map<FleetSegment, Double> fishingActivityRatios = new LinkedHashMap<>();
+        quotas
+            .keySet()
+            .stream()
+            .filter(fleetQuotaInterval -> fleetQuotaInterval.getInterval().overlaps(queryInterval))
+            .map(FleetQuotaInterval::getFleetSegment)
+            .distinct()
+            .sorted()
+            .forEach(fleetSegment ->
+                fishingActivityRatios.put(
+                    fleetSegment,
+                    permittedFishingRatio(queryInterval, fleetSegment)
+                )
+            );
+        return fishingActivityRatios;
+    }
+
     private Stream<FleetQuotaInterval> relevantFleetQuotaIntervalsFor(
         final Instant instant,
         final FleetSegment fleetSegment
@@ -236,7 +270,9 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
             .keySet()
             .stream()
             .filter(fleetQuotaInterval -> fleetQuotaInterval.getInterval().contains(instant))
-            .filter(fleetQuotaInterval -> fleetQuotaInterval.getFleetSegment().covers(fleetSegment));
+            .filter(fleetQuotaInterval -> fleetQuotaInterval
+                .getFleetSegment()
+                .covers(fleetSegment));
     }
 
     private Stream<FleetQuotaInterval> relevantFleetQuotaIntervalsFor(
@@ -247,7 +283,8 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
             .keySet()
             .stream()
             .filter(fleetQuotaInterval -> fleetQuotaInterval.getFleetSegment().covers(fleetSegment))
-            .filter(fleetQuotaInterval -> effectiveClosureInterval(fleetQuotaInterval).overlaps(actionInterval));
+            .filter(fleetQuotaInterval -> effectiveClosureInterval(fleetQuotaInterval).overlaps(
+                actionInterval));
     }
 
     private void validateNewQuotaDefinition(
@@ -256,18 +293,37 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
     ) {
         for (final var quotaEntry : quotas.entrySet()) {
             final FleetQuotaInterval existingFleetQuotaInterval = quotaEntry.getKey();
-            if (!existingFleetQuotaInterval.getInterval().overlaps(fleetQuotaInterval.getInterval())) continue;
-            if (!existingFleetQuotaInterval.getFleetSegment().overlaps(fleetQuotaInterval.getFleetSegment())) continue;
+            if (!existingFleetQuotaInterval
+                .getInterval()
+                .overlaps(fleetQuotaInterval.getInterval())) continue;
+            if (!existingFleetQuotaInterval
+                .getFleetSegment()
+                .overlaps(fleetQuotaInterval.getFleetSegment())) continue;
             final Map<Species, Double> existingQuotas = quotaEntry.getValue();
-            if (existingQuotas.containsKey(quotaSpecies)) {
+            if (!existingFleetQuotaInterval.equals(fleetQuotaInterval)) {
                 throw new IllegalArgumentException(
-                    "Overlapping TAC definition for interval %s, fleet segment '%s', and species '%s': the same species is already configured for overlapping interval %s and fleet segment '%s'."
+                    ("Overlapping TAC interval definition for interval %s, fleet segment '%s', " +
+                        "and species '%s': species quotas are already configured for overlapping " +
+                        "interval %s and fleet segment '%s'.")
                         .formatted(
                             fleetQuotaInterval.getInterval(),
                             fleetQuotaInterval.getFleetSegment(),
                             quotaSpecies,
                             existingFleetQuotaInterval.getInterval(),
                             existingFleetQuotaInterval.getFleetSegment()
+                        )
+                );
+            }
+            if (existingQuotas.containsKey(quotaSpecies)) {
+                throw new IllegalArgumentException(
+                    ("Overlapping TAC definition for interval %s, fleet segment '%s', and species" +
+                        " " +
+                        "'%s': the same species is already configured for this fleet segment and " +
+                        "interval.")
+                        .formatted(
+                            fleetQuotaInterval.getInterval(),
+                            fleetQuotaInterval.getFleetSegment(),
+                            quotaSpecies
                         )
                 );
             }
@@ -279,14 +335,14 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
                 .orElse(null);
             if (conflictingSpecies != null) {
                 throw new IllegalArgumentException(
-                    "Ambiguous TAC definition for interval %s, fleet segment '%s', and species '%s': overlapping quota species '%s' is already configured for interval %s and fleet segment '%s'."
+                    ("Ambiguous TAC definition for interval %s, fleet segment '%s', and species " +
+                        "'%s': overlapping quota species '%s' is already configured for the same " +
+                        "fleet segment and interval.")
                         .formatted(
                             fleetQuotaInterval.getInterval(),
                             fleetQuotaInterval.getFleetSegment(),
                             quotaSpecies,
-                            conflictingSpecies,
-                            existingFleetQuotaInterval.getInterval(),
-                            existingFleetQuotaInterval.getFleetSegment()
+                            conflictingSpecies
                         )
                 );
             }
@@ -306,7 +362,12 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
         final Map<Species, Double> intervalCatches
     ) {
         for (final Sale.Item item : sale.getItems()) {
-            recordCatch(intervalQuotas, intervalCatches, item.getSpecies(), item.getContent().asKg());
+            recordCatch(
+                intervalQuotas,
+                intervalCatches,
+                item.getSpecies(),
+                item.getContent().asKg()
+            );
         }
     }
 
@@ -328,7 +389,10 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
         final Species caughtSpecies,
         final double caughtKg
     ) {
-        final List<Species> matchedQuotaSpecies = matchingQuotaSpecies(intervalQuotas, caughtSpecies)
+        final List<Species> matchedQuotaSpecies = matchingQuotaSpecies(
+            intervalQuotas,
+            caughtSpecies
+        )
             .toList();
         matchedQuotaSpecies.forEach(
             quotaSpecies -> intervalCatches.merge(quotaSpecies, caughtKg, Double::sum)
@@ -350,7 +414,7 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
      * exceeded.
      *
      * @param fleetQuotaInterval fleet-quota interval to evaluate
-     * @param closureStart start instant of the effective closed sub-interval
+     * @param closureStart       start instant of the effective closed sub-interval
      */
     private void recordClosureIfAnyQuotaReached(
         final FleetQuotaInterval fleetQuotaInterval,
@@ -376,6 +440,27 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
             closureInstants.get(fleetQuotaInterval),
             fleetQuotaInterval.getInterval().getEnd()
         );
+    }
+
+    private double permittedFishingRatio(
+        final Interval queryInterval,
+        final FleetSegment fleetSegment
+    ) {
+        final long queryDurationSeconds =
+            Duration.between(queryInterval.getStart(), queryInterval.getEnd()).getSeconds();
+        final List<Interval> intervals =
+            getEffectiveClosureIntervals(fleetSegment)
+                .stream()
+                .filter(closureInterval -> closureInterval.overlaps(queryInterval))
+                .map(closureInterval -> closureInterval.intersection(queryInterval))
+                .toList();
+        final long closedDurationSeconds = intervals
+            .stream()
+            .mapToLong(interval -> Duration
+                .between(interval.getStart(), interval.getEnd())
+                .getSeconds())
+            .sum();
+        return (double) (queryDurationSeconds - closedDurationSeconds) / queryDurationSeconds;
     }
 
     @Value

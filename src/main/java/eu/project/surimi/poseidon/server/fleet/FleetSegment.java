@@ -2,6 +2,7 @@ package eu.project.surimi.poseidon.server.fleet;
 
 import lombok.Value;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
@@ -9,7 +10,7 @@ import java.util.Objects;
  * null fields broaden the segment and therefore match any corresponding value.
  */
 @Value
-public class FleetSegment {
+public class FleetSegment implements Comparable<FleetSegment> {
 
     String gearCode;
     String vesselLengthClass;
@@ -38,6 +39,17 @@ public class FleetSegment {
             overlaps(scale, other.scale) &&
             overlaps(countryCode, other.countryCode) &&
             overlaps(model, other.model);
+    }
+
+    @Override
+    public int compareTo(final FleetSegment other) {
+        return Comparator
+            .comparing(FleetSegment::getGearCode, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(FleetSegment::getVesselLengthClass, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(FleetSegment::getScale, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(FleetSegment::getCountryCode, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(FleetSegment::getModel, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .compare(this, other);
     }
 
     private static boolean covers(final Object expected, final Object actual) {
