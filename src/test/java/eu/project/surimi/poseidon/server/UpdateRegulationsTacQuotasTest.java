@@ -28,6 +28,7 @@ import build.buf.gen.surimi.v1.TotalAllowableCatch;
 import build.buf.gen.surimi.v1.UpdateRegulationsRequest;
 import eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas;
 import eu.project.surimi.poseidon.scenarios.TacOnlyScenario;
+import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
@@ -37,17 +38,22 @@ import uk.ac.ox.poseidon.agents.catches.CategorisedCatch;
 import uk.ac.ox.poseidon.agents.market.Sale;
 import uk.ac.ox.poseidon.agents.regulations.TemporalFishingAction;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
+import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.biomass.Biomass;
 import uk.ac.ox.poseidon.biology.species.Species;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
+import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toProtoFleetSegment;
 import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpecies;
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
@@ -59,22 +65,17 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
     private static final LocalDateTime END = START.plusDays(31);
     private static final Interval INTERVAL = Interval.of(START.toInstant(UTC), END.toInstant(UTC));
     private static final double COD_QUOTA = 100.0;
-    /*
-     * TODO(test plan):
-     * 1. Request rejection through gRPC
-     *    - duplicate quota definitions for the same interval/species should be rejected.
-     *    - overlapping quota-species definitions in one interval should be rejected.
-     * 2. Interval scoping through requests
-     *    - requests for different, non-overlapping intervals should not interfere with each other.
-     *    - overlapping requested intervals should remain independent except for shared sale accounting
-     *      in the TAC component itself.
-     */
+    private static final FleetSegment POSEIDON_FLEET_SEGMENT =
+        new FleetSegment("OTB", "VL1824", "Industrial", "ESP", "POSEIDON");
+    private static final FleetSegment WILDCARD_COUNTRY_AND_LENGTH_SEGMENT =
+        new FleetSegment("OTB", null, "Industrial", null, "POSEIDON");
 
     UpdateRegulationsTacQuotasTest() {
         super(TacOnlyScenario.class);
     }
 
     private static Sale sale(
+        final Vessel vessel,
         final LocalDateTime dateTime,
         final Species species,
         final double biomassInKg
@@ -83,13 +84,16 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
             dateTime,
             "sale-1",
             null,
-            null,
+            vessel,
             List.of(new Sale.Item(CATCH_CATEGORY, species, Biomass.ofKg(biomassInKg), null)),
             CategorisedCatch.empty()
         );
     }
 
-    private static TemporalFishingAction action(final Interval interval) {
+    private static TemporalFishingAction action(
+        final Vessel vessel,
+        final Interval interval
+    ) {
         return new TemporalFishingAction() {
             @Override
             public Interval getInterval() {
@@ -98,7 +102,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
             @Override
             public Vessel getAgent() {
-                return null;
+                return vessel;
             }
         };
     }
@@ -151,8 +155,8 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
     }
 
     @Test
-    void updateRegulationsRejectsDuplicateQuotaDefinitionForSameIntervalAndSpecies() {
-        // Verifies gRPC updates reject re-defining the same quota scope.
+    void updateRegulationsRejectsOverlappingQuotaDefinitionForSameSpecies() {
+        // Verifies gRPC updates reject re-defining the same species in overlapping TAC definitions.
         final String simulationId = initialiseSimulation();
         updateQuota(simulationId, COD, 100.0);
 
@@ -164,13 +168,13 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         assertThat(((StatusRuntimeException) thrown).getStatus().getCode())
             .isEqualTo(Status.Code.INVALID_ARGUMENT);
         assertThat(((StatusRuntimeException) thrown).getStatus().getDescription())
-            .contains("Quota already defined")
+            .contains("Overlapping TAC definition")
             .contains("species 'COD'");
     }
 
     @Test
-    void updateRegulationsRejectsOverlappingQuotaSpeciesWithinOneInterval() {
-        // Verifies gRPC updates reject ambiguous overlapping quota scopes.
+    void updateRegulationsRejectsOverlappingQuotaSpeciesWithinOverlappingIntervals() {
+        // Verifies gRPC updates reject ambiguous overlapping TAC definitions.
         final String simulationId = initialiseSimulation();
         final Species hakeAllStages = new Species("HKE", null, null);
         final Species hakeJuvenile = new Species("HKE", "juvenile", null);
@@ -187,8 +191,29 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         assertThat(((StatusRuntimeException) thrown).getStatus().getCode())
             .isEqualTo(Status.Code.INVALID_ARGUMENT);
         assertThat(((StatusRuntimeException) thrown).getStatus().getDescription())
-            .contains("Cannot define quota for species 'HKE (juvenile)'")
-            .contains("overlapping quota species 'HKE'");
+            .contains("Ambiguous TAC definition")
+            .contains("species 'HKE (juvenile)'")
+            .contains("quota species 'HKE'");
+    }
+
+    @Test
+    void updateRegulationsRejectsOverlappingFleetSegmentsForSameSpeciesInOverlappingIntervals() {
+        final String simulationId = initialiseSimulation();
+
+        final Throwable thrown = catchThrowable(() ->
+            updateQuotas(
+                simulationId,
+                new QuotaEntry(COD, 100.0, WILDCARD_COUNTRY_AND_LENGTH_SEGMENT),
+                new QuotaEntry(COD, 50.0, POSEIDON_FLEET_SEGMENT)
+            )
+        );
+
+        assertThat(thrown).isInstanceOf(StatusRuntimeException.class);
+        assertThat(((StatusRuntimeException) thrown).getStatus().getCode())
+            .isEqualTo(Status.Code.INVALID_ARGUMENT);
+        assertThat(((StatusRuntimeException) thrown).getStatus().getDescription())
+            .contains("Overlapping TAC definition")
+            .contains("species 'COD'");
     }
 
     @Test
@@ -210,31 +235,52 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
     }
 
     @Test
-    void updateRegulationsKeepsOverlappingIntervalsIndependentApartFromSharedSaleAccounting() {
-        // Verifies overlapping interval requests share sale accounting only where their windows overlap.
+    void updateRegulationsRejectsOverlappingIntervalsForSameFleetSegmentAndSpecies() {
         final String simulationId = initialiseSimulation();
-        final TotalAllowableCatchQuotas tac = getTac(simulationId);
         final LocalDateTime overlapStart = START.plusDays(10);
         final LocalDateTime overlapEnd = END.plusDays(10);
-        final Interval overlapInterval = Interval.of(overlapStart.toInstant(UTC), overlapEnd.toInstant(UTC));
 
         updateQuota(simulationId, START, END, COD, 100.0);
-        updateQuota(simulationId, overlapStart, overlapEnd, COD, 100.0);
 
-        broadcastSale(simulationId, START.plusDays(5), COD, 100.0);
+        final Throwable thrown = catchThrowable(() ->
+            updateQuota(simulationId, overlapStart, overlapEnd, COD, 100.0)
+        );
 
-        assertIntervalClosed(tac, INTERVAL);
-        assertThat(tac.getEffectiveClosureIntervals())
-            .containsExactly(Interval.of(START.plusDays(5).toInstant(UTC), END.toInstant(UTC)));
+        assertThat(thrown).isInstanceOf(StatusRuntimeException.class);
+        assertThat(((StatusRuntimeException) thrown).getStatus().getCode())
+            .isEqualTo(Status.Code.INVALID_ARGUMENT);
+        assertThat(((StatusRuntimeException) thrown).getStatus().getDescription())
+            .contains("Overlapping TAC definition")
+            .contains("species 'COD'");
+    }
 
-        broadcastSale(simulationId, overlapStart.plusDays(1), COD, 100.0);
+    @Test
+    void updateRegulationsOnlyClosesMatchingFleetSegment() {
+        final String simulationId = initialiseSimulation();
+        final TotalAllowableCatchQuotas tac = getTac(simulationId);
 
-        assertThat(tac.getEffectiveClosureIntervals())
-            .containsExactly(
-                Interval.of(START.plusDays(5).toInstant(UTC), END.toInstant(UTC)),
-                Interval.of(overlapStart.plusDays(1).toInstant(UTC), overlapEnd.toInstant(UTC))
-            );
-        assertIntervalClosed(tac, overlapInterval);
+        updateQuota(simulationId, COD, COD_QUOTA);
+        broadcastSale(simulationId, vessel("PS", "FRA", 13.0), START.plusDays(1), COD, COD_QUOTA);
+
+        assertIntervalOpen(tac, INTERVAL);
+        assertThat(tac.getEffectiveClosureIntervals(POSEIDON_FLEET_SEGMENT)).isEmpty();
+    }
+
+    @Test
+    void updateRegulationsTreatsBlankFleetSegmentFieldsAsWildcards() {
+        final String simulationId = initialiseSimulation();
+        final TotalAllowableCatchQuotas tac = getTac(simulationId);
+        final Vessel otbFra = vessel("OTB", "FRA", 13.0);
+
+        updateQuotas(
+            simulationId,
+            new QuotaEntry(COD, COD_QUOTA, WILDCARD_COUNTRY_AND_LENGTH_SEGMENT)
+        );
+        broadcastSale(simulationId, otbFra, START.plusDays(1), COD, COD_QUOTA);
+
+        assertThat(tac.getEffectiveClosureIntervals(quotaSegment(otbFra)))
+            .containsExactly(Interval.of(START.plusDays(1).toInstant(UTC), END.toInstant(UTC)));
+        assertThat(tac.isPermitted(action(otbFra, INTERVAL))).isFalse();
     }
 
     private void updateQuota(
@@ -256,7 +302,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
             simulationId,
             start,
             end,
-            new QuotaEntry(species, quotaInKg)
+            new QuotaEntry(species, quotaInKg, POSEIDON_FLEET_SEGMENT)
         );
     }
 
@@ -286,8 +332,18 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         final Species species,
         final double biomassInKg
     ) {
+        broadcastSale(simulationId, vessel(), dateTime, species, biomassInKg);
+    }
+
+    private void broadcastSale(
+        final String simulationId,
+        final Vessel vessel,
+        final LocalDateTime dateTime,
+        final Species species,
+        final double biomassInKg
+    ) {
         simulationManager.getSimulation(simulationId).getEventManager().broadcast(
-            sale(dateTime, species, biomassInKg)
+            sale(vessel, dateTime, species, biomassInKg)
         );
     }
 
@@ -295,14 +351,14 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         final TotalAllowableCatchQuotas tac,
         final Interval interval
     ) {
-        assertThat(tac.isPermitted(action(interval))).isTrue();
+        assertThat(tac.isPermitted(action(vessel(), interval))).isTrue();
     }
 
     private static void assertIntervalClosed(
         final TotalAllowableCatchQuotas tac,
         final Interval interval
     ) {
-        assertThat(tac.isPermitted(action(interval))).isFalse();
+        assertThat(tac.isPermitted(action(vessel(), interval))).isFalse();
     }
 
     private static UpdateRegulationsRequest updateQuotaRequest(
@@ -315,6 +371,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         for (final QuotaEntry quotaEntry : quotaEntries) {
             regulationsSummary.addTotalAllowableCatches(
                 TotalAllowableCatch.newBuilder()
+                    .setFleetSegment(toProtoFleetSegment(quotaEntry.fleetSegment()))
                     .setSpecies(toProtoSpecies(quotaEntry.species()))
                     .setCatch(quotaEntry.quotaInKg())
                     .build()
@@ -334,6 +391,45 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
             .getComponent(TotalAllowableCatchQuotas.class);
     }
 
-    private record QuotaEntry(Species species, double quotaInKg) {
+    private record QuotaEntry(Species species, double quotaInKg, FleetSegment fleetSegment) {
+
+        private QuotaEntry(final Species species, final double quotaInKg) {
+            this(species, quotaInKg, POSEIDON_FLEET_SEGMENT);
+        }
+    }
+
+    private static Vessel vessel() {
+        return vessel("OTB", "ESP", 18.5);
+    }
+
+    private static Vessel vessel(
+        final String gearCode,
+        final String countryCode,
+        final double vesselLength
+    ) {
+        final Vessel vessel = mock(Vessel.class);
+        final Gear gear = mock(Gear.class);
+        when(vessel.getGear()).thenReturn(gear);
+        when(gear.getCode()).thenReturn(gearCode);
+        when(vessel.getTag("country_of_registration")).thenReturn(Optional.of(countryCode));
+        when(vessel.getTag("loa")).thenReturn(Optional.of(vesselLength));
+        return vessel;
+    }
+
+    private static FleetSegment quotaSegment(final Vessel vessel) {
+        final Gear gear = vessel.getGear();
+        final String gearCode = gear == null ? null : gear.getCode();
+        final Object countryCode = vessel.getTag("country_of_registration").orElse(null);
+        final Object vesselLength = vessel.getTag("loa").orElse(null);
+        final String vesselLengthClass = vesselLength instanceof Number number && number.doubleValue() < 18.0
+            ? "VL1218"
+            : "VL1824";
+        return new FleetSegment(
+            gearCode,
+            vesselLengthClass,
+            "Industrial",
+            countryCode == null ? null : countryCode.toString(),
+            "POSEIDON"
+        );
     }
 }

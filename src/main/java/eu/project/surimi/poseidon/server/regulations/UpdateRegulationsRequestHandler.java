@@ -32,6 +32,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Server.toInstant;
+import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toPoseidonFleetSegment;
 import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 
 public class UpdateRegulationsRequestHandler extends
@@ -52,9 +53,18 @@ public class UpdateRegulationsRequestHandler extends
         final Simulation simulation,
         final SimulationManager.SimulationProperties simulationProperties
     ) {
-        checkArgument(request.hasStartDateTime(), "Start date time is required.");
-        checkArgument(request.hasEndDateTime(), "End date time is required.");
-        checkArgument(request.hasRegulationsSummary(), "Regulations summary is required.");
+        checkArgument(
+            request.hasStartDateTime(),
+            "Update regulations request is missing a start date time."
+        );
+        checkArgument(
+            request.hasEndDateTime(),
+            "Update regulations request is missing an end date time."
+        );
+        checkArgument(
+            request.hasRegulationsSummary(),
+            "Update regulations request is missing a regulations summary."
+        );
         final var startInstant = toInstant(request.getStartDateTime());
         final var endInstant = toInstant(request.getEndDateTime());
         checkArgument(
@@ -70,7 +80,11 @@ public class UpdateRegulationsRequestHandler extends
             .forEach(totalAllowableCatch -> {
                 checkArgument(
                     totalAllowableCatch.hasSpecies(),
-                    "Each TAC entry must include a species."
+                    "TAC entry is missing a species."
+                );
+                checkArgument(
+                    totalAllowableCatch.hasFleetSegment(),
+                    "TAC entry is missing a fleet segment."
                 );
                 final double quotaInKg =
                     simulationProperties
@@ -79,6 +93,7 @@ public class UpdateRegulationsRequestHandler extends
                         );
                 totalAllowableCatchQuotas.setQuota(
                     interval,
+                    toPoseidonFleetSegment(totalAllowableCatch.getFleetSegment()),
                     toPoseidonSpecies(totalAllowableCatch.getSpecies()),
                     quotaInKg
                 );
