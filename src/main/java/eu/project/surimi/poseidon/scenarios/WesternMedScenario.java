@@ -94,12 +94,14 @@ import java.time.Period;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static tech.units.indriya.unit.Units.LITRE;
 import static uk.ac.ox.poseidon.agents.components.Factories.component;
 import static uk.ac.ox.poseidon.agents.money.Factories.money;
+import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.refuel;
@@ -125,6 +127,7 @@ import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.paths.Factories.simulationFolder;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromFile;
 import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
+import static uk.ac.ox.poseidon.regulations.predicates.Factories.isPermitted;
 import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionCellPredicate;
 
 public class WesternMedScenario implements Supplier<Scenario> {
@@ -254,22 +257,6 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 "life_stage"
             );
 
-        final var fleetSegmentMapper =
-            fleetSegmentMapper(
-                "country_of_registration",
-                "loa",
-                numericIntervalToStringMapper(
-                    interval(0.0, 6.0, "VL0006"),
-                    interval(6.0, 12.0, "VL0612"),
-                    interval(12.0, 18.0, "VL1218"),
-                    interval(18.0, 24.0, "VL1824"),
-                    interval(24.0, 40.0, "VL2440"),
-                    interval(40.0, null, "VL40XX")
-                ),
-                "Industrial",
-                "POSEIDON"
-            );
-
         final var fishingGear =
             VesselScopeFactoriesByCode.<Gear>builder()
                 .factory(
@@ -349,9 +336,31 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 optionValuesRegister
             );
 
+        final var totalAllowableCatchQuotas =
+            totalAllowableCatchQuotas(
+                fleetSegmentMapper(
+                    "country_of_registration",
+                    "loa",
+                    numericIntervalToStringMapper(
+                        interval(0.0, 6.0, "VL0006"),
+                        interval(6.0, 12.0, "VL0612"),
+                        interval(12.0, 18.0, "VL1218"),
+                        interval(18.0, 24.0, "VL1824"),
+                        interval(24.0, 40.0, "VL2440"),
+                        interval(40.0, null, "VL40XX")
+                    ),
+                    "Industrial",
+                    "POSEIDON"
+                )
+            );
+
         final var readyForDeparture =
             checkThat(
                 allOf(
+                    isPermitted(
+                        departNow(),
+                        totalAllowableCatchQuotas
+                    ),
                     condition(
                         currentTime(),
                         afterTime(time(21, 59, 59))
