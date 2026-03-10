@@ -29,7 +29,7 @@ import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.agents.catches.CatchCategory;
 import uk.ac.ox.poseidon.agents.catches.CategorisedCatch;
 import uk.ac.ox.poseidon.agents.market.Sale;
-import uk.ac.ox.poseidon.agents.regulations.TemporalFishingAction;
+import uk.ac.ox.poseidon.agents.regulations.actions.TemporalFishingAction;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.biomass.Biomass;
@@ -38,9 +38,9 @@ import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.utils.NumericIntervalMapper;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,7 +67,8 @@ class TotalAllowableCatchQuotasTest {
 
     @Test
     void closesFisheryWhenQuotaIsReachedForExactSpecies() {
-        // Verifies exact-species catch closes the interval for that fleet segment once quota is reached.
+        // Verifies exact-species catch closes the interval for that fleet segment once quota is
+        // reached.
         final TotalAllowableCatchQuotas tac = new TotalAllowableCatchQuotas(FLEET_SEGMENT_MAPPER);
         final Species cod = new Species("COD", null, null);
         final LocalDateTime start = LocalDateTime.of(2026, 1, 1, 0, 0);
@@ -277,7 +278,8 @@ class TotalAllowableCatchQuotasTest {
 
     @Test
     void rejectsOverlappingQuotaSpeciesWithinOverlappingIntervals() {
-        // Verifies overlapping quota species scopes are rejected within the same interval and fleet segment.
+        // Verifies overlapping quota species scopes are rejected within the same interval and
+        // fleet segment.
         final TotalAllowableCatchQuotas tac = new TotalAllowableCatchQuotas(FLEET_SEGMENT_MAPPER);
         final Species hakeAllStages = new Species("HKE", null, null);
         final Species hakeJuvenile = new Species("HKE", "juvenile", null);
@@ -341,7 +343,8 @@ class TotalAllowableCatchQuotasTest {
         tac.receive(sale(start, cod, 100.0));
         assertThat(tac.isPermitted(action(interval))).isFalse();
 
-        final TotalAllowableCatchQuotas tacEndingBoundary = new TotalAllowableCatchQuotas(FLEET_SEGMENT_MAPPER);
+        final TotalAllowableCatchQuotas tacEndingBoundary = new TotalAllowableCatchQuotas(
+            FLEET_SEGMENT_MAPPER);
         tacEndingBoundary.setQuota(interval, quotaSegment(vessel()), cod, 100.0);
         tacEndingBoundary.receive(sale(end, cod, 100.0));
 
@@ -449,7 +452,12 @@ class TotalAllowableCatchQuotasTest {
         final LocalDateTime start = LocalDateTime.of(2027, 5, 1, 0, 0);
         final Interval interval = interval(start, start.plusDays(30));
 
-        tac.setQuota(interval, new FleetSegment("OTB", null, "Industrial", null, "POSEIDON"), cod, 100.0);
+        tac.setQuota(
+            interval,
+            new FleetSegment("OTB", null, "Industrial", null, "POSEIDON"),
+            cod,
+            100.0
+        );
 
         assertThatThrownBy(() ->
             tac.setQuota(interval, BROAD_OTB_ESP_SEGMENT, cod, 50.0)
@@ -479,7 +487,10 @@ class TotalAllowableCatchQuotasTest {
             .hasMessageContaining("Fishing action agent is required.");
     }
 
-    private static Interval interval(final LocalDateTime start, final LocalDateTime end) {
+    private static Interval interval(
+        final LocalDateTime start,
+        final LocalDateTime end
+    ) {
         return Interval.of(start.toInstant(UTC), end.toInstant(UTC));
     }
 
@@ -522,10 +533,18 @@ class TotalAllowableCatchQuotasTest {
             null,
             vessel,
             soldBiomassInKg > 0.0
-                ? List.of(new Sale.Item(CATCH_CATEGORY, species, Biomass.ofKg(soldBiomassInKg), null))
+                ? List.of(new Sale.Item(
+                CATCH_CATEGORY,
+                species,
+                Biomass.ofKg(soldBiomassInKg),
+                null
+            ))
                 : List.of(),
             unsoldBiomassInKg > 0.0
-                ? new CategorisedCatch(Map.of(CATCH_CATEGORY, Bucket.of(species, unsoldBiomassInKg)))
+                ? new CategorisedCatch(Map.of(
+                CATCH_CATEGORY,
+                Bucket.of(species, unsoldBiomassInKg)
+            ))
                 : CategorisedCatch.empty()
         );
     }

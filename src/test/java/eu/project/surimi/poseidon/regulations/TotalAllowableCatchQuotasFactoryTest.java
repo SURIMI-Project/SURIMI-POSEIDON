@@ -28,7 +28,7 @@ import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.agents.catches.CatchCategory;
 import uk.ac.ox.poseidon.agents.catches.CategorisedCatch;
 import uk.ac.ox.poseidon.agents.market.Sale;
-import uk.ac.ox.poseidon.agents.regulations.TemporalFishingAction;
+import uk.ac.ox.poseidon.agents.regulations.actions.TemporalFishingAction;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.biomass.Biomass;
@@ -42,13 +42,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
-import static uk.ac.ox.poseidon.core.utils.Factories.object;
 import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
+import static uk.ac.ox.poseidon.core.utils.Factories.object;
 
 class TotalAllowableCatchQuotasFactoryTest {
 

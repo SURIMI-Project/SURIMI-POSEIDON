@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.agents.market.Sale;
-import uk.ac.ox.poseidon.agents.regulations.TemporalFishingAction;
+import uk.ac.ox.poseidon.agents.regulations.actions.TemporalFishingAction;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.events.Listener;
 import uk.ac.ox.poseidon.regulations.Regulations;
@@ -98,8 +98,8 @@ import static java.time.ZoneOffset.UTC;
  * </ul>
  */
 @RequiredArgsConstructor
-public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAction>,
-    Listener<Sale> {
+public class TotalAllowableCatchQuotas
+    implements Regulations<TemporalFishingAction>, Listener<Sale> {
 
     private final @NonNull FleetSegmentMapper fleetSegmentMapper;
 

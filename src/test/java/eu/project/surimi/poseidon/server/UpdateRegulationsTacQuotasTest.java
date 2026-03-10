@@ -36,7 +36,7 @@ import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.agents.catches.CatchCategory;
 import uk.ac.ox.poseidon.agents.catches.CategorisedCatch;
 import uk.ac.ox.poseidon.agents.market.Sale;
-import uk.ac.ox.poseidon.agents.regulations.TemporalFishingAction;
+import uk.ac.ox.poseidon.agents.regulations.actions.TemporalFishingAction;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.biomass.Biomass;
@@ -223,7 +223,10 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         final TotalAllowableCatchQuotas tac = getTac(simulationId);
         final LocalDateTime laterStart = END.plusDays(1);
         final LocalDateTime laterEnd = laterStart.plusDays(31);
-        final Interval laterInterval = Interval.of(laterStart.toInstant(UTC), laterEnd.toInstant(UTC));
+        final Interval laterInterval = Interval.of(
+            laterStart.toInstant(UTC),
+            laterEnd.toInstant(UTC)
+        );
 
         updateQuota(simulationId, START, END, COD, 100.0);
         updateQuota(simulationId, laterStart, laterEnd, COD, 100.0);
@@ -393,7 +396,10 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
     private record QuotaEntry(Species species, double quotaInKg, FleetSegment fleetSegment) {
 
-        private QuotaEntry(final Species species, final double quotaInKg) {
+        private QuotaEntry(
+            final Species species,
+            final double quotaInKg
+        ) {
             this(species, quotaInKg, POSEIDON_FLEET_SEGMENT);
         }
     }
