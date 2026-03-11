@@ -48,7 +48,7 @@ public class SetPricesTest extends ServiceTest {
     protected void setUp() {
         super.setUp();
         simulationId = initialiseSimulation();
-        step(simulationId);
+        step(simulationId, START_DATE_TIME);
     }
 
     @AfterProperty

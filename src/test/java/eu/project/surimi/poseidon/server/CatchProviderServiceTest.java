@@ -45,7 +45,7 @@ public class CatchProviderServiceTest extends ServiceTest {
     @Test
     void getCatchDisposition() {
         final String simulationId = initialiseSimulation();
-        step(simulationId);
+        step(simulationId, START_DATE_TIME);
         final List<DispositionGrid> dispositionGrids =
             catchProviderStub
                 .getCatchDisposition(

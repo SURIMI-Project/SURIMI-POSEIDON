@@ -58,7 +58,7 @@ class SetPricesValidationTest extends ServiceTest {
     @BeforeEach
     void initSimulation() {
         simulationId = initialiseSimulation();
-        step(simulationId);
+        step(simulationId, START_DATE_TIME);
     }
 
     @Test

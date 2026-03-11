@@ -37,8 +37,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
@@ -55,7 +55,7 @@ public abstract class ServiceTest {
     }
 
     static final javax.measure.Unit<Mass> MASS_UNIT = KILOGRAM;
-    private static final String STEP_SIZE = "P1M";
+    protected static final String STEP_SIZE = "P1M";
     protected static final LocalDateTime START_DATE_TIME =
         LocalDate.of(2000, 1, 1).atStartOfDay();
     private static final System.Logger logger =
@@ -115,10 +115,14 @@ public abstract class ServiceTest {
         return initialiseSimulation(UUID.randomUUID().toString()).getSimulationId();
     }
 
-    protected SimulateStepResponse step(final String simulationId) {
+    protected SimulateStepResponse step(
+        final String simulationId,
+        final LocalDateTime currentDateTime
+    ) {
         final SimulateStepRequest simulateStepRequest = SimulateStepRequest
             .newBuilder()
             .setSimulationId(simulationId)
+            .setCurrentDateTime(toTimestamp(currentDateTime))
             .build();
         return workflowStub.simulateStep(simulateStepRequest);
     }

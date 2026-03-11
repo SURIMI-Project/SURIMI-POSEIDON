@@ -23,11 +23,11 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import build.buf.gen.surimi.v1.FinaliseRequest;
-import build.buf.gen.surimi.v1.SimulateStepRequest;
 import eu.project.surimi.poseidon.server.ServiceTest;
 import org.junit.jupiter.api.Test;
 
-import static java.util.stream.IntStream.range;
+import java.time.LocalDateTime;
+import java.time.Period;
 
 class WesternMedScenarioTest extends ServiceTest {
 
@@ -40,13 +40,12 @@ class WesternMedScenarioTest extends ServiceTest {
     void canRunForAYear() {
         final int numYears = 1;
         final String simulationId = initialiseSimulation();
-        final SimulateStepRequest simulateStepRequest = SimulateStepRequest
-            .newBuilder()
-            .setSimulationId(simulationId)
-            .build();
-        range(0, numYears * 12).forEach(i ->
-            workflowStub.simulateStep(simulateStepRequest)
-        );
+        LocalDateTime currentDateTime = START_DATE_TIME;
+        final Period stepSize = Period.parse(STEP_SIZE);
+        for (int i = 0; i < numYears * 12; i++) {
+            step(simulationId, currentDateTime);
+            currentDateTime = currentDateTime.plus(stepSize);
+        }
         workflowStub.finalise(FinaliseRequest.newBuilder().setSimulationId(simulationId).build());
     }
 }

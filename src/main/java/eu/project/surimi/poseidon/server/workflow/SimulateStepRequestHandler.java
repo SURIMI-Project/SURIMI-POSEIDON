@@ -30,6 +30,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 
 import java.time.Period;
 
+import static eu.project.surimi.poseidon.server.Utils.checkRequestDateTimeAlignment;
 import static java.lang.System.Logger.Level.INFO;
 
 public class SimulateStepRequestHandler extends
@@ -53,6 +54,7 @@ public class SimulateStepRequestHandler extends
         final Simulation simulation,
         final SimulationManager.SimulationProperties simulationProperties
     ) {
+        checkRequestDateTimeAlignment(request.getCurrentDateTime(), simulation);
         final Period stepSize = simulationManager.getSimulationProperties(simulation).getStepSize();
         log(INFO, simulation, "Step requested");
         simulation.getTemporalSchedule().stepFor(simulation, stepSize);

@@ -43,12 +43,12 @@ import java.math.RoundingMode;
 import java.util.Map;
 import java.util.Set;
 
+import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.INVALID_ARGUMENT;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
-import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 
 public class UpdateSpeciesPricesRequestHandler extends
     WithSimulationRequestHandler<UpdateSpeciesPricesRequest, UpdateSpeciesPricesResponse> {
@@ -131,15 +131,20 @@ public class UpdateSpeciesPricesRequestHandler extends
         final boolean hasGenericPrice = pricesBySpecies
             .keySet()
             .stream()
-            .anyMatch(species -> species.getCode().equals(speciesCode) && species.getLifeStage() == null);
+            .anyMatch(species ->
+                species.getCode().equals(speciesCode) && species.getLifeStage() == null
+            );
         final boolean hasStagedPrice = pricesBySpecies
             .keySet()
             .stream()
-            .anyMatch(species -> species.getCode().equals(speciesCode) && species.getLifeStage() != null);
+            .anyMatch(species ->
+                species.getCode().equals(speciesCode) && species.getLifeStage() != null
+            );
         if (requestIsGeneric && hasStagedPrice) {
             throw INVALID_ARGUMENT
                 .withDescription(
-                    "Cannot update generic species '%s' in market '%s' and gear '%s' because staged prices exist."
+                    ("Cannot update generic species '%s' in market '%s' and gear '%s' because " +
+                        "staged prices exist.")
                         .formatted(speciesCode, market.getCode(), catchCategory.getCode())
                 )
                 .asRuntimeException();
@@ -147,7 +152,8 @@ public class UpdateSpeciesPricesRequestHandler extends
         if (!requestIsGeneric && hasGenericPrice) {
             throw INVALID_ARGUMENT
                 .withDescription(
-                    "Cannot update staged species '%s' in market '%s' and gear '%s' because a generic price exists."
+                    ("Cannot update staged species '%s' in market '%s' and gear '%s' because a " +
+                        "generic price exists.")
                         .formatted(requestedSpecies, market.getCode(), catchCategory.getCode())
                 )
                 .asRuntimeException();

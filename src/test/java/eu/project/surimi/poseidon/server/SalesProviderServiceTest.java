@@ -46,7 +46,7 @@ public class SalesProviderServiceTest extends ServiceTest {
     @Test
     void getSales() {
         final String simulationId = initialiseSimulation();
-        step(simulationId);
+        step(simulationId, START_DATE_TIME);
         final List<Sale> sales =
             salesProviderStub
                 .getSales(

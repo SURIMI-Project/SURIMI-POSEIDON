@@ -27,6 +27,7 @@ import eu.project.surimi.poseidon.scenarios.MinimalScenario;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 
+import java.time.Period;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -112,9 +113,11 @@ class WorkflowServiceTest extends ServiceTest {
     @Test
     void canStep() {
         final String simulationId = initialiseSimulation();
-        final SimulateStepResponse response1 = step(simulationId);
+        final SimulateStepResponse response1 =
+            step(simulationId, START_DATE_TIME);
         assertEquals(simulationId, response1.getSimulationId());
-        final SimulateStepResponse response2 = step(simulationId);
+        final SimulateStepResponse response2 =
+            step(simulationId, START_DATE_TIME.plus(Period.parse(STEP_SIZE)));
         assertEquals(simulationId, response2.getSimulationId());
     }
 }
