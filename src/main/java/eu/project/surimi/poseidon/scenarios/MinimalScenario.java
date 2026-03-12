@@ -271,7 +271,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                         new CompositeDispositionProcessFactory<>(
                             new SelectedSpeciesRetentionFactory<>(
                                 new SpeciesByCodeFactory<>(
-                                    new ObjectFactory<>(List.of("A", "B")),
+                                    listOf("A", "B"),
                                     species
                                 )
                             ),

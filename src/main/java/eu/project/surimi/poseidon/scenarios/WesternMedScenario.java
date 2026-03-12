@@ -47,7 +47,6 @@ import uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
 import uk.ac.ox.poseidon.agents.tasks.general.SucceedOrWaitTaskFactory;
-import uk.ac.ox.poseidon.agents.tasks.general.WaitForFactory;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.EndTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
@@ -65,17 +64,12 @@ import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory;
 import uk.ac.ox.poseidon.core.*;
-import uk.ac.ox.poseidon.core.aggregators.MaxFactory;
 import uk.ac.ox.poseidon.core.events.EventClearerFactory;
-import uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
-import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
-import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
-import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
@@ -98,11 +92,13 @@ import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapp
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static tech.units.indriya.unit.Units.LITRE;
+import static uk.ac.ox.poseidon.core.aggregators.Factories.max;
 import static uk.ac.ox.poseidon.agents.components.Factories.component;
 import static uk.ac.ox.poseidon.agents.money.Factories.money;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
+import static uk.ac.ox.poseidon.agents.tasks.general.Factories.waitFor;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.refuel;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
@@ -115,8 +111,11 @@ import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
+import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeating;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeatingFromStart;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
+import static uk.ac.ox.poseidon.core.suppliers.temporal.Factories.durationUntil;
+import static uk.ac.ox.poseidon.core.suppliers.temporal.Factories.nextDayAtTime;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Factories.numericIntervalToStringMapper;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
@@ -183,7 +182,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             new BathymetricGridFromGridFileFactory<>(
                 bathymetricGridPath,
                 modelGrid,
-                new MaxFactory(),
+                max(),
                 false
             );
 
@@ -303,7 +302,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             new FishingEventAccumulatorFactory();
 
         final var monthlyProcesses =
-            new ScheduledRepeatingFactory<>(
+            scheduledRepeating(
                 dateTimeAfterStarting(ONE_MONTH),
                 MONTHLY,
                 new SteppableSequenceFactory(
@@ -376,11 +375,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var waitUntilNextEvening =
-            new WaitForFactory(
-                new DurationUntilSupplierFactory(
-                    new NextDayAtTimeSupplierFactory(
-                        new TimeFactory(22, 0, 0)
-                    )
+            waitFor(
+                durationUntil(
+                    nextDayAtTime(time(22, 0, 0))
                 )
             );
 
