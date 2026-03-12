@@ -75,7 +75,6 @@ import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.DurationUntilSupplierFactory;
 import uk.ac.ox.poseidon.core.suppliers.temporal.NextDayAtTimeSupplierFactory;
-import uk.ac.ox.poseidon.core.time.DateTimeAfterStartingFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
@@ -116,6 +115,7 @@ import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
+import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeatingFromStart;
 import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Factories.numericIntervalToStringMapper;
@@ -304,7 +304,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var monthlyProcesses =
             new ScheduledRepeatingFactory<>(
-                new DateTimeAfterStartingFactory(MONTHLY),
+                dateTimeAfterStarting(ONE_MONTH),
                 MONTHLY,
                 new SteppableSequenceFactory(
                     new EventClearerFactory(biomassSaleAccumulator),
@@ -337,20 +337,23 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var totalAllowableCatchQuotas =
-            totalAllowableCatchQuotas(
-                fleetSegmentMapper(
-                    "country_of_registration",
-                    "loa",
-                    numericIntervalToStringMapper(
-                        interval(0.0, 6.0, "VL0006"),
-                        interval(6.0, 12.0, "VL0612"),
-                        interval(12.0, 18.0, "VL1218"),
-                        interval(18.0, 24.0, "VL1824"),
-                        interval(24.0, 40.0, "VL2440"),
-                        interval(40.0, null, "VL40XX")
-                    ),
-                    "Industrial",
-                    "POSEIDON"
+            scheduledRepeatingFromStart(
+                DAILY,
+                totalAllowableCatchQuotas(
+                    fleetSegmentMapper(
+                        "country_of_registration",
+                        "loa",
+                        numericIntervalToStringMapper(
+                            interval(0.0, 6.0, "VL0006"),
+                            interval(6.0, 12.0, "VL0612"),
+                            interval(12.0, 18.0, "VL1218"),
+                            interval(18.0, 24.0, "VL1824"),
+                            interval(24.0, 40.0, "VL2440"),
+                            interval(40.0, null, "VL40XX")
+                        ),
+                        "Industrial",
+                        "POSEIDON"
+                    )
                 )
             );
 

@@ -27,6 +27,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.SimulationScopeFactory;
 import uk.ac.ox.poseidon.core.scopes.SimulationScope;
@@ -50,9 +51,11 @@ public class TotalAllowableCatchQuotasFactory
 
     @Override
     protected TotalAllowableCatchQuotas newInstance(final SimulationScope scope) {
-        final TotalAllowableCatchQuotas regulation =
-            new TotalAllowableCatchQuotas(checkNotNull(fleetSegmentMapper).get(scope));
-        scope.getSimulation().getEventManager().addListener(regulation);
-        return regulation;
+        final FishingEventAccumulator fishingEventAccumulator = new FishingEventAccumulator();
+        scope.getSimulation().getEventManager().addListener(fishingEventAccumulator);
+        return new TotalAllowableCatchQuotas(
+            fishingEventAccumulator,
+            checkNotNull(fleetSegmentMapper).get(scope)
+        );
     }
 }

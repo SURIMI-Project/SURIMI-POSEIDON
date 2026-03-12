@@ -32,16 +32,16 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
-import uk.ac.ox.poseidon.agents.catches.CatchCategory;
-import uk.ac.ox.poseidon.agents.catches.CategorisedCatch;
-import uk.ac.ox.poseidon.agents.market.Sale;
+import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.biology.biomass.Biomass;
+import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
+import uk.ac.ox.poseidon.core.Simulation;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
@@ -54,7 +54,6 @@ import static org.mockito.Mockito.when;
 
 class GetFishingActivityTest extends ServiceTest {
 
-    private static final CatchCategory CATCH_CATEGORY = CatchCategory.UNCATEGORISED;
     private static final Species COD = new Species("COD", null, null);
     private static final LocalDateTime START = LocalDateTime.of(2000, 1, 1, 0, 0);
     private static final LocalDateTime END = START.plusDays(31);
@@ -174,10 +173,12 @@ class GetFishingActivityTest extends ServiceTest {
     void getFishingActivityReturnsPartialRatioWhenClosureStartsInsideQueryInterval() {
         final String simulationId = initialiseSimulation();
         final TotalAllowableCatchQuotas tac = getTac(simulationId);
+        final Simulation simulation = simulationManager.getSimulation(simulationId);
         final LocalDateTime closureStart = START.plusDays(10);
 
         tac.setQuota(INTERVAL, OTB_ESP_SEGMENT, COD, 100.0);
-        tac.receive(sale(vessel("OTB", "ESP", 18.5), closureStart, COD, 100.0));
+        broadcastEvent(simulation, vessel("OTB", "ESP", 18.5), closureStart, COD, 100.0);
+        tac.step(simulation);
 
         final var response = getFishingActivity(simulationId, START, END);
 
@@ -185,7 +186,7 @@ class GetFishingActivityTest extends ServiceTest {
             .containsExactly(
                 FishingActivity.newBuilder()
                     .setFleetSegment(toProtoFleetSegment(OTB_ESP_SEGMENT))
-                    .setFishingActivityRatio(10.0 / 31.0)
+                    .setFishingActivityRatio(11.0 / 31.0)
                     .build()
             );
     }
@@ -194,12 +195,14 @@ class GetFishingActivityTest extends ServiceTest {
     void getFishingActivityReturnsZeroRatioWhenClosurePredatesQueryInterval() {
         final String simulationId = initialiseSimulation();
         final TotalAllowableCatchQuotas tac = getTac(simulationId);
+        final Simulation simulation = simulationManager.getSimulation(simulationId);
         final LocalDateTime closureStart = START.plusDays(5);
         final LocalDateTime queryStart = START.plusDays(10);
         final LocalDateTime queryEnd = END;
 
         tac.setQuota(INTERVAL, OTB_ESP_SEGMENT, COD, 100.0);
-        tac.receive(sale(vessel("OTB", "ESP", 18.5), closureStart, COD, 100.0));
+        broadcastEvent(simulation, vessel("OTB", "ESP", 18.5), closureStart, COD, 100.0);
+        tac.step(simulation);
 
         final var response = getFishingActivity(simulationId, queryStart, queryEnd);
 
@@ -280,20 +283,19 @@ class GetFishingActivityTest extends ServiceTest {
             .getComponent(TotalAllowableCatchQuotas.class);
     }
 
-    private static Sale sale(
+    private void broadcastEvent(
+        final Simulation simulation,
         final Vessel vessel,
         final LocalDateTime dateTime,
         final Species species,
         final double biomassInKg
     ) {
-        return new Sale(
-            dateTime,
-            "sale-1",
-            null,
-            vessel,
-            List.of(new Sale.Item(CATCH_CATEGORY, species, Biomass.ofKg(biomassInKg), null)),
-            CategorisedCatch.empty()
-        );
+        final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
+        when(action.getAgent()).thenReturn(vessel);
+        when(action.getStartDateTime()).thenReturn(dateTime);
+        final FishingOutcome outcome = new FishingOutcome(Bucket.of(species, biomassInKg), null);
+        simulation.getEventManager().broadcast(new FishingEvent(action, outcome));
+        simulation.getTemporalSchedule().stepUntil(simulation, dateTime.plusDays(1));
     }
 
     private static Vessel vessel(

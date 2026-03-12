@@ -25,13 +25,13 @@ package eu.project.surimi.poseidon.regulations;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
-import uk.ac.ox.poseidon.agents.catches.CatchCategory;
-import uk.ac.ox.poseidon.agents.catches.CategorisedCatch;
-import uk.ac.ox.poseidon.agents.market.Sale;
+import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.agents.regulations.actions.TemporalFishingAction;
+import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.biology.biomass.Biomass;
+import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -52,7 +52,6 @@ import static uk.ac.ox.poseidon.core.utils.Factories.object;
 
 class TotalAllowableCatchQuotasFactoryTest {
 
-    private static final CatchCategory CATCH_CATEGORY = CatchCategory.UNCATEGORISED;
     private static final FleetSegmentMapper FLEET_SEGMENT_MAPPER =
         new FleetSegmentMapper(
             "country_of_registration",
@@ -66,7 +65,7 @@ class TotalAllowableCatchQuotasFactoryTest {
         );
 
     @Test
-    void registersRegulationAsSaleListener() {
+    void registersRegulationAsFishingEventListener() {
         final Simulation simulation = Scenario.builder()
             .startingDateTime(dateTime(LocalDateTime.of(2026, 1, 1, 0, 0)))
             .build()
@@ -82,25 +81,21 @@ class TotalAllowableCatchQuotasFactoryTest {
         );
 
         tac.setQuota(interval, FLEET_SEGMENT_MAPPER.apply(vessel), cod, 100.0);
-        simulation.getEventManager().broadcast(sale(vessel, start.plusDays(1), cod, 100.0));
+
+        final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
+        when(action.getAgent()).thenReturn(vessel);
+        when(action.getStartDateTime()).thenReturn(start.plusDays(1));
+
+        simulation.getEventManager().broadcast(
+            new FishingEvent(
+                action,
+                new FishingOutcome(Bucket.of(cod, 100.0), null)
+            )
+        );
+        simulation.getTemporalSchedule().stepUntil(simulation, start.plusDays(2));
+        tac.step(simulation);
 
         assertThat(tac.isPermitted(action(vessel, interval))).isFalse();
-    }
-
-    private static Sale sale(
-        final Vessel vessel,
-        final LocalDateTime dateTime,
-        final Species species,
-        final double biomassInKg
-    ) {
-        return new Sale(
-            dateTime,
-            "sale-1",
-            null,
-            vessel,
-            List.of(new Sale.Item(CATCH_CATEGORY, species, Biomass.ofKg(biomassInKg), null)),
-            CategorisedCatch.empty()
-        );
     }
 
     private static TemporalFishingAction action(

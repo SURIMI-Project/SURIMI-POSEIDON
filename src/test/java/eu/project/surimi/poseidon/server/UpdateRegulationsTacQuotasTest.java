@@ -33,17 +33,17 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
-import uk.ac.ox.poseidon.agents.catches.CatchCategory;
-import uk.ac.ox.poseidon.agents.catches.CategorisedCatch;
-import uk.ac.ox.poseidon.agents.market.Sale;
+import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.agents.regulations.actions.TemporalFishingAction;
+import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.biology.biomass.Biomass;
+import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
+import uk.ac.ox.poseidon.core.Simulation;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
@@ -57,7 +57,6 @@ import static org.mockito.Mockito.when;
 
 class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
-    private static final CatchCategory CATCH_CATEGORY = CatchCategory.UNCATEGORISED;
     private static final Species COD = new Species("COD", null, null);
     private static final Species HADDOCK = new Species("HAD", null, null);
     private static final Species HAKE_JUVENILE = new Species("HKE", "juvenile", null);
@@ -72,22 +71,6 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
     UpdateRegulationsTacQuotasTest() {
         super(TacOnlyScenario.class);
-    }
-
-    private static Sale sale(
-        final Vessel vessel,
-        final LocalDateTime dateTime,
-        final Species species,
-        final double biomassInKg
-    ) {
-        return new Sale(
-            dateTime,
-            "sale-1",
-            null,
-            vessel,
-            List.of(new Sale.Item(CATCH_CATEGORY, species, Biomass.ofKg(biomassInKg), null)),
-            CategorisedCatch.empty()
-        );
     }
 
     private static TemporalFishingAction action(
@@ -117,8 +100,8 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         // Send a regulation update defining a COD quota for the requested time window.
         updateQuota(simulationId, COD, COD_QUOTA);
 
-        // Emit a matching sale and verify that the TAC component closes the interval.
-        broadcastSale(simulationId, START.plusDays(1), COD, COD_QUOTA);
+        // Emit a matching catch and verify that the TAC component closes the interval.
+        broadcastFishingEvent(simulationId, START.plusDays(1), COD, COD_QUOTA);
 
         assertIntervalClosed(tac, INTERVAL);
     }
@@ -135,10 +118,10 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
             new QuotaEntry(HADDOCK, 50.0)
         );
 
-        broadcastSale(simulationId, START.plusDays(1), COD, 99.9);
+        broadcastFishingEvent(simulationId, START.plusDays(1), COD, 99.9);
         assertIntervalOpen(tac, INTERVAL);
 
-        broadcastSale(simulationId, START.plusDays(2), HADDOCK, 50.0);
+        broadcastFishingEvent(simulationId, START.plusDays(2), HADDOCK, 50.0);
         assertIntervalClosed(tac, INTERVAL);
     }
 
@@ -150,7 +133,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
         updateQuota(simulationId, HAKE_JUVENILE, 50.0);
 
-        broadcastSale(simulationId, START.plusDays(1), HAKE_JUVENILE, 50.0);
+        broadcastFishingEvent(simulationId, START.plusDays(1), HAKE_JUVENILE, 50.0);
         assertIntervalClosed(tac, INTERVAL);
     }
 
@@ -231,7 +214,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         updateQuota(simulationId, START, END, COD, 100.0);
         updateQuota(simulationId, laterStart, laterEnd, COD, 100.0);
 
-        broadcastSale(simulationId, START.plusDays(1), COD, 100.0);
+        broadcastFishingEvent(simulationId, START.plusDays(1), COD, 100.0);
 
         assertIntervalClosed(tac, INTERVAL);
         assertIntervalOpen(tac, laterInterval);
@@ -263,7 +246,13 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         final TotalAllowableCatchQuotas tac = getTac(simulationId);
 
         updateQuota(simulationId, COD, COD_QUOTA);
-        broadcastSale(simulationId, vessel("PS", "FRA", 13.0), START.plusDays(1), COD, COD_QUOTA);
+        broadcastFishingEvent(
+            simulationId,
+            vessel("PS", "FRA", 13.0),
+            START.plusDays(1),
+            COD,
+            COD_QUOTA
+        );
 
         assertIntervalOpen(tac, INTERVAL);
         assertThat(tac.getEffectiveClosureIntervals(POSEIDON_FLEET_SEGMENT)).isEmpty();
@@ -279,10 +268,10 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
             simulationId,
             new QuotaEntry(COD, COD_QUOTA, WILDCARD_COUNTRY_AND_LENGTH_SEGMENT)
         );
-        broadcastSale(simulationId, otbFra, START.plusDays(1), COD, COD_QUOTA);
+        broadcastFishingEvent(simulationId, otbFra, START.plusDays(1), COD, COD_QUOTA);
 
         assertThat(tac.getEffectiveClosureIntervals(quotaSegment(otbFra)))
-            .containsExactly(Interval.of(START.plusDays(1).toInstant(UTC), END.toInstant(UTC)));
+            .containsExactly(Interval.of(START.plusDays(2).toInstant(UTC), END.toInstant(UTC)));
         assertThat(tac.isPermitted(action(otbFra, INTERVAL))).isFalse();
     }
 
@@ -329,25 +318,35 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         );
     }
 
-    private void broadcastSale(
+    private void broadcastFishingEvent(
         final String simulationId,
         final LocalDateTime dateTime,
         final Species species,
         final double biomassInKg
     ) {
-        broadcastSale(simulationId, vessel(), dateTime, species, biomassInKg);
+        broadcastFishingEvent(simulationId, vessel(), dateTime, species, biomassInKg);
     }
 
-    private void broadcastSale(
+    private void broadcastFishingEvent(
         final String simulationId,
         final Vessel vessel,
         final LocalDateTime dateTime,
         final Species species,
         final double biomassInKg
     ) {
-        simulationManager.getSimulation(simulationId).getEventManager().broadcast(
-            sale(vessel, dateTime, species, biomassInKg)
+        final Simulation simulation = simulationManager.getSimulation(simulationId);
+        final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
+        when(action.getAgent()).thenReturn(vessel);
+        when(action.getStartDateTime()).thenReturn(dateTime);
+
+        simulation.getEventManager().broadcast(
+            new FishingEvent(
+                action,
+                new FishingOutcome(Bucket.of(species, biomassInKg), null)
+            )
         );
+        simulation.getTemporalSchedule().stepUntil(simulation, dateTime.plusDays(1));
+        simulation.getComponent(TotalAllowableCatchQuotas.class).step(simulation);
     }
 
     private static void assertIntervalOpen(
@@ -388,20 +387,19 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
             .build();
     }
 
-    private TotalAllowableCatchQuotas getTac(final String simulationId) {
-        return simulationManager
-            .getSimulation(simulationId)
-            .getComponent(TotalAllowableCatchQuotas.class);
-    }
-
     private record QuotaEntry(Species species, double quotaInKg, FleetSegment fleetSegment) {
-
         private QuotaEntry(
             final Species species,
             final double quotaInKg
         ) {
             this(species, quotaInKg, POSEIDON_FLEET_SEGMENT);
         }
+    }
+
+    private TotalAllowableCatchQuotas getTac(final String simulationId) {
+        return simulationManager
+            .getSimulation(simulationId)
+            .getComponent(TotalAllowableCatchQuotas.class);
     }
 
     private static Vessel vessel() {
