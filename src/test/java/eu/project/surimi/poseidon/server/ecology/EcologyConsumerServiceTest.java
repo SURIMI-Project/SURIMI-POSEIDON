@@ -174,12 +174,7 @@ public class EcologyConsumerServiceTest extends ServiceTest {
     void someBiomassGetsRemovedAfterAStep() {
         final String simulationId = initialiseSimulation();
         final var initialGrids = getGrids(simulationId);
-        workflowStub.simulateStep(
-            SimulateStepRequest
-                .newBuilder()
-                .setSimulationId(simulationId)
-                .build()
-        );
+        step(simulationId, START_DATE_TIME);
         final var updatedGrids = getGrids(simulationId);
         initialGrids.forEach((speciesCode, initialGrid) -> {
             final var updatedGrid = updatedGrids.get(speciesCode);

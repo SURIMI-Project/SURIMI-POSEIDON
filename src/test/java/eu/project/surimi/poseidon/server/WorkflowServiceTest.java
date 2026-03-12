@@ -28,7 +28,6 @@ import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 
 import java.time.Period;
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -64,22 +63,14 @@ class WorkflowServiceTest extends ServiceTest {
         assertEquals(simulationId2, response2.getSimulationId());
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
     void canStartAndStepManySimulations() {
-        final int numSimulations = 100;
-        final List<String> simulations = Stream
+        Stream
             .generate(this::initialiseSimulation)
-            .limit(numSimulations)
-            .toList();
-        simulations.forEach(simulationId ->
-            workflowStub.simulateStep(
-                SimulateStepRequest
-                    .newBuilder()
-                    .setSimulationId(simulationId)
-                    .build()
-            )
-        );
+            .limit(100)
+            .forEach(simulationId ->
+                step(simulationId, START_DATE_TIME)
+            );
     }
 
     @Test
