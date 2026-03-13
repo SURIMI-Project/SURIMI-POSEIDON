@@ -79,18 +79,14 @@ val writeWesternMedScenario = tasks.register("writeWesternMedScenario", JavaExec
     )
 }
 
-val stageForImage = tasks.register<Copy>("stageForImage") {
+val stageForImage = tasks.register<Sync>("stageForImage") {
     val imageDir = layout.buildDirectory.dir("image")
     into(imageDir)
     dependsOn(tasks.named("jar"), writeWesternMedScenario)
     from(tasks.named<Jar>("jar"))
-    from(configurations.runtimeClasspath) {
-        into("lib")
-    }
+    from(configurations.runtimeClasspath) { into("lib") }
     from("logging.properties")
-    from("inputs/western_med/") {
-        into("inputs/western_med/")
-    }
+    from("inputs/western_med/") { into("inputs/western_med/") }
 }
 
 val buildDockerImage = tasks.register("buildDockerImage", Exec::class) {
