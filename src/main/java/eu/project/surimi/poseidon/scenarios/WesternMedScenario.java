@@ -92,7 +92,6 @@ import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapp
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static tech.units.indriya.unit.Units.LITRE;
-import static uk.ac.ox.poseidon.core.aggregators.Factories.max;
 import static uk.ac.ox.poseidon.agents.components.Factories.component;
 import static uk.ac.ox.poseidon.agents.money.Factories.money;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
@@ -102,6 +101,7 @@ import static uk.ac.ox.poseidon.agents.tasks.general.Factories.waitFor;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.refuel;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.core.aggregators.Factories.max;
 import static uk.ac.ox.poseidon.core.extractors.temporal.Factories.currentDayOfWeek;
 import static uk.ac.ox.poseidon.core.extractors.temporal.Factories.currentTime;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
@@ -566,6 +566,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             .component("marketGrid", marketGrid)
             .component("portGrid", portGrid)
             .component("regulations", regulations)
+            .component("totalAllowableCatchQuotas", totalAllowableCatchQuotas)
             .component("vesselField", vesselField)
             .component("modelGrid", modelGrid)
             .component("monthlyProcesses", monthlyProcesses)
