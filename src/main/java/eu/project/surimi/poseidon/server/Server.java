@@ -29,6 +29,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.google.protobuf.Timestamp;
+import eu.project.surimi.poseidon.ProtocolVersionExtractor;
 import eu.project.surimi.poseidon.server.catchprovider.CatchProviderService;
 import eu.project.surimi.poseidon.server.catchprovider.GetCatchDispositionRequestHandler;
 import eu.project.surimi.poseidon.server.ecology.EcologyConsumerService;
@@ -41,6 +42,7 @@ import eu.project.surimi.poseidon.server.regulations.UpdateRegulationsRequestHan
 import eu.project.surimi.poseidon.server.sales.GetSalesRequestHandler;
 import eu.project.surimi.poseidon.server.sales.SalesProviderService;
 import eu.project.surimi.poseidon.server.workflow.*;
+import io.grpc.ServerInterceptor;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
@@ -56,6 +58,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Map;
 
 import static eu.project.surimi.poseidon.server.OpenTelemetryConfiguration.openTelemetry;
 import static java.lang.System.Logger.Level.INFO;
@@ -66,6 +69,8 @@ import static java.time.ZoneOffset.UTC;
 public class Server {
 
     private static final System.Logger logger = System.getLogger(Server.class.getName());
+    public static final String PROTOCOL_VERSION =
+        ProtocolVersionExtractor.getSurimiProtocolVersion();
 
     @Parameter(
         names = {"-s", "--scenario"},
@@ -108,6 +113,7 @@ public class Server {
             .addService(ProtoReflectionServiceV1.newInstance())
             .intercept(new ExceptionInterceptor())
             .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
+            .intercept(createTrailerInterceptor())
             .addService(createWorkflowService(simulationManager))
             .addService(createSalesProviderService(simulationManager))
             .addService(createSpeciesPriceConsumerService(simulationManager))
@@ -123,6 +129,10 @@ public class Server {
         grpcServer.start();
         logger.log(INFO, "Server started, listening on " + port);
         return grpcServer;
+    }
+
+    private ServerInterceptor createTrailerInterceptor() {
+        return new TrailerInterceptor(Map.of("protocol-version", PROTOCOL_VERSION));
     }
 
     private SalesProviderService createSalesProviderService(
@@ -162,7 +172,8 @@ public class Server {
             ),
             new SimulateStepRequestHandler(simulationManager),
             new FinaliseRequestHandler(simulationManager),
-            new CancelRequestHandler(simulationManager)
+            new CancelRequestHandler(simulationManager),
+            new GetProtocolVersionRequestHandler()
         );
     }
 

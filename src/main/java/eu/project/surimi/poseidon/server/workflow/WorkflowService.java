@@ -34,6 +34,7 @@ public class WorkflowService extends WorkflowServiceImplBase {
     private final SimulateStepRequestHandler simulateStepRequestHandler;
     private final FinaliseRequestHandler finaliseRequestHandler;
     private final CancelRequestHandler cancelRequestHandler;
+    private final GetProtocolVersionRequestHandler getProtocolVersionRequestHandler;
 
     @Override
     public void initialise(
