@@ -156,6 +156,7 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
 
     @Override
     public void step(final SimState simState) {
+        checkArgument(simState instanceof Simulation);
         final Simulation simulation = (Simulation) simState;
         final Instant now = simulation.getTemporalSchedule().getDateTime().toInstant(UTC);
         fishingEventAccumulator
