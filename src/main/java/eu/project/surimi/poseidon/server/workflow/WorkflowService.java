@@ -67,4 +67,12 @@ public class WorkflowService extends WorkflowServiceImplBase {
     ) {
         cancelRequestHandler.handle(request, responseObserver);
     }
+
+    @Override
+    public void getProtocolVersion(
+        final GetProtocolVersionRequest request,
+        final StreamObserver<GetProtocolVersionResponse> responseObserver
+    ) {
+        getProtocolVersionRequestHandler.handle(request, responseObserver);
+    }
 }
