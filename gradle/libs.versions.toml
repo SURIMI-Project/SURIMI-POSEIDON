@@ -2,7 +2,7 @@
 assertj = "3.27.7"
 caffeine = "3.2.3"
 grpc = "1.75.0"
-lombok = "1.18.30"
+lombok = "1.18.44"
 opentelemetry-core = "1.49.0"
 opentelemetry-instrumentation = "2.14.0-alpha"
 spotbugs = "6.4.8"
