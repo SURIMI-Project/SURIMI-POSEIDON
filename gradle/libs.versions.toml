@@ -3,14 +3,14 @@ assertj = "3.27.7"
 caffeine = "3.2.3"
 grpc = "1.80.0"
 lombok = "1.18.46"
-opentelemetry-core = "1.49.0"
+opentelemetry-core = "1.61.0"
 opentelemetry-instrumentation = "2.14.0-alpha"
-spotbugs = "6.4.8"
+spotbugs = "6.5.1"
 jcommander = "2.0"
-jqwik = "1.9.2"
+jqwik = "1.9.3"
 mockito = "5.23.0"
 commons-beanutils = "1.11.0"
-commons-io = "2.19.0"
+commons-io = "2.22.0"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
