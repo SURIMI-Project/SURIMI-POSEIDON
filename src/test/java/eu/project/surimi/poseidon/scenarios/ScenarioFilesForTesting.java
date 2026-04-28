@@ -22,9 +22,8 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
@@ -37,9 +36,9 @@ import java.util.function.Supplier;
 public final class ScenarioFilesForTesting {
 
     private static final LoadingCache<Class<? extends Supplier<Scenario>>, Path> paths =
-        CacheBuilder
+        Caffeine
             .newBuilder()
-            .build(CacheLoader.from(ScenarioFilesForTesting::writeScenarioFile));
+            .build(ScenarioFilesForTesting::writeScenarioFile);
 
     private ScenarioFilesForTesting() {}
 
@@ -65,6 +64,6 @@ public final class ScenarioFilesForTesting {
     }
 
     public static Path getPath(final Class<? extends Supplier<Scenario>> scenarioClass) {
-        return paths.getUnchecked(scenarioClass);
+        return paths.get(scenarioClass);
     }
 }

@@ -22,8 +22,8 @@
 
 package eu.project.surimi.poseidon.server;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
@@ -40,9 +40,9 @@ import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
 public class SimulationManager {
-    private final Cache<UUID, Simulation> simulations = CacheBuilder.newBuilder().build();
+    private final Cache<UUID, Simulation> simulations = Caffeine.newBuilder().build();
     private final Cache<Simulation, SimulationProperties> simulationProperties =
-        CacheBuilder.newBuilder().weakKeys().build();
+        Caffeine.newBuilder().weakKeys().build();
 
     public static UUID parseId(final String id) {
         try {
