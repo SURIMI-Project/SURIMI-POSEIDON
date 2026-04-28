@@ -74,7 +74,6 @@ import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
-import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 import uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory;
@@ -125,6 +124,7 @@ import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.paths.Factories.simulationFolder;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromFile;
+import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
 import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
 import static uk.ac.ox.poseidon.regulations.predicates.Factories.isPermitted;
 import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionCellPredicate;
@@ -235,7 +235,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var pathFinder =
-            new DefaultPathFinderFactory<>(
+            pathFinder(
                 bathymetricGrid,
                 portGrid,
                 distance

@@ -62,7 +62,6 @@ import uk.ac.ox.poseidon.geography.CoordinateFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
-import uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory;
 import uk.ac.ox.poseidon.geography.ports.PortFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 
@@ -89,6 +88,7 @@ import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.object;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromString;
+import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
 
 @SuppressWarnings("UnstableApiUsage")
 public class MinimalScenario implements Supplier<Scenario> {
@@ -229,7 +229,7 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var vesselField =
             new VesselFieldFactory(modelGrid);
         final var pathFinder =
-            new DefaultPathFinderFactory<>(
+            pathFinder(
                 bathymetricGrid,
                 portGrid,
                 distance
