@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.SimulationStartOptions;
 import uk.ac.ox.poseidon.core.utils.Measurements;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
@@ -79,7 +80,9 @@ public class InitialiseRequestHandler
 
         validateContract(request);
 
-        final Simulation simulation = scenario.startNewSimulation(simulationId);
+        final Simulation simulation = scenario.startNewSimulation(
+            SimulationStartOptions.builder().simulationId(simulationId).build()
+        );
         log(INFO, simulation, "Simulation started");
         logMemoryUsage(simulation);
         simulationManager.put(

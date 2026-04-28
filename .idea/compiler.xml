@@ -10,6 +10,7 @@
         </processorPath>
         <module name="POSEIDON.agents.main" />
         <module name="POSEIDON.core.main" />
+        <module name="POSEIDON.calibration.main" />
         <module name="POSEIDON.gui.main" />
         <module name="POSEIDON.io.main" />
         <module name="POSEIDON.regulations.main" />
@@ -29,6 +30,9 @@
       <module name="POSEIDON.biology" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.biology.main" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.biology.test" options="-Werror -Xlint:-processing -Xlint:unchecked" />
+      <module name="POSEIDON.calibration" options="-Werror -Xlint:-processing -Xlint:unchecked" />
+      <module name="POSEIDON.calibration.main" options="-Werror -Xlint:-processing -Xlint:unchecked" />
+      <module name="POSEIDON.calibration.test" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.core" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.core.main" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.core.test" options="-Werror -Xlint:-processing -Xlint:unchecked" />

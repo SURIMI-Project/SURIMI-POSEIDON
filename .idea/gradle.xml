@@ -12,6 +12,7 @@
                   <project path="$PROJECT_DIR$/POSEIDON" />
                   <project path="$PROJECT_DIR$/POSEIDON/agents" />
                   <project path="$PROJECT_DIR$/POSEIDON/biology" />
+                  <project path="$PROJECT_DIR$/POSEIDON/calibration" />
                   <project path="$PROJECT_DIR$/POSEIDON/core" />
                   <project path="$PROJECT_DIR$/POSEIDON/examples" />
                   <project path="$PROJECT_DIR$/POSEIDON/geography" />
@@ -36,6 +37,7 @@
             <option value="$PROJECT_DIR$/POSEIDON/agents" />
             <option value="$PROJECT_DIR$/POSEIDON/biology" />
             <option value="$PROJECT_DIR$/POSEIDON/buildSrc" />
+            <option value="$PROJECT_DIR$/POSEIDON/calibration" />
             <option value="$PROJECT_DIR$/POSEIDON/core" />
             <option value="$PROJECT_DIR$/POSEIDON/examples" />
             <option value="$PROJECT_DIR$/POSEIDON/geography" />
