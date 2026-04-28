@@ -75,6 +75,7 @@ import java.util.stream.Stream;
 
 import static java.util.Collections.nCopies;
 import static java.util.stream.IntStream.range;
+import static si.uom.NonSI.KNOT;
 import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.LITRE;
@@ -332,7 +333,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                 .engine(
                     new SimpleEngineFactory<>(
                         fullTank(volumeOf(100000, LITRE)),
-                        speedOf("10 kn"),
+                        speedOf(10, KNOT),
                         volumeOf(0, LITRE) // don't consume any fuel
                     )
                 )

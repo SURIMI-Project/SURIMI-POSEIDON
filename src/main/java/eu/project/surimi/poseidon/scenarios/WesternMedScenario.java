@@ -30,8 +30,6 @@ import uk.ac.ox.poseidon.agents.catches.disposition.ProportionallyLimitingBiomas
 import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardMortalityRatesFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardRatesFactory;
 import uk.ac.ox.poseidon.agents.choices.*;
-import uk.ac.ox.poseidon.agents.choices.evaluation.TotalBiomassCaughtPerHourDestinationEvaluationProviderFactory;
-import uk.ac.ox.poseidon.agents.choices.evaluation.TripEvaluatorFactory;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
 import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
@@ -90,8 +88,11 @@ import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCat
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
+import static si.uom.NonSI.KNOT;
 import static tech.units.indriya.unit.Units.LITRE;
 import static uk.ac.ox.poseidon.agents.components.Factories.component;
+import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.totalBiomassCaughtPerHour;
+import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.tripEvaluator;
 import static uk.ac.ox.poseidon.agents.money.Factories.money;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
@@ -142,7 +143,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
     private static final double DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE = 0.1;
     private static final double DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE = 0.3;
     private static final double PURSE_SEINER_DEPTH_THRESHOLD = -35.0;
-    private static final String VESSEL_SPEED = "9.5 kn"; // as per email on 2025-03-18 08:20
+    private static final double VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
     private static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
@@ -382,9 +383,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var tripEvaluator =
-            new TripEvaluatorFactory(
+            tripEvaluator(
                 optionValues,
-                new TotalBiomassCaughtPerHourDestinationEvaluationProviderFactory()
+                totalBiomassCaughtPerHour()
             );
 
         final var startTrip =
@@ -545,7 +546,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     new SimpleEngineFactory<>(
                         // TODO: do we need a realistic value for tank volume?
                         fullTank(volumeOf(100_000, LITRE)),
-                        speedOf(VESSEL_SPEED),
+                        speedOf(VESSEL_SPEED_IN_KNOTS, KNOT),
                         volumeOf(3, LITRE) // TODO: find realistic value here
                     )
                 )
