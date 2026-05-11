@@ -22,14 +22,14 @@
 
 package eu.project.surimi.poseidon.server.workflow;
 
-import build.buf.gen.surimi.v1.CancelRequest;
-import build.buf.gen.surimi.v1.CancelResponse;
+import build.buf.gen.surimi.v1.CancelSimulationRequest;
+import build.buf.gen.surimi.v1.CancelSimulationResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.core.Simulation;
 
 public class CancelRequestHandler
-    extends WithSimulationRequestHandler<CancelRequest, CancelResponse> {
+    extends WithSimulationRequestHandler<CancelSimulationRequest, CancelSimulationResponse> {
 
     private static final System.Logger logger =
         System.getLogger(CancelRequestHandler.class.getName());
@@ -39,13 +39,13 @@ public class CancelRequestHandler
     }
 
     @Override
-    protected String getSimulationId(final CancelRequest request) {
+    protected String getSimulationId(final CancelSimulationRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected CancelResponse getResponseWithSimulation(
-        final CancelRequest request,
+    protected CancelSimulationResponse getResponseWithSimulation(
+        final CancelSimulationRequest request,
         final Simulation simulation,
         final SimulationManager.SimulationProperties simulationProperties
     ) {
@@ -59,7 +59,7 @@ public class CancelRequestHandler
         // holding on to a reference, it should be garbage collected.
         final String simulationId = request.getSimulationId();
         simulationManager.remove(simulationId);
-        return CancelResponse
+        return CancelSimulationResponse
             .newBuilder()
             .setSimulationId(simulationId)
             .build();

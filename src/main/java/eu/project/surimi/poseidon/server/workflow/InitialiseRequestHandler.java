@@ -22,8 +22,8 @@
 
 package eu.project.surimi.poseidon.server.workflow;
 
-import build.buf.gen.surimi.v1.InitialiseRequest;
-import build.buf.gen.surimi.v1.InitialiseResponse;
+import build.buf.gen.surimi.v1.InitialiseSimulationRequest;
+import build.buf.gen.surimi.v1.InitialiseSimulationResponse;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,7 @@ import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
 
 @RequiredArgsConstructor
 public class InitialiseRequestHandler
-    extends RequestHandler<InitialiseRequest, InitialiseResponse> {
+    extends RequestHandler<InitialiseSimulationRequest, InitialiseSimulationResponse> {
 
     private static final System.Logger logger =
         System.getLogger(InitialiseRequestHandler.class.getName());
@@ -61,7 +61,7 @@ public class InitialiseRequestHandler
     private final File scenarioFile;
 
     @Override
-    protected InitialiseResponse getResponse(final InitialiseRequest request) {
+    protected InitialiseSimulationResponse getResponse(final InitialiseSimulationRequest request) {
         final UUID simulationId = SimulationManager.parseId(request.getSimulationId());
         if (simulationManager.contains(simulationId)) {
             throw ALREADY_EXISTS
@@ -90,13 +90,13 @@ public class InitialiseRequestHandler
             simulation,
             new SimulationManager.SimulationProperties(stepSize, massUnit)
         );
-        return InitialiseResponse
+        return InitialiseSimulationResponse
             .newBuilder()
             .setSimulationId(simulationId.toString())
             .build();
     }
 
-    private void validateContract(final InitialiseRequest request) {
+    private void validateContract(final InitialiseSimulationRequest request) {
         final boolean isRasterCellOriginCentroid = request
             .getSimulation()
             .getGeography()
@@ -109,7 +109,7 @@ public class InitialiseRequestHandler
         }
     }
 
-    private static Unit<Mass> getMassUnit(final InitialiseRequest request) {
+    private static Unit<Mass> getMassUnit(final InitialiseSimulationRequest request) {
         return request.getSimulation()
             .getStandards()
             .getMeasurements()

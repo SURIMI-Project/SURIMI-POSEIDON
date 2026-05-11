@@ -32,7 +32,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import uk.ac.ox.poseidon.core.Scenario;
 
-import javax.measure.quantity.Mass;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -54,7 +53,6 @@ public abstract class ServiceTest {
         this.scenarioSupplierClass = scenarioSupplierClass;
     }
 
-    static final javax.measure.Unit<Mass> MASS_UNIT = KILOGRAM;
     protected static final String STEP_SIZE = "P1M";
     protected static final LocalDateTime START_DATE_TIME =
         LocalDate.of(2000, 1, 1).atStartOfDay();
@@ -64,7 +62,7 @@ public abstract class ServiceTest {
     protected SimulationManager simulationManager;
     io.grpc.Server server;
     ManagedChannel channel;
-    protected WorkflowServiceGrpc.WorkflowServiceBlockingStub workflowStub;
+    protected SimulationServiceGrpc.SimulationServiceBlockingStub simulationStub;
     protected CatchProviderServiceGrpc.CatchProviderServiceBlockingStub catchProviderStub;
     protected EcologyConsumerServiceGrpc.EcologyConsumerServiceBlockingStub ecologyConsumerStub;
     protected SalesProviderServiceGrpc.SalesProviderServiceBlockingStub salesProviderStub;
@@ -80,7 +78,7 @@ public abstract class ServiceTest {
             final int boundPort = server.getPort();
             final ChannelCredentials credentials = InsecureChannelCredentials.create();
             channel = Grpc.newChannelBuilder("localhost:" + boundPort, credentials).build();
-            workflowStub = WorkflowServiceGrpc.newBlockingStub(channel);
+            simulationStub = SimulationServiceGrpc.newBlockingStub(channel);
             catchProviderStub = CatchProviderServiceGrpc.newBlockingStub(channel);
             ecologyConsumerStub = EcologyConsumerServiceGrpc.newBlockingStub(channel);
             salesProviderStub = SalesProviderServiceGrpc.newBlockingStub(channel);
@@ -124,12 +122,12 @@ public abstract class ServiceTest {
             .setSimulationId(simulationId)
             .setCurrentDateTime(toTimestamp(currentDateTime))
             .build();
-        return workflowStub.simulateStep(simulateStepRequest);
+        return simulationStub.simulateStep(simulateStepRequest);
     }
 
-    protected InitialiseResponse initialiseSimulation(final String simulationId) {
-        return workflowStub.initialise(
-            InitialiseRequest
+    protected InitialiseSimulationResponse initialiseSimulation(final String simulationId) {
+        return simulationStub.initialiseSimulation(
+            InitialiseSimulationRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
                 .setScenarioId(scenarioSupplierClass.getSimpleName())

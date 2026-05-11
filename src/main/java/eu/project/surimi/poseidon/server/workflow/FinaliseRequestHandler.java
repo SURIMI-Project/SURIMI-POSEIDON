@@ -22,8 +22,8 @@
 
 package eu.project.surimi.poseidon.server.workflow;
 
-import build.buf.gen.surimi.v1.FinaliseRequest;
-import build.buf.gen.surimi.v1.FinaliseResponse;
+import build.buf.gen.surimi.v1.FinaliseSimulationRequest;
+import build.buf.gen.surimi.v1.FinaliseSimulationResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -31,7 +31,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 import static java.lang.System.Logger.Level.INFO;
 
 public class FinaliseRequestHandler
-    extends WithSimulationRequestHandler<FinaliseRequest, FinaliseResponse> {
+    extends WithSimulationRequestHandler<FinaliseSimulationRequest, FinaliseSimulationResponse> {
 
     private static final System.Logger logger =
         System.getLogger(FinaliseRequestHandler.class.getName());
@@ -41,13 +41,13 @@ public class FinaliseRequestHandler
     }
 
     @Override
-    protected String getSimulationId(final FinaliseRequest request) {
+    protected String getSimulationId(final FinaliseSimulationRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected FinaliseResponse getResponseWithSimulation(
-        final FinaliseRequest request,
+    protected FinaliseSimulationResponse getResponseWithSimulation(
+        final FinaliseSimulationRequest request,
         final Simulation simulation,
         final SimulationManager.SimulationProperties simulationProperties
     ) {
@@ -55,7 +55,7 @@ public class FinaliseRequestHandler
         simulation.finish();
         final String simulationId = request.getSimulationId();
         simulationManager.remove(simulationId);
-        return FinaliseResponse
+        return FinaliseSimulationResponse
             .newBuilder()
             .setSimulationId(simulationId)
             .build();

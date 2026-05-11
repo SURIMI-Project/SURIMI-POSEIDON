@@ -43,7 +43,7 @@ class WorkflowServiceTest extends ServiceTest {
     @Test
     void simulationCanBeStarted() {
         final String simulationId = UUID.randomUUID().toString();
-        final InitialiseResponse response = initialiseSimulation(simulationId);
+        final InitialiseSimulationResponse response = initialiseSimulation(simulationId);
         assertEquals(simulationId, response.getSimulationId());
     }
 
@@ -57,9 +57,9 @@ class WorkflowServiceTest extends ServiceTest {
     void canStartTwoSimulationsWithDifferentIds() {
         final String simulationId1 = UUID.randomUUID().toString();
         final String simulationId2 = UUID.randomUUID().toString();
-        final InitialiseResponse response1 = initialiseSimulation(simulationId1);
+        final InitialiseSimulationResponse response1 = initialiseSimulation(simulationId1);
         assertEquals(simulationId1, response1.getSimulationId());
-        final InitialiseResponse response2 = initialiseSimulation(simulationId2);
+        final InitialiseSimulationResponse response2 = initialiseSimulation(simulationId2);
         assertEquals(simulationId2, response2.getSimulationId());
     }
 
@@ -76,28 +76,28 @@ class WorkflowServiceTest extends ServiceTest {
     @Test
     void idBecomesAvailableAfterCancelling() {
         final String simulationId = initialiseSimulation();
-        final CancelResponse cancelResponse = workflowStub.cancel(
-            CancelRequest
+        final CancelSimulationResponse cancelResponse = simulationStub.cancelSimulation(
+            CancelSimulationRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
                 .build()
         );
         assertEquals(simulationId, cancelResponse.getSimulationId());
-        final InitialiseResponse initResponse = initialiseSimulation(simulationId);
+        final InitialiseSimulationResponse initResponse = initialiseSimulation(simulationId);
         assertEquals(simulationId, initResponse.getSimulationId());
     }
 
     @Test
     void idBecomesAvailableAfterFinalising() {
         final String simulationId = initialiseSimulation();
-        final FinaliseResponse cancelResponse = workflowStub.finalise(
-            FinaliseRequest
+        final FinaliseSimulationResponse cancelResponse = simulationStub.finaliseSimulation(
+            FinaliseSimulationRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
                 .build()
         );
         assertEquals(simulationId, cancelResponse.getSimulationId());
-        final InitialiseResponse initResponse = initialiseSimulation(simulationId);
+        final InitialiseSimulationResponse initResponse = initialiseSimulation(simulationId);
         assertEquals(simulationId, initResponse.getSimulationId());
     }
 

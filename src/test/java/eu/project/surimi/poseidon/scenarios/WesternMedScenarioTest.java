@@ -22,7 +22,7 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
-import build.buf.gen.surimi.v1.FinaliseRequest;
+import build.buf.gen.surimi.v1.FinaliseSimulationRequest;
 import eu.project.surimi.poseidon.server.ServiceTest;
 import org.junit.jupiter.api.Test;
 
@@ -46,6 +46,8 @@ class WesternMedScenarioTest extends ServiceTest {
             step(simulationId, currentDateTime);
             currentDateTime = currentDateTime.plus(stepSize);
         }
-        workflowStub.finalise(FinaliseRequest.newBuilder().setSimulationId(simulationId).build());
+        simulationStub.finaliseSimulation(
+            FinaliseSimulationRequest.newBuilder().setSimulationId(simulationId).build()
+        );
     }
 }
