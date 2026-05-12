@@ -20,42 +20,46 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server.workflow;
+package eu.project.surimi.poseidon.server.simulation;
 
-import build.buf.gen.surimi.v1.FinaliseSimulationRequest;
-import build.buf.gen.surimi.v1.FinaliseSimulationResponse;
+import build.buf.gen.surimi.v1.CancelSimulationRequest;
+import build.buf.gen.surimi.v1.CancelSimulationResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.core.Simulation;
 
-import static java.lang.System.Logger.Level.INFO;
-
-public class FinaliseRequestHandler
-    extends WithSimulationRequestHandler<FinaliseSimulationRequest, FinaliseSimulationResponse> {
+public class CancelRequestHandler
+    extends WithSimulationRequestHandler<CancelSimulationRequest, CancelSimulationResponse> {
 
     private static final System.Logger logger =
-        System.getLogger(FinaliseRequestHandler.class.getName());
+        System.getLogger(CancelRequestHandler.class.getName());
 
-    public FinaliseRequestHandler(final SimulationManager simulationManager) {
+    public CancelRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 
     @Override
-    protected String getSimulationId(final FinaliseSimulationRequest request) {
+    protected String getSimulationId(final CancelSimulationRequest request) {
         return request.getSimulationId();
     }
 
     @Override
-    protected FinaliseSimulationResponse getResponseWithSimulation(
-        final FinaliseSimulationRequest request,
+    protected CancelSimulationResponse getResponseWithSimulation(
+        final CancelSimulationRequest request,
         final Simulation simulation,
         final SimulationManager.SimulationProperties simulationProperties
     ) {
-        logger.log(INFO, "Finalising simulation {0}", request.getSimulationId());
-        simulation.finish();
+        logger.log(
+            System.Logger.Level.INFO,
+            "Cancelling simulation {0}",
+            request.getSimulationId()
+        );
+        // Here, we only remove the simulation from the manager
+        // without calling its finish method. If no one else is
+        // holding on to a reference, it should be garbage collected.
         final String simulationId = request.getSimulationId();
         simulationManager.remove(simulationId);
-        return FinaliseSimulationResponse
+        return CancelSimulationResponse
             .newBuilder()
             .setSimulationId(simulationId)
             .build();

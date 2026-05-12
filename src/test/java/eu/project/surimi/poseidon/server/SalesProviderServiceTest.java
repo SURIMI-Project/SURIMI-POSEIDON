@@ -61,9 +61,10 @@ public class SalesProviderServiceTest extends ServiceTest {
                         )
                         .build()
                 )
-                .getSalesSummariesList()
+                .getSalesSummary()
+                .getMarketSalesList()
                 .stream()
-                .flatMap(salesSummary -> salesSummary.getSalesList().stream())
+                .flatMap(marketSales -> marketSales.getSalesList().stream())
                 .toList();
         // Just check that we get sales for each gear/species combination
         assertEquals(

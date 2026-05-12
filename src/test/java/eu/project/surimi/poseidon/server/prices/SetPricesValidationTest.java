@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.server.prices;
 
 import build.buf.gen.surimi.v1.SpeciesPrice;
+import build.buf.gen.surimi.v1.SpeciesPriceSummary;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
 import eu.project.surimi.poseidon.scenarios.MinimalScenario;
 import eu.project.surimi.poseidon.server.ServiceTest;
@@ -99,15 +100,19 @@ class SetPricesValidationTest extends ServiceTest {
             UpdateSpeciesPricesRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
-                .addPrices(
-                    SpeciesPrice
+                .setSpeciesPriceSummary(
+                    SpeciesPriceSummary
                         .newBuilder()
-                        .setMarketCode(MARKET_CODE)
-                        .setCurrency("GBP")
-                        .setGearCode(GEAR_CODE)
-                        .setSpecies(toProtoSpecies(speciesCode, lifeStage))
-                        .setPrice(price)
-                        .build()
+                        .addSpeciesPrices(
+                            SpeciesPrice
+                                .newBuilder()
+                                .setMarketCode(MARKET_CODE)
+                                .setCurrency("GBP")
+                                .setGearCode(GEAR_CODE)
+                                .setSpecies(toProtoSpecies(speciesCode, lifeStage))
+                                .setPrice(price)
+                                .build()
+                        )
                 )
                 .build()
         );

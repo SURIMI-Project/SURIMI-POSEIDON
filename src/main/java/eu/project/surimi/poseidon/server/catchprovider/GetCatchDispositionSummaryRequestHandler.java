@@ -42,13 +42,13 @@ import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpe
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
 
-public class GetCatchDispositionRequestHandler
+public class GetCatchDispositionSummaryRequestHandler
     extends WithSimulationRequestHandler<GetCatchDispositionRequest, GetCatchDispositionResponse> {
 
     private static final System.Logger logger =
-        System.getLogger(GetCatchDispositionRequestHandler.class.getName());
+        System.getLogger(GetCatchDispositionSummaryRequestHandler.class.getName());
 
-    public GetCatchDispositionRequestHandler(final SimulationManager simulationManager) {
+    public GetCatchDispositionSummaryRequestHandler(final SimulationManager simulationManager) {
         super(simulationManager);
     }
 

@@ -22,7 +22,7 @@
 
 package eu.project.surimi.poseidon;
 
-import build.buf.gen.surimi.v1.SimulationServiceGrpc;
+import build.buf.gen.surimi.v1.FisheryServiceGrpc;
 import io.grpc.Status;
 
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class ProtocolVersionExtractor {
 
     public static String getSurimiProtocolVersion() {
         final String fullString =
-            extractVersion(SimulationServiceGrpc.class).orElseThrow(() ->
+            extractVersion(FisheryServiceGrpc.class).orElseThrow(() ->
                 Status.INTERNAL
                     .withDescription("Unable to extract protocol version")
                     .asRuntimeException()

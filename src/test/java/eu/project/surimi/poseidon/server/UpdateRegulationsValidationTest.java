@@ -22,7 +22,7 @@
 
 package eu.project.surimi.poseidon.server;
 
-import build.buf.gen.surimi.v1.RegulationsConsumerServiceGrpc;
+import build.buf.gen.surimi.v1.FisheryServiceGrpc;
 import build.buf.gen.surimi.v1.RegulationsSummary;
 import build.buf.gen.surimi.v1.TotalAllowableCatch;
 import build.buf.gen.surimi.v1.UpdateRegulationsRequest;
@@ -49,7 +49,7 @@ class UpdateRegulationsValidationTest extends ServiceTest {
     void updateRegulationsRejectsIncompleteRequest() {
         final String simulationId = initialiseSimulation();
         final var regulationsStub =
-            RegulationsConsumerServiceGrpc.newBlockingStub(channel);
+            FisheryServiceGrpc.newBlockingStub(channel);
 
         final Throwable thrown = catchThrowable(() ->
             regulationsStub.updateRegulations(
@@ -70,7 +70,7 @@ class UpdateRegulationsValidationTest extends ServiceTest {
     @Test
     void updateRegulationsRejectsEndDateTimeBeforeStartDateTime() {
         final String simulationId = initialiseSimulation();
-        final var regulationsStub = RegulationsConsumerServiceGrpc.newBlockingStub(channel);
+        final var regulationsStub = FisheryServiceGrpc.newBlockingStub(channel);
         final LocalDateTime start = LocalDateTime.of(2000, 2, 1, 0, 0);
         final LocalDateTime end = start.minusDays(1);
 
@@ -95,7 +95,7 @@ class UpdateRegulationsValidationTest extends ServiceTest {
     @Test
     void updateRegulationsRejectsTacEntryWithoutSpecies() {
         final String simulationId = initialiseSimulation();
-        final var regulationsStub = RegulationsConsumerServiceGrpc.newBlockingStub(channel);
+        final var regulationsStub = FisheryServiceGrpc.newBlockingStub(channel);
         final LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0);
         final LocalDateTime end = start.plusDays(31);
 
@@ -128,7 +128,7 @@ class UpdateRegulationsValidationTest extends ServiceTest {
     @Test
     void updateRegulationsRejectsTacEntryWithoutFleetSegment() {
         final String simulationId = initialiseSimulation();
-        final var regulationsStub = RegulationsConsumerServiceGrpc.newBlockingStub(channel);
+        final var regulationsStub = FisheryServiceGrpc.newBlockingStub(channel);
         final LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0);
         final LocalDateTime end = start.plusDays(31);
 

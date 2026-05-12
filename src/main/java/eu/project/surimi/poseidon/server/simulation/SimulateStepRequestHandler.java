@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server.workflow;
+package eu.project.surimi.poseidon.server.simulation;
 
 import build.buf.gen.surimi.v1.SimulateStepRequest;
 import build.buf.gen.surimi.v1.SimulateStepResponse;

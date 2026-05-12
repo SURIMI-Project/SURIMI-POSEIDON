@@ -93,7 +93,7 @@ public class GetSalesRequestHandler extends
             toLocalDateTime(request.getEndDateTime())
         );
         record Key(Market market, CatchCategory catchCategory, CurrencyUnit currencyUnit) {}
-        final List<SalesSummary> saleSummaries =
+        final List<MarketSales> marketSales =
             simulation
                 .getComponent(BiomassSaleAccumulator.class)
                 .getEvents()
@@ -131,7 +131,7 @@ public class GetSalesRequestHandler extends
                 .entrySet()
                 .stream()
                 .map(entry ->
-                    SalesSummary
+                    MarketSales
                         .newBuilder()
                         .setMarketCode(entry.getKey().market().getCode())
                         .setCurrency(entry.getKey().currencyUnit().getCode())
@@ -145,7 +145,7 @@ public class GetSalesRequestHandler extends
             .setSimulationId(request.getSimulationId())
             .setStartDateTime(request.getStartDateTime())
             .setEndDateTime(request.getEndDateTime())
-            .addAllSalesSummaries(saleSummaries)
+            .setSalesSummary(SalesSummary.newBuilder().addAllMarketSales(marketSales))
             .build();
     }
 

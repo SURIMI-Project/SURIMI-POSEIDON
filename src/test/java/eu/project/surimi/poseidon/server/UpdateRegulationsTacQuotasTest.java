@@ -22,7 +22,7 @@
 
 package eu.project.surimi.poseidon.server;
 
-import build.buf.gen.surimi.v1.RegulationsConsumerServiceGrpc;
+import build.buf.gen.surimi.v1.FisheryServiceGrpc;
 import build.buf.gen.surimi.v1.RegulationsSummary;
 import build.buf.gen.surimi.v1.TotalAllowableCatch;
 import build.buf.gen.surimi.v1.UpdateRegulationsRequest;
@@ -302,7 +302,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         final String simulationId,
         final QuotaEntry... quotaEntries
     ) {
-        RegulationsConsumerServiceGrpc.newBlockingStub(channel).updateRegulations(
+        FisheryServiceGrpc.newBlockingStub(channel).updateRegulations(
             updateQuotaRequest(simulationId, START, END, quotaEntries)
         );
     }
@@ -313,7 +313,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         final LocalDateTime end,
         final QuotaEntry... quotaEntries
     ) {
-        RegulationsConsumerServiceGrpc.newBlockingStub(channel).updateRegulations(
+        FisheryServiceGrpc.newBlockingStub(channel).updateRegulations(
             updateQuotaRequest(simulationId, start, end, quotaEntries)
         );
     }

@@ -20,26 +20,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server.prices;
+package eu.project.surimi.poseidon.server.simulation;
 
-import build.buf.gen.surimi.v1.SpeciesPriceConsumerServiceGrpc;
-import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
-import build.buf.gen.surimi.v1.UpdateSpeciesPricesResponse;
-import io.grpc.stub.StreamObserver;
-import lombok.RequiredArgsConstructor;
+import build.buf.gen.surimi.v1.GetProtocolVersionRequest;
+import build.buf.gen.surimi.v1.GetProtocolVersionResponse;
+import eu.project.surimi.poseidon.server.RequestHandler;
 
-@RequiredArgsConstructor
-public class SpeciesPriceConsumerService
-    extends SpeciesPriceConsumerServiceGrpc.SpeciesPriceConsumerServiceImplBase {
+import static eu.project.surimi.poseidon.server.Server.PROTOCOL_VERSION;
 
-    private final UpdateSpeciesPricesRequestHandler updateSpeciesPricesRequestHandler;
+public class GetProtocolVersionRequestHandler
+    extends RequestHandler<GetProtocolVersionRequest, GetProtocolVersionResponse> {
 
     @Override
-    public void updateSpeciesPrices(
-        final UpdateSpeciesPricesRequest request,
-        final StreamObserver<UpdateSpeciesPricesResponse> responseObserver
-    ) {
-        updateSpeciesPricesRequestHandler.handle(request, responseObserver);
+    protected GetProtocolVersionResponse getResponse(final GetProtocolVersionRequest request) {
+        return GetProtocolVersionResponse
+            .newBuilder()
+            .setProtocolVersion(PROTOCOL_VERSION)
+            .build();
     }
 
 }

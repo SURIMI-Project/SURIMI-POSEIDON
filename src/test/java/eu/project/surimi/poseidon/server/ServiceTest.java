@@ -57,17 +57,16 @@ public abstract class ServiceTest {
     protected static final LocalDateTime START_DATE_TIME =
         LocalDate.of(2000, 1, 1).atStartOfDay();
     private static final System.Logger logger =
-        System.getLogger(WorkflowServiceTest.class.getName());
+        System.getLogger(SimulationServiceTest.class.getName());
     private static final int PORT = 0;
     protected SimulationManager simulationManager;
     io.grpc.Server server;
     ManagedChannel channel;
-    protected SimulationServiceGrpc.SimulationServiceBlockingStub simulationStub;
-    protected CatchProviderServiceGrpc.CatchProviderServiceBlockingStub catchProviderStub;
-    protected EcologyConsumerServiceGrpc.EcologyConsumerServiceBlockingStub ecologyConsumerStub;
-    protected SalesProviderServiceGrpc.SalesProviderServiceBlockingStub salesProviderStub;
-    protected SpeciesPriceConsumerServiceGrpc.SpeciesPriceConsumerServiceBlockingStub
-        speciesPriceConsumerStub;
+    protected FisheryServiceGrpc.FisheryServiceBlockingStub simulationStub;
+    protected FisheryServiceGrpc.FisheryServiceBlockingStub catchProviderStub;
+    protected FisheryServiceGrpc.FisheryServiceBlockingStub ecologyConsumerStub;
+    protected FisheryServiceGrpc.FisheryServiceBlockingStub salesProviderStub;
+    protected FisheryServiceGrpc.FisheryServiceBlockingStub speciesPriceConsumerStub;
 
     @BeforeEach
     protected void setUp() {
@@ -78,11 +77,11 @@ public abstract class ServiceTest {
             final int boundPort = server.getPort();
             final ChannelCredentials credentials = InsecureChannelCredentials.create();
             channel = Grpc.newChannelBuilder("localhost:" + boundPort, credentials).build();
-            simulationStub = SimulationServiceGrpc.newBlockingStub(channel);
-            catchProviderStub = CatchProviderServiceGrpc.newBlockingStub(channel);
-            ecologyConsumerStub = EcologyConsumerServiceGrpc.newBlockingStub(channel);
-            salesProviderStub = SalesProviderServiceGrpc.newBlockingStub(channel);
-            speciesPriceConsumerStub = SpeciesPriceConsumerServiceGrpc.newBlockingStub(channel);
+            simulationStub = FisheryServiceGrpc.newBlockingStub(channel);
+            catchProviderStub = FisheryServiceGrpc.newBlockingStub(channel);
+            ecologyConsumerStub = FisheryServiceGrpc.newBlockingStub(channel);
+            salesProviderStub = FisheryServiceGrpc.newBlockingStub(channel);
+            speciesPriceConsumerStub = FisheryServiceGrpc.newBlockingStub(channel);
         } catch (final InterruptedException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -130,7 +129,7 @@ public abstract class ServiceTest {
             InitialiseSimulationRequest
                 .newBuilder()
                 .setSimulationId(simulationId)
-                .setScenarioId(scenarioSupplierClass.getSimpleName())
+                .setScenarioName(scenarioSupplierClass.getSimpleName())
                 .setSimulation(
                     Simulation
                         .newBuilder()
