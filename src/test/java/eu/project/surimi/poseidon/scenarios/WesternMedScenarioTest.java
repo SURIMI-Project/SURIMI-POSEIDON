@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.stream.IntStream;
 
 class WesternMedScenarioTest extends ServiceTest {
 
@@ -49,5 +50,22 @@ class WesternMedScenarioTest extends ServiceTest {
         simulationStub.finaliseSimulation(
             FinaliseSimulationRequest.newBuilder().setSimulationId(simulationId).build()
         );
+    }
+
+    @Test
+    void canRunSimulationsInParallel() {
+        final Period stepSize = Period.parse(STEP_SIZE);
+        final int numSteps = 12;
+        final int numSimulations = 5;
+        IntStream.range(0, numSimulations)
+            .parallel()
+            .mapToObj(i -> initialiseSimulation())
+            .forEach(simulationId -> {
+                LocalDateTime currentDateTime = START_DATE_TIME;
+                for (int j = 0; j < numSteps; j++) {
+                    step(simulationId, currentDateTime);
+                    currentDateTime = currentDateTime.plus(stepSize);
+                }
+            });
     }
 }
