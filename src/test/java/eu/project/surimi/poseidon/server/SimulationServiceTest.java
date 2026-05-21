@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Period;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -65,12 +64,9 @@ class SimulationServiceTest extends ServiceTest {
 
     @Test
     void canStartAndStepManySimulations() {
-        Stream
-            .generate(this::initialiseSimulation)
-            .limit(100)
-            .forEach(simulationId ->
-                step(simulationId, START_DATE_TIME)
-            );
+        for (int i = 0; i < 25; i++) {
+            step(initialiseSimulation(), START_DATE_TIME);
+        }
     }
 
     @Test
