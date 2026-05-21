@@ -26,6 +26,7 @@ import build.buf.gen.surimi.v1.InitialiseSimulationRequest;
 import build.buf.gen.surimi.v1.InitialiseSimulationResponse;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.SimulationManager;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
@@ -44,6 +45,7 @@ import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
@@ -60,6 +62,17 @@ public class InitialiseRequestHandler
     private final ScenarioLoader scenarioLoader;
     private final File scenarioFile;
 
+    @Getter(lazy = true)
+    private final Scenario scenario = loadScenario();
+
+    private Scenario loadScenario() {
+        checkNotNull(scenarioLoader);
+        checkNotNull(scenarioFile);
+        final Scenario scenario = scenarioLoader.load(scenarioFile);
+        logger.log(INFO, "Scenario loaded: {0}", scenarioFile.toPath().toAbsolutePath());
+        return scenario;
+    }
+
     @Override
     protected InitialiseSimulationResponse getResponse(final InitialiseSimulationRequest request) {
         final UUID simulationId = SimulationManager.parseId(request.getSimulationId());
@@ -68,21 +81,23 @@ public class InitialiseRequestHandler
                 .withDescription("Simulation already initialised: " + simulationId)
                 .asRuntimeException();
         }
-        final Scenario scenario = scenarioLoader.load(scenarioFile);
-        scenario.setStartingDateTime(
-            dateTime(toLocalDateTime(request.getSimulation().getStartDateTime()))
-        );
-
-        logger.log(INFO, "Scenario loaded: {0}", scenarioFile.toPath().toAbsolutePath());
 
         final Period stepSize = parsePeriod(request.getSimulation().getTimeStep());
         final Unit<Mass> massUnit = getMassUnit(request);
 
         validateContract(request);
 
-        final Simulation simulation = scenario.startNewSimulation(
-            SimulationStartOptions.builder().simulationId(simulationId).build()
-        );
+        final Simulation simulation =
+            getScenario().startNewSimulation(
+                SimulationStartOptions
+                    .builder()
+                    .simulationId(simulationId)
+                    .propertyOverride(
+                        "startingDateTime",
+                        dateTime(toLocalDateTime(request.getSimulation().getStartDateTime()))
+                    )
+                    .build()
+            );
         log(INFO, simulation, "Simulation started");
         logMemoryUsage(simulation);
         simulationManager.put(
