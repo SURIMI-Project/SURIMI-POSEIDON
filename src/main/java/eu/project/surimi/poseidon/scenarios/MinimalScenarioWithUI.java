@@ -22,15 +22,13 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
-import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
-import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
+import uk.ac.ox.poseidon.core.utils.ListFactory;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
 import uk.ac.ox.poseidon.gui.portrayals.*;
 
 import java.util.List;
-import java.util.Map;
 
 import static java.awt.Color.WHITE;
 
@@ -38,6 +36,7 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
     public MinimalScenarioWithUI(
         final Scenario scenario
     ) {
+        // noinspection unchecked
         super(
             scenario,
             List.of(
@@ -47,16 +46,10 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
                         new BathymetryFieldPortrayalFactory(
                             scenario.component("bathymetricGrid")
                         ),
-                        new MappedFactory<>(
-                            new SpeciesBiomassFieldPortrayalFactory(
-                                null,
-                                scenario.component("carryingCapacityGrid"),
-                                false
-                            ),
-                            Map.of(
-                                "biomassGrid",
-                                scenario.<List<BiomassGrid>>component("biomassGrids")
-                            )
+                        new SpeciesBiomassFieldsPortrayalFactory(
+                            scenario.component("biomassGrids", ListFactory.class),
+                            scenario.component("carryingCapacityGrid", ListFactory.class),
+                            false
                         ),
                         new SimpleFieldPortrayalFactory(
                             "Markets",
@@ -96,7 +89,7 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
         );
     }
 
-    public static void main(final String[] args) {
+    static void main(final String[] args) {
         final MinimalScenarioWithUI minimalScenarioWithUI =
             new MinimalScenarioWithUI(new MinimalScenario().get());
         minimalScenarioWithUI.createController();

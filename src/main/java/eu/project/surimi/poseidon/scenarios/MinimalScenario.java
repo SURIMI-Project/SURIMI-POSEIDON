@@ -51,11 +51,7 @@ import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
-import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.utils.ListFactory;
-import uk.ac.ox.poseidon.core.utils.ObjectFactory;
 import uk.ac.ox.poseidon.core.utils.Pair;
 import uk.ac.ox.poseidon.core.utils.PairFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
@@ -69,7 +65,6 @@ import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -81,15 +76,14 @@ import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.LITRE;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
-import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
-import static uk.ac.ox.poseidon.core.suppliers.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.time.Factories.hours;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
-import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
-import static uk.ac.ox.poseidon.core.utils.Factories.object;
-import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromString;
+import static uk.ac.ox.poseidon.core.utils.Factories.*;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
+import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromString;
 
 @SuppressWarnings("UnstableApiUsage")
 public class MinimalScenario implements Supplier<Scenario> {
@@ -145,24 +139,22 @@ public class MinimalScenario implements Supplier<Scenario> {
             fullCarryingCapacityAllocator(carryingCapacityGrid);
 
         final var species =
-            new MappedFactory<>(
+            mappedFactory(
                 new SpeciesFactory(),
-                Map.of(
-                    "code",
-                    listOf(LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst)),
-                    "lifeStage",
-                    listOf(LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getSecond))
+                mappedProperty(
+                    SpeciesFactory::setCode,
+                    LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst).toList()
+                ),
+                mappedProperty(
+                    SpeciesFactory::setLifeStage,
+                    LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getSecond).toList()
                 )
             );
 
         final var biomassGrids =
-            new MappedFactory<>(
-                new BiomassGridFactory(
-                    modelGrid,
-                    null,
-                    biomassAllocator
-                ),
-                Map.of("species", species)
+            mappedFactory(
+                new BiomassGridFactory(modelGrid, null, biomassAllocator),
+                mappedProperty(BiomassGridFactory::setSpecies, species.getFactories())
             );
 
         final var distance =
@@ -173,7 +165,7 @@ public class MinimalScenario implements Supplier<Scenario> {
 
         final var portGrid =
             new PortGridFactory<>(
-                ListFactory.from(
+                listOf(
                     new PairFactory<>(port1, new CoordinateFactory(1, 1)),
                     new PairFactory<>(port2, new CoordinateFactory(1, -1))
                 ),
@@ -181,50 +173,47 @@ public class MinimalScenario implements Supplier<Scenario> {
                 distance
             );
 
-        final ObjectFactory<List<MappedFactory<Scope, PriceEntry>>> priceEntries =
-            listOf(
-                Stream.of(1, 2).map(portIndex ->
-                    new MappedFactory<>(
-                        new PriceEntryFactory<>(),
-                        Map.of(
-                            "catchCategory", listOf(
-                                GEAR_CODES
-                                    .stream()
-                                    .map(CatchCategoryFactory::new)
-                                    .flatMap(cc -> nCopies(SPECIES_CODES.size(), cc).stream())
-                            ),
-                            "species", listOf(
-                                GEAR_CODES
-                                    .stream()
-                                    .flatMap(__ -> SPECIES_CODES.stream().map(SpeciesFactory::new))
-                            ),
-                            "price", listOf(
-                                range(0, NUM_PRICES)
-                                    .boxed()
-                                    .map(i -> new PriceFactory(
-                                        portIndex + i * 0.1,
-                                        "GBP",
-                                        "kg"
-                                    ))
-                            )
-                        )
+        final var priceEntries =
+            Stream.of(1, 2).map(portIndex ->
+                mappedFactory(
+                    new PriceEntryFactory<>(),
+                    mappedProperty(
+                        PriceEntryFactory::setCatchCategory,
+                        GEAR_CODES
+                            .stream()
+                            .map(CatchCategoryFactory::new)
+                            .flatMap(cc -> nCopies(SPECIES_CODES.size(), cc).stream())
+                            .toList()
+                    ),
+                    mappedProperty(
+                        PriceEntryFactory::setSpecies,
+                        GEAR_CODES
+                            .stream()
+                            .flatMap(_ -> SPECIES_CODES.stream().map(SpeciesFactory::new))
+                            .toList()
+                    ),
+                    mappedProperty(
+                        PriceEntryFactory::setPrice,
+                        range(0, NUM_PRICES)
+                            .boxed()
+                            .map(i -> new PriceFactory(
+                                portIndex + i * 0.1,
+                                "GBP",
+                                "kg"
+                            ))
+                            .toList()
                     )
                 )
-            );
+            ).toList();
 
         final var markets =
-            new MappedFactory<>(
-                new BiomassMarketFactory(
-                    null,
-                    null,
-                    null
-                ),
-                Map.of(
-                    "port", ListFactory.from(port1, port2),
-                    "marketCode", object(MARKET_CODES),
-                    "pricesEntries", priceEntries
-                )
+            mappedFactory(
+                new BiomassMarketFactory(null, null, null),
+                mappedProperty(BiomassMarketFactory::setPort, List.of(port1, port2)),
+                mappedProperty(BiomassMarketFactory::setMarketCode, MARKET_CODES),
+                mappedProperty(BiomassMarketFactory::setPricesEntries, priceEntries)
             );
+
         final var marketGrid = new MarketGridFactory<>(portGrid, markets);
 
         final var vesselField =

@@ -23,16 +23,18 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
-import uk.ac.ox.poseidon.core.MappedFactory;
+import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
+import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
+import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
 import uk.ac.ox.poseidon.gui.portrayals.*;
 
 import java.util.List;
-import java.util.Map;
 
 import static java.awt.Color.WHITE;
+import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.gui.palettes.PaletteColorMap.IMOLA;
 
 public class WesternMedScenarioWithUI extends ScenarioWithUI {
@@ -40,6 +42,7 @@ public class WesternMedScenarioWithUI extends ScenarioWithUI {
     private static final int WIDTH = 1090;
     private static final int HEIGHT = 820;
 
+    @SuppressWarnings("unchecked")
     public WesternMedScenarioWithUI(final Scenario scenario) {
         super(
             scenario,
@@ -60,16 +63,16 @@ public class WesternMedScenarioWithUI extends ScenarioWithUI {
                             ),
                             false
                         ),
-                        new MappedFactory<>(
-                            new SpeciesBiomassFieldPortrayalFactory(
-                                null,
-                                scenario.component("carryingCapacityGrid"),
-                                false
+                        new SpeciesBiomassFieldsPortrayalFactory(
+                            (Factory<? super SimulationScope, List<? extends BiomassGrid>>)
+                                scenario.component("biomassGrids"),
+                            listOf(
+                                scenario.component(
+                                    "carryingCapacityGrid",
+                                    CarryingCapacityGridFactory.class
+                                )
                             ),
-                            Map.of(
-                                "biomassGrid",
-                                scenario.<List<BiomassGrid>>component("biomassGrids")
-                            )
+                            false
                         ),
                         new SimpleFieldPortrayalFactory(
                             "Markets",
@@ -120,7 +123,7 @@ public class WesternMedScenarioWithUI extends ScenarioWithUI {
         );
     }
 
-    public static void main(final String[] args) {
+    static void main(final String[] args) {
         final WesternMedScenarioWithUI westernMedScenarioWithUI =
             new WesternMedScenarioWithUI(new WesternMedScenario().get());
         westernMedScenarioWithUI.createController();

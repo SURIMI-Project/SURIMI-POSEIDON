@@ -57,20 +57,17 @@ import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.SpeciesSpecificBiomassCatchabilityGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
-import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
+import uk.ac.ox.poseidon.biology.biomass.BiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory;
 import uk.ac.ox.poseidon.core.Factory;
-import uk.ac.ox.poseidon.core.MappedFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.events.EventClearerFactory;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.suppliers.PoissonIntSupplierFactory;
-import uk.ac.ox.poseidon.core.suppliers.ShiftedIntSupplierFactory;
 import uk.ac.ox.poseidon.core.utils.FinalProcessFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
 import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
@@ -85,7 +82,6 @@ import uk.ac.ox.poseidon.io.ScenarioWriter;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
@@ -106,23 +102,21 @@ import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.refuel;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.max;
-import static uk.ac.ox.poseidon.core.extractors.temporal.Factories.currentDayOfWeek;
-import static uk.ac.ox.poseidon.core.extractors.temporal.Factories.currentTime;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
+import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
+import static uk.ac.ox.poseidon.core.providers.random.Factories.randomPoisson;
+import static uk.ac.ox.poseidon.core.providers.temporal.Factories.*;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeating;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeatingFromStart;
-import static uk.ac.ox.poseidon.core.suppliers.Factories.constant;
-import static uk.ac.ox.poseidon.core.suppliers.temporal.Factories.durationUntil;
-import static uk.ac.ox.poseidon.core.suppliers.temporal.Factories.nextDayAtTime;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
-import static uk.ac.ox.poseidon.core.utils.Factories.numericIntervalToStringMapper;
-import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
+import static uk.ac.ox.poseidon.core.utils.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
@@ -291,13 +285,10 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .build();
 
         final var biomassGrids =
-            new MappedFactory<>(
-                new BiomassGridFactory(
-                    modelGrid,
-                    null,
-                    biomassAllocator
-                ),
-                Map.of("species", species)
+            new BiomassGridsFactory(
+                modelGrid,
+                species,
+                listOf(biomassAllocator)
             );
 
         final var biomassSaleAccumulator =
@@ -311,8 +302,10 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 dateTimeAfterStarting(ONE_MONTH),
                 MONTHLY,
                 new SteppableSequenceFactory(
-                    new EventClearerFactory(biomassSaleAccumulator),
-                    new EventClearerFactory(fishingActionAccumulator)
+                    listOf(
+                        new EventClearerFactory(biomassSaleAccumulator),
+                        new EventClearerFactory(fishingActionAccumulator)
+                    )
                 ),
                 -2
             );
@@ -400,10 +393,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         optionValues,
                         fishingLocationChecker,
                         pathFinder,
-                        new ShiftedIntSupplierFactory<>(
-                            new PoissonIntSupplierFactory(MEAN_EXPLORATION_RADIUS),
-                            1
-                        )
+                        shiftedInt(randomPoisson(MEAN_EXPLORATION_RADIUS), 1)
                     ),
                     new ImitatingPickerFactory<>(
                         optionValues,
