@@ -316,7 +316,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 "date",
                 "market_code",
                 "species_code",
-                "category_code",
+                "gear_code",
                 "price",
                 "currency",
                 "measurement_unit",
