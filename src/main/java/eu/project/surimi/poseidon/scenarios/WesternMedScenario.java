@@ -94,14 +94,20 @@ import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.totalBiomass
 import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.tripEvaluator;
 import static uk.ac.ox.poseidon.agents.components.Factories.component;
 import static uk.ac.ox.poseidon.agents.money.Factories.money;
+import static uk.ac.ox.poseidon.agents.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
+import static uk.ac.ox.poseidon.agents.tasks.accounting.Factories.payTripCost;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.waitFor;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.refuel;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
+import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
+import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
-import static uk.ac.ox.poseidon.core.aggregators.Factories.max;
+import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
+import static uk.ac.ox.poseidon.core.functions.Factories.*;
+import static uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
@@ -110,20 +116,23 @@ import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantInt;
+import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
+import static uk.ac.ox.poseidon.core.providers.math.Factories.minInt;
 import static uk.ac.ox.poseidon.core.providers.random.Factories.randomPoisson;
 import static uk.ac.ox.poseidon.core.providers.temporal.Factories.*;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeating;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeatingFromStart;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
-import static uk.ac.ox.poseidon.core.utils.Factories.*;
-import static uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory.interval;
+import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
+import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
 import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.paths.Factories.simulationFolder;
-import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromFile;
+import static uk.ac.ox.poseidon.io.tables.Factories.*;
 import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
 import static uk.ac.ox.poseidon.regulations.predicates.Factories.isPermitted;
 import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionCellPredicate;
@@ -144,7 +153,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
     private static final double VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
-    private static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
+    public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
 
     static void main(final String[] args) {
         final int numSteps = 12 * 10;
@@ -154,9 +163,10 @@ public class WesternMedScenario implements Supplier<Scenario> {
         new ScenarioWriter().write(scenario, scenarioPath);
         final Simulation simulation = scenario.startNewSimulation();
         final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
-        range(0, numSteps).forEach(__ ->
-            temporalSchedule.stepFor(simulation, stepSize)
-        );
+        range(0, numSteps).forEach(_ -> {
+            temporalSchedule.stepFor(simulation, stepSize);
+            System.out.println(temporalSchedule.getDateTime());
+        });
         simulation.finish();
     }
 
@@ -181,7 +191,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             new BathymetricGridFromGridFileFactory<>(
                 bathymetricGridPath,
                 modelGrid,
-                max(),
+                maxAggregator(),
                 false
             );
 
@@ -310,6 +320,45 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 -2
             );
 
+        final var costsKeyFromRow =
+            multiKeyFromRow("country_code", "year", "vessel_length", "gear");
+
+        // TODO: implement usage of yearly costs
+        final var yearlyCostsMap =
+            mapFromTable(
+                csvTableFromFile(inputPath.plus("operating_costs.csv")),
+                costsKeyFromRow,
+                moneyFromRow("currency", "fixed_cost_per_year")
+            );
+
+        final var hourlyCostsMap =
+            mapFromTable(
+                csvTableFromFile(inputPath.plus("operating_costs.csv")),
+                costsKeyFromRow,
+                moneyFromRow("currency", "cost_per_hour_at_sea")
+            );
+
+        final var vesselLengthClassMapper =
+            numericIntervalToStringMapper(
+                interval(0.0, 6.0, "VL0006"),
+                interval(6.0, 12.0, "VL0612"),
+                interval(12.0, 18.0, "VL1218"),
+                interval(18.0, 24.0, "VL1824"),
+                interval(24.0, 40.0, "VL2440"),
+                interval(40.0, null, "VL40XX")
+            );
+
+        final var costsKeyFromVessel =
+            multiKeyFromFunctions(
+                stringTagExtractor("country_of_registration"),
+                minInt(maxInt(currentYear(), constantInt(2013)), constantInt(2023)),
+                composedFunction(
+                    doubleTagExtractor("loa"),
+                    vesselLengthClassMapper
+                ),
+                stringTagExtractor("main_fishing_gear")
+            );
+
         final var marketGrid =
             new BiomassMarketGridFromPriceTableFactory(
                 csvTableFromFile(inputPath.plus("prices.csv")),
@@ -340,14 +389,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     fleetSegmentMapper(
                         "country_of_registration",
                         "loa",
-                        numericIntervalToStringMapper(
-                            interval(0.0, 6.0, "VL0006"),
-                            interval(6.0, 12.0, "VL0612"),
-                            interval(12.0, 18.0, "VL1218"),
-                            interval(18.0, 24.0, "VL1824"),
-                            interval(24.0, 40.0, "VL2440"),
-                            interval(40.0, null, "VL40XX")
-                        ),
+                        vesselLengthClassMapper,
                         "Industrial",
                         "POSEIDON"
                     )
@@ -483,6 +525,12 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     purseSeinerFishingTask,
                     new SetDestinationToOriginFactory(),
                     new TravelAlongPathFactory(pathFinder, distance),
+                    payTripCost(
+                        composedFunction(
+                            costsKeyFromVessel,
+                            mapValueExtractor(hourlyCostsMap)
+                        )
+                    ),
                     new LandCatchesFactory(constant(hours(1))),
                     refuel(fuelStationGrid),
                     new EndTripFactory()
