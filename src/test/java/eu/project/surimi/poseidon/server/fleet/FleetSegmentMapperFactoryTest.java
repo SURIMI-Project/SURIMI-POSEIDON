@@ -5,13 +5,13 @@ import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 
+import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
+import static uk.ac.ox.poseidon.core.functions.Factories.numericIntervalToStringMapper;
+import static uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.core.scopes.Scope.GLOBAL_SCOPE;
-import static uk.ac.ox.poseidon.core.utils.Factories.numericIntervalToStringMapper;
-import static uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory.interval;
 
 class FleetSegmentMapperFactoryTest {
 

@@ -6,8 +6,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
+import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.utils.NumericIntervalMapper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -18,7 +18,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class FleetSegmentMapperFactory<S extends Scope> extends RelativeScopeFactory<S, FleetSegmentMapper> {
+public class FleetSegmentMapperFactory<S extends Scope> extends RelativeScopeFactory<S,
+    FleetSegmentMapper> {
 
     private String countryCodeTag;
     private String vesselLengthTag;

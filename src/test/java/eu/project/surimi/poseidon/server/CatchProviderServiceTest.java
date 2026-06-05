@@ -66,7 +66,7 @@ public class CatchProviderServiceTest extends ServiceTest {
         assertEquals(
             GEAR_CODES.stream().collect(toMap(
                 identity(),
-                gc -> Set.copyOf(SPECIES_CODES)
+                _ -> Set.copyOf(SPECIES_CODES)
             )),
             dispositionGrids
                 .stream()

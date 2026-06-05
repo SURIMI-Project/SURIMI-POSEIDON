@@ -3,7 +3,7 @@ package eu.project.surimi.poseidon.server.fleet;
 import org.junit.jupiter.api.Test;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.core.utils.NumericIntervalMapper;
+import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
 
 import java.util.List;
 

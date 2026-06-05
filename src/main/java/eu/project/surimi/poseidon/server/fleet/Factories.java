@@ -1,8 +1,8 @@
 package eu.project.surimi.poseidon.server.fleet;
 
 import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.utils.NumericIntervalMapper;
 
 public class Factories {
 

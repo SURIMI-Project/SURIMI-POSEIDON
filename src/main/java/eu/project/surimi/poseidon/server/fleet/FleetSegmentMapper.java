@@ -1,9 +1,10 @@
 package eu.project.surimi.poseidon.server.fleet;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.core.utils.NumericIntervalMapper;
+import uk.ac.ox.poseidon.agents.vessels.extractors.tags.DoubleTagExtractor;
+import uk.ac.ox.poseidon.agents.vessels.extractors.tags.StringTagExtractor;
+import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
 
 import java.util.function.Function;
 
@@ -29,14 +30,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>Missing, invalid, or unclassified values are mapped to {@code null}. This
  * preserves the wildcard semantics used by {@link FleetSegment#covers(FleetSegment)}.
  */
-@RequiredArgsConstructor
 public class FleetSegmentMapper implements Function<Vessel, FleetSegment> {
 
-    private final @NonNull String countryCodeTag;
-    private final @NonNull String vesselLengthTag;
+    private final @NonNull StringTagExtractor countryCodeExtractor;
+    private final @NonNull DoubleTagExtractor vesselLengthExtractor;
     private final @NonNull NumericIntervalMapper<String> vesselLengthClassMapper;
     private final String scale;
     private final String model;
+
+    public FleetSegmentMapper(
+        @NonNull final String countryCodeTag,
+        @NonNull final String vesselLengthTag,
+        @NonNull final NumericIntervalMapper<String> vesselLengthClassMapper,
+        final String scale,
+        final String model
+    ) {
+        this.countryCodeExtractor = new StringTagExtractor(countryCodeTag);
+        this.vesselLengthExtractor = new DoubleTagExtractor(vesselLengthTag);
+        this.vesselLengthClassMapper = vesselLengthClassMapper;
+        this.scale = scale;
+        this.model = model;
+    }
 
     @Override
     public FleetSegment apply(final Vessel vessel) {
@@ -46,7 +60,7 @@ public class FleetSegmentMapper implements Function<Vessel, FleetSegment> {
             getGearCode(vessel),
             getVesselLengthClass(vessel),
             scale,
-            getStringTag(vessel, countryCodeTag),
+            countryCodeExtractor.apply(vessel),
             model
         );
     }
@@ -56,55 +70,11 @@ public class FleetSegmentMapper implements Function<Vessel, FleetSegment> {
     }
 
     private String getVesselLengthClass(final Vessel vessel) {
-        final Double vesselLength = getNumericTag(vessel, vesselLengthTag);
+        final Double vesselLength = vesselLengthExtractor.apply(vessel);
         if (vesselLength == null) {
             return null;
         }
-        return vesselLengthClassMapper.get(vesselLength).orElse(null);
+        return vesselLengthClassMapper.apply(vesselLength);
     }
 
-    private String getStringTag(
-        final Vessel vessel,
-        final String tagName
-    ) {
-        return vessel.getTag(tagName)
-            .map(FleetSegmentMapper::normaliseString)
-            .orElse(null);
-    }
-
-    private Double getNumericTag(
-        final Vessel vessel,
-        final String tagName
-    ) {
-        return vessel.getTag(tagName)
-            .map(FleetSegmentMapper::toDouble)
-            .orElse(null);
-    }
-
-    private static String normaliseString(final Object value) {
-        if (value == null) {
-            return null;
-        }
-        final String stringValue = value.toString().trim();
-        if (stringValue.isEmpty() || stringValue.equalsIgnoreCase("NA")) {
-            return null;
-        }
-        return stringValue;
-    }
-
-    private static Double toDouble(final Object value) {
-        if (value instanceof final Number number) {
-            final double doubleValue = number.doubleValue();
-            return Double.isFinite(doubleValue) ? doubleValue : null;
-        }
-        final String stringValue = normaliseString(value);
-        if (stringValue == null) {
-            return null;
-        }
-        try {
-            return Double.valueOf(stringValue);
-        } catch (final NumberFormatException ignored) {
-            return null;
-        }
-    }
 }

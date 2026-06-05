@@ -1,13 +1,13 @@
 package eu.project.surimi.poseidon.server.fleet;
 
 import org.junit.jupiter.api.Test;
+import uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static uk.ac.ox.poseidon.core.scopes.Scope.GLOBAL_SCOPE;
-import static uk.ac.ox.poseidon.core.utils.Factories.numericIntervalToStringMapper;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
+import static org.assertj.core.api.Assertions.assertThat;
+import static uk.ac.ox.poseidon.core.functions.Factories.numericIntervalToStringMapper;
+import static uk.ac.ox.poseidon.core.scopes.Scope.GLOBAL_SCOPE;
 
 class FactoriesTest {
 
