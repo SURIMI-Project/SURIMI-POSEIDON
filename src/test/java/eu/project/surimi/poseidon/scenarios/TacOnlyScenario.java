@@ -27,10 +27,10 @@ import uk.ac.ox.poseidon.core.Scenario;
 import java.time.LocalDateTime;
 import java.util.function.Supplier;
 
-import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
-import static uk.ac.ox.poseidon.core.utils.Factories.numericIntervalToStringMapper;
-import static uk.ac.ox.poseidon.core.utils.NumericIntervalToStringMapperFactory.interval;
+import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
+import static uk.ac.ox.poseidon.core.functions.Factories.numericIntervalToStringMapper;
+import static uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
 
 public class TacOnlyScenario implements Supplier<Scenario> {
