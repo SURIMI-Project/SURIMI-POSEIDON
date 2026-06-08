@@ -41,7 +41,7 @@ import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingL
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.InactiveBehaviourFactory;
-import uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory;
+import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
 import uk.ac.ox.poseidon.agents.tasks.general.SucceedOrWaitTaskFactory;
@@ -423,7 +423,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var startTrip =
-            new StartTripFactory(
+            startTrip(
                 new EpsilonGreedyDestinationSupplierFactory(
                     EXPLORATION_PROBABILITY,
                     new NeighbourhoodGridExplorerFactory(
