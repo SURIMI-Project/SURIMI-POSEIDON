@@ -33,8 +33,8 @@ import uk.ac.ox.poseidon.agents.choices.*;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
 import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
-import uk.ac.ox.poseidon.agents.fuel.FuelStationGridFactory;
-import uk.ac.ox.poseidon.agents.fuel.OneFuelStationPerPortFactory;
+import static uk.ac.ox.poseidon.agents.fuel.Factories.fuelStationGrid;
+import static uk.ac.ox.poseidon.agents.fuel.Factories.oneFuelStationPerPort;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
 import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingLocationLegalityChecker;
@@ -497,9 +497,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
             )
         );
 
-        final var fuelStationGrid = new FuelStationGridFactory<>(
+        final var fuelStationGrid = fuelStationGrid(
             portGrid,
-            new OneFuelStationPerPortFactory(
+            oneFuelStationPerPort(
                 portGrid,
                 money(1.50, "EUR"),
                 400
