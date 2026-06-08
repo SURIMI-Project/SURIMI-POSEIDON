@@ -52,7 +52,7 @@ import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.utils.Pair;
 import uk.ac.ox.poseidon.core.utils.PairFactory;
-import uk.ac.ox.poseidon.geography.CoordinateFactory;
+import static uk.ac.ox.poseidon.geography.Factories.coordinate;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
@@ -169,8 +169,8 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var portGrid =
             new PortGridFactory<>(
                 listOf(
-                    new PairFactory<>(port1, new CoordinateFactory(1, 1)),
-                    new PairFactory<>(port2, new CoordinateFactory(1, -1))
+                    new PairFactory<>(port1, coordinate(1, 1)),
+                    new PairFactory<>(port2, coordinate(1, -1))
                 ),
                 bathymetricGrid,
                 distance
@@ -248,7 +248,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                     startTrip(
                         new ConstantDestinationSupplierFactory(
                             modelGrid,
-                            new CoordinateFactory()
+                            coordinate(0, 0)
                         )
                     ),
                     new TravelAlongPathFactory(
