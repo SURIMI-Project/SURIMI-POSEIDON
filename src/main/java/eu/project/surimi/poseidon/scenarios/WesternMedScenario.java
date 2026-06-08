@@ -42,8 +42,8 @@ import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.InactiveBehaviourFactory;
 import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
+import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
+import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
 import uk.ac.ox.poseidon.agents.tasks.general.SucceedOrWaitTaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.EndTripFactory;
@@ -308,7 +308,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             new BiomassSaleAccumulatorFactory();
 
         final var fishingActionAccumulator =
-            new FishingEventAccumulatorFactory();
+            fishingEventAccumulator();
 
         final var monthlyProcesses =
             scheduledRepeating(
@@ -476,7 +476,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE
             );
 
-        final var purseSeinerFishingTask = new FishingFactory(
+        final var purseSeinerFishingTask = fishing(
             currentCellFisheable(
                 fisheableBiomassGrids(biomassGrids)
             ),
@@ -486,7 +486,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 purseSeineDiscardMortalityRates
             )
         );
-        final var bottomTrawlerFishingTask = new FishingFactory(
+        final var bottomTrawlerFishingTask = fishing(
             currentCellFisheable(
                 fisheableBiomassGrids(biomassGrids)
             ),

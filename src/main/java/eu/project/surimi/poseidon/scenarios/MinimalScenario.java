@@ -34,8 +34,8 @@ import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable
 import uk.ac.ox.poseidon.agents.market.*;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulatorFactory;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingFactory;
+import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
+import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.RoundTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
@@ -255,7 +255,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                         pathFinder,
                         distance
                     ),
-                    new FishingFactory(
+                    fishing(
                         currentCellFisheable(
                             fisheableBiomassGrids(
                                 biomassGrids
@@ -332,7 +332,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                 .build();
 
         final var fishingActionAccumulator =
-            new FishingEventAccumulatorFactory();
+            fishingEventAccumulator();
         final var biomassSaleAccumulator =
             new BiomassSaleAccumulatorFactory();
 
