@@ -27,8 +27,8 @@ import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
 import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
 import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.ProportionallyLimitingBiomassToHoldFactory;
-import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardMortalityRatesFactory;
-import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardRatesFactory;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardMortalityRates;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardRates;
 import uk.ac.ox.poseidon.agents.choices.*;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
 import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
@@ -55,7 +55,7 @@ import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
-import uk.ac.ox.poseidon.agents.vessels.gears.SpeciesSpecificBiomassCatchabilityGearFactory;
+import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.speciesSpecificBiomassCatchabilityGear;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 
 import uk.ac.ox.poseidon.core.Factory;
@@ -119,6 +119,7 @@ import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.minInt;
@@ -268,30 +269,35 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 "life_stage"
             );
 
+        final var speciesTable = csvTableFromFile(inputPath.plus("species.csv"));
+        final var speciesKeyBuilder = multiKeyFromRow("species_code", "life_stage");
+
         final var fishingGear =
             VesselScopeFactoriesByCode.<Gear>builder()
                 .factory(
                     PURSE_SEINE_GEAR_CODE,
-                    SpeciesSpecificBiomassCatchabilityGearFactory.fromFile(
-                        INPUT_PATH.resolve("species.csv"),
-                        "species_code",
-                        "life_stage",
+                    speciesSpecificBiomassCatchabilityGear(
                         PURSE_SEINE_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        DEFAULT_CATCH_PROPORTION
+                        mapFromTable(
+                            speciesTable,
+                            speciesKeyBuilder,
+                            constantDouble(DEFAULT_CATCH_PROPORTION)
+                        )
                     )
                 )
                 .factory(
                     BOTTOM_TRAWLER_GEAR_CODE,
-                    SpeciesSpecificBiomassCatchabilityGearFactory.fromFile(
-                        INPUT_PATH.resolve("species.csv"),
-                        "species_code",
-                        "life_stage",
+                    speciesSpecificBiomassCatchabilityGear(
                         BOTTOM_TRAWLER_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        DEFAULT_CATCH_PROPORTION
+                        mapFromTable(
+                            speciesTable,
+                            speciesKeyBuilder,
+                            constantDouble(DEFAULT_CATCH_PROPORTION)
+                        )
                     )
                 )
                 .defaultFactory(inactiveGear(null))
@@ -444,36 +450,24 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var purseSeineDiscardRates =
-            SpeciesSpecificDiscardRatesFactory.fromFile(
-                INPUT_PATH.resolve("species.csv"),
-                "species_code",
-                "life_stage",
+            discardRates(
                 species,
-                DEFAULT_PURSE_SEINE_DISCARD_RATE
+                mapFromTable(speciesTable, speciesKeyBuilder, constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE))
             );
         final var purseSeineDiscardMortalityRates =
-            SpeciesSpecificDiscardMortalityRatesFactory.fromFile(
-                INPUT_PATH.resolve("species.csv"),
-                "species_code",
-                "life_stage",
+            discardMortalityRates(
                 species,
-                DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE
+                mapFromTable(speciesTable, speciesKeyBuilder, constantDouble(DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE))
             );
         final var bottomTrawlerDiscardRates =
-            SpeciesSpecificDiscardRatesFactory.fromFile(
-                INPUT_PATH.resolve("species.csv"),
-                "species_code",
-                "life_stage",
+            discardRates(
                 species,
-                DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE
+                mapFromTable(speciesTable, speciesKeyBuilder, constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE))
             );
         final var bottomTrawlerDiscardMortalityRates =
-            SpeciesSpecificDiscardMortalityRatesFactory.fromFile(
-                INPUT_PATH.resolve("species.csv"),
-                "species_code",
-                "life_stage",
+            discardMortalityRates(
                 species,
-                DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE
+                mapFromTable(speciesTable, speciesKeyBuilder, constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE))
             );
 
         final var purseSeinerFishingTask = fishing(
