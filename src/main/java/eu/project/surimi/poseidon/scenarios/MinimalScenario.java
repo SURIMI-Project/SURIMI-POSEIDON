@@ -73,7 +73,7 @@ import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.LITRE;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
-import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;

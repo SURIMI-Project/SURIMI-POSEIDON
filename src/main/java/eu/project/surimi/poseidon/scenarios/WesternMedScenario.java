@@ -103,7 +103,7 @@ import static uk.ac.ox.poseidon.agents.vessels.accounts.Factories.fixedCostColle
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
-import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.biomassGrids;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.fisheableBiomassGrids;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.uniformCarryingCapacityGrid;
