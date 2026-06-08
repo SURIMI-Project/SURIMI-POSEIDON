@@ -61,7 +61,7 @@ import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.events.EventClearerFactory;
+import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
@@ -316,8 +316,8 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 MONTHLY,
                 new SteppableSequenceFactory(
                     listOf(
-                        new EventClearerFactory(biomassSaleAccumulator),
-                        new EventClearerFactory(fishingActionAccumulator)
+                        eventClearer(biomassSaleAccumulator),
+                        eventClearer(fishingActionAccumulator)
                     )
                 ),
                 -2
