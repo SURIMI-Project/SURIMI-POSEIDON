@@ -100,7 +100,9 @@ import static uk.ac.ox.poseidon.agents.tasks.accounting.Factories.payTripCost;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.waitFor;
+import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.refuel;
+import static uk.ac.ox.poseidon.agents.vessels.accounts.Factories.fixedCostCollector;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
@@ -139,6 +141,7 @@ import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionC
 
 public class WesternMedScenario implements Supplier<Scenario> {
 
+    public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
     private static final Path INPUT_PATH = Path.of("inputs", "western_med");
     private static final String CARRYING_CAPACITY = "10 kg";
     private static final double LEARNING_ALPHA = 1;
@@ -153,7 +156,6 @@ public class WesternMedScenario implements Supplier<Scenario> {
     private static final double VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
-    public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
 
     static void main(final String[] args) {
         final int numSteps = 12 * 10;
@@ -322,14 +324,6 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var costsKeyFromRow =
             multiKeyFromRow("country_code", "year", "vessel_length", "gear");
-
-        // TODO: implement usage of yearly costs
-        final var yearlyCostsMap =
-            mapFromTable(
-                csvTableFromFile(inputPath.plus("operating_costs.csv")),
-                costsKeyFromRow,
-                moneyFromRow("currency", "fixed_cost_per_year")
-            );
 
         final var hourlyCostsMap =
             mapFromTable(
@@ -531,7 +525,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                             mapValueExtractor(hourlyCostsMap)
                         )
                     ),
-                    new LandCatchesFactory(constant(hours(1))),
+                    landCatches(constant(hours(1))),
                     refuel(fuelStationGrid),
                     new EndTripFactory()
                 )
@@ -595,6 +589,24 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .extraFactory(tripEvaluator)
                 .build();
 
+        final var fixedCostCollector =
+            scheduledRepeatingFromStart(
+                DAILY,
+                fixedCostCollector(
+                    fleet,
+                    composedFunction(
+                        costsKeyFromVessel,
+                        mapValueExtractor(
+                            mapFromTable(
+                                csvTableFromFile(inputPath.plus("operating_costs.csv")),
+                                costsKeyFromRow,
+                                moneyFromRow("currency", "fixed_cost_per_day")
+                            )
+                        )
+                    )
+                )
+            );
+
         final var directoryRemover =
             new FinalProcessFactory<>(
                 new DirectoryRemoverFactory<>(outputPath, false)
@@ -614,6 +626,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             .component("modelGrid", modelGrid)
             .component("monthlyProcesses", monthlyProcesses)
             .component("fleet", fleet)
+            .component("fixedCostCollector", fixedCostCollector)
             .component("fishingActionAccumulator", fishingActionAccumulator)
             .component("biomassSaleAccumulator", biomassSaleAccumulator)
             .component("directoryRemover", directoryRemover);
