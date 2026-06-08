@@ -54,7 +54,7 @@ import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
+import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
 import uk.ac.ox.poseidon.agents.vessels.gears.SpeciesSpecificBiomassCatchabilityGearFactory;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 
@@ -294,7 +294,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         DEFAULT_CATCH_PROPORTION
                     )
                 )
-                .defaultFactory(new InactiveGearFactory())
+                .defaultFactory(inactiveGear(null))
                 .build();
 
         final var biomassGrids =

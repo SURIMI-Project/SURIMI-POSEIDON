@@ -43,7 +43,7 @@ import uk.ac.ox.poseidon.agents.vessels.FleetFactory;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
-import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
+import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.fixedBiomassProportionGear;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
@@ -229,14 +229,14 @@ public class MinimalScenario implements Supplier<Scenario> {
             );
 
         final var gear1 =
-            new FixedBiomassProportionGearFactory<>(
+            fixedBiomassProportionGear(
                 GEAR_CODES.get(0),
                 0.25,
                 constant(hours(1))
             );
 
         final var gear2 =
-            new FixedBiomassProportionGearFactory<>(
+            fixedBiomassProportionGear(
                 GEAR_CODES.get(1),
                 0.5,
                 constant(hours(1))
