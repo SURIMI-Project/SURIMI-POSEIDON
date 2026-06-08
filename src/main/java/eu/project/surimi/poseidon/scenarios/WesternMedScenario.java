@@ -60,7 +60,6 @@ import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridsFactory;
 import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
-import uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -107,6 +106,7 @@ import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.functions.Factories.*;
 import static uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory.interval;
@@ -260,7 +260,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var species =
-            new SpeciesFromDataFactory<>(
+            speciesFromData(
                 csvTableFromFile(inputPath.plus("species.csv")),
                 "species_code",
                 "species_name",

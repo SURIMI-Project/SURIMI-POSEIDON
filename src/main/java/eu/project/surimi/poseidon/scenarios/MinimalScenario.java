@@ -49,7 +49,6 @@ import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
-import uk.ac.ox.poseidon.biology.species.SpeciesByCodeFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.utils.Pair;
@@ -83,6 +82,8 @@ import static uk.ac.ox.poseidon.core.time.Factories.hours;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.*;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
+import static uk.ac.ox.poseidon.biology.species.Factories.species;
+import static uk.ac.ox.poseidon.biology.species.Factories.speciesByCode;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromString;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -140,7 +141,7 @@ public class MinimalScenario implements Supplier<Scenario> {
 
         final var species =
             mappedFactory(
-                new SpeciesFactory(),
+                species(),
                 mappedProperty(
                     SpeciesFactory::setCode,
                     LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst).toList()
@@ -189,7 +190,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                         PriceEntryFactory::setSpecies,
                         GEAR_CODES
                             .stream()
-                            .flatMap(_ -> SPECIES_CODES.stream().map(SpeciesFactory::new))
+                            .flatMap(_ -> SPECIES_CODES.stream().map(code -> species(code)))
                             .toList()
                     ),
                     mappedProperty(
@@ -260,7 +261,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                         ),
                         new CompositeDispositionProcessFactory<>(
                             new SelectedSpeciesRetentionFactory<>(
-                                new SpeciesByCodeFactory<>(
+                                speciesByCode(
                                     listOf("A", "B"),
                                     species
                                 )
