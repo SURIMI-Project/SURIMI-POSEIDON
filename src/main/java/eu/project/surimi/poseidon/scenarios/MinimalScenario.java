@@ -23,8 +23,8 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import com.google.common.collect.Streams;
-import uk.ac.ox.poseidon.agents.catches.CatchCategoryFactory;
-import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
+import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
+import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
 import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
@@ -184,7 +184,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                         PriceEntryFactory::setCatchCategory,
                         GEAR_CODES
                             .stream()
-                            .map(CatchCategoryFactory::new)
+                            .map(code -> catchCategory(code))
                             .flatMap(cc -> nCopies(SPECIES_CODES.size(), cc).stream())
                             .toList()
                     ),
@@ -315,7 +315,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                 .dataMapping("gear.code", "gear")
                 .hold(
                     infiniteBiomassHold(
-                        new UniformCatchCategoriserFactory<>(new CatchCategoryFactory())
+                        uniformCatchCategoriser(catchCategory(null))
                     )
                 )
                 .dataMapping(

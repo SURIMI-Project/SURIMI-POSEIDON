@@ -23,8 +23,8 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import sim.util.Int2D;
-import uk.ac.ox.poseidon.agents.catches.CatchCategoryFactory;
-import uk.ac.ox.poseidon.agents.catches.UniformCatchCategoriserFactory;
+import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
+import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
 import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.ProportionallyLimitingBiomassToHoldFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardMortalityRatesFactory;
@@ -569,7 +569,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .dataMapping("behaviour.code", "main_fishing_gear")
                 .hold(
                     infiniteBiomassHold(
-                        new UniformCatchCategoriserFactory<>(new CatchCategoryFactory())
+                        uniformCatchCategoriser(catchCategory(null))
                     )
                 )
                 .dataMapping(
