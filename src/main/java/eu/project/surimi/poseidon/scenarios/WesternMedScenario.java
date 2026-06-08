@@ -56,7 +56,7 @@ import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.SpeciesSpecificBiomassCatchabilityGearFactory;
-import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
+import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
@@ -568,7 +568,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .behaviour(behaviour)
                 .dataMapping("behaviour.code", "main_fishing_gear")
                 .hold(
-                    new InfiniteBiomassHoldFactory(
+                    infiniteBiomassHold(
                         new UniformCatchCategoriserFactory<>(new CatchCategoryFactory())
                     )
                 )

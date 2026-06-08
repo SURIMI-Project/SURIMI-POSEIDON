@@ -45,7 +45,7 @@ import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
+import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
 
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
@@ -314,7 +314,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                 )
                 .dataMapping("gear.code", "gear")
                 .hold(
-                    new InfiniteBiomassHoldFactory(
+                    infiniteBiomassHold(
                         new UniformCatchCategoriserFactory<>(new CatchCategoryFactory())
                     )
                 )
