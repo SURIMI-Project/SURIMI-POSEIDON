@@ -32,7 +32,7 @@ import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardRatesF
 import uk.ac.ox.poseidon.agents.choices.*;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
-import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
+import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
 import uk.ac.ox.poseidon.agents.fuel.FuelStationGridFactory;
 import uk.ac.ox.poseidon.agents.fuel.OneFuelStationPerPortFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
@@ -477,7 +477,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var purseSeinerFishingTask = new FishingFactory(
-            new CurrentCellFisheableFactory(
+            currentCellFisheable(
                 fisheableBiomassGrids(biomassGrids)
             ),
             new CompositeDispositionProcessFactory<>(
@@ -487,7 +487,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             )
         );
         final var bottomTrawlerFishingTask = new FishingFactory(
-            new CurrentCellFisheableFactory(
+            currentCellFisheable(
                 fisheableBiomassGrids(biomassGrids)
             ),
             new CompositeDispositionProcessFactory<>(

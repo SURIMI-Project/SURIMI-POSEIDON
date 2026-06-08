@@ -30,7 +30,7 @@ import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFacto
 import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.choices.ConstantDestinationSupplierFactory;
 import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
-import uk.ac.ox.poseidon.agents.fisheables.CurrentCellFisheableFactory;
+import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
 import uk.ac.ox.poseidon.agents.market.*;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory;
@@ -256,7 +256,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                         distance
                     ),
                     new FishingFactory(
-                        new CurrentCellFisheableFactory(
+                        currentCellFisheable(
                             fisheableBiomassGrids(
                                 biomassGrids
                             )
