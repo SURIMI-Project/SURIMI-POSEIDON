@@ -73,7 +73,7 @@ import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 import uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory;
-import uk.ac.ox.poseidon.io.DirectoryRemoverFactory;
+import static uk.ac.ox.poseidon.io.Factories.directoryRemover;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 import java.nio.file.Path;
@@ -610,7 +610,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var directoryRemover =
             new FinalProcessFactory<>(
-                new DirectoryRemoverFactory<>(outputPath, false)
+                directoryRemover(outputPath, false)
             );
 
         builder
