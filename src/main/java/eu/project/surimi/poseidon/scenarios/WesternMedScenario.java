@@ -57,9 +57,7 @@ import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.gears.InactiveGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.SpeciesSpecificBiomassCatchabilityGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
-import uk.ac.ox.poseidon.biology.biomass.BiomassGridsFactory;
-import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
-import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
+
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -106,6 +104,9 @@ import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
 import static uk.ac.ox.poseidon.biology.allocators.ProportionOfCarryingCapacityAllocatorFactory.fullCarryingCapacityAllocator;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.biomassGrids;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.fisheableBiomassGrids;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.uniformCarryingCapacityGrid;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.functions.Factories.*;
@@ -198,7 +199,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var carryingCapacityGrid =
-            CarryingCapacityGridFactory.ofUniformCapacity(
+            uniformCarryingCapacityGrid(
                 modelGrid,
                 bathymetricGrid,
                 massOf(CARRYING_CAPACITY)
@@ -297,7 +298,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .build();
 
         final var biomassGrids =
-            new BiomassGridsFactory(
+            biomassGrids(
                 modelGrid,
                 species,
                 listOf(biomassAllocator)
@@ -477,7 +478,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var purseSeinerFishingTask = new FishingFactory(
             new CurrentCellFisheableFactory(
-                new FisheableBiomassGridsFactory(biomassGrids)
+                fisheableBiomassGrids(biomassGrids)
             ),
             new CompositeDispositionProcessFactory<>(
                 purseSeineDiscardRates,
@@ -487,7 +488,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
         );
         final var bottomTrawlerFishingTask = new FishingFactory(
             new CurrentCellFisheableFactory(
-                new FisheableBiomassGridsFactory(biomassGrids)
+                fisheableBiomassGrids(biomassGrids)
             ),
             new CompositeDispositionProcessFactory<>(
                 bottomTrawlerDiscardRates,

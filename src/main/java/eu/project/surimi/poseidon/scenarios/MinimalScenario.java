@@ -47,8 +47,7 @@ import uk.ac.ox.poseidon.agents.vessels.gears.FixedBiomassProportionGearFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.agents.vessels.holds.InfiniteBiomassHoldFactory;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
-import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
-import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory;
+
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.utils.Pair;
@@ -82,6 +81,9 @@ import static uk.ac.ox.poseidon.core.time.Factories.hours;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.*;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.biomassGrid;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.fisheableBiomassGrids;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.uniformCarryingCapacityGrid;
 import static uk.ac.ox.poseidon.biology.species.Factories.species;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesByCode;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromString;
@@ -130,7 +132,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             );
 
         final var carryingCapacityGrid =
-            CarryingCapacityGridFactory.ofUniformCapacity(
+            uniformCarryingCapacityGrid(
                 modelGrid,
                 bathymetricGrid,
                 massOf(CARRYING_CAPACITY)
@@ -154,7 +156,7 @@ public class MinimalScenario implements Supplier<Scenario> {
 
         final var biomassGrids =
             mappedFactory(
-                new BiomassGridFactory(modelGrid, null, biomassAllocator),
+                biomassGrid(modelGrid, null, biomassAllocator),
                 mappedProperty(BiomassGridFactory::setSpecies, species.getFactories())
             );
 
@@ -255,7 +257,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                     ),
                     new FishingFactory(
                         new CurrentCellFisheableFactory(
-                            new FisheableBiomassGridsFactory(
+                            fisheableBiomassGrids(
                                 biomassGrids
                             )
                         ),
