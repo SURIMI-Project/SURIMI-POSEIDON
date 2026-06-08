@@ -22,9 +22,9 @@
 
 package eu.project.surimi.poseidon.server;
 
+import build.buf.gen.surimi.v1.FisheryServiceGrpc;
 import build.buf.gen.surimi.v1.FishingActivity;
 import build.buf.gen.surimi.v1.GetFishingActivityRequest;
-import build.buf.gen.surimi.v1.FisheryServiceGrpc;
 import eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas;
 import eu.project.surimi.poseidon.scenarios.TacOnlyScenario;
 import eu.project.surimi.poseidon.server.fleet.FleetSegment;

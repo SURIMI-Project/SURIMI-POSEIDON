@@ -25,9 +25,9 @@ package eu.project.surimi.poseidon.server.mappers;
 import org.junit.jupiter.api.Test;
 import uk.ac.ox.poseidon.biology.species.Species;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpecies;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SpeciesMapperTest {
 

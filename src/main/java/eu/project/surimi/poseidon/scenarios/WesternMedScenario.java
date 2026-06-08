@@ -23,27 +23,15 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import sim.util.Int2D;
-import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
-import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
 import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.ProportionallyLimitingBiomassToHoldFactory;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardMortalityRates;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardRates;
 import uk.ac.ox.poseidon.agents.choices.*;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
-import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
-import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
-import static uk.ac.ox.poseidon.agents.fuel.Factories.fuelStationGrid;
-import static uk.ac.ox.poseidon.agents.fuel.Factories.oneFuelStationPerPort;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
 import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
-import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingLocationLegalityChecker;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.InactiveBehaviourFactory;
-import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
-import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
-import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
 import uk.ac.ox.poseidon.agents.tasks.general.SucceedOrWaitTaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.EndTripFactory;
@@ -54,26 +42,19 @@ import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
-import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.speciesSpecificBiomassCatchabilityGear;
-import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
-
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
 import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.utils.FinalProcessFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
-import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
 import uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory;
-import static uk.ac.ox.poseidon.io.Factories.directoryRemover;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 import java.nio.file.Path;
@@ -87,14 +68,26 @@ import static java.time.DayOfWeek.*;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.KNOT;
 import static tech.units.indriya.unit.Units.LITRE;
+import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
+import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardMortalityRates;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardRates;
 import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.totalBiomassCaughtPerHour;
 import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.tripEvaluator;
 import static uk.ac.ox.poseidon.agents.components.Factories.component;
+import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
+import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
+import static uk.ac.ox.poseidon.agents.fuel.Factories.fuelStationGrid;
+import static uk.ac.ox.poseidon.agents.fuel.Factories.oneFuelStationPerPort;
 import static uk.ac.ox.poseidon.agents.money.Factories.money;
 import static uk.ac.ox.poseidon.agents.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
+import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingLocationLegalityChecker;
 import static uk.ac.ox.poseidon.agents.tasks.accounting.Factories.payTripCost;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
+import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
+import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
+import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.waitFor;
 import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
@@ -103,12 +96,14 @@ import static uk.ac.ox.poseidon.agents.vessels.accounts.Factories.fixedCostColle
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
+import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
+import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.speciesSpecificBiomassCatchabilityGear;
+import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
-import static uk.ac.ox.poseidon.biology.biomass.Factories.biomassGrids;
-import static uk.ac.ox.poseidon.biology.biomass.Factories.fisheableBiomassGrids;
-import static uk.ac.ox.poseidon.biology.biomass.Factories.uniformCarryingCapacityGrid;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
+import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
 import static uk.ac.ox.poseidon.core.functions.Factories.*;
 import static uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
@@ -118,9 +113,7 @@ import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantDouble;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantInt;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.*;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.minInt;
 import static uk.ac.ox.poseidon.core.providers.random.Factories.randomPoisson;
@@ -131,9 +124,11 @@ import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeatingFromSt
 import static uk.ac.ox.poseidon.core.time.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
+import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
+import static uk.ac.ox.poseidon.io.Factories.directoryRemover;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.paths.Factories.simulationFolder;
 import static uk.ac.ox.poseidon.io.tables.Factories.*;
@@ -452,22 +447,38 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var purseSeineDiscardRates =
             discardRates(
                 species,
-                mapFromTable(speciesTable, speciesKeyBuilder, constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE))
+                mapFromTable(
+                    speciesTable,
+                    speciesKeyBuilder,
+                    constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE)
+                )
             );
         final var purseSeineDiscardMortalityRates =
             discardMortalityRates(
                 species,
-                mapFromTable(speciesTable, speciesKeyBuilder, constantDouble(DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE))
+                mapFromTable(
+                    speciesTable,
+                    speciesKeyBuilder,
+                    constantDouble(DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE)
+                )
             );
         final var bottomTrawlerDiscardRates =
             discardRates(
                 species,
-                mapFromTable(speciesTable, speciesKeyBuilder, constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE))
+                mapFromTable(
+                    speciesTable,
+                    speciesKeyBuilder,
+                    constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE)
+                )
             );
         final var bottomTrawlerDiscardMortalityRates =
             discardMortalityRates(
                 species,
-                mapFromTable(speciesTable, speciesKeyBuilder, constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE))
+                mapFromTable(
+                    speciesTable,
+                    speciesKeyBuilder,
+                    constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE)
+                )
             );
 
         final var purseSeinerFishingTask = fishing(
