@@ -29,7 +29,7 @@ import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessF
 import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.choices.ConstantDestinationSupplierFactory;
-import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
+import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
 import uk.ac.ox.poseidon.agents.market.*;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
@@ -220,7 +220,7 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var marketGrid = new MarketGridFactory<>(portGrid, markets);
 
         final var vesselField =
-            new VesselFieldFactory(modelGrid);
+            vesselField(modelGrid);
         final var pathFinder =
             pathFinder(
                 bathymetricGrid,

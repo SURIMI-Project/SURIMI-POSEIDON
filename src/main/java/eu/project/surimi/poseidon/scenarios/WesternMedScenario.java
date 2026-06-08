@@ -31,7 +31,7 @@ import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardMortal
 import uk.ac.ox.poseidon.agents.catches.disposition.SpeciesSpecificDiscardRatesFactory;
 import uk.ac.ox.poseidon.agents.choices.*;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
-import uk.ac.ox.poseidon.agents.fields.VesselFieldFactory;
+import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
 import uk.ac.ox.poseidon.agents.fuel.FuelStationGridFactory;
 import uk.ac.ox.poseidon.agents.fuel.OneFuelStationPerPortFactory;
@@ -231,7 +231,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var vesselField =
-            new VesselFieldFactory(modelGrid);
+            vesselField(modelGrid);
 
         final var distance =
             new HaversineDistanceCalculatorFactory<>(modelGrid);
