@@ -67,7 +67,7 @@ import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.utils.FinalProcessFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
-import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
+import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
@@ -234,7 +234,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             vesselField(modelGrid);
 
         final var distance =
-            new HaversineDistanceCalculatorFactory<>(modelGrid);
+            haversineDistanceCalculator(modelGrid);
 
         final Factory<Scope, ? extends PortGrid> portGrid =
             new PortGridFactory<>(

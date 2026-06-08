@@ -54,7 +54,7 @@ import uk.ac.ox.poseidon.core.utils.Pair;
 import uk.ac.ox.poseidon.core.utils.PairFactory;
 import uk.ac.ox.poseidon.geography.CoordinateFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
-import uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory;
+import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
 import uk.ac.ox.poseidon.geography.ports.PortFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
@@ -161,7 +161,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             );
 
         final var distance =
-            new HaversineDistanceCalculatorFactory<>(modelGrid);
+            haversineDistanceCalculator(modelGrid);
 
         final var port1 = new PortFactory("P1", "Port 1");
         final var port2 = new PortFactory("P2", "Port 2");
