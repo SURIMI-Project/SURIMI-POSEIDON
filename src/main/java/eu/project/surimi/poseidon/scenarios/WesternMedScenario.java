@@ -23,8 +23,8 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import sim.util.Int2D;
-import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
-import uk.ac.ox.poseidon.agents.catches.disposition.ProportionallyLimitingBiomassToHoldFactory;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.compositeDispositionProcess;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.proportionallyLimitingBiomassToHold;
 import uk.ac.ox.poseidon.agents.choices.*;
 import static uk.ac.ox.poseidon.agents.choices.Factories.*;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
@@ -33,26 +33,26 @@ import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
 import static uk.ac.ox.poseidon.agents.tasks.Factories.inactiveBehaviour;
-import uk.ac.ox.poseidon.agents.tasks.general.SucceedOrWaitTaskFactory;
-import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
-import uk.ac.ox.poseidon.agents.tasks.travel.EndTripFactory;
-import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
-import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
+import static uk.ac.ox.poseidon.agents.tasks.general.Factories.succeedOrWait;
+
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.endTrip;
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.setDestinationToOrigin;
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.travelAlongPath;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
-import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
+import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
+import static uk.ac.ox.poseidon.core.schedule.Factories.steppableSequence;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.utils.FinalProcessFactory;
+
 import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
-import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
+import static uk.ac.ox.poseidon.geography.grids.Factories.modelGridWithActiveCells;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromTable;
@@ -123,6 +123,7 @@ import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeating;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeatingFromStart;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
+import static uk.ac.ox.poseidon.core.utils.Factories.finalProcess;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
@@ -179,7 +180,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var bathymetricGridPath = inputPath.plus("bathymetry_grid.asc");
 
         final var modelGrid =
-            new ModelGridWithActiveCellsFactory<>(
+            modelGridWithActiveCells(
                 new ModelGridFromGridFile<>(bathymetricGridPath),
                 cellSetFromGridFile(
                     inputPath.plus("exclusion_grid.asc"),
@@ -316,7 +317,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             scheduledRepeating(
                 dateTimeAfterStarting(ONE_MONTH),
                 MONTHLY,
-                new SteppableSequenceFactory(
+                steppableSequence(
                     listOf(
                         eventClearer(biomassSaleAccumulator),
                         eventClearer(fishingActionAccumulator)
@@ -486,9 +487,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
             currentCellFisheable(
                 fisheableBiomassGrids(biomassGrids)
             ),
-            new CompositeDispositionProcessFactory<>(
+            compositeDispositionProcess(
                 purseSeineDiscardRates,
-                new ProportionallyLimitingBiomassToHoldFactory(),
+                proportionallyLimitingBiomassToHold(),
                 purseSeineDiscardMortalityRates
             )
         );
@@ -496,9 +497,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
             currentCellFisheable(
                 fisheableBiomassGrids(biomassGrids)
             ),
-            new CompositeDispositionProcessFactory<>(
+            compositeDispositionProcess(
                 bottomTrawlerDiscardRates,
-                new ProportionallyLimitingBiomassToHoldFactory(),
+                proportionallyLimitingBiomassToHold(),
                 bottomTrawlerDiscardMortalityRates
             )
         );
@@ -515,17 +516,17 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var purseSeinerBehaviour =
             behaviour(
                 sequenceTask(
-                    new SucceedOrWaitTaskFactory(
+                    succeedOrWait(
                         sequenceTask(
                             readyForDeparture,
                             startTrip
                         ),
                         waitUntilNextEvening
                     ),
-                    new TravelAlongPathFactory(pathFinder, distance),
+                    travelAlongPath(pathFinder, distance),
                     purseSeinerFishingTask,
-                    new SetDestinationToOriginFactory(),
-                    new TravelAlongPathFactory(pathFinder, distance),
+                    setDestinationToOrigin(),
+                    travelAlongPath(pathFinder, distance),
                     payTripCost(
                         composedFunction(
                             costsKeyFromVessel,
@@ -534,27 +535,27 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     ),
                     landCatches(constant(hours(1))),
                     refuel(fuelStationGrid),
-                    new EndTripFactory()
+                    endTrip()
                 )
             );
 
         final var bottomTrawlerBehaviour =
             behaviour(
                 sequenceTask(
-                    new SucceedOrWaitTaskFactory(
+                    succeedOrWait(
                         sequenceTask(
                             readyForDeparture,
                             startTrip
                         ),
                         waitUntilNextEvening
                     ),
-                    new TravelAlongPathFactory(pathFinder, distance),
+                    travelAlongPath(pathFinder, distance),
                     bottomTrawlerFishingTask,
-                    new SetDestinationToOriginFactory(),
-                    new TravelAlongPathFactory(pathFinder, distance),
-                    new LandCatchesFactory(constant(hours(1))),
+                    setDestinationToOrigin(),
+                    travelAlongPath(pathFinder, distance),
+                    landCatches(constant(hours(1))),
                     refuel(fuelStationGrid),
-                    new EndTripFactory()
+                    endTrip()
                 )
             );
 
@@ -586,7 +587,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .dataMapping("gear.code", "main_fishing_gear")
                 .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
                 .engine(
-                    new SimpleEngineFactory<>(
+                    simpleEngine(
                         // TODO: do we need a realistic value for tank volume?
                         fullTank(volumeOf(100_000, LITRE)),
                         speedOf(VESSEL_SPEED_IN_KNOTS, KNOT),
@@ -615,7 +616,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var directoryRemover =
-            new FinalProcessFactory<>(
+            finalProcess(
                 directoryRemover(outputPath, false)
             );
 

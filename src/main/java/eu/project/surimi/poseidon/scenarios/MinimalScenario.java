@@ -23,9 +23,9 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import com.google.common.collect.Streams;
-import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
-import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFactory;
-import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.compositeDispositionProcess;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.generalDiscardMortality;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.selectedSpeciesRetention;
 import uk.ac.ox.poseidon.agents.market.*;
 import static uk.ac.ox.poseidon.agents.choices.Factories.constantDestination;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarket;
@@ -34,21 +34,20 @@ import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
 import static uk.ac.ox.poseidon.agents.market.Factories.price;
 import static uk.ac.ox.poseidon.agents.market.Factories.priceEntry;
 import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
-import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
-import uk.ac.ox.poseidon.agents.tasks.travel.RoundTripFactory;
-import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
+import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.roundTrip;
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.travelAlongPath;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
-import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
+import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.utils.Pair;
-import uk.ac.ox.poseidon.core.utils.PairFactory;
+import static uk.ac.ox.poseidon.core.utils.Factories.pair;
 import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromElevationValues;
-import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
 import static uk.ac.ox.poseidon.geography.ports.Factories.port;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 
@@ -86,6 +85,7 @@ import static uk.ac.ox.poseidon.core.time.Factories.hours;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.*;
 import static uk.ac.ox.poseidon.geography.Factories.coordinate;
+import static uk.ac.ox.poseidon.geography.grids.Factories.modelGrid;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromString;
@@ -118,8 +118,8 @@ public class MinimalScenario implements Supplier<Scenario> {
     @Override
     public Scenario get() {
 
-        final ModelGridFactory modelGrid =
-            new ModelGridFactory(
+        final var modelGrid =
+            modelGrid(
                 1,
                 -1.5, 1.5, -1.5, 1.5
             );
@@ -171,8 +171,8 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var portGrid =
             portGrid(
                 listOf(
-                    new PairFactory<>(port1, coordinate(1, 1)),
-                    new PairFactory<>(port2, coordinate(1, -1))
+                    pair(port1, coordinate(1, 1)),
+                    pair(port2, coordinate(1, -1))
                 ),
                 bathymetricGrid,
                 distance
@@ -246,14 +246,14 @@ public class MinimalScenario implements Supplier<Scenario> {
 
         final var behaviour =
             behaviour(
-                new RoundTripFactory(
+                roundTrip(
                     startTrip(
                         constantDestination(
                             modelGrid,
                             coordinate(0, 0)
                         )
                     ),
-                    new TravelAlongPathFactory(
+                    travelAlongPath(
                         pathFinder,
                         distance
                     ),
@@ -263,19 +263,19 @@ public class MinimalScenario implements Supplier<Scenario> {
                                 biomassGrids
                             )
                         ),
-                        new CompositeDispositionProcessFactory<>(
-                            new SelectedSpeciesRetentionFactory<>(
+                        compositeDispositionProcess(
+                            selectedSpeciesRetention(
                                 speciesByCode(
                                     listOf("A", "B"),
                                     species
                                 )
                             ),
-                            new GeneralDiscardMortalityFactory<>(
+                            generalDiscardMortality(
                                 constantDouble(0.1)
                             )
                         )
                     ),
-                    new LandCatchesFactory(constant(hours(1)))
+                    landCatches(constant(hours(1)))
                 )
             );
 
@@ -325,7 +325,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                     "gear"
                 )
                 .engine(
-                    new SimpleEngineFactory<>(
+                    simpleEngine(
                         fullTank(volumeOf(100000, LITRE)),
                         speedOf(10, KNOT),
                         volumeOf(0, LITRE) // don't consume any fuel
