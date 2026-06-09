@@ -26,8 +26,8 @@ import com.google.common.collect.Streams;
 import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFactory;
 import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
-import uk.ac.ox.poseidon.agents.choices.ConstantDestinationSupplierFactory;
 import uk.ac.ox.poseidon.agents.market.*;
+import static uk.ac.ox.poseidon.agents.choices.Factories.constantDestination;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarket;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
 import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
@@ -248,7 +248,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             behaviour(
                 new RoundTripFactory(
                     startTrip(
-                        new ConstantDestinationSupplierFactory(
+                        constantDestination(
                             modelGrid,
                             coordinate(0, 0)
                         )
