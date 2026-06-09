@@ -49,7 +49,7 @@ import uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.utils.FinalProcessFactory;
-import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory;
+import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
@@ -187,7 +187,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var bathymetricGrid =
-            new BathymetricGridFromGridFileFactory<>(
+            bathymetricGridFromGridFile(
                 bathymetricGridPath,
                 modelGrid,
                 maxAggregator(),

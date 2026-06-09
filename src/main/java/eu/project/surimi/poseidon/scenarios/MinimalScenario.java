@@ -42,7 +42,7 @@ import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.utils.Pair;
 import uk.ac.ox.poseidon.core.utils.PairFactory;
-import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
+import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromElevationValues;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
 import static uk.ac.ox.poseidon.geography.ports.Factories.port;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
@@ -119,7 +119,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                 -1.5, 1.5, -1.5, 1.5
             );
         final var bathymetricGrid =
-            new BathymetricGridFromElevationValuesFactory<>(
+            bathymetricGridFromElevationValues(
                 modelGrid,
                 List.of(
                     -1, -1, 0,
