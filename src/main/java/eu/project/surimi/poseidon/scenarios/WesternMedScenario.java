@@ -27,8 +27,8 @@ import uk.ac.ox.poseidon.agents.catches.disposition.CompositeDispositionProcessF
 import uk.ac.ox.poseidon.agents.catches.disposition.ProportionallyLimitingBiomassToHoldFactory;
 import uk.ac.ox.poseidon.agents.choices.*;
 import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
-import uk.ac.ox.poseidon.agents.market.BiomassMarketGridFromPriceTableFactory;
-import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulatorFactory;
+import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarketGridFromPriceTable;
+import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.InactiveBehaviourFactory;
@@ -306,7 +306,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var biomassSaleAccumulator =
-            new BiomassSaleAccumulatorFactory();
+            biomassSaleAccumulator();
 
         final var fishingActionAccumulator =
             fishingEventAccumulator();
@@ -356,7 +356,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var marketGrid =
-            new BiomassMarketGridFromPriceTableFactory(
+            biomassMarketGridFromPriceTable(
                 csvTableFromFile(inputPath.plus("prices.csv")),
                 "date",
                 "market_code",

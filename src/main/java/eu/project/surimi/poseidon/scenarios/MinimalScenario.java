@@ -28,6 +28,11 @@ import uk.ac.ox.poseidon.agents.catches.disposition.GeneralDiscardMortalityFacto
 import uk.ac.ox.poseidon.agents.catches.disposition.SelectedSpeciesRetentionFactory;
 import uk.ac.ox.poseidon.agents.choices.ConstantDestinationSupplierFactory;
 import uk.ac.ox.poseidon.agents.market.*;
+import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarket;
+import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
+import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
+import static uk.ac.ox.poseidon.agents.market.Factories.price;
+import static uk.ac.ox.poseidon.agents.market.Factories.priceEntry;
 import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.RoundTripFactory;
@@ -176,7 +181,7 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var priceEntries =
             Stream.of(1, 2).map(portIndex ->
                 mappedFactory(
-                    new PriceEntryFactory<>(),
+                    priceEntry(null, null, null),
                     mappedProperty(
                         PriceEntryFactory::setCatchCategory,
                         GEAR_CODES
@@ -196,7 +201,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                         PriceEntryFactory::setPrice,
                         range(0, NUM_PRICES)
                             .boxed()
-                            .map(i -> new PriceFactory(
+                            .map(i -> price(
                                 portIndex + i * 0.1,
                                 "GBP",
                                 "kg"
@@ -208,13 +213,13 @@ public class MinimalScenario implements Supplier<Scenario> {
 
         final var markets =
             mappedFactory(
-                new BiomassMarketFactory(null, null, null),
+                biomassMarket(null, null, null),
                 mappedProperty(BiomassMarketFactory::setPort, List.of(port1, port2)),
                 mappedProperty(BiomassMarketFactory::setMarketCode, MARKET_CODES),
                 mappedProperty(BiomassMarketFactory::setPricesEntries, priceEntries)
             );
 
-        final var marketGrid = new MarketGridFactory<>(portGrid, markets);
+        final var marketGrid = marketGrid(portGrid, markets);
 
         final var vesselField =
             vesselField(modelGrid);
@@ -331,7 +336,7 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var fishingActionAccumulator =
             fishingEventAccumulator();
         final var biomassSaleAccumulator =
-            new BiomassSaleAccumulatorFactory();
+            biomassSaleAccumulator();
 
         return Scenario.builder()
             .startingDateTime(startOf(START_DATE))
