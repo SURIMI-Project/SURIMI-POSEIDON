@@ -37,7 +37,7 @@ import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.RoundTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
-import uk.ac.ox.poseidon.agents.vessels.FleetFactory;
+import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
@@ -286,7 +286,7 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var fleet =
             FleetFromVesselRegisterFactory
                 .builder()
-                .fleet(new FleetFactory(
+                .fleet(fleet(
                     vesselField,
                     portGrid,
                     marketGrid

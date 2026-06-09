@@ -38,7 +38,7 @@ import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.EndTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.SetDestinationToOriginFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
-import uk.ac.ox.poseidon.agents.vessels.FleetFactory;
+import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.SimpleEngineFactory;
@@ -569,7 +569,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var fleet =
             FleetFromVesselRegisterFactory
                 .builder()
-                .fleet(new FleetFactory(vesselField, portGrid, marketGrid))
+                .fleet(fleet(vesselField, portGrid, marketGrid))
                 .data(csvTableFromFile(inputPath.plus("fleet_register.csv")))
                 .behaviour(behaviour)
                 .dataMapping("behaviour.code", "main_fishing_gear")
