@@ -53,8 +53,8 @@ import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
-import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
-import uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory;
+import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
+import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromTable;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 import java.nio.file.Path;
@@ -233,8 +233,8 @@ public class WesternMedScenario implements Supplier<Scenario> {
             haversineDistanceCalculator(modelGrid);
 
         final Factory<Scope, ? extends PortGrid> portGrid =
-            new PortGridFactory<>(
-                new PortsFromTableFactory<>(
+            portGrid(
+                portsFromTable(
                     csvTableFromFile(inputPath.plus("ports.csv")),
                     "port_code", "port_name", "lon", "lat"
                 ),

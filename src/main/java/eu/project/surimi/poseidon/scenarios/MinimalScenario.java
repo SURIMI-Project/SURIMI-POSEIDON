@@ -44,8 +44,8 @@ import uk.ac.ox.poseidon.core.utils.Pair;
 import uk.ac.ox.poseidon.core.utils.PairFactory;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromElevationValuesFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFactory;
-import uk.ac.ox.poseidon.geography.ports.PortFactory;
-import uk.ac.ox.poseidon.geography.ports.PortGridFactory;
+import static uk.ac.ox.poseidon.geography.ports.Factories.port;
+import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 
 import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
@@ -160,11 +160,11 @@ public class MinimalScenario implements Supplier<Scenario> {
         final var distance =
             haversineDistanceCalculator(modelGrid);
 
-        final var port1 = new PortFactory("P1", "Port 1");
-        final var port2 = new PortFactory("P2", "Port 2");
+        final var port1 = port("P1", "Port 1");
+        final var port2 = port("P2", "Port 2");
 
         final var portGrid =
-            new PortGridFactory<>(
+            portGrid(
                 listOf(
                     new PairFactory<>(port1, coordinate(1, 1)),
                     new PairFactory<>(port2, coordinate(1, -1))
