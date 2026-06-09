@@ -33,7 +33,7 @@ import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
 import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
 import static uk.ac.ox.poseidon.agents.market.Factories.price;
 import static uk.ac.ox.poseidon.agents.market.Factories.priceEntry;
-import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
+import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.RoundTripFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.TravelAlongPathFactory;
@@ -245,7 +245,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             );
 
         final var behaviour =
-            new BehaviourFactory(
+            behaviour(
                 new RoundTripFactory(
                     startTrip(
                         new ConstantDestinationSupplierFactory(

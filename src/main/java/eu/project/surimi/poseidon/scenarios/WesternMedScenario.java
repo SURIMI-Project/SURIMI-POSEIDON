@@ -30,8 +30,8 @@ import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarketGridFromPriceTable;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
-import uk.ac.ox.poseidon.agents.tasks.BehaviourFactory;
-import uk.ac.ox.poseidon.agents.tasks.InactiveBehaviourFactory;
+import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
+import static uk.ac.ox.poseidon.agents.tasks.Factories.inactiveBehaviour;
 import uk.ac.ox.poseidon.agents.tasks.general.SucceedOrWaitTaskFactory;
 import uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory;
 import uk.ac.ox.poseidon.agents.tasks.travel.EndTripFactory;
@@ -512,7 +512,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
         );
 
         final var purseSeinerBehaviour =
-            new BehaviourFactory(
+            behaviour(
                 sequenceTask(
                     new SucceedOrWaitTaskFactory(
                         sequenceTask(
@@ -538,7 +538,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var bottomTrawlerBehaviour =
-            new BehaviourFactory(
+            behaviour(
                 sequenceTask(
                     new SucceedOrWaitTaskFactory(
                         sequenceTask(
@@ -562,7 +562,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .<Behaviour>builder()
                 .factory(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour)
                 .factory(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
-                .defaultFactory(new InactiveBehaviourFactory())
+                .defaultFactory(inactiveBehaviour())
                 .build();
 
         final var fleet =
