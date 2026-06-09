@@ -23,39 +23,19 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import sim.util.Int2D;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.compositeDispositionProcess;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.proportionallyLimitingBiomassToHold;
-import uk.ac.ox.poseidon.agents.choices.*;
-import static uk.ac.ox.poseidon.agents.choices.Factories.*;
-import uk.ac.ox.poseidon.agents.components.ComponentRegisterFactory;
-import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarketGridFromPriceTable;
-import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
+import uk.ac.ox.poseidon.agents.choices.MutableOptionValues;
+import uk.ac.ox.poseidon.agents.components.VesselComponentRegisterFactory;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
-import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
-import static uk.ac.ox.poseidon.agents.tasks.Factories.inactiveBehaviour;
-import static uk.ac.ox.poseidon.agents.tasks.general.Factories.succeedOrWait;
-
-import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.endTrip;
-import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.setDestinationToOrigin;
-import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.travelAlongPath;
-import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
-import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-import static uk.ac.ox.poseidon.core.schedule.Factories.steppableSequence;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-
-import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
-import static uk.ac.ox.poseidon.geography.grids.Factories.modelGridWithActiveCells;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
-import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
-import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromTable;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 import java.nio.file.Path;
@@ -71,30 +51,36 @@ import static si.uom.NonSI.KNOT;
 import static tech.units.indriya.unit.Units.LITRE;
 import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
 import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardMortalityRates;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardRates;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.*;
+import static uk.ac.ox.poseidon.agents.choices.Factories.*;
 import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.totalBiomassCaughtPerHour;
 import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.tripEvaluator;
-import static uk.ac.ox.poseidon.agents.components.Factories.component;
+import static uk.ac.ox.poseidon.agents.components.Factories.registeredVesselComponent;
+import static uk.ac.ox.poseidon.agents.components.Factories.vesselComponentRegister;
 import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
 import static uk.ac.ox.poseidon.agents.fuel.Factories.fuelStationGrid;
 import static uk.ac.ox.poseidon.agents.fuel.Factories.oneFuelStationPerPort;
+import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarketGridFromPriceTable;
+import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
 import static uk.ac.ox.poseidon.agents.money.Factories.money;
 import static uk.ac.ox.poseidon.agents.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingLocationLegalityChecker;
+import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
+import static uk.ac.ox.poseidon.agents.tasks.Factories.inactiveBehaviour;
 import static uk.ac.ox.poseidon.agents.tasks.accounting.Factories.payTripCost;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
-import static uk.ac.ox.poseidon.agents.tasks.general.Factories.checkThat;
-import static uk.ac.ox.poseidon.agents.tasks.general.Factories.waitFor;
+import static uk.ac.ox.poseidon.agents.tasks.general.Factories.*;
 import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
-import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.refuel;
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.*;
+import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import static uk.ac.ox.poseidon.agents.vessels.accounts.Factories.fixedCostCollector;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
+import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
@@ -120,16 +106,17 @@ import static uk.ac.ox.poseidon.core.providers.math.Factories.minInt;
 import static uk.ac.ox.poseidon.core.providers.random.Factories.randomPoisson;
 import static uk.ac.ox.poseidon.core.providers.temporal.Factories.*;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
-import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeating;
-import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledRepeatingFromStart;
+import static uk.ac.ox.poseidon.core.schedule.Factories.*;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
-import static uk.ac.ox.poseidon.core.utils.Factories.finalProcess;
-import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
-import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
+import static uk.ac.ox.poseidon.core.utils.Factories.*;
+import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
+import static uk.ac.ox.poseidon.geography.grids.Factories.modelGridWithActiveCells;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
+import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
+import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromTable;
 import static uk.ac.ox.poseidon.io.Factories.directoryRemover;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.paths.Factories.simulationFolder;
@@ -371,11 +358,11 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 species
             );
 
-        final var optionValuesRegister =
-            new ComponentRegisterFactory<MutableOptionValues<Int2D>>();
+        final VesselComponentRegisterFactory<MutableOptionValues<Int2D>>
+            optionValuesRegister = vesselComponentRegister();
 
         final var optionValues =
-            component(
+            registeredVesselComponent(
                 exponentialMovingAverageOptionValues(LEARNING_ALPHA),
                 optionValuesRegister
             );
