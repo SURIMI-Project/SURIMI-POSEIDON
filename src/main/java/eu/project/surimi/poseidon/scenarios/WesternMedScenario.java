@@ -86,6 +86,7 @@ import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringT
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.speciesSpecificBiomassCatchabilityGear;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentCell;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
@@ -418,9 +419,10 @@ public class WesternMedScenario implements Supplier<Scenario> {
                     EXPLORATION_PROBABILITY,
                     neighbourhoodGridExplorer(
                         optionValues,
-                        fishingLocationChecker,
                         pathFinder,
-                        shiftedInt(randomPoisson(MEAN_EXPLORATION_RADIUS), 1)
+                        fishingLocationChecker,
+                        shiftedInt(randomPoisson(MEAN_EXPLORATION_RADIUS), 1),
+                        currentCell()
                     ),
                     imitatingPicker(
                         optionValues,
