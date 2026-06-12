@@ -81,6 +81,7 @@ import static uk.ac.ox.poseidon.biology.species.Factories.speciesByCode;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
+import static uk.ac.ox.poseidon.core.quantities.VolumetricFlowRateFactory.LITRE_PER_HOUR;
 import static uk.ac.ox.poseidon.core.time.Factories.hours;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.*;
@@ -234,14 +235,16 @@ public class MinimalScenario implements Supplier<Scenario> {
             fixedBiomassProportionGear(
                 GEAR_CODES.get(0),
                 0.25,
-                constant(hours(1))
+                constant(hours(1)),
+                volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
             );
 
         final var gear2 =
             fixedBiomassProportionGear(
                 GEAR_CODES.get(1),
                 0.5,
-                constant(hours(1))
+                constant(hours(1)),
+                volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
             );
 
         final var behaviour =
