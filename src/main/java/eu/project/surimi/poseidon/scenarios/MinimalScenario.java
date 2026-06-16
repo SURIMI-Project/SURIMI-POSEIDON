@@ -24,7 +24,7 @@ package eu.project.surimi.poseidon.scenarios;
 
 import com.google.common.collect.Streams;
 import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.compositeDispositionProcess;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.generalDiscardMortality;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardMortality;
 import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.selectedSpeciesRetention;
 import uk.ac.ox.poseidon.agents.market.*;
 import static uk.ac.ox.poseidon.agents.choices.Factories.constantDestination;
@@ -273,7 +273,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                                     species
                                 )
                             ),
-                            generalDiscardMortality(
+                            discardMortality(
                                 constantDouble(0.1)
                             )
                         )

@@ -445,7 +445,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 )
             );
         final var purseSeineDiscardMortalityRates =
-            discardMortalityRates(
+            indexedDiscardMortality(
                 species,
                 mapFromTable(
                     speciesTable,
@@ -463,7 +463,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 )
             );
         final var bottomTrawlerDiscardMortalityRates =
-            discardMortalityRates(
+            indexedDiscardMortality(
                 species,
                 mapFromTable(
                     speciesTable,
