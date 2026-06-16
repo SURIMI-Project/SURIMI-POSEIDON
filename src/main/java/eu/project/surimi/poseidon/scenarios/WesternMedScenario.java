@@ -84,12 +84,14 @@ import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
-import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.speciesSpecificBiomassCatchabilityGear;
+import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.indexedBiomassCatchabilityGear;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentCell;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
+import static uk.ac.ox.poseidon.biology.species.Factories.speciesCode;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
+import static uk.ac.ox.poseidon.biology.species.Factories.speciesLifeStage;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
 import static uk.ac.ox.poseidon.core.functions.Factories.*;
@@ -256,32 +258,43 @@ public class WesternMedScenario implements Supplier<Scenario> {
 
         final var speciesTable = csvTableFromFile(inputPath.plus("species.csv"));
         final var speciesKeyBuilder = multiKeyFromRow("species_code", "life_stage");
+        final var speciesKeyExtractor = multiKeyFromFunctions(speciesCode(), speciesLifeStage());
 
         final var fishingGear =
             VesselScopeFactoriesByCode.<Gear>builder()
                 .factory(
                     PURSE_SEINE_GEAR_CODE,
-                    speciesSpecificBiomassCatchabilityGear(
+                    indexedBiomassCatchabilityGear(
                         PURSE_SEINE_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        mapFromTable(
-                            speciesTable,
-                            speciesKeyBuilder,
-                            constantDouble(DEFAULT_CATCH_PROPORTION)
+                        composedFunction(
+                            speciesKeyExtractor,
+                            mapValueExtractor(
+                                mapFromTable(
+                                    speciesTable,
+                                    speciesKeyBuilder,
+                                    constantDouble(DEFAULT_CATCH_PROPORTION)
+                                )
+                            )
                         )
                     )
                 )
                 .factory(
                     BOTTOM_TRAWLER_GEAR_CODE,
-                    speciesSpecificBiomassCatchabilityGear(
+                    indexedBiomassCatchabilityGear(
                         BOTTOM_TRAWLER_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        mapFromTable(
-                            speciesTable,
-                            speciesKeyBuilder,
-                            constantDouble(DEFAULT_CATCH_PROPORTION)
+                        composedFunction(
+                            speciesKeyExtractor,
+                            mapValueExtractor(
+                                mapFromTable(
+                                    speciesTable,
+                                    speciesKeyBuilder,
+                                    constantDouble(DEFAULT_CATCH_PROPORTION)
+                                )
+                            )
                         )
                     )
                 )
@@ -438,37 +451,57 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var purseSeineDiscardRates =
             discardRates(
                 species,
-                mapFromTable(
-                    speciesTable,
-                    speciesKeyBuilder,
-                    constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE)
+                composedFunction(
+                    speciesKeyExtractor,
+                    mapValueExtractor(
+                        mapFromTable(
+                            speciesTable,
+                            speciesKeyBuilder,
+                            constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE)
+                        )
+                    )
                 )
             );
         final var purseSeineDiscardMortalityRates =
             indexedDiscardMortality(
                 species,
-                mapFromTable(
-                    speciesTable,
-                    speciesKeyBuilder,
-                    constantDouble(DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE)
+                composedFunction(
+                    speciesKeyExtractor,
+                    mapValueExtractor(
+                        mapFromTable(
+                            speciesTable,
+                            speciesKeyBuilder,
+                            constantDouble(DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE)
+                        )
+                    )
                 )
             );
         final var bottomTrawlerDiscardRates =
             discardRates(
                 species,
-                mapFromTable(
-                    speciesTable,
-                    speciesKeyBuilder,
-                    constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE)
+                composedFunction(
+                    speciesKeyExtractor,
+                    mapValueExtractor(
+                        mapFromTable(
+                            speciesTable,
+                            speciesKeyBuilder,
+                            constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE)
+                        )
+                    )
                 )
             );
         final var bottomTrawlerDiscardMortalityRates =
             indexedDiscardMortality(
                 species,
-                mapFromTable(
-                    speciesTable,
-                    speciesKeyBuilder,
-                    constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE)
+                composedFunction(
+                    speciesKeyExtractor,
+                    mapValueExtractor(
+                        mapFromTable(
+                            speciesTable,
+                            speciesKeyBuilder,
+                            constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE)
+                        )
+                    )
                 )
             );
 
