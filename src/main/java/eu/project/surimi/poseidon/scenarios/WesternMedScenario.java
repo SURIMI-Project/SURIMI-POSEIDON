@@ -268,15 +268,11 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         PURSE_SEINE_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        composedFunction(
+                        tableLookup(
                             speciesKeyExtractor,
-                            mapValueExtractor(
-                                mapFromTable(
-                                    speciesTable,
-                                    speciesKeyBuilder,
-                                    constantDouble(DEFAULT_CATCH_PROPORTION)
-                                )
-                            )
+                            speciesTable,
+                            speciesKeyBuilder,
+                            constantDouble(DEFAULT_CATCH_PROPORTION)
                         )
                     )
                 )
@@ -286,15 +282,11 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         BOTTOM_TRAWLER_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        composedFunction(
+                        tableLookup(
                             speciesKeyExtractor,
-                            mapValueExtractor(
-                                mapFromTable(
-                                    speciesTable,
-                                    speciesKeyBuilder,
-                                    constantDouble(DEFAULT_CATCH_PROPORTION)
-                                )
-                            )
+                            speciesTable,
+                            speciesKeyBuilder,
+                            constantDouble(DEFAULT_CATCH_PROPORTION)
                         )
                     )
                 )
@@ -451,57 +443,41 @@ public class WesternMedScenario implements Supplier<Scenario> {
         final var purseSeineDiscardRates =
             discardRates(
                 species,
-                composedFunction(
+                tableLookup(
                     speciesKeyExtractor,
-                    mapValueExtractor(
-                        mapFromTable(
-                            speciesTable,
-                            speciesKeyBuilder,
-                            constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE)
-                        )
-                    )
+                    speciesTable,
+                    speciesKeyBuilder,
+                    constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE)
                 )
             );
         final var purseSeineDiscardMortalityRates =
             indexedDiscardMortality(
                 species,
-                composedFunction(
+                tableLookup(
                     speciesKeyExtractor,
-                    mapValueExtractor(
-                        mapFromTable(
-                            speciesTable,
-                            speciesKeyBuilder,
-                            constantDouble(DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE)
-                        )
-                    )
+                    speciesTable,
+                    speciesKeyBuilder,
+                    constantDouble(DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE)
                 )
             );
         final var bottomTrawlerDiscardRates =
             discardRates(
                 species,
-                composedFunction(
+                tableLookup(
                     speciesKeyExtractor,
-                    mapValueExtractor(
-                        mapFromTable(
-                            speciesTable,
-                            speciesKeyBuilder,
-                            constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE)
-                        )
-                    )
+                    speciesTable,
+                    speciesKeyBuilder,
+                    constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE)
                 )
             );
         final var bottomTrawlerDiscardMortalityRates =
             indexedDiscardMortality(
                 species,
-                composedFunction(
+                tableLookup(
                     speciesKeyExtractor,
-                    mapValueExtractor(
-                        mapFromTable(
-                            speciesTable,
-                            speciesKeyBuilder,
-                            constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE)
-                        )
-                    )
+                    speciesTable,
+                    speciesKeyBuilder,
+                    constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE)
                 )
             );
 
@@ -624,15 +600,11 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 DAILY,
                 fixedCostCollector(
                     fleet,
-                    composedFunction(
+                    tableLookup(
                         costsKeyFromVessel,
-                        mapValueExtractor(
-                            mapFromTable(
-                                csvTableFromFile(inputPath.plus("operating_costs.csv")),
-                                costsKeyFromRow,
-                                moneyFromRow("currency", "fixed_cost_per_day")
-                            )
-                        )
+                        csvTableFromFile(inputPath.plus("operating_costs.csv")),
+                        costsKeyFromRow,
+                        moneyFromRow("currency", "fixed_cost_per_day")
                     )
                 )
             );
