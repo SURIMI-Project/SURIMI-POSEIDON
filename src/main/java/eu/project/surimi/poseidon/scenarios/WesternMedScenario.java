@@ -86,9 +86,12 @@ import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
+import static uk.ac.ox.poseidon.agents.vessels.friends.Factories.dynamicFriendsSupplier;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.indexedBiomassCatchabilityGear;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
+import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.vesselHasSameHomePort;
+import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.vesselIsActive;
 import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentCell;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
@@ -453,8 +456,15 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         optionValues,
                         fishingLocationChecker,
                         bestOptionsFromFriends(
-                            5,
-                            optionValuesRegister
+                            optionValuesRegister,
+                            dynamicFriendsSupplier(
+                                5,
+                                optionValuesRegister,
+                                allOf(
+                                    vesselIsActive(),
+                                    vesselHasSameHomePort()
+                                )
+                            )
                         )
                     )
                 )
