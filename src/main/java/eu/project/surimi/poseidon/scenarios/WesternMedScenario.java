@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import sim.util.Int2D;
+import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.agents.choices.MutableOptionValues;
 import uk.ac.ox.poseidon.agents.components.VesselComponentRegisterFactory;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
@@ -41,12 +42,13 @@ import uk.ac.ox.poseidon.io.ScenarioWriter;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.function.Supplier;
 
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.KNOT;
 import static tech.units.indriya.unit.Units.LITRE;
@@ -90,7 +92,8 @@ import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHo
 import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentCell;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
-import static uk.ac.ox.poseidon.biology.species.Factories.*;
+import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
+import static uk.ac.ox.poseidon.biology.species.extractors.Factories.speciesKey;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
 import static uk.ac.ox.poseidon.core.functions.Factories.*;
@@ -111,6 +114,7 @@ import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.schedule.Factories.*;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Factories.*;
+import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
 import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
@@ -255,12 +259,30 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 "life_stage"
             );
 
+        final var purseSeinerCatchabilities =
+            object(
+                Table
+                    .read()
+                    .csv(INPUT_PATH.resolve("species.csv").toFile())
+                    .stream()
+                    .collect(toMap(
+                        row -> multiStringKey(
+                            row.getString("species_code"),
+                            row.getString("life_stage")
+                        ),
+                        _ -> DEFAULT_CATCH_PROPORTION,
+                        (a, _) -> a,
+                        LinkedHashMap::new
+                    ))
+            );
+
+        final var bottomTrawlerCatchabilities =
+            object(
+                new LinkedHashMap<>(purseSeinerCatchabilities.getValue())
+            );
+
         final var speciesTable = csvTableFromFile(inputPath.plus("species.csv"));
-        final var speciesKeyBuilder = multiStringKeyFromRow("species_code", "life_stage");
-        final var speciesKeyExtractor = multiStringKeyFromFunctions(
-            speciesCode(),
-            speciesLifeStage()
-        );
+        final var speciesKeyFromRow = multiStringKeyFromRow("species_code", "life_stage");
 
         final var fishingGear =
             VesselScopeFactoriesByCode.<Gear>builder()
@@ -270,11 +292,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         PURSE_SEINE_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        tableLookup(
-                            speciesKeyExtractor,
-                            speciesTable,
-                            speciesKeyBuilder,
-                            constantDouble(DEFAULT_CATCH_PROPORTION)
+                        composedFunction(
+                            speciesKey(),
+                            mapValueExtractor(purseSeinerCatchabilities)
                         )
                     )
                 )
@@ -284,11 +304,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         BOTTOM_TRAWLER_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        tableLookup(
-                            speciesKeyExtractor,
-                            speciesTable,
-                            speciesKeyBuilder,
-                            constantDouble(DEFAULT_CATCH_PROPORTION)
+                        composedFunction(
+                            speciesKey(),
+                            mapValueExtractor(bottomTrawlerCatchabilities)
                         )
                     )
                 )
@@ -446,9 +464,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
             discardRates(
                 species,
                 tableLookup(
-                    speciesKeyExtractor,
+                    speciesKey(),
                     speciesTable,
-                    speciesKeyBuilder,
+                    speciesKeyFromRow,
                     constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE)
                 )
             );
@@ -456,9 +474,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
             indexedDiscardMortality(
                 species,
                 tableLookup(
-                    speciesKeyExtractor,
+                    speciesKey(),
                     speciesTable,
-                    speciesKeyBuilder,
+                    speciesKeyFromRow,
                     constantDouble(DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE)
                 )
             );
@@ -466,9 +484,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
             discardRates(
                 species,
                 tableLookup(
-                    speciesKeyExtractor,
+                    speciesKey(),
                     speciesTable,
-                    speciesKeyBuilder,
+                    speciesKeyFromRow,
                     constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE)
                 )
             );
@@ -476,9 +494,9 @@ public class WesternMedScenario implements Supplier<Scenario> {
             indexedDiscardMortality(
                 species,
                 tableLookup(
-                    speciesKeyExtractor,
+                    speciesKey(),
                     speciesTable,
-                    speciesKeyBuilder,
+                    speciesKeyFromRow,
                     constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE)
                 )
             );
@@ -616,16 +634,10 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 directoryRemover(outputPath, false)
             );
 
-        final var catchabilities = object(
-            Map.of(
-                "PIL", 0.1,
-                "ANE", 0.2
-            )
-        );
-
         builder
             .startingDateTime(startOf(START_DATE))
-            .component("catchabilities", catchabilities)
+            .component("purseSeinerCatchabilities", purseSeinerCatchabilities)
+            .component("bottomTrawlerCatchabilities", bottomTrawlerCatchabilities)
             .component("species", species)
             .component("bathymetricGrid", bathymetricGrid)
             .component("carryingCapacityGrid", carryingCapacityGrid)
