@@ -41,6 +41,7 @@ import uk.ac.ox.poseidon.io.ScenarioWriter;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
@@ -89,9 +90,7 @@ import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHo
 import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentCell;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
-import static uk.ac.ox.poseidon.biology.species.Factories.speciesCode;
-import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
-import static uk.ac.ox.poseidon.biology.species.Factories.speciesLifeStage;
+import static uk.ac.ox.poseidon.biology.species.Factories.*;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
 import static uk.ac.ox.poseidon.core.functions.Factories.*;
@@ -257,8 +256,11 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var speciesTable = csvTableFromFile(inputPath.plus("species.csv"));
-        final var speciesKeyBuilder = multiKeyFromRow("species_code", "life_stage");
-        final var speciesKeyExtractor = multiKeyFromFunctions(speciesCode(), speciesLifeStage());
+        final var speciesKeyBuilder = multiStringKeyFromRow("species_code", "life_stage");
+        final var speciesKeyExtractor = multiStringKeyFromFunctions(
+            speciesCode(),
+            speciesLifeStage()
+        );
 
         final var fishingGear =
             VesselScopeFactoriesByCode.<Gear>builder()
@@ -320,7 +322,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var costsKeyFromRow =
-            multiKeyFromRow("country_code", "year", "vessel_length", "gear");
+            multiStringKeyFromRow("country_code", "year", "vessel_length", "gear");
 
         final var hourlyCostsMap =
             mapFromTable(
@@ -340,7 +342,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             );
 
         final var costsKeyFromVessel =
-            multiKeyFromFunctions(
+            multiStringKeyFromFunctions(
                 stringTagExtractor("country_of_registration"),
                 minInt(maxInt(currentYear(), constantInt(2013)), constantInt(2023)),
                 composedFunction(
@@ -614,8 +616,16 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 directoryRemover(outputPath, false)
             );
 
+        final var catchabilities = object(
+            Map.of(
+                "PIL", 0.1,
+                "ANE", 0.2
+            )
+        );
+
         builder
             .startingDateTime(startOf(START_DATE))
+            .component("catchabilities", catchabilities)
             .component("species", species)
             .component("bathymetricGrid", bathymetricGrid)
             .component("carryingCapacityGrid", carryingCapacityGrid)
