@@ -104,9 +104,6 @@ public class Server {
         final io.grpc.Server grpcServer = NettyServerBuilder
             // Bind to 0.0.0.0 so the server listens on all network interfaces
             .forAddress(new InetSocketAddress("0.0.0.0", this.port))
-            
-            //.addService(ProtoReflectionService.newInstance()) // deprecated, but works with
-            // postman
             .addService(ProtoReflectionServiceV1.newInstance())
             .intercept(new ExceptionInterceptor())
             .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
