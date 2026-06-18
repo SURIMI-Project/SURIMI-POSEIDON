@@ -46,6 +46,7 @@ import java.util.Set;
 import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.INVALID_ARGUMENT;
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
@@ -94,7 +95,7 @@ public class UpdateSpeciesPricesRequestHandler extends
 
             market.setPrice(catchCategory, requestSpecies, marketPrice);
             logger.log(
-                INFO,
+                DEBUG,
                 "Updated price of species {0} at port market {1} to {2}/{3}.",
                 requestSpecies,
                 market.getCode(),
