@@ -6,6 +6,7 @@ ENTRYPOINT [ \
   "java", \
   "-Xms1g", \
   "-Xmx8g", \
+  "--enable-native-access=ALL-UNNAMED", \
   "-Djava.util.logging.config.file=/app/logging.properties", \
   "-cp", "/app/SURIMI-POSEIDON.jar:/app/lib/*", \
   "eu.project.surimi.poseidon.server.Server", \
