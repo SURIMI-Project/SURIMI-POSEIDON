@@ -1,7 +1,7 @@
 [versions]
 assertj = "3.27.7"
 caffeine = "3.2.3"
-grpc = "1.81.0"
+grpc = "1.82.0"
 lombok = "1.18.46"
 opentelemetry-core = "1.62.0"
 opentelemetry-instrumentation = "2.14.0-alpha"
