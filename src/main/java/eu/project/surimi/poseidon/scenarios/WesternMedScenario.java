@@ -45,6 +45,7 @@ import java.time.Period;
 import java.util.LinkedHashMap;
 import java.util.function.Supplier;
 
+import static eu.project.surimi.poseidon.calibration.Factories.landingsAccumulator;
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
@@ -663,6 +664,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
             .component("fixedCostCollector", fixedCostCollector)
             .component("fishingActionAccumulator", fishingActionAccumulator)
             .component("biomassSaleAccumulator", biomassSaleAccumulator)
+            .component("landingsAccumulator", landingsAccumulator())
             .component("directoryRemover", directoryRemover);
 
         return builder.build();
