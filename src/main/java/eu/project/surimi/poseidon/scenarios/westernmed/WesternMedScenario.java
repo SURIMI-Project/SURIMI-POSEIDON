@@ -51,6 +51,7 @@ import static java.time.DayOfWeek.*;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.KNOT;
+import static tech.units.indriya.unit.Units.KILOGRAM;
 import static tech.units.indriya.unit.Units.LITRE;
 import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
 import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
@@ -296,7 +297,8 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         composedFunction(
                             speciesKey(),
                             mapValueExtractor(purseSeinerCatchabilities)
-                        )
+                        ),
+                        massOf(1, KILOGRAM)
                     )
                 )
                 .factory(
@@ -308,7 +310,8 @@ public class WesternMedScenario implements Supplier<Scenario> {
                         composedFunction(
                             speciesKey(),
                             mapValueExtractor(bottomTrawlerCatchabilities)
-                        )
+                        ),
+                        massOf(1, KILOGRAM)
                     )
                 )
                 .defaultFactory(inactiveGear(null))

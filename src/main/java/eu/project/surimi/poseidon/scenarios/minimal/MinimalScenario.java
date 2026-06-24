@@ -45,6 +45,7 @@ import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.KNOT;
 import static si.uom.NonSI.TONNE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static tech.units.indriya.unit.Units.KILOGRAM;
 import static tech.units.indriya.unit.Units.LITRE;
 import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
 import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
@@ -229,6 +230,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             fixedBiomassProportionGear(
                 GEAR_CODES.get(0),
                 0.25,
+                massOf(1, KILOGRAM),
                 constant(hours(1)),
                 volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
             );
@@ -237,6 +239,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             fixedBiomassProportionGear(
                 GEAR_CODES.get(1),
                 0.5,
+                massOf(1, KILOGRAM),
                 constant(hours(1)),
                 volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
             );
