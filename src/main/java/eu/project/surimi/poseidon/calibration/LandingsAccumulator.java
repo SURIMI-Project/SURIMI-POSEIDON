@@ -32,6 +32,7 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.toMap;
+import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
 
 public class LandingsAccumulator extends AbstractListener<Sale>
     implements Supplier<Map<LandingsAccumulator.Key, Double>> {
@@ -54,7 +55,10 @@ public class LandingsAccumulator extends AbstractListener<Sale>
                         new Key(
                             year,
                             gearCode,
-                            item.getSpecies().getCode()
+                            multiStringKey(
+                                item.getSpecies().getCode(),
+                                item.getSpecies().getLifeStage()
+                            )
                         ),
                     item -> item.getContent().asKg(),
                     Double::sum
