@@ -84,7 +84,7 @@ public class WesternMedCalibration {
                             "purseSeinerCatchabilities",
                             "bottomTrawlerCatchabilities"
                         )
-                        .map(x -> "components(" + x + ").value(" + speciesKey + ")")
+                        .map(x -> "components(" + x + ").delegate.value(" + speciesKey + ")")
                 )
                 .collect(toImmutableMap(
                     identity(),

@@ -262,27 +262,25 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 "life_stage"
             );
 
+        final LinkedHashMap<String, Double> catchabilityMap = Table
+            .read()
+            .csv(INPUT_PATH.resolve("species.csv").toFile())
+            .stream()
+            .collect(toMap(
+                row -> multiStringKey(
+                    row.getString("species_code"),
+                    row.getString("life_stage")
+                ),
+                _ -> DEFAULT_CATCH_PROPORTION,
+                (a, _) -> a,
+                LinkedHashMap::new
+            ));
+
         final var purseSeinerCatchabilities =
-            object(
-                Table
-                    .read()
-                    .csv(INPUT_PATH.resolve("species.csv").toFile())
-                    .stream()
-                    .collect(toMap(
-                        row -> multiStringKey(
-                            row.getString("species_code"),
-                            row.getString("life_stage")
-                        ),
-                        _ -> DEFAULT_CATCH_PROPORTION,
-                        (a, _) -> a,
-                        LinkedHashMap::new
-                    ))
-            );
+            perSimulation(object(catchabilityMap));
 
         final var bottomTrawlerCatchabilities =
-            object(
-                new LinkedHashMap<>(purseSeinerCatchabilities.getValue())
-            );
+            perSimulation(object(new LinkedHashMap<>(catchabilityMap)));
 
         final var speciesTable = csvTableFromFile(inputPath.plus("species.csv"));
         final var speciesKeyFromRow = multiStringKeyFromRow("species_code", "life_stage");
