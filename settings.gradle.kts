@@ -45,6 +45,7 @@ includeBuild("POSEIDON") {
     dependencySubstitution {
         substitute(module("POSEIDON:agents")).using(project(":agents"))
         substitute(module("POSEIDON:biology")).using(project(":biology"))
+        substitute(module("POSEIDON:calibration")).using(project(":calibration"))
         substitute(module("POSEIDON:examples")).using(project(":examples"))
         substitute(module("POSEIDON:gui")).using(project(":gui"))
         substitute(module("POSEIDON:io")).using(project(":io"))

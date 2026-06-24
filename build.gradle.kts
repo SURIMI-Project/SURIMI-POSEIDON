@@ -35,6 +35,7 @@ dependencies {
     implementation("POSEIDON:agents")
     implementation("POSEIDON:biology")
     implementation("POSEIDON:io")
+    implementation("POSEIDON:calibration")
     implementation(libs.lombok)
     annotationProcessor(libs.lombok)
     implementation(libs.caffeine)
