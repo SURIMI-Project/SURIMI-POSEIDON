@@ -71,14 +71,14 @@ public class LandingsAccumulator extends AbstractListener<Sale>
     }
 
     public record Key(
-        Integer year, String gearCode, String speciesCode
+        Integer year, String gearCode, String speciesKey
     ) implements Comparable<Key> {
         @Override
         public int compareTo(final Key other) {
             return ComparisonChain.start()
                 .compare(this.year, other.year)
                 .compare(this.gearCode, other.gearCode)
-                .compare(this.speciesCode, other.speciesCode)
+                .compare(this.speciesKey, other.speciesKey)
                 .result();
         }
     }
@@ -91,7 +91,7 @@ public class LandingsAccumulator extends AbstractListener<Sale>
         landings.forEach((key, value) -> {
             year.append(key.year);
             gearCode.append(key.gearCode);
-            speciesCode.append(key.speciesCode);
+            speciesCode.append(key.speciesKey);
             landingsKg.append(value);
         });
         return Table.create(year, gearCode, speciesCode, landingsKg);
