@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2024-2025, University of Oxford.
+ * Copyright (c) 2024-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.scenarios;
+package eu.project.surimi.poseidon.scenarios.westernmed;
 
 import sim.util.Int2D;
 import tech.tablesaw.api.Table;
@@ -45,7 +45,6 @@ import java.time.Period;
 import java.util.LinkedHashMap;
 import java.util.function.Supplier;
 
-import static eu.project.surimi.poseidon.calibration.Factories.landingsAccumulator;
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
@@ -138,7 +137,7 @@ import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionC
 public class WesternMedScenario implements Supplier<Scenario> {
 
     public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
-    private static final Path INPUT_PATH = Path.of("inputs", "western_med");
+    static final Path INPUT_PATH = Path.of("inputs", "western_med");
     private static final String CARRYING_CAPACITY = "10 kg";
     private static final double LEARNING_ALPHA = 1;
     private static final double EXPLORATION_PROBABILITY = 0.2;
@@ -664,7 +663,6 @@ public class WesternMedScenario implements Supplier<Scenario> {
             .component("fixedCostCollector", fixedCostCollector)
             .component("fishingActionAccumulator", fishingActionAccumulator)
             .component("biomassSaleAccumulator", biomassSaleAccumulator)
-            .component("landingsAccumulator", landingsAccumulator())
             .component("directoryRemover", directoryRemover);
 
         return builder.build();

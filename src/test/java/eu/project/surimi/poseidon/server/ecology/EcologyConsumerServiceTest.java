@@ -23,7 +23,7 @@
 package eu.project.surimi.poseidon.server.ecology;
 
 import build.buf.gen.surimi.v1.*;
-import eu.project.surimi.poseidon.scenarios.MinimalScenario;
+import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.server.ServiceTest;
 import eu.project.surimi.poseidon.server.SpeciesKey;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ import javax.measure.quantity.Mass;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static eu.project.surimi.poseidon.scenarios.MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE;
+import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.stream.Collectors.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;

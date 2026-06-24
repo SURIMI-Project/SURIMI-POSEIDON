@@ -26,7 +26,7 @@ import build.buf.gen.surimi.v1.Species;
 import build.buf.gen.surimi.v1.SpeciesPrice;
 import build.buf.gen.surimi.v1.SpeciesPriceSummary;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
-import eu.project.surimi.poseidon.scenarios.MinimalScenario;
+import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.server.ServiceTest;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.DoubleRange;
@@ -34,7 +34,7 @@ import net.jqwik.api.lifecycle.AfterProperty;
 import net.jqwik.api.lifecycle.BeforeProperty;
 import uk.ac.ox.poseidon.agents.catches.CatchCategory;
 
-import static eu.project.surimi.poseidon.scenarios.MinimalScenario.*;
+import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.*;
 import static eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler.getMarketsById;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 

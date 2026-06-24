@@ -23,7 +23,7 @@
 package eu.project.surimi.poseidon.server;
 
 import build.buf.gen.surimi.v1.*;
-import eu.project.surimi.poseidon.scenarios.MinimalScenario;
+import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 

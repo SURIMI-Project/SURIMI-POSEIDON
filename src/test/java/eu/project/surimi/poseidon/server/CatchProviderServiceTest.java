@@ -24,14 +24,14 @@ package eu.project.surimi.poseidon.server;
 
 import build.buf.gen.surimi.v1.DispositionGrid;
 import build.buf.gen.surimi.v1.GetCatchDispositionRequest;
-import eu.project.surimi.poseidon.scenarios.MinimalScenario;
+import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Set;
 
-import static eu.project.surimi.poseidon.scenarios.MinimalScenario.GEAR_CODES;
-import static eu.project.surimi.poseidon.scenarios.MinimalScenario.SPECIES_CODES;
+import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.GEAR_CODES;
+import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.SPECIES_CODES;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;

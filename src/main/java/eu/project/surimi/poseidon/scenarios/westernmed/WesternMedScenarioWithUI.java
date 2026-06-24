@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -20,10 +20,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.scenarios;
+package eu.project.surimi.poseidon.scenarios.westernmed;
 
+import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
+import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
+import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.utils.ListFactory;
+import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
 import uk.ac.ox.poseidon.gui.portrayals.*;
@@ -31,24 +34,44 @@ import uk.ac.ox.poseidon.gui.portrayals.*;
 import java.util.List;
 
 import static java.awt.Color.WHITE;
+import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
+import static uk.ac.ox.poseidon.gui.palettes.PaletteColorMap.IMOLA;
 
-public class MinimalScenarioWithUI extends ScenarioWithUI {
-    public MinimalScenarioWithUI(
-        final Scenario scenario
-    ) {
-        // noinspection unchecked
+public class WesternMedScenarioWithUI extends ScenarioWithUI {
+
+    private static final int WIDTH = 1090;
+    private static final int HEIGHT = 820;
+
+    @SuppressWarnings("unchecked")
+    public WesternMedScenarioWithUI(final Scenario scenario) {
         super(
             scenario,
             List.of(
                 new DisplayWrapper2D(
-                    "Ocean",
+                    "Catalan Mediterranean Sea",
                     List.of(
                         new BathymetryFieldPortrayalFactory(
                             scenario.component("bathymetricGrid")
                         ),
+                        new SimpleFieldPortrayalFactory(
+                            "Carrying capacity",
+                            new NumberGridPortrayalFactory(
+                                IMOLA,
+                                "Carrying capacity",
+                                true,
+                                scenario.component("carryingCapacityGrid")
+                            ),
+                            false
+                        ),
                         new SpeciesBiomassFieldsPortrayalFactory(
-                            scenario.component("biomassGrids", ListFactory.class),
-                            scenario.component("carryingCapacityGrid", ListFactory.class),
+                            (Factory<? super SimulationScope, List<? extends BiomassGrid>>)
+                                scenario.component("biomassGrids"),
+                            listOf(
+                                scenario.component(
+                                    "carryingCapacityGrid",
+                                    CarryingCapacityGridFactory.class
+                                )
+                            ),
                             false
                         ),
                         new SimpleFieldPortrayalFactory(
@@ -73,6 +96,17 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
                             true
                         ),
                         new SimpleFieldPortrayalFactory(
+                            "Regulations",
+                            new RegulationGridPortrayalFactory(
+                                scenario.component("regulations"),
+                                scenario.component("vesselField"),
+                                scenario.component("bathymetricGrid"),
+                                WIDTH,
+                                HEIGHT
+                            ),
+                            true
+                        ),
+                        new SimpleFieldPortrayalFactory(
                             "Coordinates",
                             new CoordinatesPortrayalFactory(
                                 scenario.component("modelGrid"),
@@ -81,8 +115,8 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
                             true
                         )
                     ),
-                    600,
-                    600,
+                    WIDTH,
+                    HEIGHT,
                     WHITE
                 )
             )
@@ -90,8 +124,9 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
     }
 
     static void main(final String[] args) {
-        final MinimalScenarioWithUI minimalScenarioWithUI =
-            new MinimalScenarioWithUI(new MinimalScenario().get());
-        minimalScenarioWithUI.createController();
+        final WesternMedScenarioWithUI westernMedScenarioWithUI =
+            new WesternMedScenarioWithUI(new WesternMedScenario().get());
+        westernMedScenarioWithUI.createController();
     }
+
 }

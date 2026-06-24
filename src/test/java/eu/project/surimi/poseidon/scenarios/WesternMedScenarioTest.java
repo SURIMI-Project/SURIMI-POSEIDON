@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import build.buf.gen.surimi.v1.FinaliseSimulationRequest;
+import eu.project.surimi.poseidon.scenarios.westernmed.WesternMedScenario;
 import eu.project.surimi.poseidon.server.ServiceTest;
 import org.junit.jupiter.api.Test;
 

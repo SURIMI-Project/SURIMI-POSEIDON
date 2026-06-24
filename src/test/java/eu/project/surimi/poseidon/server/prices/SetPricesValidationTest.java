@@ -25,7 +25,7 @@ package eu.project.surimi.poseidon.server.prices;
 import build.buf.gen.surimi.v1.SpeciesPrice;
 import build.buf.gen.surimi.v1.SpeciesPriceSummary;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
-import eu.project.surimi.poseidon.scenarios.MinimalScenario;
+import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.server.ServiceTest;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;

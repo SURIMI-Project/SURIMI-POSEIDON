@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -20,36 +20,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.scenarios;
+package eu.project.surimi.poseidon.scenarios.minimal;
 
 import com.google.common.collect.Streams;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.compositeDispositionProcess;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.discardMortality;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.selectedSpeciesRetention;
-import uk.ac.ox.poseidon.agents.market.*;
-import static uk.ac.ox.poseidon.agents.choices.Factories.constantDestination;
-import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarket;
-import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
-import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
-import static uk.ac.ox.poseidon.agents.market.Factories.price;
-import static uk.ac.ox.poseidon.agents.market.Factories.priceEntry;
-import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
-import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
-import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.roundTrip;
-import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.travelAlongPath;
-import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
+import uk.ac.ox.poseidon.agents.market.BiomassMarketFactory;
+import uk.ac.ox.poseidon.agents.market.PriceEntryFactory;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
-import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.utils.Pair;
-import static uk.ac.ox.poseidon.core.utils.Factories.pair;
-import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromElevationValues;
-import static uk.ac.ox.poseidon.geography.ports.Factories.port;
-import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 
 import javax.measure.Quantity;
 import javax.measure.quantity.Mass;
@@ -66,12 +48,21 @@ import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.LITRE;
 import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
 import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
+import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.*;
+import static uk.ac.ox.poseidon.agents.choices.Factories.constantDestination;
 import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
+import static uk.ac.ox.poseidon.agents.market.Factories.*;
+import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
 import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
+import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.roundTrip;
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.travelAlongPath;
+import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
+import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.fixedBiomassProportionGear;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
@@ -86,9 +77,12 @@ import static uk.ac.ox.poseidon.core.time.Factories.hours;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.*;
 import static uk.ac.ox.poseidon.geography.Factories.coordinate;
-import static uk.ac.ox.poseidon.geography.grids.Factories.modelGrid;
+import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromElevationValues;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
+import static uk.ac.ox.poseidon.geography.grids.Factories.modelGrid;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
+import static uk.ac.ox.poseidon.geography.ports.Factories.port;
+import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromString;
 
 @SuppressWarnings("UnstableApiUsage")
