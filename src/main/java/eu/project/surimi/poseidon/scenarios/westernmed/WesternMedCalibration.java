@@ -113,7 +113,9 @@ public class WesternMedCalibration {
                     MUTATION_PROBABILITY,
                     RECOMBINATION_PROBABILITY,
                     STEADY_GENERATIONS,
-                    1
+                    1,
+                    -1.0,
+                    2.0
                 )
             );
 
