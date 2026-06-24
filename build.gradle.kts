@@ -75,7 +75,7 @@ val writeWesternMedScenario = tasks.register("writeWesternMedScenario", JavaExec
     mainClass.set("uk.ac.ox.poseidon.io.ScenarioWriter")
     classpath = sourceSets["main"].runtimeClasspath
     args(
-        "-c", "eu.project.surimi.poseidon.scenarios.WesternMedScenario",
+        "-c", "eu.project.surimi.poseidon.scenarios.westernmed.WesternMedScenario",
         "-s", "inputs/western_med/scenario.yaml"
     )
 }
