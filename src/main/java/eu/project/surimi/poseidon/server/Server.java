@@ -25,6 +25,7 @@
  */
 package eu.project.surimi.poseidon.server;
 
+import build.buf.protovalidate.ValidatorFactory;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -106,6 +107,7 @@ public class Server {
             .forAddress(new InetSocketAddress("0.0.0.0", this.port))
             .addService(ProtoReflectionServiceV1.newInstance())
             .intercept(new ExceptionInterceptor())
+            .intercept(new ValidationInterceptor(ValidatorFactory.newBuilder().build()))
             .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
             .intercept(createTrailerInterceptor())
             .addService(createFisheryService(simulationManager))

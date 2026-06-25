@@ -50,8 +50,8 @@ public class WesternMedCalibration {
     private static final double MAX_CATCHABILITY = 1.0;
 
     private static final int POPULATION_SIZE = 10;
-    private static final long GENERATIONS = 10;
-    private static final int STEADY_GENERATIONS = 10;
+    private static final long GENERATIONS = 5;
+    private static final int STEADY_GENERATIONS = 5;
     private static final double MUTATION_PROBABILITY = 0.20;
     private static final double RECOMBINATION_PROBABILITY = 0.35;
     private static final ImmutableLongArray SEEDS = ImmutableLongArray.of(1, 2, 3);
