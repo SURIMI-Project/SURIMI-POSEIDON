@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.server;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import uk.ac.ox.poseidon.core.Simulation;
 
@@ -32,6 +33,7 @@ public abstract class WithSimulationRequestHandler<ReqT, RespT>
     protected final SimulationManager simulationManager;
 
     @SuppressWarnings("SynchronizeOnNonFinalField")
+    @SuppressFBWarnings("USO")
     @Override
     protected RespT getResponse(final ReqT request) {
         final Simulation simulation = simulationManager.getSimulation(getSimulationId(request));

@@ -27,6 +27,7 @@ import tech.tablesaw.api.*;
 import uk.ac.ox.poseidon.agents.market.Sale;
 import uk.ac.ox.poseidon.core.events.AbstractListener;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Supplier;
@@ -71,7 +72,7 @@ public class LandingsAccumulator extends AbstractListener<Sale>
 
     @Override
     public Map<Key, Double> get() {
-        return landings;
+        return Collections.unmodifiableMap(landings);
     }
 
     public record Key(

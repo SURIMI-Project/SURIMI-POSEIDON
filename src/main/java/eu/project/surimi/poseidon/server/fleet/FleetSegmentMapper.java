@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>Missing, invalid, or unclassified values are mapped to {@code null}. This
  * preserves the wildcard semantics used by {@link FleetSegment#covers(FleetSegment)}.
  */
-public class FleetSegmentMapper implements Function<Vessel, FleetSegment> {
+public final class FleetSegmentMapper implements Function<Vessel, FleetSegment> {
 
     private final @NonNull StringTagExtractor countryCodeExtractor;
     private final @NonNull DoubleTagExtractor vesselLengthExtractor;
