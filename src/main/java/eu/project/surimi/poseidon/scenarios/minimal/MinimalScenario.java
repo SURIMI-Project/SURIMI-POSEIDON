@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.scenarios.minimal;
 
 import com.google.common.collect.Streams;
+import uk.ac.ox.poseidon.agents.catches.Factories;
 import uk.ac.ox.poseidon.agents.market.BiomassMarketFactory;
 import uk.ac.ox.poseidon.agents.market.PriceEntryFactory;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
@@ -91,6 +92,8 @@ public class MinimalScenario implements Supplier<Scenario> {
 
     public static final LocalDate START_DATE = LocalDate.of(2000, 1, 1);
     public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
+    public static final List<String> RETAINED_SPECIES_CODES =
+        SPECIES_CODES.subList(0, SPECIES_CODES.size() - 1);
     public static final List<String> LIFE_STAGES = List.of("juvenile", "adult");
 
     public static final List<Pair<String, String>> LIFE_STAGE_PER_SPECIES_CODE = Streams.zip(
@@ -174,7 +177,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                 distance
             );
 
-        final var priceEntries =
+        @SuppressWarnings("Convert2MethodRef") final var priceEntries =
             Stream.of(1, 2).map(portIndex ->
                 mappedFactory(
                     priceEntry(null, null, null),
@@ -182,7 +185,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                         PriceEntryFactory::setCatchCategory,
                         GEAR_CODES
                             .stream()
-                            .map(code -> catchCategory(code))
+                            .map(Factories::catchCategory)
                             .flatMap(cc -> nCopies(SPECIES_CODES.size(), cc).stream())
                             .toList()
                     ),
@@ -266,7 +269,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                         compositeDispositionProcess(
                             selectedSpeciesRetention(
                                 speciesByCode(
-                                    listOf("A", "B"),
+                                    object(RETAINED_SPECIES_CODES),
                                     species
                                 )
                             ),
