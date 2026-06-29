@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.GEAR_CODES;
-import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.SPECIES_CODES;
+import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.RETAINED_SPECIES_CODES;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
@@ -70,7 +70,7 @@ public class SalesProviderServiceTest extends ServiceTest {
         assertEquals(
             GEAR_CODES.stream().collect(toMap(
                 identity(),
-                gc -> Set.copyOf(SPECIES_CODES)
+                _ -> Set.copyOf(RETAINED_SPECIES_CODES)
             )),
             sales
                 .stream()
