@@ -152,6 +152,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
     private static final double VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
+    private static final String CATCH_CATEGORY = "Fresh - Whole";
 
     static void main(final String[] args) {
         final int numSteps = 12 * 10;
@@ -380,7 +381,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 "date",
                 "market_code",
                 "species_code",
-                "gear_code",
+                "category_code",
                 "price",
                 "currency",
                 "measurement_unit",
@@ -605,12 +606,8 @@ public class WesternMedScenario implements Supplier<Scenario> {
                 .dataMapping("behaviour.code", "main_fishing_gear")
                 .hold(
                     infiniteBiomassHold(
-                        uniformCatchCategoriser(catchCategory(null))
+                        uniformCatchCategoriser(catchCategory(CATCH_CATEGORY))
                     )
-                )
-                .dataMapping(
-                    "hold.catchCategoriser.catchCategory.code",
-                    "main_fishing_gear"
                 )
                 .gear(fishingGear)
                 .dataMapping("gear.code", "main_fishing_gear")
