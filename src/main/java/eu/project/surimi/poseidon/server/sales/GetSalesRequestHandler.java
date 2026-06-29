@@ -68,7 +68,8 @@ public class GetSalesRequestHandler extends
             .orElse(0.0);
         return Sale.newBuilder()
             .setSpecies(toProtoSpecies(firstEntry.species))
-            .setFleetSegment(FleetSegment.newBuilder().setGearCode(catchCategoryCode).build())
+            .setFleetSegment(FleetSegment.newBuilder().setGearCode(firstEntry.gearCode).build())
+            .setCategoryCode(catchCategoryCode)
             .setQuantity(totalKg)
             .setValue(totalValue)
             .build();
@@ -104,6 +105,7 @@ public class GetSalesRequestHandler extends
                         .stream()
                         .map(item -> new SaleEntry(
                             sale.getMarket(),
+                            sale.getVessel().getGear().getCode(),
                             item.getCategory(),
                             item.getSpecies(),
                             item.getContent().asBiomass(),
@@ -151,6 +153,7 @@ public class GetSalesRequestHandler extends
 
     private record SaleEntry(
         Market market,
+        String gearCode,
         CatchCategory catchCategory,
         Species species,
         Biomass biomass,

@@ -108,7 +108,7 @@ class SetPricesValidationTest extends ServiceTest {
                                 .newBuilder()
                                 .setMarketCode(MARKET_CODE)
                                 .setCurrency("GBP")
-                                .setGearCode(GEAR_CODE)
+                                .setCategoryCode(GEAR_CODE)
                                 .setSpecies(toProtoSpecies(speciesCode, lifeStage))
                                 .setPrice(price)
                                 .build()

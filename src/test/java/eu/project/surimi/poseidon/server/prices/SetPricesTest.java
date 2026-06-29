@@ -78,7 +78,7 @@ public class SetPricesTest extends ServiceTest {
                                 .newBuilder()
                                 .setMarketCode(marketCode)
                                 .setCurrency(currencyCode)
-                                .setGearCode(gearCode)
+                                .setCategoryCode(gearCode)
                                 .setSpecies(
                                     Species.newBuilder().setSpeciesCode(speciesCode).build()
                                 )

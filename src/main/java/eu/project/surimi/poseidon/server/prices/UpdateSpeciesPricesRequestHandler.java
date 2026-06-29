@@ -89,7 +89,7 @@ public class UpdateSpeciesPricesRequestHandler extends
                     Money.of(currencyUnit, price.getPrice(), RoundingMode.HALF_EVEN),
                     biomassUnit
                 );
-            final CatchCategory catchCategory = new CatchCategory(price.getGearCode());
+            final CatchCategory catchCategory = new CatchCategory(price.getCategoryCode());
             final Species requestSpecies = toPoseidonSpecies(price.getSpecies());
             validateNoGenericStagedConflict(market, catchCategory, requestSpecies);
 
