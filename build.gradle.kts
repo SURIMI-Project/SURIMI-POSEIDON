@@ -71,19 +71,19 @@ application {
     mainClass = "eu.project.surimi.poseidon.server.Server"
 }
 
-val writeWesternMedScenario = tasks.register("writeWesternMedScenario", JavaExec::class) {
+val writeNorthwesternMedScenario = tasks.register("writeNorthwesternMedScenario", JavaExec::class) {
     dependsOn("classes")
     mainClass.set("uk.ac.ox.poseidon.io.ScenarioWriter")
     classpath = sourceSets["main"].runtimeClasspath
     args(
-        "-c", "eu.project.surimi.poseidon.scenarios.westernmed.WesternMedScenario",
-        "-s", "inputs/western_med/scenario.yaml"
+        "-c", "eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario",
+        "-s", "inputs/northwestern_med/scenario.yaml"
     )
 }
 
-val profileWesternMedScenario = tasks.register("profileWesternMedScenario", JavaExec::class) {
+val profileWesternMedScenario = tasks.register("profileNorthwesternMedScenario", JavaExec::class) {
     dependsOn("classes")
-    mainClass.set("eu.project.surimi.poseidon.scenarios.westernmed.WesternMedScenario")
+    mainClass.set("eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario")
     classpath = sourceSets["main"].runtimeClasspath
     jvmArgs("-XX:StartFlightRecording=duration=120s,filename=build/profile.jfr,settings=profile")
 }
@@ -91,11 +91,11 @@ val profileWesternMedScenario = tasks.register("profileWesternMedScenario", Java
 val stageForImage = tasks.register<Sync>("stageForImage") {
     val imageDir = layout.buildDirectory.dir("image")
     into(imageDir)
-    dependsOn(tasks.named("jar"), writeWesternMedScenario)
+    dependsOn(tasks.named("jar"), writeNorthwesternMedScenario)
     from(tasks.named<Jar>("jar"))
     from(configurations.runtimeClasspath) { into("lib") }
     from("logging.properties")
-    from("inputs/western_med/") { into("inputs/western_med/") }
+    from("inputs/northwestern_med/") { into("inputs/northwestern_med/") }
 }
 
 val buildDockerImage = tasks.register("buildDockerImage", Exec::class) {

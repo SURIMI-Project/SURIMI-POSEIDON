@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.scenarios.westernmed;
+package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
@@ -37,13 +37,13 @@ import static java.awt.Color.WHITE;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.gui.palettes.PaletteColorMap.IMOLA;
 
-public class WesternMedScenarioWithUI extends ScenarioWithUI {
+public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
 
     private static final int WIDTH = 1090;
     private static final int HEIGHT = 820;
 
     @SuppressWarnings("unchecked")
-    public WesternMedScenarioWithUI(final Scenario scenario) {
+    public NorthwesternMedScenarioWithUI(final Scenario scenario) {
         super(
             scenario,
             List.of(
@@ -124,9 +124,9 @@ public class WesternMedScenarioWithUI extends ScenarioWithUI {
     }
 
     static void main(final String[] args) {
-        final WesternMedScenarioWithUI westernMedScenarioWithUI =
-            new WesternMedScenarioWithUI(new WesternMedScenario().get());
-        westernMedScenarioWithUI.createController();
+        final NorthwesternMedScenarioWithUI northwesternMedScenarioWithUI =
+            new NorthwesternMedScenarioWithUI(new NorthwesternMedScenario().get());
+        northwesternMedScenarioWithUI.createController();
     }
 
 }

@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.scenarios.westernmed;
+package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.ImmutableLongArray;
@@ -38,13 +38,13 @@ import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static eu.project.surimi.poseidon.calibration.Factories.landingsAccumulator;
-import static eu.project.surimi.poseidon.scenarios.westernmed.WesternMedScenario.INPUT_PATH;
+import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.INPUT_PATH;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.summarizingInt;
 import static java.util.stream.Collectors.toMap;
 import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
 
-public class WesternMedCalibration {
+public class NorthwesternMedCalibration {
 
     private static final double MIN_CATCHABILITY = 0.0;
     private static final double MAX_CATCHABILITY = 1.0;
@@ -93,7 +93,7 @@ public class WesternMedCalibration {
 
         final CalibrationProblem problem =
             new CalibrationProblem(
-                new WesternMedScenario().get(),
+                new NorthwesternMedScenario().get(),
                 Period.ofYears(yearsSummary.getMax() - yearsSummary.getMin() + 1),
                 ImmutableMap.of("landingsAccumulator", landingsAccumulator()),
                 parameterRanges,

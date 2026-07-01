@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.scenarios.westernmed;
+package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
 import sim.util.Int2D;
 import tech.tablesaw.api.Table;
@@ -135,10 +135,10 @@ import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
 import static uk.ac.ox.poseidon.regulations.predicates.Factories.isPermitted;
 import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionCellPredicate;
 
-public class WesternMedScenario implements Supplier<Scenario> {
+public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
-    static final Path INPUT_PATH = Path.of("inputs", "western_med");
+    static final Path INPUT_PATH = Path.of("inputs", "northwestern_med");
     private static final String CARRYING_CAPACITY = "10 kg";
     private static final double LEARNING_ALPHA = 1;
     private static final double EXPLORATION_PROBABILITY = 0.2;
@@ -157,7 +157,7 @@ public class WesternMedScenario implements Supplier<Scenario> {
     static void main(final String[] args) {
         final int numSteps = 12 * 10;
         final Period stepSize = Period.ofMonths(1);
-        final Scenario scenario = new WesternMedScenario().get();
+        final Scenario scenario = new NorthwesternMedScenario().get();
         final Path scenarioPath = INPUT_PATH.resolve("scenario.yaml");
         new ScenarioWriter().write(scenario, scenarioPath);
         final Simulation simulation = scenario.startNewSimulation();

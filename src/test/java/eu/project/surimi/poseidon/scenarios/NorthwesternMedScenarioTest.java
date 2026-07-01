@@ -23,7 +23,7 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import build.buf.gen.surimi.v1.FinaliseSimulationRequest;
-import eu.project.surimi.poseidon.scenarios.westernmed.WesternMedScenario;
+import eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario;
 import eu.project.surimi.poseidon.server.ServiceTest;
 import org.junit.jupiter.api.Test;
 
@@ -31,10 +31,10 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.stream.IntStream;
 
-class WesternMedScenarioTest extends ServiceTest {
+class NorthwesternMedScenarioTest extends ServiceTest {
 
-    public WesternMedScenarioTest() {
-        super(WesternMedScenario.class);
+    public NorthwesternMedScenarioTest() {
+        super(NorthwesternMedScenario.class);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
