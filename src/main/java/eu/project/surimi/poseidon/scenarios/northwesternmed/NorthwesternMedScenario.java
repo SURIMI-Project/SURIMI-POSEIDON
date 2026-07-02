@@ -74,6 +74,7 @@ import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingL
 import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
 import static uk.ac.ox.poseidon.agents.tasks.Factories.inactiveBehaviour;
 import static uk.ac.ox.poseidon.agents.tasks.accounting.Factories.payTripCost;
+import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.selectorTask;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
@@ -93,7 +94,12 @@ import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.indexedBiomassCat
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.vesselHasSameHomePort;
 import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.vesselIsActive;
+import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.vesselIsAt;
 import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentCell;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripDestinationCell;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripEventManager;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.homePortCell;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.vesselEventManager;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
@@ -430,10 +436,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
-        final var waitUntilNextEvening =
+        final var waitUntilNextCheckpoint =
             waitFor(
                 durationUntil(
-                    nextDayAtTime(time(22, 0, 0))
+                    nextTimeAt(time(6, 0, 0), time(22, 0, 0))
                 )
             );
 
@@ -546,17 +552,21 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var purseSeinerBehaviour =
             behaviour(
                 sequenceTask(
+                    selectorTask(
+                        checkThat(vesselIsAt(homePortCell())),
+                        travelAlongPathTo(pathFinder, distance, homePortCell(), vesselEventManager())
+                    ),
                     succeedOrWait(
                         sequenceTask(
                             readyForDeparture,
                             startTrip
                         ),
-                        waitUntilNextEvening
+                        waitUntilNextCheckpoint
                     ),
-                    travelAlongPath(pathFinder, distance),
+                    travelAlongPathTo(pathFinder, distance, currentTripDestinationCell(), currentTripEventManager()),
                     purseSeinerFishingTask,
                     setDestinationToOrigin(),
-                    travelAlongPath(pathFinder, distance),
+                    travelAlongPathTo(pathFinder, distance, currentTripDestinationCell(), currentTripEventManager()),
                     payTripCost(
                         composedFunction(
                             costsKeyFromVessel,
@@ -572,17 +582,21 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var bottomTrawlerBehaviour =
             behaviour(
                 sequenceTask(
+                    selectorTask(
+                        checkThat(vesselIsAt(homePortCell())),
+                        travelAlongPathTo(pathFinder, distance, homePortCell(), vesselEventManager())
+                    ),
                     succeedOrWait(
                         sequenceTask(
                             readyForDeparture,
                             startTrip
                         ),
-                        waitUntilNextEvening
+                        waitUntilNextCheckpoint
                     ),
-                    travelAlongPath(pathFinder, distance),
+                    travelAlongPathTo(pathFinder, distance, currentTripDestinationCell(), currentTripEventManager()),
                     bottomTrawlerFishingTask,
                     setDestinationToOrigin(),
-                    travelAlongPath(pathFinder, distance),
+                    travelAlongPathTo(pathFinder, distance, currentTripDestinationCell(), currentTripEventManager()),
                     landCatches(constant(hours(1))),
                     refuel(fuelStationGrid),
                     endTrip()

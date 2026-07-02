@@ -61,7 +61,9 @@ import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
 import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.roundTrip;
-import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.travelAlongPath;
+import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.travelAlongPathTo;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripDestinationCell;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripEventManager;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
@@ -256,9 +258,11 @@ public class MinimalScenario implements Supplier<Scenario> {
                             coordinate(0, 0)
                         )
                     ),
-                    travelAlongPath(
+                    travelAlongPathTo(
                         pathFinder,
-                        distance
+                        distance,
+                        currentTripDestinationCell(),
+                        currentTripEventManager()
                     ),
                     fishing(
                         currentCellFisheable(
