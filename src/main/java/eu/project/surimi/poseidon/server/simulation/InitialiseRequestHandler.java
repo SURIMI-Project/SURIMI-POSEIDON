@@ -24,6 +24,8 @@ package eu.project.surimi.poseidon.server.simulation;
 
 import build.buf.gen.surimi.v1.InitialiseSimulationRequest;
 import build.buf.gen.surimi.v1.InitialiseSimulationResponse;
+import build.buf.gen.surimi.v1.Market;
+import com.google.common.collect.ImmutableSet;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import lombok.Getter;
@@ -46,6 +48,7 @@ import java.util.UUID;
 
 import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
@@ -84,6 +87,14 @@ public class InitialiseRequestHandler
 
         final Period stepSize = parsePeriod(request.getSimulation().getTimeStep());
         final Unit<Mass> massUnit = getMassUnit(request);
+        final ImmutableSet<String> marketCodes =
+            request
+                .getSimulation()
+                .getItems()
+                .getMarketsList()
+                .stream()
+                .map(Market::getMarketCode)
+                .collect(toImmutableSet());
 
         validateContract(request);
 
@@ -103,7 +114,7 @@ public class InitialiseRequestHandler
         simulationManager.put(
             simulationId,
             simulation,
-            new SimulationManager.SimulationProperties(stepSize, massUnit)
+            new SimulationManager.SimulationProperties(stepSize, massUnit, marketCodes)
         );
         return InitialiseSimulationResponse
             .newBuilder()

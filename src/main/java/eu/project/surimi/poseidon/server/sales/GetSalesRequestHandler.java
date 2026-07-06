@@ -98,7 +98,10 @@ public class GetSalesRequestHandler extends
             simulation
                 .getComponent(BiomassSaleAccumulator.class)
                 .getEvents()
-                .filter(sale -> dateTimeRange.contains(sale.getDateTime()))
+                .filter(sale ->
+                    dateTimeRange.contains(sale.getDateTime()) &&
+                        simulationProperties.getMarketCodes().contains(sale.getMarket().getCode())
+                )
                 .flatMap(sale ->
                     sale
                         .getItems()

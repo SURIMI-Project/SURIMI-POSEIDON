@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.server;
 
 import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.ScenarioFilesForTesting;
+import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -152,6 +153,15 @@ public abstract class ServiceTest {
                                                 .setQuantity("mass")
                                                 .setUnit(KILOGRAM.getSymbol())
                                         )
+                                )
+                        )
+                        .setItems(
+                            Items
+                                .newBuilder()
+                                .addAllMarkets(
+                                    MinimalScenario.MARKET_CODES.stream().map(marketCode ->
+                                        Market.newBuilder().setMarketCode(marketCode).build()
+                                    ).toList()
                                 )
                         )
                 )

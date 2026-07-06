@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.server;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.collect.ImmutableSet;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
@@ -32,6 +33,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 import javax.measure.Unit;
 import javax.measure.quantity.Mass;
 import java.time.Period;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -99,14 +101,17 @@ public class SimulationManager {
         private final Period stepSize;
         private final Unit<Mass> standardMassUnit;
         @Getter(AccessLevel.NONE) private final boolean massUnitIsKg;
+        private final ImmutableSet<String> marketCodes;
 
         public SimulationProperties(
             final Period stepSize,
-            final Unit<Mass> standardMassUnit
+            final Unit<Mass> standardMassUnit,
+            final Set<String> marketCodes
         ) {
             this.stepSize = stepSize;
             this.standardMassUnit = standardMassUnit;
             this.massUnitIsKg = standardMassUnit.isEquivalentTo(KILOGRAM);
+            this.marketCodes = ImmutableSet.copyOf(marketCodes);
         }
 
         public double convertKgToStandardMassUnit(final double valueInKg) {
