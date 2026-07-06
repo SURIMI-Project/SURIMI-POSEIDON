@@ -75,35 +75,35 @@ public class UpdateSpeciesPricesRequestHandler extends
         logger.log(INFO, "Price update received for simulation {0}", request.getSimulationId());
 
         final Map<String, BiomassMarket> marketsById = getMarketsById(simulation);
-        request.getSpeciesPriceSummary().getSpeciesPricesList().forEach(price -> {
-            final BiomassMarket market = getOrThrow(
-                marketsById,
-                price.getMarketCode(),
-                "Market"
-            );
+        request
+            .getSpeciesPriceSummary()
+            .getSpeciesPricesList()
+            .forEach(price -> {
+                final BiomassMarket market = marketsById.get(price.getMarketCode());
+                if (market != null) { // ignore prices for unknown markets
 
-            final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());
-            final Unit<Mass> biomassUnit = simulationProperties.getStandardMassUnit();
-            final Price marketPrice =
-                new Price(
-                    Money.of(currencyUnit, price.getPrice(), RoundingMode.HALF_EVEN),
-                    biomassUnit
-                );
-            final CatchCategory catchCategory = new CatchCategory(price.getCategoryCode());
-            final Species requestSpecies = toPoseidonSpecies(price.getSpecies());
-            validateNoGenericStagedConflict(market, catchCategory, requestSpecies);
+                    final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());
+                    final Unit<Mass> biomassUnit = simulationProperties.getStandardMassUnit();
+                    final Price marketPrice =
+                        new Price(
+                            Money.of(currencyUnit, price.getPrice(), RoundingMode.HALF_EVEN),
+                            biomassUnit
+                        );
+                    final CatchCategory catchCategory = new CatchCategory(price.getCategoryCode());
+                    final Species requestSpecies = toPoseidonSpecies(price.getSpecies());
+                    validateNoGenericStagedConflict(market, catchCategory, requestSpecies);
 
-            market.setPrice(catchCategory, requestSpecies, marketPrice);
-            logger.log(
-                DEBUG,
-                "Updated price of species {0} at port market {1} to {2}/{3}.",
-                requestSpecies,
-                market.getCode(),
-                marketPrice.getAmount(),
-                marketPrice.getBiomassUnit()
-            );
-
-        });
+                    market.setPrice(catchCategory, requestSpecies, marketPrice);
+                    logger.log(
+                        DEBUG,
+                        "Updated price of species {0} at port market {1} to {2}/{3}.",
+                        requestSpecies,
+                        market.getCode(),
+                        marketPrice.getAmount(),
+                        marketPrice.getBiomassUnit()
+                    );
+                }
+            });
         return UpdateSpeciesPricesResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())
