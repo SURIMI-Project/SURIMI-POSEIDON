@@ -102,16 +102,19 @@ public class SimulationManager {
         private final Unit<Mass> standardMassUnit;
         @Getter(AccessLevel.NONE) private final boolean massUnitIsKg;
         private final ImmutableSet<String> marketCodes;
+        private final ImmutableSet<SpeciesKey> speciesKeys;
 
         public SimulationProperties(
             final Period stepSize,
             final Unit<Mass> standardMassUnit,
-            final Set<String> marketCodes
+            final Set<String> marketCodes,
+            final Set<SpeciesKey> speciesKeys
         ) {
             this.stepSize = stepSize;
             this.standardMassUnit = standardMassUnit;
             this.massUnitIsKg = standardMassUnit.isEquivalentTo(KILOGRAM);
             this.marketCodes = ImmutableSet.copyOf(marketCodes);
+            this.speciesKeys = ImmutableSet.copyOf(speciesKeys);
         }
 
         public double convertKgToStandardMassUnit(final double valueInKg) {

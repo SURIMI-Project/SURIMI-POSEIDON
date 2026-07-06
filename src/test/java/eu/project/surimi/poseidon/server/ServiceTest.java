@@ -159,9 +159,29 @@ public abstract class ServiceTest {
                             Items
                                 .newBuilder()
                                 .addAllMarkets(
-                                    MinimalScenario.MARKET_CODES.stream().map(marketCode ->
-                                        Market.newBuilder().setMarketCode(marketCode).build()
-                                    ).toList()
+                                    MinimalScenario.MARKET_CODES
+                                        .stream()
+                                        .map(marketCode ->
+                                            Market
+                                                .newBuilder()
+                                                .setMarketCode(marketCode)
+                                                .build()
+                                        )
+                                        .toList()
+                                )
+                                .addAllSpecies(
+                                    MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE
+                                        .stream()
+                                        .map(pair -> {
+                                            final Species.Builder builder =
+                                                Species.newBuilder();
+                                            builder.setSpeciesCode(pair.getFirst());
+                                            if (pair.getSecond() != null) {
+                                                builder.setLifeStage(pair.getSecond());
+                                            }
+                                            return builder.build();
+                                        })
+                                        .toList()
                                 )
                         )
                 )

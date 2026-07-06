@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.server.sales;
 import build.buf.gen.surimi.v1.*;
 import com.google.common.collect.Range;
 import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
@@ -106,6 +107,12 @@ public class GetSalesRequestHandler extends
                     sale
                         .getItems()
                         .stream()
+                        .filter(item ->
+                            // only report sales for species in contract
+                            simulationProperties
+                                .getSpeciesKeys()
+                                .contains(SpeciesKey.from(item.getSpecies()))
+                        )
                         .map(item -> new SaleEntry(
                             sale.getMarket(),
                             sale.getVessel().getGear().getCode(),

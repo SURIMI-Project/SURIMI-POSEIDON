@@ -28,6 +28,7 @@ import build.buf.gen.surimi.v1.Market;
 import com.google.common.collect.ImmutableSet;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.SpeciesKey;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -95,6 +96,14 @@ public class InitialiseRequestHandler
                 .stream()
                 .map(Market::getMarketCode)
                 .collect(toImmutableSet());
+        final ImmutableSet<SpeciesKey> speciesKeys =
+            request
+                .getSimulation()
+                .getItems()
+                .getSpeciesList()
+                .stream()
+                .map(SpeciesKey::from)
+                .collect(toImmutableSet());
 
         validateContract(request);
 
@@ -114,7 +123,7 @@ public class InitialiseRequestHandler
         simulationManager.put(
             simulationId,
             simulation,
-            new SimulationManager.SimulationProperties(stepSize, massUnit, marketCodes)
+            new SimulationManager.SimulationProperties(stepSize, massUnit, marketCodes, speciesKeys)
         );
         return InitialiseSimulationResponse
             .newBuilder()
