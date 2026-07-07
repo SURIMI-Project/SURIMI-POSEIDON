@@ -111,8 +111,11 @@ public class GetSalesRequestHandler extends
                             // only report sales for species in contract
                             simulationProperties
                                 .getSpeciesKeys()
-                                .contains(SpeciesKey.from(item.getSpecies()))
-                        )
+                                .contains(SpeciesKey.from(item.getSpecies())) &&
+                                // ...and price categories in contract
+                                simulationProperties
+                                    .getPriceCategoryCodes()
+                                    .contains(item.getCategory().getCode()))
                         .map(item -> new SaleEntry(
                             sale.getMarket(),
                             sale.getVessel().getGear().getCode(),

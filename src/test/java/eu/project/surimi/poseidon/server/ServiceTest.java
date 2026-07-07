@@ -169,6 +169,17 @@ public abstract class ServiceTest {
                                         )
                                         .toList()
                                 )
+                                .addAllPriceCategories(
+                                    MinimalScenario.GEAR_CODES
+                                        .stream()
+                                        .map(gearCode ->
+                                            PriceCategory
+                                                .newBuilder()
+                                                .setCategoryCode(gearCode)
+                                                .build()
+                                        )
+                                        .toList()
+                                )
                                 .addAllSpecies(
                                     MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE
                                         .stream()

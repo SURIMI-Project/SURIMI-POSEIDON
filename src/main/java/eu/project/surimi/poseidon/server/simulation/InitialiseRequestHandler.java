@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.server.simulation;
 import build.buf.gen.surimi.v1.InitialiseSimulationRequest;
 import build.buf.gen.surimi.v1.InitialiseSimulationResponse;
 import build.buf.gen.surimi.v1.Market;
+import build.buf.gen.surimi.v1.PriceCategory;
 import com.google.common.collect.ImmutableSet;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.SimulationManager;
@@ -96,6 +97,14 @@ public class InitialiseRequestHandler
                 .stream()
                 .map(Market::getMarketCode)
                 .collect(toImmutableSet());
+        final ImmutableSet<String> priceCategoryCodes =
+            request
+                .getSimulation()
+                .getItems()
+                .getPriceCategoriesList()
+                .stream()
+                .map(PriceCategory::getCategoryCode)
+                .collect(toImmutableSet());
         final ImmutableSet<SpeciesKey> speciesKeys =
             request
                 .getSimulation()
@@ -123,7 +132,13 @@ public class InitialiseRequestHandler
         simulationManager.put(
             simulationId,
             simulation,
-            new SimulationManager.SimulationProperties(stepSize, massUnit, marketCodes, speciesKeys)
+            new SimulationManager.SimulationProperties(
+                stepSize,
+                massUnit,
+                marketCodes,
+                priceCategoryCodes,
+                speciesKeys
+            )
         );
         return InitialiseSimulationResponse
             .newBuilder()
