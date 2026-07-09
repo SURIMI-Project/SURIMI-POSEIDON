@@ -63,11 +63,8 @@ import static uk.ac.ox.poseidon.agents.components.Factories.registeredVesselComp
 import static uk.ac.ox.poseidon.agents.components.Factories.vesselComponentRegister;
 import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
-import static uk.ac.ox.poseidon.agents.fuel.Factories.fuelStationGrid;
-import static uk.ac.ox.poseidon.agents.fuel.Factories.oneFuelStationPerPort;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarketGridFromPriceTable;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
-import static uk.ac.ox.poseidon.agents.money.Factories.money;
 import static uk.ac.ox.poseidon.agents.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingLocationLegalityChecker;
@@ -84,7 +81,7 @@ import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.*;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import static uk.ac.ox.poseidon.agents.vessels.accounts.Factories.fixedCostCollector;
-import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
+import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.infiniteTank;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
@@ -92,14 +89,8 @@ import static uk.ac.ox.poseidon.agents.vessels.friends.Factories.dynamicFriendsS
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.indexedBiomassCatchabilityGear;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
-import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.vesselHasSameHomePort;
-import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.vesselIsActive;
-import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.vesselIsAt;
-import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentCell;
-import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripDestinationCell;
-import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripEventManager;
-import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.homePortCell;
-import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.vesselEventManager;
+import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.*;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.*;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
@@ -540,21 +531,17 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             )
         );
 
-        final var fuelStationGrid = fuelStationGrid(
-            portGrid,
-            oneFuelStationPerPort(
-                portGrid,
-                money(1.50, "EUR"),
-                400
-            )
-        );
-
         final var purseSeinerBehaviour =
             behaviour(
                 sequenceTask(
                     selectorTask(
                         checkThat(vesselIsAt(homePortCell())),
-                        travelAlongPathTo(pathFinder, distance, homePortCell(), vesselEventManager())
+                        travelAlongPathTo(
+                            pathFinder,
+                            distance,
+                            homePortCell(),
+                            vesselEventManager()
+                        )
                     ),
                     succeedOrWait(
                         sequenceTask(
@@ -563,10 +550,20 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         ),
                         waitUntilNextCheckpoint
                     ),
-                    travelAlongPathTo(pathFinder, distance, currentTripDestinationCell(), currentTripEventManager()),
+                    travelAlongPathTo(
+                        pathFinder,
+                        distance,
+                        currentTripDestinationCell(),
+                        currentTripEventManager()
+                    ),
                     purseSeinerFishingTask,
                     setDestinationToOrigin(),
-                    travelAlongPathTo(pathFinder, distance, currentTripDestinationCell(), currentTripEventManager()),
+                    travelAlongPathTo(
+                        pathFinder,
+                        distance,
+                        currentTripDestinationCell(),
+                        currentTripEventManager()
+                    ),
                     payTripCost(
                         composedFunction(
                             costsKeyFromVessel,
@@ -574,7 +571,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         )
                     ),
                     landCatches(constant(hours(1))),
-                    refuel(fuelStationGrid),
                     endTrip()
                 )
             );
@@ -584,7 +580,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 sequenceTask(
                     selectorTask(
                         checkThat(vesselIsAt(homePortCell())),
-                        travelAlongPathTo(pathFinder, distance, homePortCell(), vesselEventManager())
+                        travelAlongPathTo(
+                            pathFinder,
+                            distance,
+                            homePortCell(),
+                            vesselEventManager()
+                        )
                     ),
                     succeedOrWait(
                         sequenceTask(
@@ -593,12 +594,21 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         ),
                         waitUntilNextCheckpoint
                     ),
-                    travelAlongPathTo(pathFinder, distance, currentTripDestinationCell(), currentTripEventManager()),
+                    travelAlongPathTo(
+                        pathFinder,
+                        distance,
+                        currentTripDestinationCell(),
+                        currentTripEventManager()
+                    ),
                     bottomTrawlerFishingTask,
                     setDestinationToOrigin(),
-                    travelAlongPathTo(pathFinder, distance, currentTripDestinationCell(), currentTripEventManager()),
+                    travelAlongPathTo(
+                        pathFinder,
+                        distance,
+                        currentTripDestinationCell(),
+                        currentTripEventManager()
+                    ),
                     landCatches(constant(hours(1))),
-                    refuel(fuelStationGrid),
                     endTrip()
                 )
             );
@@ -628,10 +638,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
                 .engine(
                     simpleEngine(
-                        // TODO: do we need a realistic value for tank volume?
-                        fullTank(volumeOf(100_000, LITRE)),
+                        infiniteTank(),
                         speedOf(VESSEL_SPEED_IN_KNOTS, KNOT),
-                        volumeOf(3, LITRE) // TODO: find realistic value here
+                        volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
                     )
                 )
                 .extraFactory(tripEvaluator)
