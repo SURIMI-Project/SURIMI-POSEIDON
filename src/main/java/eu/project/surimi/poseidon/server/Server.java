@@ -40,6 +40,7 @@ import eu.project.surimi.poseidon.server.regulations.UpdateRegulationsRequestHan
 import eu.project.surimi.poseidon.server.sales.GetSalesRequestHandler;
 import eu.project.surimi.poseidon.server.simulation.*;
 import io.grpc.ServerInterceptor;
+import io.grpc.ServerInterceptors;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
@@ -107,10 +108,12 @@ public class Server {
             .forAddress(new InetSocketAddress("0.0.0.0", this.port))
             .addService(ProtoReflectionServiceV1.newInstance())
             .intercept(new ExceptionInterceptor())
-            .intercept(new ValidationInterceptor(ValidatorFactory.newBuilder().build()))
             .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
             .intercept(createTrailerInterceptor())
-            .addService(createFisheryService(simulationManager))
+            .addService(ServerInterceptors.intercept(
+                createFisheryService(simulationManager),
+                new ValidationInterceptor(ValidatorFactory.newBuilder().build())
+            ))
             .build();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.log(INFO, "Shutting down gRPC server...");
