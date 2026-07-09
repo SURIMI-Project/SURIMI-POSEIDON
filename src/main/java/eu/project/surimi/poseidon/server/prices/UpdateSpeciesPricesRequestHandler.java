@@ -144,8 +144,8 @@ public class UpdateSpeciesPricesRequestHandler extends
         if (requestIsGeneric && hasStagedPrice) {
             throw INVALID_ARGUMENT
                 .withDescription(
-                    ("Cannot update generic species '%s' in market '%s' and gear '%s' because " +
-                        "staged prices exist.")
+                    ("Cannot update generic species '%s' in market '%s' and category '%s' because" +
+                        " life-staged prices exist.")
                         .formatted(speciesCode, market.getCode(), catchCategory.getCode())
                 )
                 .asRuntimeException();
@@ -153,8 +153,8 @@ public class UpdateSpeciesPricesRequestHandler extends
         if (!requestIsGeneric && hasGenericPrice) {
             throw INVALID_ARGUMENT
                 .withDescription(
-                    ("Cannot update staged species '%s' in market '%s' and gear '%s' because a " +
-                        "generic price exists.")
+                    ("Cannot update life-staged species '%s' in market '%s' and category '%s' " +
+                        "because a generic price exists.")
                         .formatted(requestedSpecies, market.getCode(), catchCategory.getCode())
                 )
                 .asRuntimeException();
