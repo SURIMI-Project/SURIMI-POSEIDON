@@ -143,8 +143,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final double DEFAULT_CATCH_PROPORTION = 0.1;
     private static final double DEFAULT_PURSE_SEINE_DISCARD_RATE = 0.05;
     private static final double DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE = 0.2;
-    private static final double DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE = 0.1;
-    private static final double DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE = 0.3;
     private static final double PURSE_SEINER_DEPTH_THRESHOLD = -35.0;
     private static final double VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
@@ -479,16 +477,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE)
                 )
             );
-        final var purseSeineDiscardMortalityRates =
-            indexedDiscardMortality(
-                species,
-                tableLookup(
-                    speciesKey(),
-                    speciesTable,
-                    speciesKeyFromRow,
-                    constantDouble(DEFAULT_PURSE_SEINE_DISCARD_MORTALITY_RATE)
-                )
-            );
         final var bottomTrawlerDiscardRates =
             discardRates(
                 species,
@@ -499,16 +487,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE)
                 )
             );
-        final var bottomTrawlerDiscardMortalityRates =
-            indexedDiscardMortality(
-                species,
-                tableLookup(
-                    speciesKey(),
-                    speciesTable,
-                    speciesKeyFromRow,
-                    constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_MORTALITY_RATE)
-                )
-            );
+
+        final var discardMortality = fullDiscardMortality();
 
         final var purseSeinerFishingTask = fishing(
             currentCellFisheable(
@@ -517,7 +497,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             compositeDispositionProcess(
                 purseSeineDiscardRates,
                 proportionallyLimitingBiomassToHold(),
-                purseSeineDiscardMortalityRates
+                discardMortality
             )
         );
         final var bottomTrawlerFishingTask = fishing(
@@ -527,7 +507,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             compositeDispositionProcess(
                 bottomTrawlerDiscardRates,
                 proportionallyLimitingBiomassToHold(),
-                bottomTrawlerDiscardMortalityRates
+                discardMortality
             )
         );
 
