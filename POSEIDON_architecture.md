@@ -12,6 +12,18 @@ Within SURIMI, POSEIDON communicates exclusively with the **SURIMI controller** 
 It never contacts other SURIMI models directly. The controller drives the simulation lifecycle and
 exchanges fisheries state (biomass, regulations, prices, catch data, sales) at each time step.
 
+The service is written in **Java 25** and developed with **IntelliJ IDEA**.
+
+The code is licensed under the **GNU General Public License v3 (GPL-3.0-or-later)**. Every source file carries the standard GPL-3 header attributing copyright to the University of Oxford.
+
+### Build outputs
+
+| Artifact | Gradle task | Description |
+|----------|-------------|-------------|
+| `SURIMI-POSEIDON.jar` | `jar` (via `build`) | Executable JAR containing the compiled service code. Runtime dependencies are placed alongside it in `build/image/lib/` by the `stageForImage` task. |
+| `ghcr.io/official-ewe/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties`, and the `inputs/northwestern_med/` scenario data. This is the deployable artefact pushed to GHCR by CI. |
+| `inputs/northwestern_med/scenario.yaml` | `writeNorthwesternMedScenario` | Serialised YAML representation of the `NorthwesternMedScenario`. Generated from Java code and committed to the `inputs` submodule; also regenerated at Docker image build time to ensure consistency. |
+
 ---
 
 ## Responsibilities
@@ -107,6 +119,8 @@ recorded in a `BiomassSaleAccumulator`. Prices can be updated at any step via
 ---
 
 ## Service architecture
+
+POSEIDON runs as a single-process **gRPC server** that exposes one service (`FisheryService`) on a configurable TCP port. All inbound calls pass through a four-layer interceptor chain — exception enrichment, OpenTelemetry tracing, protocol-version trailers, and request validation — before reaching the business logic. The business logic is organised as a set of independent `RequestHandler` subclasses, each responsible for exactly one gRPC method; they share access to a central `SimulationManager` that maintains a Caffeine cache of live `Simulation` objects keyed by UUID. Each `Simulation` is a self-contained MASON agent-based engine that owns its own biomass grids, TAC quota tracker, market grid, and event accumulators, making concurrent multi-simulation execution safe without inter-simulation state sharing. The service is intentionally stateless with respect to fisheries domain data between steps: biomass, regulations, and prices are pushed in by the controller each time step, while catch, fishing-activity, and sales data are pulled out by the controller after each step.
 
 ### High-Level Architecture
 
@@ -387,6 +401,30 @@ SURIMI-POSEIDON/
 ├── settings.gradle.kts                     # Composite build including POSEIDON submodule
 └── gradle/libs.versions.toml              # Centralised dependency version catalogue
 ```
+
+---
+
+## Source control
+
+The repository is hosted on **GitHub** at `https://github.com/Official-EwE/SURIMI-POSEIDON`.
+
+### Submodules
+
+The repository contains **two Git submodules**:
+
+| Submodule | Local path | Remote | Branch / note |
+|-----------|------------|--------|---------------|
+| POSEIDON ABM framework | `POSEIDON/` | `https://github.com/poseidon-fisheries/POSEIDON.git` | `SURIMI` branch — a dedicated integration branch of the upstream POSEIDON project |
+| Scenario input data | `inputs/` | `https://github.com/Official-EwE/SURIMI-POSEIDON_inputs.git` | default branch — kept in a separate repository because input files are large and versioned independently of the service code |
+
+The CI workflow checks out all submodules recursively (`submodules: 'recursive'`) and uses a
+**Personal Access Token** (`POSEIDON_PAT` secret) to access the private submodules.
+
+### Git LFS
+
+The CI checkout step enables **Git LFS** (`lfs: true`). Large binary input files (grid files,
+CSV data) stored in the `inputs` submodule repository are managed via Git LFS so they do not
+bloat the main repository history.
 
 ---
 
