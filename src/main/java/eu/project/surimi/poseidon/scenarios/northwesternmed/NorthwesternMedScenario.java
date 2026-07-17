@@ -94,6 +94,8 @@ import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.*;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
+import static uk.ac.ox.poseidon.biology.species.extractors.Factories.speciesCode;
+import static uk.ac.ox.poseidon.biology.species.extractors.Factories.speciesLifeStage;
 import static uk.ac.ox.poseidon.biology.species.extractors.Factories.speciesKey;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
@@ -141,8 +143,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final double EXPLORATION_PROBABILITY = 0.2;
     private static final int MEAN_EXPLORATION_RADIUS = 1;
     private static final double DEFAULT_CATCH_PROPORTION = 0.1;
-    private static final double DEFAULT_PURSE_SEINE_DISCARD_RATE = 0.05;
-    private static final double DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE = 0.2;
     private static final double PURSE_SEINER_DEPTH_THRESHOLD = -35.0;
     private static final double VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
@@ -278,9 +278,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
         final var bottomTrawlerCatchabilities =
             perSimulation(object(new LinkedHashMap<>(catchabilityMap)));
-
-        final var speciesTable = csvTableFromFile(inputPath.plus("species.csv"));
-        final var speciesKeyFromRow = multiStringKeyFromRow("species_code", "life_stage");
 
         final var fishingGear =
             VesselScopeFactoriesByCode.<Gear>builder()
@@ -471,20 +468,28 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             discardRates(
                 species,
                 tableLookup(
-                    speciesKey(),
-                    speciesTable,
-                    speciesKeyFromRow,
-                    constantDouble(DEFAULT_PURSE_SEINE_DISCARD_RATE)
+                    multiStringKeyFromFunctions(
+                        speciesCode(),
+                        speciesLifeStage(),
+                        constant(object(PURSE_SEINE_GEAR_CODE))
+                    ),
+                    csvTableFromFile(inputPath.plus("discard_ratios.csv")),
+                    multiStringKeyFromRow("species_code", "life_stage", "gear"),
+                    doubleFromRow("discard_ratio")
                 )
             );
         final var bottomTrawlerDiscardRates =
             discardRates(
                 species,
                 tableLookup(
-                    speciesKey(),
-                    speciesTable,
-                    speciesKeyFromRow,
-                    constantDouble(DEFAULT_BOTTOM_TRAWLER_DISCARD_RATE)
+                    multiStringKeyFromFunctions(
+                        speciesCode(),
+                        speciesLifeStage(),
+                        constant(object(BOTTOM_TRAWLER_GEAR_CODE))
+                    ),
+                    csvTableFromFile(inputPath.plus("discard_ratios.csv")),
+                    multiStringKeyFromRow("species_code", "life_stage", "gear"),
+                    doubleFromRow("discard_ratio")
                 )
             );
 
