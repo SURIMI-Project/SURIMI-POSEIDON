@@ -266,7 +266,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
                 .stream()
                 .collect(groupingBy(
-                    row -> row.getString("gear"),
+                    row -> row.getString("gear_code"),
                     LinkedHashMap::new,
                     toMap(
                         row -> multiStringKey(
@@ -353,7 +353,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             );
 
         final var costsKeyFromRow =
-            multiStringKeyFromRow("country_code", "year", "vessel_length", "gear");
+            multiStringKeyFromRow("country_code", "year", "vessel_length", "gear_code");
 
         final var hourlyCostsMap =
             mapFromTable(
@@ -480,8 +480,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
-        final var discardRatiosTable = csvTableFromFile(inputPath.plus("discard_ratios.csv"));
-        final var discardRatiosKeyFromRow = multiStringKeyFromRow("species_code", "life_stage", "gear");
+        final var discardRatiosTable =
+            csvTableFromFile(inputPath.plus("discard_ratios.csv"));
+        final var discardRatiosKeyFromRow =
+            multiStringKeyFromRow("species_code", "life_stage", "gear_code");
 
         final var purseSeineDiscardRates =
             discardRates(
