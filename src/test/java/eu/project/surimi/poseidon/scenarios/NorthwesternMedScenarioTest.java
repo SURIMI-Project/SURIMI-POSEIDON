@@ -62,10 +62,16 @@ class NorthwesternMedScenarioTest extends ServiceTest {
             .parallel()
             .mapToObj(i -> initialiseSimulation())
             .forEach(simulationId -> {
-                LocalDateTime currentDateTime = START_DATE_TIME;
-                for (int j = 0; j < numSteps; j++) {
-                    step(simulationId, currentDateTime);
-                    currentDateTime = currentDateTime.plus(stepSize);
+                try {
+                    LocalDateTime currentDateTime = START_DATE_TIME;
+                    for (int j = 0; j < numSteps; j++) {
+                        step(simulationId, currentDateTime);
+                        currentDateTime = currentDateTime.plus(stepSize);
+                    }
+                } finally {
+                    simulationStub.finaliseSimulation(
+                        FinaliseSimulationRequest.newBuilder().setSimulationId(simulationId).build()
+                    );
                 }
             });
     }

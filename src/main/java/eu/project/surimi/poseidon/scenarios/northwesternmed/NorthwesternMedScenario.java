@@ -480,6 +480,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
+        final var discardRatiosTable = csvTableFromFile(inputPath.plus("discard_ratios.csv"));
+        final var discardRatiosKeyFromRow = multiStringKeyFromRow("species_code", "life_stage", "gear");
+
         final var purseSeineDiscardRates =
             discardRates(
                 species,
@@ -490,8 +493,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                             speciesLifeStage(),
                             constant(object(PURSE_SEINE_GEAR_CODE))
                         ),
-                        csvTableFromFile(inputPath.plus("discard_ratios.csv")),
-                        multiStringKeyFromRow("species_code", "life_stage", "gear"),
+                        discardRatiosTable,
+                        discardRatiosKeyFromRow,
                         doubleFromRow("discard_ratio")
                     ),
                     0.0
@@ -507,8 +510,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                             speciesLifeStage(),
                             constant(object(BOTTOM_TRAWLER_GEAR_CODE))
                         ),
-                        csvTableFromFile(inputPath.plus("discard_ratios.csv")),
-                        multiStringKeyFromRow("species_code", "life_stage", "gear"),
+                        discardRatiosTable,
+                        discardRatiosKeyFromRow,
                         doubleFromRow("discard_ratio")
                     ),
                     0.0
