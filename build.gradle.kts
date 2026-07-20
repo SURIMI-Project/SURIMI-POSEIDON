@@ -28,6 +28,20 @@ plugins {
 
 val mockitoAgent: Configuration = configurations.create("mockitoAgent")
 
+abstract class MockitoAgentArgumentProvider : CommandLineArgumentProvider {
+    @get:InputFile
+    @get:Classpath
+    abstract val agentJar: RegularFileProperty
+
+    override fun asArguments(): Iterable<String> {
+        return listOf("-javaagent:${agentJar.asFile.get().absolutePath}", "-Xshare:off")
+    }
+}
+
+val mockitoAgentArgs = objects.newInstance(MockitoAgentArgumentProvider::class).apply {
+    agentJar.set(layout.file(mockitoAgent.elements.map { it.single().asFile }))
+}
+
 dependencies {
     implementation("POSEIDON:gui")
     implementation("POSEIDON:regulations")
@@ -51,12 +65,13 @@ dependencies {
     testImplementation(libs.jqwik)
     testImplementation(libs.assertj)
     testImplementation(libs.mockito)
+    mockitoAgent(libs.mockito) { isTransitive = false }
 }
 
 testing {
     suites {
-        val test by getting(JvmTestSuite::class) {
-            useJUnitJupiter("5.14.3")
+        named<JvmTestSuite>("test") {
+            useJUnitJupiter(libs.versions.junit.get())
         }
     }
 }
@@ -112,6 +127,7 @@ tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
+    jvmArgumentProviders.add(mockitoAgentArgs)
 }
 
 tasks.jacocoTestReport {
