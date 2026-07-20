@@ -34,12 +34,9 @@ import uk.ac.ox.poseidon.calibration.errors.SumSquaredErrors;
 import java.nio.file.Path;
 import java.time.Period;
 import java.util.Map;
-import java.util.stream.Stream;
 
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static eu.project.surimi.poseidon.calibration.Factories.landingsAccumulator;
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.INPUT_PATH;
-import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.summarizingInt;
 import static java.util.stream.Collectors.toMap;
 import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
@@ -67,36 +64,33 @@ public class NorthwesternMedCalibration {
             .collect(summarizingInt(LandingsAccumulator.Key::year));
 
         final DoubleRange catchabilityRange = new DoubleRange(MIN_CATCHABILITY, MAX_CATCHABILITY);
-        final var parameterRanges =
-            Table
+        final ImmutableMap<String, DoubleRange> catchabilityParameterRanges =
+            ImmutableMap.copyOf(Table
                 .read()
-                .csv(INPUT_PATH.resolve("species.csv").toFile())
+                .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
                 .stream()
-                .map(
-                    row -> multiStringKey(
-                        row.getString("species_code"),
-                        row.getString("life_stage")
-                    )
-                )
-                .flatMap(speciesKey ->
-                    Stream
-                        .of(
-                            "purseSeinerCatchabilities",
-                            "bottomTrawlerCatchabilities"
-                        )
-                        .map(x -> "components(" + x + ").delegate.value(" + speciesKey + ")")
-                )
-                .collect(toImmutableMap(
-                    identity(),
-                    _ -> catchabilityRange
-                ));
+                .collect(toMap(
+                    row -> {
+                        final String component = switch (row.getString("gear")) {
+                            case "PS" -> "purseSeinerCatchabilities";
+                            case "OTB" -> "bottomTrawlerCatchabilities";
+                            default -> throw new IllegalArgumentException("Unsupported gear: " + row.getString("gear"));
+                        };
+                        return "components(" + component + ").delegate.value(" + multiStringKey(
+                            row.getString("species_code"),
+                            row.getString("life_stage")
+                        ) + ")";
+                    },
+                    _ -> catchabilityRange,
+                    (a, _) -> a
+                )));
 
         final CalibrationProblem problem =
             new CalibrationProblem(
                 new NorthwesternMedScenario().get(),
                 Period.ofYears(yearsSummary.getMax() - yearsSummary.getMin() + 1),
                 ImmutableMap.of("landingsAccumulator", landingsAccumulator()),
-                parameterRanges,
+                catchabilityParameterRanges,
                 new SumSquaredErrors<>(
                     targetLandings,
                     sim -> sim.getComponent(LandingsAccumulator.class).get()

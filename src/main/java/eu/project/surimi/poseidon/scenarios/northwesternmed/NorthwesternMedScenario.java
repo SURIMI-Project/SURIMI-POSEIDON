@@ -45,9 +45,11 @@ import java.time.Period;
 import java.util.LinkedHashMap;
 import java.util.function.Supplier;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.KNOT;
@@ -94,9 +96,7 @@ import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.*;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
-import static uk.ac.ox.poseidon.biology.species.extractors.Factories.speciesCode;
-import static uk.ac.ox.poseidon.biology.species.extractors.Factories.speciesLifeStage;
-import static uk.ac.ox.poseidon.biology.species.extractors.Factories.speciesKey;
+import static uk.ac.ox.poseidon.biology.species.extractors.Factories.*;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
 import static uk.ac.ox.poseidon.core.functions.Factories.*;
@@ -108,7 +108,8 @@ import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.*;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.minInt;
 import static uk.ac.ox.poseidon.core.providers.random.Factories.randomPoisson;
@@ -259,25 +260,34 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 "life_stage"
             );
 
-        final LinkedHashMap<String, Double> catchabilityMap = Table
-            .read()
-            .csv(INPUT_PATH.resolve("species.csv").toFile())
-            .stream()
-            .collect(toMap(
-                row -> multiStringKey(
-                    row.getString("species_code"),
-                    row.getString("life_stage")
-                ),
-                _ -> DEFAULT_CATCH_PROPORTION,
-                (a, _) -> a,
-                LinkedHashMap::new
-            ));
+        final var catchabilityMapsByGearCode =
+            Table
+                .read()
+                .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
+                .stream()
+                .collect(groupingBy(
+                    row -> row.getString("gear"),
+                    LinkedHashMap::new,
+                    toMap(
+                        row -> multiStringKey(
+                            row.getString("species_code"),
+                            row.getString("life_stage")
+                        ),
+                        _ -> DEFAULT_CATCH_PROPORTION,
+                        (a, _) -> a,
+                        LinkedHashMap::new
+                    )
+                ));
 
         final var purseSeinerCatchabilities =
-            perSimulation(object(catchabilityMap));
+            perSimulation(object(checkNotNull(
+                catchabilityMapsByGearCode.get(PURSE_SEINE_GEAR_CODE)
+            )));
 
         final var bottomTrawlerCatchabilities =
-            perSimulation(object(new LinkedHashMap<>(catchabilityMap)));
+            perSimulation(object(checkNotNull(
+                catchabilityMapsByGearCode.get(BOTTOM_TRAWLER_GEAR_CODE)
+            )));
 
         final var fishingGear =
             VesselScopeFactoriesByCode.<Gear>builder()
@@ -287,9 +297,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         PURSE_SEINE_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        composedFunction(
-                            speciesKey(),
-                            mapValueExtractor(purseSeinerCatchabilities)
+                        defaultIfNull(
+                            composedFunction(
+                                speciesKey(),
+                                mapValueExtractor(purseSeinerCatchabilities)
+                            ),
+                            0.0
                         ),
                         massOf(1, KILOGRAM)
                     )
@@ -300,9 +313,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         BOTTOM_TRAWLER_GEAR_CODE,
                         constant(hours(1)),
                         species,
-                        composedFunction(
-                            speciesKey(),
-                            mapValueExtractor(bottomTrawlerCatchabilities)
+                        defaultIfNull(
+                            composedFunction(
+                                speciesKey(),
+                                mapValueExtractor(bottomTrawlerCatchabilities)
+                            ),
+                            0.0
                         ),
                         massOf(1, KILOGRAM)
                     )
@@ -467,29 +483,35 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var purseSeineDiscardRates =
             discardRates(
                 species,
-                tableLookup(
-                    multiStringKeyFromFunctions(
-                        speciesCode(),
-                        speciesLifeStage(),
-                        constant(object(PURSE_SEINE_GEAR_CODE))
+                defaultIfNull(
+                    tableLookup(
+                        multiStringKeyFromFunctions(
+                            speciesCode(),
+                            speciesLifeStage(),
+                            constant(object(PURSE_SEINE_GEAR_CODE))
+                        ),
+                        csvTableFromFile(inputPath.plus("discard_ratios.csv")),
+                        multiStringKeyFromRow("species_code", "life_stage", "gear"),
+                        doubleFromRow("discard_ratio")
                     ),
-                    csvTableFromFile(inputPath.plus("discard_ratios.csv")),
-                    multiStringKeyFromRow("species_code", "life_stage", "gear"),
-                    doubleFromRow("discard_ratio")
+                    0.0
                 )
             );
         final var bottomTrawlerDiscardRates =
             discardRates(
                 species,
-                tableLookup(
-                    multiStringKeyFromFunctions(
-                        speciesCode(),
-                        speciesLifeStage(),
-                        constant(object(BOTTOM_TRAWLER_GEAR_CODE))
+                defaultIfNull(
+                    tableLookup(
+                        multiStringKeyFromFunctions(
+                            speciesCode(),
+                            speciesLifeStage(),
+                            constant(object(BOTTOM_TRAWLER_GEAR_CODE))
+                        ),
+                        csvTableFromFile(inputPath.plus("discard_ratios.csv")),
+                        multiStringKeyFromRow("species_code", "life_stage", "gear"),
+                        doubleFromRow("discard_ratio")
                     ),
-                    csvTableFromFile(inputPath.plus("discard_ratios.csv")),
-                    multiStringKeyFromRow("species_code", "life_stage", "gear"),
-                    doubleFromRow("discard_ratio")
+                    0.0
                 )
             );
 
