@@ -128,6 +128,10 @@ tasks.named<Test>("test") {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
     jvmArgumentProviders.add(mockitoAgentArgs)
+    jvmArgs(
+        "--enable-native-access=ALL-UNNAMED",
+        "-Dio.grpc.netty.shaded.io.netty.noUnsafe=true"
+    )
 }
 
 tasks.jacocoTestReport {
