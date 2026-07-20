@@ -130,6 +130,7 @@ tasks.named<Test>("test") {
     jvmArgumentProviders.add(mockitoAgentArgs)
     jvmArgs(
         "--enable-native-access=ALL-UNNAMED",
+        "--sun-misc-unsafe-memory-access=deny",
         "-Dio.grpc.netty.shaded.io.netty.noUnsafe=true"
     )
 }
