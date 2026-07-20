@@ -71,10 +71,11 @@ public class NorthwesternMedCalibration {
                 .stream()
                 .collect(toMap(
                     row -> {
-                        final String component = switch (row.getString("gear")) {
+                        final String component = switch (row.getString("gear_code")) {
                             case "PS" -> "purseSeinerCatchabilities";
                             case "OTB" -> "bottomTrawlerCatchabilities";
-                            default -> throw new IllegalArgumentException("Unsupported gear: " + row.getString("gear"));
+                            default -> throw new IllegalArgumentException("Unsupported gear: " +
+                                row.getString("gear"));
                         };
                         return "components(" + component + ").delegate.value(" + multiStringKey(
                             row.getString("species_code"),
@@ -131,7 +132,7 @@ public class NorthwesternMedCalibration {
                         row.getString("life_stage")
                     )
                 ),
-                row -> (double) row.getInt("landings_kg")
+                row -> row.getDouble("landings_kg")
             ));
     }
 
