@@ -64,12 +64,12 @@ dependencies {
     implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.82.1.1.20260707100832.459c3b62a20e")
     testImplementation(libs.jqwik)
     testImplementation(libs.assertj)
-    testImplementation(libs.mockito)
     mockitoAgent(libs.mockito) { isTransitive = false }
 }
 
 testing {
     suites {
+        @Suppress("UnstableApiUsage")
         named<JvmTestSuite>("test") {
             useJUnitJupiter(libs.versions.junit.get())
         }
