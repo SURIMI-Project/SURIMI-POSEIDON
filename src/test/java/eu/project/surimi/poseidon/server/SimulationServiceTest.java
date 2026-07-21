@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.server;
 
 import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 
@@ -50,6 +51,26 @@ class SimulationServiceTest extends ServiceTest {
     void cantUseSameIdTwice() {
         final String simulationId = initialiseSimulation();
         assertThrows(StatusRuntimeException.class, () -> initialiseSimulation(simulationId));
+    }
+
+    @Test
+    void rejectsScenarioNameWithParentDirectoryTraversal() {
+        final StatusRuntimeException error = assertThrows(
+            StatusRuntimeException.class,
+            () -> initialiseSimulation(UUID.randomUUID().toString(), "../MinimalScenario")
+        );
+
+        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
+    }
+
+    @Test
+    void rejectsScenarioNameWithPathSeparator() {
+        final StatusRuntimeException error = assertThrows(
+            StatusRuntimeException.class,
+            () -> initialiseSimulation(UUID.randomUUID().toString(), "minimal/MinimalScenario")
+        );
+
+        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
     }
 
     @Test

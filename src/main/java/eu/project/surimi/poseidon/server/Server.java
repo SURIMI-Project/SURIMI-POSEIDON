@@ -71,12 +71,12 @@ public class Server {
         ProtocolVersionExtractor.getSurimiProtocolVersion();
 
     @Parameter(
-        names = {"-s", "--scenario"},
-        description = "Path to the scenario file in YAML format.",
-        converter = CustomPathConverter.class,
-        required = true
+        names = {"-s", "--scenario_folder"},
+        description = "Path to the folder containing scenario files.",
+        defaultValueDescription = "Defaults to `inputs`.",
+        converter = CustomPathConverter.class
     )
-    private Path scenarioPath;
+    private Path scenarioFolder = Path.of("inputs");
 
     @Parameter(
         names = {"-p", "--port"},
@@ -134,7 +134,7 @@ public class Server {
             new InitialiseRequestHandler(
                 simulationManager,
                 new ScenarioLoader("eu.project.surimi"),
-                scenarioPath.toFile()
+                scenarioFolder
             ),
             new SimulateStepRequestHandler(simulationManager),
             new FinaliseRequestHandler(simulationManager),

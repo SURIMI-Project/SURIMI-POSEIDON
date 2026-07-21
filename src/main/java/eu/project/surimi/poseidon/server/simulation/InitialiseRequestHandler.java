@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableSet;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.SpeciesKey;
-import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
@@ -42,14 +42,16 @@ import uk.ac.ox.poseidon.io.ScenarioLoader;
 import javax.measure.Unit;
 import javax.measure.format.MeasurementParseException;
 import javax.measure.quantity.Mass;
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static io.grpc.Status.*;
@@ -62,30 +64,30 @@ public class InitialiseRequestHandler
 
     private static final System.Logger logger =
         System.getLogger(InitialiseRequestHandler.class.getName());
+    private static final Pattern SCENARIO_NAME_PATTERN = Pattern.compile("[A-Za-z0-9_-]+");
 
-    private final SimulationManager simulationManager;
-    private final ScenarioLoader scenarioLoader;
-    private final File scenarioFile;
+    @NonNull private final SimulationManager simulationManager;
+    @NonNull private final ScenarioLoader scenarioLoader;
+    @NonNull private final Path scenarioFolder;
 
-    @Getter(lazy = true)
-    private final Scenario scenario = loadScenario();
-
-    private Scenario loadScenario() {
-        checkNotNull(scenarioLoader);
-        checkNotNull(scenarioFile);
-        final Scenario scenario = scenarioLoader.load(scenarioFile);
-        logger.log(INFO, "Scenario loaded: {0}", scenarioFile.toPath().toAbsolutePath());
-        return scenario;
-    }
+    private final Map<String, Scenario> scenarios = new ConcurrentHashMap<>();
 
     @Override
     protected InitialiseSimulationResponse getResponse(final InitialiseSimulationRequest request) {
         final UUID simulationId = SimulationManager.parseId(request.getSimulationId());
+
         if (simulationManager.contains(simulationId)) {
             throw ALREADY_EXISTS
                 .withDescription("Simulation already initialised: " + simulationId)
                 .asRuntimeException();
         }
+
+        final String scenarioName = validateScenarioName(request.getScenarioName());
+        final Scenario scenario =
+            scenarios.computeIfAbsent(
+                scenarioName,
+                s -> scenarioLoader.load(scenarioFolder.resolve(s + ".yaml"))
+            );
 
         final Period stepSize = parsePeriod(request.getSimulation().getTimeStep());
         final Unit<Mass> massUnit = getMassUnit(request);
@@ -117,7 +119,7 @@ public class InitialiseRequestHandler
         validateContract(request);
 
         final Simulation simulation =
-            getScenario().startNewSimulation(
+            scenario.startNewSimulation(
                 SimulationStartOptions
                     .builder()
                     .simulationId(simulationId)
@@ -144,6 +146,15 @@ public class InitialiseRequestHandler
             .newBuilder()
             .setSimulationId(simulationId.toString())
             .build();
+    }
+
+    private static String validateScenarioName(final String scenarioName) {
+        if (!SCENARIO_NAME_PATTERN.matcher(scenarioName).matches()) {
+            throw INVALID_ARGUMENT
+                .withDescription("Invalid scenario name: " + scenarioName)
+                .asRuntimeException();
+        }
+        return scenarioName;
     }
 
     private void validateContract(final InitialiseSimulationRequest request) {

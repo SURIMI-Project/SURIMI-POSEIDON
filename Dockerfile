@@ -9,8 +9,7 @@ ENTRYPOINT [ \
   "--enable-native-access=ALL-UNNAMED", \
   "-Djava.util.logging.config.file=/app/logging.properties", \
   "-cp", "/app/SURIMI-POSEIDON.jar:/app/lib/*", \
-  "eu.project.surimi.poseidon.server.Server", \
-  "-s", "inputs/northwestern_med/scenario.yaml" \
+  "eu.project.surimi.poseidon.server.Server" \
 ]
 # The port on which to listen for gRPC requests can be changed but defaults to 50051
 CMD ["-p", "50051"]

@@ -21,8 +21,8 @@ The code is licensed under the **GNU General Public License v3 (GPL-3.0-or-later
 | Artifact | Gradle task | Description |
 |----------|-------------|-------------|
 | `SURIMI-POSEIDON.jar` | `jar` (via `build`) | Executable JAR containing the compiled service code. Runtime dependencies are placed alongside it in `build/image/lib/` by the `stageForImage` task. |
-| `ghcr.io/official-ewe/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties`, and the `inputs/northwestern_med/` scenario data. This is the deployable artefact pushed to GHCR by CI. |
-| `inputs/northwestern_med/scenario.yaml` | `writeNorthwesternMedScenario` | Serialised YAML representation of the `NorthwesternMedScenario`. Generated from Java code and committed to the `inputs` submodule; also regenerated at Docker image build time to ensure consistency. |
+| `ghcr.io/official-ewe/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties`, the `inputs/northwestern_med.yaml` scenario file, and the `inputs/northwestern_med/` scenario data. This is the deployable artefact pushed to GHCR by CI. |
+| `inputs/northwestern_med.yaml` | `writeNorthwesternMedScenario` | Serialised YAML representation of the `NorthwesternMedScenario`. Generated from Java code and committed to the `inputs` submodule; also regenerated at Docker image build time to ensure consistency. |
 
 ---
 
@@ -267,8 +267,8 @@ container runtime.
 
 **POSEIDON does not use an S3 bucket.** All scenario input data (bathymetry, species tables,
 fleet register, port locations, prices, operating costs) is bundled directly into the Docker
-image at build time. The `stageForImage` Gradle task copies the `inputs/northwestern_med/`
-directory into the image at `/app/inputs/northwestern_med/`.
+image at build time. The `stageForImage` Gradle task copies `inputs/northwestern_med.yaml`
+and the `inputs/northwestern_med/` directory into the image under `/app/inputs/`.
 
 ### S3 bucket authentication
 
@@ -299,7 +299,7 @@ These are passed as arguments to the Java process and can be overridden in Kuber
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `-s` / `--scenario` | `inputs/northwestern_med/scenario.yaml` | Path to the scenario YAML file inside the container. |
+| `-s` / `--scenario_folder` | `inputs` | Path to the folder containing scenario YAML files inside the container. |
 | `-p` / `--port` | `50051` | TCP port on which the gRPC server listens. |
 
 ---
@@ -327,7 +327,8 @@ pull request targeting the `main` branch.
 | `ghcr.io/official-ewe/surimiposeidon:latest` | GitHub Container Registry |
 
 The image is built from `eclipse-temurin:25-jre` and contains the application JAR, all runtime
-dependencies, the `logging.properties` file, and the `inputs/northwestern_med/` scenario data.
+dependencies, the `logging.properties` file, `inputs/northwestern_med.yaml`, and the
+`inputs/northwestern_med/` scenario data.
 
 ---
 

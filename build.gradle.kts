@@ -92,7 +92,7 @@ val writeNorthwesternMedScenario = tasks.register("writeNorthwesternMedScenario"
     classpath = sourceSets["main"].runtimeClasspath
     args(
         "-c", "eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario",
-        "-s", "inputs/northwestern_med/scenario.yaml"
+        "-s", "inputs/northwestern_med.yaml"
     )
 }
 
@@ -110,6 +110,7 @@ val stageForImage = tasks.register<Sync>("stageForImage") {
     from(tasks.named<Jar>("jar"))
     from(configurations.runtimeClasspath) { into("lib") }
     from("logging.properties")
+    from("inputs/northwestern_med.yaml") { into("inputs") }
     from("inputs/northwestern_med/") { into("inputs/northwestern_med/") }
 }
 
