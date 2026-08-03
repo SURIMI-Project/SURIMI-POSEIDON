@@ -205,10 +205,12 @@ allows the controller to run ensemble simulations (e.g., Monte-Carlo runs) in a 
 instance without restarting the JVM. The trade-off is that each live simulation consumes
 significant heap.
 
-**Lazy scenario loading**  
-The `Scenario` object is constructed from the YAML file once (lazily on first `Initialise`) and
-then reused for all subsequent initialisations. This avoids repeated file I/O and YAML
-deserialization.
+**Lazy, per-scenario-name scenario loading**  
+`InitialiseRequestHandler` keys a `ConcurrentHashMap<String, Scenario>` by the request's
+`scenario_name` field, loading `<scenario-folder>/<scenario_name>.yaml` via `ScenarioLoader` on
+first use (`computeIfAbsent`) and reusing the parsed `Scenario` for every later `Initialise` call
+that names the same scenario. Multiple distinct scenarios can therefore be live in one server
+process simultaneously, each parsed from YAML at most once.
 
 **Biomass updates are externally driven**  
 POSEIDON does not perform its own biomass growth calculations. It relies on the controller to
@@ -306,19 +308,29 @@ These are passed as arguments to the Java process and can be overridden in Kuber
 
 ## CI/CD
 
-The GitHub Actions workflow `.github/workflows/gradle.yml` is triggered on every push to and
-pull request targeting the `main` branch.
+Two GitHub Actions workflows exist under `.github/workflows/`:
+
+### `gradle.yml` — build, test, and publish
+
+Triggered on every push to and pull request targeting the `main` branch.
 
 **Steps:**
 
 1. Check out the repository **including submodules** (POSEIDON is a Git submodule) and Git LFS
-   files (scenario input data).
+   files (scenario input data), using the `POSEIDON_PAT` secret for private-submodule access.
 2. Set up **JDK 25** (Temurin distribution).
 3. Configure the Gradle wrapper cache.
 4. Run `./gradlew build` — compiles sources, executes unit tests, generates the JaCoCo coverage
    report, and runs SpotBugs static analysis.
 5. Authenticate with **GitHub Container Registry (GHCR)**.
 6. Run `./gradlew pushDockerImage` — builds and pushes the Docker image.
+
+### `dependency-submission.yml` — dependency graph submission
+
+Triggered on push to `main` only (not on pull requests). Checks out the repository (submodules +
+LFS, same `POSEIDON_PAT` secret), sets up JDK 25, and runs
+`gradle/actions/dependency-submission@v6` to submit the resolved Gradle dependency graph to
+GitHub's dependency graph / Dependabot alerting feature. Requires `contents: write` permission.
 
 **Docker image:**
 
@@ -369,8 +381,8 @@ SURIMI-POSEIDON/
 │   │   ├── calibration/                    # LandingsAccumulator for calibration support
 │   │   ├── regulations/                    # TotalAllowableCatchQuotas component and factory
 │   │   ├── scenarios/
-│   │   │   ├── minimal/                    # Minimal scenario used in tests
-│   │   │   └── northwesternmed/            # Northwestern Mediterranean scenario (production)
+│   │   │   ├── minimal/                    # MinimalScenario (+ MinimalScenarioWithUI) used in tests
+│   │   │   └── northwesternmed/            # NorthwesternMedScenario (production), *ScenarioWithUI, NorthwesternMedCalibration
 │   │   └── server/
 │   │       ├── Server.java                 # Entry point; builds and starts the Netty gRPC server
 │   │       ├── SimulationManager.java      # Caffeine-backed registry of live simulations
@@ -380,6 +392,8 @@ SURIMI-POSEIDON/
 │   │       ├── ValidationInterceptor.java  # protovalidate-based request validation
 │   │       ├── TrailerInterceptor.java     # Appends protocol-version to all response trailers
 │   │       ├── OpenTelemetryConfiguration.java # OTLP trace setup
+│   │       ├── SpeciesKey.java             # Species + life-stage identity key used across handlers
+│   │       ├── Utils.java                  # Shared request-validation helpers (e.g. date-time alignment checks)
 │   │       ├── fishery/
 │   │       │   └── FisheryService.java     # gRPC service implementation (delegates to handlers)
 │   │       ├── simulation/                 # Lifecycle handlers (Initialise/Step/Finalise/Cancel/GetProtocolVersion)
@@ -391,8 +405,10 @@ SURIMI-POSEIDON/
 │   │       ├── fleet/                      # FleetSegment model and mappers
 │   │       └── mappers/                    # Proto ↔ domain object mappers (species, fleet segment)
 │   └── test/java/eu/project/surimi/poseidon/
+│       ├── ProtocolVersionExtractorTest.java
 │       ├── regulations/                    # Unit tests for TAC quota logic
-│       └── server/                         # Integration tests (start real gRPC server in-process)
+│       ├── scenarios/                      # NorthwesternMedScenarioTest, TacOnlyScenario, ScenarioFilesForTesting
+│       └── server/                         # Integration tests (start real gRPC server in-process); fleet/ and mappers/ unit tests
 ├── POSEIDON/                               # Git submodule — POSEIDON ABM framework
 ├── inputs/                                 # Git LFS — scenario input files (bundled in Docker image)
 ├── outputs/                                # Simulation output directory (created in container)
@@ -439,14 +455,22 @@ run via `./gradlew test`.
 | Test class | What is tested |
 |---|---|
 | `SimulationServiceTest` | Full lifecycle (initialise → step → finalise) using the `MinimalScenario` |
+| `NorthwesternMedScenarioTest` | The production `NorthwesternMedScenario` loads and starts a simulation successfully |
 | `CatchProviderServiceTest` | `GetCatchDisposition` results after simulating fishing events |
 | `SalesProviderServiceTest` | `GetSales` results including monetary values |
+| `SetPricesTest` | `UpdateSpeciesPrices` propagates prices into the market grid |
+| `SetPricesValidationTest` | `UpdateSpeciesPrices` proto constraint violations are rejected with `INVALID_ARGUMENT` |
 | `UpdateRegulationsTacQuotasTest` | TAC quota bookkeeping across multiple steps using `TacOnlyScenario` |
 | `UpdateRegulationsValidationTest` | Proto constraint violations are rejected with `INVALID_ARGUMENT` |
 | `GetFishingActivityTest` | Fishing-activity ratio reporting against known TAC state |
+| `EcologyConsumerServiceTest` | `UpdateBiomass` applies incoming biomass grids to a live simulation |
 | `TotalAllowableCatchQuotasTest` | Unit tests for quota accumulation and reset logic |
 | `TotalAllowableCatchQuotasFactoryTest` | Factory construction and wiring |
 | `ProtocolVersionExtractorTest` | Protocol version is non-null and non-empty |
+| `FleetSegmentTest`, `FleetSegmentMapperTest`, `FleetSegmentMapperFactoryTest`, `FactoriesTest` (`server/fleet/`) | Fleet-segment model, its mapper, and the mapper factory |
+| `SpeciesMapperTest`, `FleetSegmentProtoMapperTest` (`server/mappers/`) | Proto ↔ domain object mapping for species and fleet segments |
+
+This table is a snapshot, not generated from the test tree — check `src/test/java/eu/project/surimi/poseidon/` directly if it matters which tests currently exist.
 
 The integration tests in `ServiceTest` subclasses start a real in-process Netty gRPC server on a
 random port and connect via a standard `ManagedChannel`, exercising the full interceptor and
