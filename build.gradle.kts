@@ -97,7 +97,7 @@ val writeNorthwesternMedScenario = tasks.register("writeNorthwesternMedScenario"
     )
 }
 
-val profileWesternMedScenario = tasks.register("profileNorthwesternMedScenario", JavaExec::class) {
+val profileNorthwesternMedScenario = tasks.register("profileNorthwesternMedScenario", JavaExec::class) {
     dependsOn("classes")
     mainClass.set("eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario")
     classpath = sourceSets["main"].runtimeClasspath
