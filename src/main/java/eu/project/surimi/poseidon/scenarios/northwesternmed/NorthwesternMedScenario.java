@@ -93,7 +93,6 @@ import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.indexedBiomassCat
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
 import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.*;
 import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.*;
-import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
 import static uk.ac.ox.poseidon.biology.species.extractors.Factories.*;
@@ -109,6 +108,7 @@ import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.minInt;
@@ -119,12 +119,15 @@ import static uk.ac.ox.poseidon.core.schedule.Factories.*;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
+import static uk.ac.ox.poseidon.geography.allocators.Factories.filteredAllocator;
+import static uk.ac.ox.poseidon.geography.allocators.Factories.supplierAllocator;
 import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
 import static uk.ac.ox.poseidon.geography.grids.Factories.modelGridWithActiveCells;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
+import static uk.ac.ox.poseidon.geography.predicates.Factories.isActiveWaterCell;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromTable;
 import static uk.ac.ox.poseidon.io.Factories.directoryRemover;
@@ -139,7 +142,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
     static final Path INPUT_PATH = Path.of("inputs", "northwestern_med");
-    private static final String CARRYING_CAPACITY = "10 kg";
     private static final double LEARNING_ALPHA = 1;
     private static final double EXPLORATION_PROBABILITY = 0.2;
     private static final int MEAN_EXPLORATION_RADIUS = 1;
@@ -189,16 +191,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 maxAggregator(),
                 false
             );
-
-        final var carryingCapacityGrid =
-            uniformCarryingCapacityGrid(
-                modelGrid,
-                bathymetricGrid,
-                massOf(CARRYING_CAPACITY)
-            );
-
-        final var biomassAllocator =
-            fullCarryingCapacityAllocator(carryingCapacityGrid);
 
         final var regulations =
             forbiddenIf(
@@ -326,11 +318,33 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .defaultFactory(inactiveGear(null))
                 .build();
 
+        final var zeroBiomassAllocator =
+            filteredAllocator(
+                supplierAllocator(constantDouble(0.0)),
+                isActiveWaterCell(bathymetricGrid)
+            );
+
         final var biomassGrids =
             biomassGrids(
                 modelGrid,
                 species,
-                listOf(biomassAllocator)
+                listOf(zeroBiomassAllocator)
+            );
+
+        final var fisheableBiomassGrids =
+            fisheableBiomassGrids(biomassGrids);
+
+        final var dateIndexedBiomassGrids =
+            dateIndexedBiomassGridsFromNetCdf(
+                modelGrid,
+                species,
+                inputPath.plus("biomass_grids.nc")
+            );
+
+        final var dateIndexedBiomassGridUpdates =
+            dateIndexedBiomassGridUpdates(
+                fisheableBiomassGrids,
+                dateIndexedBiomassGrids
             );
 
         final var biomassSaleAccumulator =
@@ -524,7 +538,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
         final var purseSeinerFishingTask = fishing(
             currentCellFisheable(
-                fisheableBiomassGrids(biomassGrids)
+                fisheableBiomassGrids
             ),
             compositeDispositionProcess(
                 purseSeineDiscardRates,
@@ -534,7 +548,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         );
         final var bottomTrawlerFishingTask = fishing(
             currentCellFisheable(
-                fisheableBiomassGrids(biomassGrids)
+                fisheableBiomassGrids
             ),
             compositeDispositionProcess(
                 bottomTrawlerDiscardRates,
@@ -683,8 +697,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("bottomTrawlerCatchabilities", bottomTrawlerCatchabilities)
             .component("species", species)
             .component("bathymetricGrid", bathymetricGrid)
-            .component("carryingCapacityGrid", carryingCapacityGrid)
             .component("biomassGrids", biomassGrids)
+            .component("dateIndexedBiomassGridUpdates", dateIndexedBiomassGridUpdates)
             .component("marketGrid", marketGrid)
             .component("portGrid", portGrid)
             .component("regulations", regulations)

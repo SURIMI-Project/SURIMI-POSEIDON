@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
+import uk.ac.ox.poseidon.biology.biomass.Factories;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.scopes.SimulationScope;
@@ -34,15 +35,22 @@ import uk.ac.ox.poseidon.gui.portrayals.*;
 import java.util.List;
 
 import static java.awt.Color.WHITE;
+import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
-import static uk.ac.ox.poseidon.gui.palettes.PaletteColorMap.IMOLA;
 
 public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
 
     private static final int WIDTH = 1090;
     private static final int HEIGHT = 820;
 
-    @SuppressWarnings("unchecked")
+    // purely a color-scale ceiling for the per-species biomass panel below;
+    // decoupled from the scenario's own (now zero-initialized) biomass state.
+    // 700 t comfortably covers the largest single-cell biomass value seen across every
+    // species and every yearly snapshot in inputs/northwestern_med/biomass_grids.nc
+    // (BOY tops out at ~673.9 t), so the scale doesn't clip the most abundant stocks.
+    private static final String DISPLAY_CARRYING_CAPACITY = "700000 kg";
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public NorthwesternMedScenarioWithUI(final Scenario scenario) {
         super(
             scenario,
@@ -53,23 +61,14 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
                         new BathymetryFieldPortrayalFactory(
                             scenario.component("bathymetricGrid")
                         ),
-                        new SimpleFieldPortrayalFactory(
-                            "Carrying capacity",
-                            new NumberGridPortrayalFactory(
-                                IMOLA,
-                                "Carrying capacity",
-                                true,
-                                scenario.component("carryingCapacityGrid")
-                            ),
-                            false
-                        ),
                         new SpeciesBiomassFieldsPortrayalFactory(
                             (Factory<? super SimulationScope, List<? extends BiomassGrid>>)
                                 scenario.component("biomassGrids"),
                             listOf(
-                                scenario.component(
-                                    "carryingCapacityGrid",
-                                    CarryingCapacityGridFactory.class
+                                (CarryingCapacityGridFactory) Factories.<SimulationScope>uniformCarryingCapacityGrid(
+                                    scenario.component("modelGrid"),
+                                    scenario.component("bathymetricGrid"),
+                                    massOf(DISPLAY_CARRYING_CAPACITY)
                                 )
                             ),
                             false
