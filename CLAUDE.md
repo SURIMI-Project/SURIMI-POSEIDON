@@ -71,7 +71,15 @@ Notes:
 `eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario` to produce the YAML.
 The same task also runs as a dependency of `stageForImage` (so the Docker image always embeds a
 fresh copy). If the Northwestern Med scenario needs to change, edit `NorthwesternMedScenario.java`
-(or the factories it composes) and regenerate — don't patch the `.yaml` directly.
+(or the factories it composes) and regenerate — don't patch the `.yaml` directly, **including via a
+scripted/sed find-and-replace that looks safe** (e.g. a class rename touching only a handful of
+`!!fully.qualified.ClassName` tags). No hand edit is exempt just because it was verified against a
+regenerated copy first — the committed file must come from actually running the writer task. If
+regenerating surfaces a diff wider than the change you intended (the checked-in YAML had already
+drifted from what the current Java produces, for unrelated reasons), stop and tell the user rather
+than either hand-patching around the unrelated part or discarding it — that drift is real and its
+resolution (regenerate and accept the full diff, in this commit or a separate one) is the user's
+call, not something to route around silently.
 
 ## Docker image
 
