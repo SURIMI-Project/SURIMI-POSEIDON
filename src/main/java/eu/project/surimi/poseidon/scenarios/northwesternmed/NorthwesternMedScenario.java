@@ -223,7 +223,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final Factory<Scope, ? extends PortGrid> portGrid =
             portGrid(
                 portsFromTable(
-                    csvTableFromFile(inputPath.plus("ports.csv")),
+                    tableFromCsvFile(inputPath.plus("ports.csv")),
                     "port_code", "port_name", "lon", "lat"
                 ),
                 bathymetricGrid,
@@ -246,7 +246,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
         final var species =
             speciesFromData(
-                csvTableFromFile(inputPath.plus("species.csv")),
+                tableFromCsvFile(inputPath.plus("species.csv")),
                 "species_code",
                 "species_name",
                 "life_stage"
@@ -371,7 +371,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
         final var hourlyCostsMap =
             mapFromTable(
-                csvTableFromFile(inputPath.plus("operating_costs.csv")),
+                tableFromCsvFile(inputPath.plus("operating_costs.csv")),
                 costsKeyFromRow,
                 moneyFromRow("currency", "cost_per_hour_at_sea")
             );
@@ -399,7 +399,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
         final var marketGrid =
             biomassMarketGridFromPriceTable(
-                csvTableFromFile(inputPath.plus("prices.csv")),
+                tableFromCsvFile(inputPath.plus("prices.csv")),
                 "date",
                 "market_code",
                 "species_code",
@@ -495,7 +495,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             );
 
         final var discardRatiosTable =
-            csvTableFromFile(inputPath.plus("discard_ratios.csv"));
+            tableFromCsvFile(inputPath.plus("discard_ratios.csv"));
         final var discardRatiosKeyFromRow =
             multiStringKeyFromRow("species_code", "life_stage", "gear_code");
 
@@ -651,7 +651,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             FleetFromVesselRegisterFactory
                 .builder()
                 .fleet(fleet(vesselField, portGrid, marketGrid))
-                .data(csvTableFromFile(inputPath.plus("fleet_register.csv")))
+                .data(tableFromCsvFile(inputPath.plus("fleet_register.csv")))
                 .behaviour(behaviour)
                 .dataMapping("behaviour.code", "main_fishing_gear")
                 .hold(
@@ -679,7 +679,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     fleet,
                     tableLookup(
                         costsKeyFromVessel,
-                        csvTableFromFile(inputPath.plus("operating_costs.csv")),
+                        tableFromCsvFile(inputPath.plus("operating_costs.csv")),
                         costsKeyFromRow,
                         moneyFromRow("currency", "fixed_cost_per_day")
                     )

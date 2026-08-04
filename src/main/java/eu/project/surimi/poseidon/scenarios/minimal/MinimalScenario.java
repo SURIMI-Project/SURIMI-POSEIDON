@@ -87,7 +87,7 @@ import static uk.ac.ox.poseidon.geography.grids.Factories.modelGrid;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
 import static uk.ac.ox.poseidon.geography.ports.Factories.port;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
-import static uk.ac.ox.poseidon.io.tables.Factories.csvTableFromString;
+import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
 @SuppressWarnings("UnstableApiUsage")
 public class MinimalScenario implements Supplier<Scenario> {
@@ -298,7 +298,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                     portGrid,
                     marketGrid
                 ))
-                .data(csvTableFromString("""
+                .data(tableFromCsvString("""
                     cfr,name_of_vessel,place_of_registration,event,event_start_date,gear,hold,fav_lon,fav_lat
                     V1,Vessel 1,P1,CEN,2000-01-01,G1,H1,-1,-1
                     V2,Vessel 2,P1,CEN,2000-01-01,G2,H1,0,0
