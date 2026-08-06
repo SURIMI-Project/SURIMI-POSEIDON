@@ -128,3 +128,9 @@ one-handler-per-method pattern and register it in `FisheryService`.
 
 All source files carry a GNU GPLv3 header (University of Oxford copyright, 2025). Copy the header
 from a neighboring file rather than retyping it when creating new files.
+
+## Design docs
+
+Never commit `docs/superpowers/specs/**` (or any other design/spec doc). Write the file and leave
+it staged/unstaged — committing design docs is the user's call, not something to do by default
+even when a skill's process says to.
