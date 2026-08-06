@@ -334,17 +334,17 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var fisheableBiomassGrids =
             fisheableBiomassGrids(biomassGrids);
 
-        final var dateIndexedBiomassGrids =
-            dateIndexedBiomassGridsFromNetCdf(
+        final var timeIndexedBiomassGrids =
+            timeIndexedBiomassGridsFromNetCdf(
                 modelGrid,
                 species,
                 inputPath.plus("biomass_grids.nc")
             );
 
-        final var dateIndexedBiomassGridUpdates =
-            dateIndexedBiomassGridUpdates(
+        final var timeIndexedBiomassGridUpdates =
+            timeIndexedBiomassGridUpdates(
                 fisheableBiomassGrids,
-                dateIndexedBiomassGrids
+                timeIndexedBiomassGrids
             );
 
         final var biomassSaleAccumulator =
@@ -698,7 +698,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("species", species)
             .component("bathymetricGrid", bathymetricGrid)
             .component("biomassGrids", biomassGrids)
-            .component("dateIndexedBiomassGridUpdates", dateIndexedBiomassGridUpdates)
+            .component("timeIndexedBiomassGridUpdates", timeIndexedBiomassGridUpdates)
             .component("marketGrid", marketGrid)
             .component("portGrid", portGrid)
             .component("regulations", regulations)
