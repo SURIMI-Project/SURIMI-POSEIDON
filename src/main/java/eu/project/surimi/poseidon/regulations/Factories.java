@@ -23,7 +23,9 @@
 package eu.project.surimi.poseidon.regulations;
 
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
+import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 
 public class Factories {
@@ -39,5 +41,16 @@ public class Factories {
         final Factory<? super SimulationScope, ? extends FleetSegmentMapper> fleetSegmentMapper
     ) {
         return new TotalAllowableCatchQuotasFactory(fleetSegmentMapper);
+    }
+
+    public static <S extends Scope> MpaClosedMonthsFromTableFactory<S> mpaClosedMonths(
+        final Factory<? super S, Table> table,
+        final String mpaIdColumnName,
+        final String monthColumnName,
+        final String closedColumnName
+    ) {
+        return new MpaClosedMonthsFromTableFactory<>(
+            table, mpaIdColumnName, monthColumnName, closedColumnName
+        );
     }
 }
