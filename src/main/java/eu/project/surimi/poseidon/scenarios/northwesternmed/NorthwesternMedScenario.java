@@ -46,6 +46,7 @@ import java.util.LinkedHashMap;
 import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static eu.project.surimi.poseidon.regulations.Factories.mpaClosedMonths;
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
@@ -695,6 +696,14 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 "longitude"
             );
 
+        final var mpaClosedMonths =
+            mpaClosedMonths(
+                tableFromCsvFile(inputPath.plus("mpa_months.csv")),
+                "mpa_id",
+                "month",
+                "closed"
+            );
+
         final var directoryRemover =
             finalProcess(
                 directoryRemover(outputPath, false)
@@ -708,6 +717,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("bathymetricGrid", bathymetricGrid)
             .component("biomassGrids", biomassGrids)
             .component("mpaGrids", mpaGrids)
+            .component("mpaClosedMonths", mpaClosedMonths)
             .component("timeIndexedBiomassGridUpdates", timeIndexedBiomassGridUpdates)
             .component("marketGrid", marketGrid)
             .component("portGrid", portGrid)
