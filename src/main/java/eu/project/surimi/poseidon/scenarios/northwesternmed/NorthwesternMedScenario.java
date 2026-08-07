@@ -125,6 +125,7 @@ import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFr
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
 import static uk.ac.ox.poseidon.geography.grids.Factories.modelGridWithActiveCells;
+import static uk.ac.ox.poseidon.geography.grids.Factories.staticGridsFromNetCdf;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
 import static uk.ac.ox.poseidon.geography.predicates.Factories.isActiveWaterCell;
@@ -686,6 +687,14 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
+        final var mpaGrids =
+            staticGridsFromNetCdf(
+                modelGrid,
+                inputPath.plus("mpa_grids.nc"),
+                "latitude",
+                "longitude"
+            );
+
         final var directoryRemover =
             finalProcess(
                 directoryRemover(outputPath, false)
@@ -698,6 +707,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("species", species)
             .component("bathymetricGrid", bathymetricGrid)
             .component("biomassGrids", biomassGrids)
+            .component("mpaGrids", mpaGrids)
             .component("timeIndexedBiomassGridUpdates", timeIndexedBiomassGridUpdates)
             .component("marketGrid", marketGrid)
             .component("portGrid", portGrid)
