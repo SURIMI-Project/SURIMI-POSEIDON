@@ -5,3 +5,5 @@
 build
 
 .jqwik-database
+
+.opencode
