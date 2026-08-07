@@ -47,6 +47,7 @@ import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static eu.project.surimi.poseidon.regulations.Factories.mpaClosedMonths;
+import static eu.project.surimi.poseidon.regulations.Factories.mpaFleetRestrictions;
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
@@ -704,6 +705,14 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 "closed"
             );
 
+        final var mpaFleetRestrictions =
+            mpaFleetRestrictions(
+                tableFromCsvFile(inputPath.plus("mpa_fleet_restrictions.csv")),
+                "mpa_id",
+                "gear_code",
+                "country_code"
+            );
+
         final var directoryRemover =
             finalProcess(
                 directoryRemover(outputPath, false)
@@ -718,6 +727,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("biomassGrids", biomassGrids)
             .component("mpaGrids", mpaGrids)
             .component("mpaClosedMonths", mpaClosedMonths)
+            .component("mpaFleetRestrictions", mpaFleetRestrictions)
             .component("timeIndexedBiomassGridUpdates", timeIndexedBiomassGridUpdates)
             .component("marketGrid", marketGrid)
             .component("portGrid", portGrid)

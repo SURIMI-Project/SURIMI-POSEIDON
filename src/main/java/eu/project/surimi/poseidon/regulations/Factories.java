@@ -53,4 +53,15 @@ public class Factories {
             table, mpaIdColumnName, monthColumnName, closedColumnName
         );
     }
+
+    public static <S extends Scope> MpaFleetRestrictionsFromTableFactory<S> mpaFleetRestrictions(
+        final Factory<? super S, Table> table,
+        final String mpaIdColumnName,
+        final String gearCodeColumnName,
+        final String countryCodeColumnName
+    ) {
+        return new MpaFleetRestrictionsFromTableFactory<>(
+            table, mpaIdColumnName, gearCodeColumnName, countryCodeColumnName
+        );
+    }
 }
