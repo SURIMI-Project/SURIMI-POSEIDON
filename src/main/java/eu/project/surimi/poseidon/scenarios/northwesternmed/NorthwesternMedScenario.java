@@ -148,10 +148,13 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
     static final Path INPUT_PATH = Path.of("inputs", "northwestern_med");
     private static final double LEARNING_ALPHA = 1;
-    private static final double EXPLORATION_PROBABILITY = 0.2;
-    private static final int MEAN_EXPLORATION_RADIUS = 1;
+    private static final double PURSE_SEINER_EXPLORATION_PROBABILITY = 0.2;
+    private static final double BOTTOM_TRAWLER_EXPLORATION_PROBABILITY = 0.2;
+    private static final int PURSE_SEINER_MEAN_EXPLORATION_RADIUS = 1;
+    private static final int BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS = 1;
     private static final double DEFAULT_CATCH_PROPORTION = 0.1;
     private static final double PURSE_SEINER_DEPTH_THRESHOLD = -35.0;
+    private static final double BOTTOM_TRAWLER_DEPTH_THRESHOLD = -50.0;
     private static final double VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
@@ -207,6 +210,18 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
+        // Not yet consumed by any regulation/gear logic - which fleets are
+        // restricted by which habitat is a separate, future task.
+        final var habitatGrids =
+            staticGridsFromNetCdf(
+                modelGrid,
+                staticNetCdfGridReader(
+                    inputPath.plus("habitat_grids.nc"),
+                    "latitude",
+                    "longitude"
+                )
+            );
+
         final var mpaClosedMonths =
             mpaClosedMonths(
                 tableFromCsvFile(inputPath.plus("mpa_months.csv")),
@@ -223,7 +238,27 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 "country_code"
             );
 
-        final var regulations =
+        final var commonActionPredicate =
+            anyOf(
+                actionCellPredicate(
+                    modelGrid,
+                    in(
+                        cellSetFromGridFile(
+                            inputPath.plus("french_eez.asc"),
+                            1
+                        )
+                    )
+                ),
+                mpaClosurePredicate(
+                    modelGrid,
+                    mpaGrids,
+                    mpaClosedMonths,
+                    mpaFleetRestrictions,
+                    "country_of_registration"
+                )
+            );
+
+        final var purseSeinerRegulations =
             forbiddenIf(
                 anyOf(
                     actionCellPredicate(
@@ -233,22 +268,21 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                             greaterThan(PURSE_SEINER_DEPTH_THRESHOLD)
                         )
                     ),
+                    commonActionPredicate
+                )
+            );
+
+        final var bottomTrawlerRegulations =
+            forbiddenIf(
+                anyOf(
                     actionCellPredicate(
                         modelGrid,
-                        in(
-                            cellSetFromGridFile(
-                                inputPath.plus("french_eez.asc"),
-                                1
-                            )
+                        condition(
+                            cellValue(bathymetricGrid),
+                            greaterThan(BOTTOM_TRAWLER_DEPTH_THRESHOLD)
                         )
                     ),
-                    mpaClosurePredicate(
-                        modelGrid,
-                        mpaGrids,
-                        mpaClosedMonths,
-                        mpaFleetRestrictions,
-                        "country_of_registration"
-                    )
+                    commonActionPredicate
                 )
             );
 
@@ -275,9 +309,16 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 distance
             );
 
-        final var fishingLocationChecker =
+        final var purseSeinerFishingLocationChecker =
             fishingLocationLegalityChecker(
-                regulations,
+                purseSeinerRegulations,
+                pathFinder,
+                distance
+            );
+
+        final var bottomTrawlerFishingLocationChecker =
+            fishingLocationLegalityChecker(
+                bottomTrawlerRegulations,
                 pathFinder,
                 distance
             );
@@ -503,31 +544,53 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 totalBiomassCaughtPerHour()
             );
 
-        final var startTrip =
+        final var bestOptionsFromFriends =
+            bestOptionsFromFriends(
+                optionValuesRegister,
+                dynamicFriendsSupplier(
+                    5,
+                    optionValuesRegister,
+                    allOf(
+                        vesselIsActive(),
+                        vesselHasSameHomePort()
+                    )
+                )
+            );
+
+        final var purseSeinerStartTrip =
             startTrip(
                 epsilonGreedyDestination(
-                    EXPLORATION_PROBABILITY,
+                    PURSE_SEINER_EXPLORATION_PROBABILITY,
                     neighbourhoodGridExplorer(
                         optionValues,
                         pathFinder,
-                        fishingLocationChecker,
-                        shiftedInt(randomPoisson(MEAN_EXPLORATION_RADIUS), 1),
+                        purseSeinerFishingLocationChecker,
+                        shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
                         currentCell()
                     ),
                     imitatingPicker(
                         optionValues,
-                        fishingLocationChecker,
-                        bestOptionsFromFriends(
-                            optionValuesRegister,
-                            dynamicFriendsSupplier(
-                                5,
-                                optionValuesRegister,
-                                allOf(
-                                    vesselIsActive(),
-                                    vesselHasSameHomePort()
-                                )
-                            )
-                        )
+                        purseSeinerFishingLocationChecker,
+                        bestOptionsFromFriends
+                    )
+                )
+            );
+
+        final var bottomTrawlerStartTrip =
+            startTrip(
+                epsilonGreedyDestination(
+                    BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
+                    neighbourhoodGridExplorer(
+                        optionValues,
+                        pathFinder,
+                        bottomTrawlerFishingLocationChecker,
+                        shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
+                        currentCell()
+                    ),
+                    imitatingPicker(
+                        optionValues,
+                        bottomTrawlerFishingLocationChecker,
+                        bestOptionsFromFriends
                     )
                 )
             );
@@ -610,7 +673,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     succeedOrWait(
                         sequenceTask(
                             readyForDeparture,
-                            startTrip
+                            purseSeinerStartTrip
                         ),
                         waitUntilNextCheckpoint
                     ),
@@ -654,7 +717,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     succeedOrWait(
                         sequenceTask(
                             readyForDeparture,
-                            startTrip
+                            bottomTrawlerStartTrip
                         ),
                         waitUntilNextCheckpoint
                     ),
@@ -739,7 +802,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("timeIndexedBiomassGridUpdates", timeIndexedBiomassGridUpdates)
             .component("marketGrid", marketGrid)
             .component("portGrid", portGrid)
-            .component("regulations", regulations)
+            .component("purseSeinerRegulations", purseSeinerRegulations)
+            .component("bottomTrawlerRegulations", bottomTrawlerRegulations)
             .component("totalAllowableCatchQuotas", totalAllowableCatchQuotas)
             .component("vesselField", vesselField)
             .component("modelGrid", modelGrid)

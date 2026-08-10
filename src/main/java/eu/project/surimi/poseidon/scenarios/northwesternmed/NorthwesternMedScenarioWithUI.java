@@ -95,9 +95,20 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
                             true
                         ),
                         new SimpleFieldPortrayalFactory(
-                            "Regulations",
+                            "Purse seiner regulations",
                             new RegulationGridPortrayalFactory(
-                                scenario.component("regulations"),
+                                scenario.component("purseSeinerRegulations"),
+                                scenario.component("vesselField"),
+                                scenario.component("bathymetricGrid"),
+                                WIDTH,
+                                HEIGHT
+                            ),
+                            true
+                        ),
+                        new SimpleFieldPortrayalFactory(
+                            "Bottom trawler regulations",
+                            new RegulationGridPortrayalFactory(
+                                scenario.component("bottomTrawlerRegulations"),
                                 scenario.component("vesselField"),
                                 scenario.component("bathymetricGrid"),
                                 WIDTH,
