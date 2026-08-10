@@ -107,6 +107,7 @@ import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
+import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.below;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
@@ -153,8 +154,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final int PURSE_SEINER_MEAN_EXPLORATION_RADIUS = 1;
     private static final int BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS = 1;
     private static final double DEFAULT_CATCH_PROPORTION = 0.1;
-    private static final double PURSE_SEINER_DEPTH_THRESHOLD = -35.0;
-    private static final double BOTTOM_TRAWLER_DEPTH_THRESHOLD = -50.0;
+    private static final double PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD = -35.0;
+    private static final double BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD = -50.0;
+    private static final double BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD = -1000.0;
     private static final double VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
@@ -265,7 +267,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         modelGrid,
                         condition(
                             cellValue(bathymetricGrid),
-                            greaterThan(PURSE_SEINER_DEPTH_THRESHOLD)
+                            greaterThan(PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD)
                         )
                     ),
                     commonActionPredicate
@@ -279,7 +281,14 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         modelGrid,
                         condition(
                             cellValue(bathymetricGrid),
-                            greaterThan(BOTTOM_TRAWLER_DEPTH_THRESHOLD)
+                            greaterThan(BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD)
+                        )
+                    ),
+                    actionCellPredicate(
+                        modelGrid,
+                        condition(
+                            cellValue(bathymetricGrid),
+                            below(BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD)
                         )
                     ),
                     commonActionPredicate
