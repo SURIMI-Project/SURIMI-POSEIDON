@@ -128,6 +128,7 @@ import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCa
 import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
 import static uk.ac.ox.poseidon.geography.grids.Factories.modelGridWithActiveCells;
 import static uk.ac.ox.poseidon.geography.grids.Factories.staticGridsFromNetCdf;
+import static uk.ac.ox.poseidon.geography.grids.Factories.staticNetCdfGridReader;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
 import static uk.ac.ox.poseidon.geography.predicates.Factories.isActiveWaterCell;
@@ -692,9 +693,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var mpaGrids =
             staticGridsFromNetCdf(
                 modelGrid,
-                inputPath.plus("mpa_grids.nc"),
-                "latitude",
-                "longitude"
+                staticNetCdfGridReader(
+                    inputPath.plus("mpa_grids.nc"),
+                    "latitude",
+                    "longitude"
+                )
             );
 
         final var mpaClosedMonths =
