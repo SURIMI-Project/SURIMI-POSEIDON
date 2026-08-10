@@ -107,8 +107,8 @@ import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
-import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.below;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
+import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.lessThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
@@ -212,8 +212,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
-        // Not yet consumed by any regulation/gear logic - which fleets are
-        // restricted by which habitat is a separate, future task.
         final var habitatGrids =
             staticGridsFromNetCdf(
                 modelGrid,
@@ -223,6 +221,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     "longitude"
                 )
             );
+
+        final var rockGrid = mapEntry(habitatGrids, "rock");
+        final var posidoniaGrid = mapEntry(habitatGrids, "posidonia");
+        final var cymodoceaGrid = mapEntry(habitatGrids, "cymodocea");
 
         final var mpaClosedMonths =
             mpaClosedMonths(
@@ -288,7 +290,28 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         modelGrid,
                         condition(
                             cellValue(bathymetricGrid),
-                            below(BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD)
+                            lessThan(BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD)
+                        )
+                    ),
+                    actionCellPredicate(
+                        modelGrid,
+                        condition(
+                            cellValue(rockGrid),
+                            greaterThan(0.0)
+                        )
+                    ),
+                    actionCellPredicate(
+                        modelGrid,
+                        condition(
+                            cellValue(posidoniaGrid),
+                            greaterThan(0.0)
+                        )
+                    ),
+                    actionCellPredicate(
+                        modelGrid,
+                        condition(
+                            cellValue(cymodoceaGrid),
+                            greaterThan(0.0)
                         )
                     ),
                     commonActionPredicate
