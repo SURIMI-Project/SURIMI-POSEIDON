@@ -22,11 +22,17 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.scopes.SimulationScope;
+import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
+import uk.ac.ox.poseidon.geography.grids.ModelGrid;
+
+import java.time.Month;
 
 public class Factories {
 
@@ -62,6 +68,18 @@ public class Factories {
     ) {
         return new MpaFleetRestrictionsFromTableFactory<>(
             table, mpaIdColumnName, gearCodeColumnName, countryCodeColumnName
+        );
+    }
+
+    public static <S extends Scope> MpaClosurePredicateFactory<S> mpaClosurePredicate(
+        final Factory<? super S, ? extends ModelGrid> modelGrid,
+        final Factory<? super S, ImmutableMap<String, DoubleGridWrapper>> mpaGrids,
+        final Factory<? super S, ImmutableMap<String, ImmutableSet<Month>>> mpaClosedMonths,
+        final Factory<? super S, ImmutableMap<String, ImmutableSet<GearCountry>>> mpaFleetRestrictions,
+        final String countryTag
+    ) {
+        return new MpaClosurePredicateFactory<>(
+            modelGrid, mpaGrids, mpaClosedMonths, mpaFleetRestrictions, countryTag
         );
     }
 }
