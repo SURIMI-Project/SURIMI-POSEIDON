@@ -49,6 +49,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static eu.project.surimi.poseidon.regulations.Factories.mpaClosedMonths;
 import static eu.project.surimi.poseidon.regulations.Factories.mpaClosurePredicate;
 import static eu.project.surimi.poseidon.regulations.Factories.mpaFleetRestrictions;
+import static eu.project.surimi.poseidon.regulations.Factories.portClosurePredicate;
+import static eu.project.surimi.poseidon.regulations.Factories.portClosures;
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
@@ -242,6 +244,15 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 "country_code"
             );
 
+        final var portClosures =
+            portClosures(
+                tableFromCsvFile(inputPath.plus("port_closures.csv")),
+                "port_code",
+                "gear_code",
+                "start_date",
+                "end_date"
+            );
+
         final var commonActionPredicate =
             anyOf(
                 actionCellPredicate(
@@ -259,7 +270,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     mpaClosedMonths,
                     mpaFleetRestrictions,
                     "country_of_registration"
-                )
+                ),
+                portClosurePredicate(portClosures)
             );
 
         final var purseSeinerRegulations =

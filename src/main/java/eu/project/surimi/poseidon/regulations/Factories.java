@@ -82,4 +82,22 @@ public class Factories {
             modelGrid, mpaGrids, mpaClosedMonths, mpaFleetRestrictions, countryTag
         );
     }
+
+    public static <S extends Scope> PortClosuresFromTableFactory<S> portClosures(
+        final Factory<? super S, Table> table,
+        final String portCodeColumnName,
+        final String gearCodeColumnName,
+        final String startDateColumnName,
+        final String endDateColumnName
+    ) {
+        return new PortClosuresFromTableFactory<>(
+            table, portCodeColumnName, gearCodeColumnName, startDateColumnName, endDateColumnName
+        );
+    }
+
+    public static <S extends Scope> PortClosurePredicateFactory<S> portClosurePredicate(
+        final Factory<? super S, ImmutableMap<String, ImmutableMap<String, ImmutableSet<PortClosureWindow>>>> portClosures
+    ) {
+        return new PortClosurePredicateFactory<>(portClosures);
+    }
 }
