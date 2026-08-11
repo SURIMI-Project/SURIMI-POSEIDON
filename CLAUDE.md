@@ -57,7 +57,12 @@ Notes:
   `MockitoAgentArgumentProvider`, and `--enable-native-access=ALL-UNNAMED`,
   `--sun-misc-unsafe-memory-access=allow`, and `-Dio.grpc.netty.shaded.io.netty.noUnsafe=true` are
   needed for protobuf/Netty to work under the JDK 25 module system.
-- SpotBugs exclusions live in `spotbugs_exclude.xml` at the repo root.
+- SpotBugs exclusions live in `spotbugs_exclude.xml` at the repo root, but that file is for
+  broad, structural exclusions (e.g. a whole generated-code package) — for a single false
+  positive on a specific method, suppress it in place with
+  `@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "...", justification = "...")`
+  instead of adding a `<Match>` entry, so the suppression and its reasoning stay next to the
+  code it applies to (see `Agent.java` or `WithSimulationRequestHandler.java` for the pattern).
 - Integration tests (`*ServiceTest`) spin up a real in-process Netty gRPC server on a random port
   via `ServiceTest` and connect with a standard `ManagedChannel` — exercising the full interceptor
   chain (exception enrichment → OpenTelemetry → protocol-version trailer → protovalidate
