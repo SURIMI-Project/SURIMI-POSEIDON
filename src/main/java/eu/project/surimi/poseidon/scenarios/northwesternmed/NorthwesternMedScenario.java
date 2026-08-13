@@ -258,9 +258,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 actionCellPredicate(
                     modelGrid,
                     in(
-                        cellSetFromGridFile(
-                            inputPath.plus("french_eez.asc"),
-                            1
+                        constant(
+                            cellSetFromGridFile(
+                                inputPath.plus("french_eez.asc"),
+                                1
+                            )
                         )
                     )
                 ),
@@ -566,11 +568,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     ),
                     condition(
                         currentTime(),
-                        afterTime(time(21, 59, 59))
+                        afterTime(constant(time(21, 59, 59)))
                     ),
                     condition(
                         currentDayOfWeek(),
-                        in(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY))
+                        in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
                     )
                 )
             );
@@ -595,11 +597,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     ),
                     condition(
                         currentTime(),
-                        afterTime(time(6, 59, 59))
+                        afterTime(constant(time(6, 59, 59)))
                     ),
                     condition(
                         currentDayOfWeek(),
-                        in(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY))
+                        in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
                     )
                 )
             );
