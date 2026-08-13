@@ -271,7 +271,28 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     mpaFleetRestrictions,
                     "country_of_registration"
                 ),
-                portClosurePredicate(portClosures)
+                portClosurePredicate(portClosures),
+                actionCellPredicate(
+                    modelGrid,
+                    condition(
+                        cellValue(rockGrid),
+                        greaterThan(0.0)
+                    )
+                ),
+                actionCellPredicate(
+                    modelGrid,
+                    condition(
+                        cellValue(posidoniaGrid),
+                        greaterThan(0.0)
+                    )
+                ),
+                actionCellPredicate(
+                    modelGrid,
+                    condition(
+                        cellValue(cymodoceaGrid),
+                        greaterThan(0.0)
+                    )
+                )
             );
 
         final var purseSeinerRegulations =
@@ -303,27 +324,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         condition(
                             cellValue(bathymetricGrid),
                             lessThan(BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD)
-                        )
-                    ),
-                    actionCellPredicate(
-                        modelGrid,
-                        condition(
-                            cellValue(rockGrid),
-                            greaterThan(0.0)
-                        )
-                    ),
-                    actionCellPredicate(
-                        modelGrid,
-                        condition(
-                            cellValue(posidoniaGrid),
-                            greaterThan(0.0)
-                        )
-                    ),
-                    actionCellPredicate(
-                        modelGrid,
-                        condition(
-                            cellValue(cymodoceaGrid),
-                            greaterThan(0.0)
                         )
                     ),
                     commonActionPredicate
@@ -557,7 +557,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
-        final var readyForDeparture =
+        final var purseSeinerReadyForDeparture =
             checkThat(
                 allOf(
                     isPermitted(
@@ -575,10 +575,39 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
-        final var waitUntilNextCheckpoint =
+        final var purseSeinerWaitUntilNextCheckpoint =
             waitFor(
                 durationUntil(
                     nextTimeAt(time(6, 0, 0), time(22, 0, 0))
+                )
+            );
+
+        // Bottom trawlers depart in the morning and return the same day (per Miquel Ortega:
+        // ~07:00 departure, ~16:30-18:00 return), unlike purse seiners' overnight schedule
+        // above - this used to share the purse seiner's 06:00/22:00 checkpoint pair, which
+        // made trawlers only eligible to depart after 22:00.
+        final var bottomTrawlerReadyForDeparture =
+            checkThat(
+                allOf(
+                    isPermitted(
+                        departNow(),
+                        totalAllowableCatchQuotas
+                    ),
+                    condition(
+                        currentTime(),
+                        afterTime(time(6, 59, 59))
+                    ),
+                    condition(
+                        currentDayOfWeek(),
+                        in(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY))
+                    )
+                )
+            );
+
+        final var bottomTrawlerWaitUntilNextCheckpoint =
+            waitFor(
+                durationUntil(
+                    nextTimeAt(time(7, 0, 0))
                 )
             );
 
@@ -716,10 +745,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     ),
                     succeedOrWait(
                         sequenceTask(
-                            readyForDeparture,
+                            purseSeinerReadyForDeparture,
                             purseSeinerStartTrip
                         ),
-                        waitUntilNextCheckpoint
+                        purseSeinerWaitUntilNextCheckpoint
                     ),
                     travelAlongPathTo(
                         pathFinder,
@@ -760,10 +789,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     ),
                     succeedOrWait(
                         sequenceTask(
-                            readyForDeparture,
+                            bottomTrawlerReadyForDeparture,
                             bottomTrawlerStartTrip
                         ),
-                        waitUntilNextCheckpoint
+                        bottomTrawlerWaitUntilNextCheckpoint
                     ),
                     travelAlongPathTo(
                         pathFinder,
