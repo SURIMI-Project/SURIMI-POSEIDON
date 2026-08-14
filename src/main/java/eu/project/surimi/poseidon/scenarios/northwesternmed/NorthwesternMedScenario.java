@@ -36,6 +36,8 @@ import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.time.DurationFactory;
+import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
@@ -150,12 +152,17 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final double PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD = -35.0;
     private static final double BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD = -50.0;
     private static final double BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD = -1000.0;
-    private static final double PURSE_SEINER_VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
-    private static final double BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS = 9; // midpoint of 8-10 knots, per bottom trawler regulation doc
-    private static final double BOTTOM_TRAWLER_TRAWLING_SPEED_IN_KNOTS = 3; // midpoint of 2-4 knots, per bottom trawler regulation doc
+    private static final double PURSE_SEINER_VESSEL_SPEED_IN_KNOTS = 9.5;
+        // as per email on 2025-03-18 08:20
+    private static final double BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS = 9;
+        // midpoint of 8-10 knots, per bottom trawler regulation doc
+    private static final double BOTTOM_TRAWLER_TRAWLING_SPEED_IN_KNOTS = 3;
+        // midpoint of 2-4 knots, per bottom trawler regulation doc
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
     private static final String CATCH_CATEGORY = "Fresh - Whole";
+    private static final TimeFactory PURSE_SEINER_RETURN_TIME = time(6, 30, 0);
+    private static final DurationFactory PURSE_SEINE_SET_DURATION = hours(1);
 
     static void main(final String[] args) {
         final int numSteps = 12 * 10;
@@ -349,10 +356,21 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             );
 
         final var purseSeinerFishingLocationChecker =
-            fishingLocationLegalityChecker(
-                purseSeinerRegulations,
-                pathFinder,
-                distance
+            allOf(
+                fishingLocationLegalityChecker(
+                    purseSeinerRegulations,
+                    pathFinder,
+                    distance
+                ),
+                condition(
+                    composedFunction(
+                        travelTimeToPortViaDestination(pathFinder, distance),
+                        combinedDuration(PURSE_SEINE_SET_DURATION)
+                    ),
+                    uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan(
+                        durationUntil(nextTimeAt(PURSE_SEINER_RETURN_TIME))
+                    )
+                )
             );
 
         final var bottomTrawlerFishingLocationChecker =
@@ -405,7 +423,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     PURSE_SEINE_GEAR_CODE,
                     indexedBiomassCatchabilityGear(
                         PURSE_SEINE_GEAR_CODE,
-                        constant(hours(1)),
+                        constant(PURSE_SEINE_SET_DURATION),
                         species,
                         defaultIfNull(
                             composedFunction(
