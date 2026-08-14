@@ -46,12 +46,7 @@ import java.util.LinkedHashMap;
 import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static eu.project.surimi.poseidon.regulations.Factories.mpaClosedMonths;
-import static eu.project.surimi.poseidon.regulations.Factories.mpaClosurePredicate;
-import static eu.project.surimi.poseidon.regulations.Factories.mpaFleetRestrictions;
-import static eu.project.surimi.poseidon.regulations.Factories.portClosurePredicate;
-import static eu.project.surimi.poseidon.regulations.Factories.portClosures;
-import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
+import static eu.project.surimi.poseidon.regulations.Factories.*;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
 import static java.util.stream.Collectors.groupingBy;
@@ -113,9 +108,7 @@ import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.lessThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantDouble;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantInt;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.*;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.minInt;
 import static uk.ac.ox.poseidon.core.providers.random.Factories.randomPoisson;
@@ -129,15 +122,12 @@ import static uk.ac.ox.poseidon.geography.allocators.Factories.filteredAllocator
 import static uk.ac.ox.poseidon.geography.allocators.Factories.supplierAllocator;
 import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
-import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
-import static uk.ac.ox.poseidon.geography.grids.Factories.modelGridWithActiveCells;
-import static uk.ac.ox.poseidon.geography.grids.Factories.staticGridsFromNetCdf;
-import static uk.ac.ox.poseidon.geography.grids.Factories.staticNetCdfGridReader;
+import static uk.ac.ox.poseidon.geography.grids.Factories.*;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
-import static uk.ac.ox.poseidon.geography.predicates.Factories.isActiveWaterCell;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromTable;
+import static uk.ac.ox.poseidon.geography.predicates.Factories.isActiveWaterCell;
 import static uk.ac.ox.poseidon.io.Factories.directoryRemover;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.paths.Factories.simulationFolder;
@@ -683,7 +673,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         multiStringKeyFromFunctions(
                             speciesCode(),
                             speciesLifeStage(),
-                            constant(object(PURSE_SEINE_GEAR_CODE))
+                            constant(PURSE_SEINE_GEAR_CODE)
                         ),
                         discardRatiosTable,
                         discardRatiosKeyFromRow,
@@ -700,7 +690,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         multiStringKeyFromFunctions(
                             speciesCode(),
                             speciesLifeStage(),
-                            constant(object(BOTTOM_TRAWLER_GEAR_CODE))
+                            constant(BOTTOM_TRAWLER_GEAR_CODE)
                         ),
                         discardRatiosTable,
                         discardRatiosKeyFromRow,
