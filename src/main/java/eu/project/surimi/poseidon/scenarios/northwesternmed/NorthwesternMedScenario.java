@@ -29,6 +29,7 @@ import uk.ac.ox.poseidon.agents.components.VesselComponentRegisterFactory;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
+import uk.ac.ox.poseidon.agents.vessels.engines.Engine;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
@@ -149,7 +150,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final double PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD = -35.0;
     private static final double BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD = -50.0;
     private static final double BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD = -1000.0;
-    private static final double VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
+    private static final double PURSE_SEINER_VESSEL_SPEED_IN_KNOTS = 9.5; // as per email on 2025-03-18 08:20
+    private static final double BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS = 9; // midpoint of 8-10 knots, per bottom trawler regulation doc
+    private static final double BOTTOM_TRAWLER_TRAWLING_SPEED_IN_KNOTS = 3; // midpoint of 2-4 knots, per bottom trawler regulation doc
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
     private static final String CATCH_CATEGORY = "Fresh - Whole";
@@ -813,6 +816,34 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .defaultFactory(inactiveBehaviour())
                 .build();
 
+        final var engine =
+            VesselScopeFactoriesByCode
+                .<Engine>builder()
+                .factory(
+                    PURSE_SEINE_GEAR_CODE,
+                    simpleEngine(
+                        infiniteTank(),
+                        speedOf(PURSE_SEINER_VESSEL_SPEED_IN_KNOTS, KNOT),
+                        volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
+                    )
+                )
+                .factory(
+                    BOTTOM_TRAWLER_GEAR_CODE,
+                    simpleEngine(
+                        infiniteTank(),
+                        speedOf(BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS, KNOT),
+                        volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
+                    )
+                )
+                .defaultFactory(
+                    simpleEngine(
+                        infiniteTank(),
+                        speedOf(0, KNOT), // inactive vessels never travel, so this is never read
+                        volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
+                    )
+                )
+                .build();
+
         final var fleet =
             FleetFromVesselRegisterFactory
                 .builder()
@@ -828,13 +859,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .gear(fishingGear)
                 .dataMapping("gear.code", "main_fishing_gear")
                 .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
-                .engine(
-                    simpleEngine(
-                        infiniteTank(),
-                        speedOf(VESSEL_SPEED_IN_KNOTS, KNOT),
-                        volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
-                    )
-                )
+                .engine(engine)
+                .dataMapping("engine.code", "main_fishing_gear")
                 .extraFactory(tripEvaluator)
                 .build();
 
