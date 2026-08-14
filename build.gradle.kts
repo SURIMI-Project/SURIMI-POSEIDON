@@ -128,6 +128,7 @@ tasks.register("pushDockerImage", Exec::class) {
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+    maxHeapSize = "4g"
     finalizedBy(tasks.jacocoTestReport)
     jvmArgumentProviders.add(mockitoAgentArgs)
     jvmArgs(
