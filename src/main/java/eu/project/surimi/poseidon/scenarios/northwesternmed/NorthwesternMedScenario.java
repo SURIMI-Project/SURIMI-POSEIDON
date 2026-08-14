@@ -163,6 +163,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final String CATCH_CATEGORY = "Fresh - Whole";
     private static final TimeFactory PURSE_SEINER_RETURN_TIME = time(6, 30, 0);
     private static final DurationFactory PURSE_SEINE_SET_DURATION = hours(1);
+    private static final DurationFactory BOTTOM_TRAWLER_SET_DURATION = hours(3);
+    private static final DurationFactory BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION = hours(12);
 
     static void main(final String[] args) {
         final int numSteps = 12 * 10;
@@ -363,9 +365,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     distance
                 ),
                 condition(
-                    composedFunction(
+                    combinedDuration(
                         travelTimeToPortViaDestination(pathFinder, distance),
-                        combinedDuration(PURSE_SEINE_SET_DURATION)
+                        constant(PURSE_SEINE_SET_DURATION)
                     ),
                     uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan(
                         durationUntil(nextTimeAt(PURSE_SEINER_RETURN_TIME))
@@ -374,10 +376,22 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             );
 
         final var bottomTrawlerFishingLocationChecker =
-            fishingLocationLegalityChecker(
-                bottomTrawlerRegulations,
-                pathFinder,
-                distance
+            allOf(
+                fishingLocationLegalityChecker(
+                    bottomTrawlerRegulations,
+                    pathFinder,
+                    distance
+                ),
+                condition(
+                    combinedDuration(
+                        currentTripDuration(),
+                        travelTimeToPortViaDestination(pathFinder, distance),
+                        constant(BOTTOM_TRAWLER_SET_DURATION)
+                    ),
+                    uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan(
+                        constant(BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION)
+                    )
+                )
             );
 
         final var species =
