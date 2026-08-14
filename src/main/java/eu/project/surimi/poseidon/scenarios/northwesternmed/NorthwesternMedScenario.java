@@ -107,8 +107,8 @@ import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
-import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.greaterThan;
-import static uk.ac.ox.poseidon.core.predicates.numeric.Factories.lessThan;
+import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.greaterThan;
+import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.*;
@@ -369,7 +369,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         travelTimeToPortViaDestination(pathFinder, distance),
                         constant(PURSE_SEINE_SET_DURATION)
                     ),
-                    uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan(
+                    lessThan(
                         durationUntil(nextTimeAt(PURSE_SEINER_RETURN_TIME))
                     )
                 )
@@ -388,7 +388,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         travelTimeToPortViaDestination(pathFinder, distance),
                         constant(BOTTOM_TRAWLER_SET_DURATION)
                     ),
-                    uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan(
+                    lessThan(
                         constant(BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION)
                     )
                 )
