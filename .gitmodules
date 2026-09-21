@@ -1,7 +1,7 @@
 [submodule "POSEIDON"]
   path = POSEIDON
   url = https://github.com/poseidon-fisheries/POSEIDON.git
-  branch = SURIMI
+  branch = main
 [submodule "SURIMI-POSEIDON_inputs"]
 	path = inputs
 	url = https://github.com/Official-EwE/SURIMI-POSEIDON_inputs.git
