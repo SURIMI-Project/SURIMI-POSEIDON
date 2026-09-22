@@ -9,7 +9,7 @@ model (a Git submodule) and exposes it to the SURIMI controller as the `FisheryS
 This repo is the *service layer*: gRPC handlers, request/response mapping, TAC-quota tracking,
 and the concrete scenarios (Northwestern Mediterranean, minimal test scenario) that get served.
 The simulation framework itself (agents, biology, regulations engine, YAML scenario
-(de)serialization, GUI) lives in the `POSEIDON/` submodule — see `POSEIDON/CLAUDE.md` for its
+(de)serialization, GUI) lives in the `POSEIDON/` submodule — see `POSEIDON/AGENTS.md` for its
 conventions (Factory/Scenario pattern, module graph, "YAML is generated, never hand-edited") before
 touching code under `POSEIDON/`.
 
