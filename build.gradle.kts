@@ -117,12 +117,12 @@ val stageForImage = tasks.register<Sync>("stageForImage") {
 
 val buildDockerImage = tasks.register("buildDockerImage", Exec::class) {
     dependsOn(stageForImage)
-    commandLine("docker", "build", "-t", "ghcr.io/official-ewe/surimiposeidon:latest", ".")
+    commandLine("docker", "build", "-t", "ghcr.io/surimi-project/surimiposeidon:latest", ".")
 }
 
 tasks.register("pushDockerImage", Exec::class) {
     dependsOn(buildDockerImage)
-    commandLine("docker", "push", "ghcr.io/official-ewe/surimiposeidon:latest")
+    commandLine("docker", "push", "ghcr.io/surimi-project/surimiposeidon:latest")
 }
 
 tasks.named<Test>("test") {

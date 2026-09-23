@@ -21,7 +21,7 @@ The code is licensed under the **GNU General Public License v3 (GPL-3.0-or-later
 | Artifact | Gradle task | Description |
 |----------|-------------|-------------|
 | `SURIMI-POSEIDON.jar` | `jar` (via `build`) | Executable JAR containing the compiled service code. Runtime dependencies are placed alongside it in `build/image/lib/` by the `stageForImage` task. |
-| `ghcr.io/official-ewe/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties`, the `inputs/northwestern_med.yaml` scenario file, and the `inputs/northwestern_med/` scenario data. This is the deployable artefact pushed to GHCR by CI. |
+| `ghcr.io/surimi-project/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties`, the `inputs/northwestern_med.yaml` scenario file, and the `inputs/northwestern_med/` scenario data. This is the deployable artefact pushed to GHCR by CI. |
 | `inputs/northwestern_med.yaml` | `writeNorthwesternMedScenario` | Serialised YAML representation of the `NorthwesternMedScenario`. Generated from Java code and committed to the `inputs` submodule; also regenerated at Docker image build time to ensure consistency. |
 
 ---
@@ -336,7 +336,7 @@ GitHub's dependency graph / Dependabot alerting feature. Requires `contents: wri
 
 | Image | Registry |
 |-------|----------|
-| `ghcr.io/official-ewe/surimiposeidon:latest` | GitHub Container Registry |
+| `ghcr.io/surimi-project/surimiposeidon:latest` | GitHub Container Registry |
 
 The image is built from `eclipse-temurin:25-jre` and contains the application JAR, all runtime
 dependencies, the `logging.properties` file, `inputs/northwestern_med.yaml`, and the
@@ -423,7 +423,7 @@ SURIMI-POSEIDON/
 
 ## Source control
 
-The repository is hosted on **GitHub** at `https://github.com/Official-EwE/SURIMI-POSEIDON`.
+The repository is hosted on **GitHub** at `https://github.com/SURIMI-Project/SURIMI-POSEIDON`.
 
 ### Submodules
 

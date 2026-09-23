@@ -90,7 +90,7 @@ call, not something to route around silently.
 
 ```
 ./gradlew stageForImage      # assemble build/image/ (jar + runtime libs + logging.properties + inputs/northwestern_med*)
-./gradlew buildDockerImage    # docker build -t ghcr.io/official-ewe/surimiposeidon:latest .
+./gradlew buildDockerImage    # docker build -t ghcr.io/surimi-project/surimiposeidon:latest .
 ./gradlew pushDockerImage     # docker push — has external blast radius (GHCR), confirm before running
 ```
 
