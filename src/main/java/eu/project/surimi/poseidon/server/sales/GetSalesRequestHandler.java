@@ -46,6 +46,12 @@ import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpe
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
 
+/**
+ * Handles {@code GetSales}: summarizes recorded sales in the requested date-time range into
+ * per-market, per-catch-category, per-species totals, restricted to markets, price categories,
+ * and species the simulation was configured with (see
+ * {@link SimulationManager.SimulationProperties}).
+ */
 public class GetSalesRequestHandler extends
     WithSimulationRequestHandler<GetSalesRequest, GetSalesResponse> {
 
@@ -56,6 +62,10 @@ public class GetSalesRequestHandler extends
         super(simulationManager);
     }
 
+    /**
+     * @return one summarised {@link Sale} for a list of sale entries sharing the same market,
+     * catch category, and species: quantity and value are the sums across all entries.
+     */
     private static Sale summariseSale(final List<SaleEntry> saleEntries) {
         final SaleEntry firstEntry = saleEntries.getFirst();
         final String catchCategoryCode = firstEntry.catchCategory.getCode();
@@ -164,6 +174,10 @@ public class GetSalesRequestHandler extends
             .build();
     }
 
+    /**
+     * One sold item, flattened out of a {@code Sale} event for grouping by market/catch
+     * category/species.
+     */
     private record SaleEntry(
         Market market,
         String gearCode,
