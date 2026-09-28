@@ -89,15 +89,29 @@ import static uk.ac.ox.poseidon.geography.ports.Factories.port;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
+/**
+ * A small, hand-built (not YAML-loaded) scenario used by tests: a 3x3 grid, two ports, three
+ * species (one generic, two life-staged), two gears, two markets, and a four-vessel fleet loaded
+ * from an inline CSV. Species {@code C} is discarded rather than retained (see
+ * {@link #RETAINED_SPECIES_CODES}), to exercise the disposition path.
+ */
 @SuppressWarnings("UnstableApiUsage")
 public class MinimalScenario implements Supplier<Scenario> {
 
     public static final LocalDate START_DATE = LocalDate.of(2000, 1, 1);
     public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
+    /**
+     * All species but the last are retained when caught; the last ({@code C}) is discarded.
+     */
     public static final List<String> RETAINED_SPECIES_CODES =
         SPECIES_CODES.subList(0, SPECIES_CODES.size() - 1);
     public static final List<String> LIFE_STAGES = List.of("juvenile", "adult");
 
+    /**
+     * One (species code, life stage) pair per configured species: the first species is split
+     * into one pair per life stage, every other species gets a single generic ({@code null}
+     * life stage) pair.
+     */
     public static final List<Pair<String, String>> LIFE_STAGE_PER_SPECIES_CODE = Streams.zip(
         // this is a just very roundabout way to generate Stream.of("A", "A", "B", "C")...
         Stream.concat(
@@ -116,6 +130,9 @@ public class MinimalScenario implements Supplier<Scenario> {
     public static final int NUM_PRICES = GEAR_CODES.size() * SPECIES_CODES.size();
     public static final Quantity<Mass> CARRYING_CAPACITY = getQuantity(1, TONNE);
 
+    /**
+     * @return a freshly built minimal {@link Scenario}.
+     */
     @Override
     public Scenario get() {
 

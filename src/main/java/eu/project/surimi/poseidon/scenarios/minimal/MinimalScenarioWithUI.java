@@ -32,6 +32,10 @@ import java.util.List;
 
 import static java.awt.Color.WHITE;
 
+/**
+ * GUI wrapper for {@link MinimalScenario}: displays bathymetry, species biomass, markets, ports,
+ * vessels, and grid coordinates over the scenario's model grid.
+ */
 public class MinimalScenarioWithUI extends ScenarioWithUI {
     public MinimalScenarioWithUI(
         final Scenario scenario
@@ -89,6 +93,9 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
         );
     }
 
+    /**
+     * Opens the GUI for a freshly built {@link MinimalScenario}.
+     */
     static void main(final String[] args) {
         final MinimalScenarioWithUI minimalScenarioWithUI =
             new MinimalScenarioWithUI(new MinimalScenario().get());
