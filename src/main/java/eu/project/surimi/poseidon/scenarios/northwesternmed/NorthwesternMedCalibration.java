@@ -41,6 +41,14 @@ import static java.util.stream.Collectors.summarizingInt;
 import static java.util.stream.Collectors.toMap;
 import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
 
+/**
+ * Calibration entry point for {@link NorthwesternMedScenario}: fits each gear/species/life-stage
+ * catchability against real-world landings targets read from
+ * {@code inputs/northwestern_med/target_landings.csv}, using {@link CalibrationRunner}'s genetic
+ * algorithm to minimise {@link SumSquaredErrors} against a
+ * {@link eu.project.surimi.poseidon.calibration.LandingsAccumulator}. The parameter set to
+ * calibrate is derived from {@code discard_ratios.csv}'s (gear, species, life-stage) rows.
+ */
 public class NorthwesternMedCalibration {
 
     private static final double MIN_CATCHABILITY = 0.0;
@@ -53,6 +61,9 @@ public class NorthwesternMedCalibration {
     private static final double RECOMBINATION_PROBABILITY = 0.35;
     private static final ImmutableLongArray SEEDS = ImmutableLongArray.of(1, 2, 3);
 
+    /**
+     * Runs the calibration and prints the best parameters, fitness, and generation count found.
+     */
     static void main() {
 
         final var targetLandings =
@@ -120,6 +131,10 @@ public class NorthwesternMedCalibration {
 
     }
 
+    /**
+     * @return real-world landings targets read from a CSV with columns {@code year},
+     * {@code gear_code}, {@code species_code}, {@code life_stage}, {@code landings_kg}.
+     */
     private static Map<LandingsAccumulator.Key, Double> readTargetLandings(final Path path) {
         return Table.read().csv(path.toFile())
             .stream()

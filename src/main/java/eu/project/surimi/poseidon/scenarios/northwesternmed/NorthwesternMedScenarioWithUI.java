@@ -38,6 +38,11 @@ import static java.awt.Color.WHITE;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 
+/**
+ * GUI wrapper for {@link NorthwesternMedScenario}: displays bathymetry, species biomass, markets,
+ * ports, vessels, per-fleet regulation coverage, and grid coordinates over the scenario's model
+ * grid.
+ */
 public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
 
     private static final int WIDTH = 1090;
@@ -133,6 +138,9 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
         );
     }
 
+    /**
+     * Opens the GUI for a freshly built {@link NorthwesternMedScenario}.
+     */
     static void main(final String[] args) {
         final NorthwesternMedScenarioWithUI northwesternMedScenarioWithUI =
             new NorthwesternMedScenarioWithUI(new NorthwesternMedScenario().get());

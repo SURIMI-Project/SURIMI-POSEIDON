@@ -104,10 +104,10 @@ import static uk.ac.ox.poseidon.core.functions.Factories.*;
 import static uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
-import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
-import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.greaterThan;
 import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan;
+import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
+import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.*;
@@ -152,11 +152,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final double BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD = -50.0;
     private static final double BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD = -1000.0;
     private static final double PURSE_SEINER_VESSEL_SPEED_IN_KNOTS = 9.5;
-        // as per email on 2025-03-18 08:20
+    // as per email on 2025-03-18 08:20
     private static final double BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS = 9;
-        // midpoint of 8-10 knots, per bottom trawler regulation doc
+    // midpoint of 8-10 knots, per bottom trawler regulation doc
     private static final double BOTTOM_TRAWLER_TRAWLING_SPEED_IN_KNOTS = 3;
-        // midpoint of 2-4 knots, per bottom trawler regulation doc
+    // midpoint of 2-4 knots, per bottom trawler regulation doc
     private static final String PURSE_SEINE_GEAR_CODE = "PS";
     private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
     private static final String CATCH_CATEGORY = "Fresh - Whole";
@@ -165,6 +165,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final DurationFactory BOTTOM_TRAWLER_SET_DURATION = hours(3);
     private static final DurationFactory BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION = hours(12);
 
+    /**
+     * Regenerates {@code inputs/northwestern_med.yaml} from this class and runs a 10-year
+     * simulation against it, printing the date-time reached at each step, as a sanity check.
+     */
     static void main(final String[] args) {
         final int numSteps = 12 * 10;
         final Period stepSize = Period.ofMonths(1);
@@ -180,6 +184,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         simulation.finish();
     }
 
+    /**
+     * @return a freshly built Northwestern Mediterranean {@link Scenario}.
+     */
     @Override
     public Scenario get() {
         final Scenario.ScenarioBuilder builder = Scenario.builder();
