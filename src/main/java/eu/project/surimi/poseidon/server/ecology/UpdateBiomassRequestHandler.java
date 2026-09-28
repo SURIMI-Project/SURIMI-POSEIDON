@@ -46,6 +46,12 @@ import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * Handles {@code UpdateBiomass}: overwrites each cell of the simulation's per-species
+ * {@link BiomassGrid}s with the biomass values in the request (converted from the simulation's
+ * standard mass unit to kilograms). A species in the request with no matching
+ * {@link BiomassGrid} in the simulation is silently skipped.
+ */
 public class UpdateBiomassRequestHandler extends
     WithSimulationRequestHandler<UpdateBiomassRequest, UpdateBiomassResponse> {
 
