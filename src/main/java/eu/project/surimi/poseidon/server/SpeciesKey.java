@@ -31,6 +31,12 @@ import java.util.Optional;
 
 import static java.util.function.Predicate.not;
 
+/**
+ * A species code plus an optional life stage, used as a lightweight, hashable key wherever a
+ * simulation's configured species set needs to be looked up or compared (e.g. in
+ * {@link SimulationManager.SimulationProperties}), independent of a full POSEIDON
+ * {@link Species} or the proto {@code Species} message.
+ */
 @Value
 public class SpeciesKey {
 
@@ -42,6 +48,9 @@ public class SpeciesKey {
         this.lifeStage = null;
     }
 
+    /**
+     * @param lifeStage life stage, normalised to {@code null} when blank.
+     */
     public SpeciesKey(
         @NonNull final String speciesCode,
         final String lifeStage
@@ -53,10 +62,16 @@ public class SpeciesKey {
             .orElse(null);
     }
 
+    /**
+     * @return the equivalent POSEIDON {@link Species}.
+     */
     public Species toSpecies() {
         return new Species(speciesCode, lifeStage, null);
     }
 
+    /**
+     * @return the equivalent proto species, with {@code lifeStage} left unset when {@code null}.
+     */
     public build.buf.gen.surimi.v1.Species toProtobufSpecies() {
         final build.buf.gen.surimi.v1.Species.Builder builder =
             build.buf.gen.surimi.v1.Species
@@ -68,14 +83,23 @@ public class SpeciesKey {
         return builder.build();
     }
 
+    /**
+     * @return {@code (speciesCode, lifeStage)}.
+     */
     public Pair<String, String> toPair() {
         return Pair.of(speciesCode, lifeStage);
     }
 
+    /**
+     * @return the key for a POSEIDON {@link Species}.
+     */
     public static SpeciesKey from(final Species species) {
         return new SpeciesKey(species.getCode(), species.getLifeStage());
     }
 
+    /**
+     * @return the key for a proto species.
+     */
     public static SpeciesKey from(final build.buf.gen.surimi.v1.Species species) {
         return new SpeciesKey(
             species.getSpeciesCode(),

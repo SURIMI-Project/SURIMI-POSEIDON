@@ -29,10 +29,17 @@ import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static io.grpc.Status.INVALID_ARGUMENT;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
+/**
+ * Small request-validation helpers shared across gRPC handlers.
+ */
 public class Utils {
 
     private Utils() {}
 
+    /**
+     * Throws {@code INVALID_ARGUMENT} if {@code requestTimestamp} is more than one second away
+     * from the simulation's current date-time.
+     */
     public static void checkRequestDateTimeAlignment(
         final Timestamp requestTimestamp,
         final Simulation simulation

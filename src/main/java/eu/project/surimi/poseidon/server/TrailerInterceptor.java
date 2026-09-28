@@ -31,10 +31,17 @@ import io.grpc.ServerInterceptor;
 
 import java.util.Map;
 
+/**
+ * Attaches a fixed set of key/value pairs (e.g. the protocol version) to the trailers of every
+ * response, regardless of status.
+ */
 public class TrailerInterceptor implements ServerInterceptor {
 
     private final Map<Metadata.Key<String>, String> metadata;
 
+    /**
+     * @param metadata key/value pairs to attach to every response's trailers.
+     */
     public TrailerInterceptor(final Map<String, String> metadata) {
         final ImmutableMap.Builder<Metadata.Key<String>, String> builder = ImmutableMap.builder();
         metadata.forEach((key, value) ->

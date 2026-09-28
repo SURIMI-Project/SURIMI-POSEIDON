@@ -35,11 +35,22 @@ import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.*;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
+/**
+ * Base class for one gRPC method handler: logs the request, delegates to {@link #getResponse},
+ * and translates any thrown exception into a {@link StatusRuntimeException} ({@code
+ * INVALID_ARGUMENT} for an {@link IllegalArgumentException}, a pass-through for an existing
+ * {@link StatusRuntimeException}, {@code INTERNAL} otherwise) before completing the response
+ * observer.
+ */
 @RequiredArgsConstructor
 public abstract class RequestHandler<ReqT, RespT> {
 
     private static final System.Logger logger = System.getLogger(RequestHandler.class.getName());
 
+    /**
+     * @return {@code map.get(key)}, or throws {@code NOT_FOUND} naming the missing key and the
+     * map's known keys.
+     */
     protected static <K, V> V getOrThrow(
         final Map<K, V> map,
         final K key,
@@ -56,8 +67,16 @@ public abstract class RequestHandler<ReqT, RespT> {
         return v;
     }
 
+    /**
+     * @return the response for the given request; may throw, which {@link #handle} translates
+     * into an appropriate {@link StatusRuntimeException}.
+     */
     protected abstract RespT getResponse(final ReqT request);
 
+    /**
+     * Logs the request, computes and sends the response via {@link #getResponse}, and translates
+     * any thrown exception into an error on {@code responseObserver}.
+     */
     public void handle(
         final ReqT request,
         final StreamObserver<RespT> responseObserver
@@ -92,6 +111,10 @@ public abstract class RequestHandler<ReqT, RespT> {
         }
     }
 
+    /**
+     * @return a {@link StatusRuntimeException} with the given status and {@code e}'s message and
+     * cause.
+     */
     @SuppressWarnings("SameParameterValue")
     protected static StatusRuntimeException wrap(
         final Status status,
@@ -103,6 +126,10 @@ public abstract class RequestHandler<ReqT, RespT> {
             .asRuntimeException();
     }
 
+    /**
+     * Logs a message tagged with the simulation's current step and date-time (see
+     * {@link Simulation#log}).
+     */
     protected void log(
         final System.Logger.Level level,
         final SimState simState,
@@ -112,6 +139,10 @@ public abstract class RequestHandler<ReqT, RespT> {
         Simulation.log(logger, level, simState, format, args);
     }
 
+    /**
+     * Logs current JVM heap usage at {@code INFO}, tagged with the simulation's current step and
+     * date-time.
+     */
     protected void logMemoryUsage(
         final SimState simState
     ) {

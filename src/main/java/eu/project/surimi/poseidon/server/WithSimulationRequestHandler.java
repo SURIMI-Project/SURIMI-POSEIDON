@@ -26,6 +26,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import uk.ac.ox.poseidon.core.Simulation;
 
+/**
+ * Base class for a gRPC method handler that operates on a live {@link Simulation}: looks it up
+ * (via {@link #getSimulationId}) and its {@link SimulationManager.SimulationProperties}, then
+ * delegates to {@link #getResponseWithSimulation} while holding the simulation's schedule lock,
+ * so no two requests can step or mutate the same simulation concurrently.
+ */
 @RequiredArgsConstructor
 public abstract class WithSimulationRequestHandler<ReqT, RespT>
     extends RequestHandler<ReqT, RespT> {
@@ -44,8 +50,14 @@ public abstract class WithSimulationRequestHandler<ReqT, RespT>
         }
     }
 
+    /**
+     * @return the simulation ID the request refers to.
+     */
     protected abstract String getSimulationId(final ReqT request);
 
+    /**
+     * @return the response for the given request, with the simulation's schedule lock held.
+     */
     protected abstract RespT getResponseWithSimulation(
         final ReqT request,
         final Simulation simulation,

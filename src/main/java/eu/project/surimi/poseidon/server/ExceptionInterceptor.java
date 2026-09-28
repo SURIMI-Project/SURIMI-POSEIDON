@@ -24,6 +24,11 @@ package eu.project.surimi.poseidon.server;
 
 import io.grpc.*;
 
+/**
+ * Attaches the failing method name and an "application" marker to the trailers of any non-OK
+ * response, so a caller can identify which gRPC method failed and that the failure came from
+ * this service.
+ */
 public class ExceptionInterceptor implements ServerInterceptor {
 
     private static final Metadata.Key<String> METHOD_NAME_KEY =

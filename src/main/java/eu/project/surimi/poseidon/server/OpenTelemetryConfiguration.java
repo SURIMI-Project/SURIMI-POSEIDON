@@ -37,13 +37,24 @@ import java.util.Optional;
 
 import static java.lang.System.Logger.Level.INFO;
 
+/**
+ * Configures the process-wide OpenTelemetry SDK used to trace gRPC requests. Exports spans via
+ * OTLP/gRPC when the {@code OTEL_EXPORTER_OTLP_ENDPOINT} environment variable is set; otherwise
+ * traces are collected but not exported.
+ */
 public class OpenTelemetryConfiguration {
 
     private static final System.Logger logger =
         System.getLogger(OpenTelemetryConfiguration.class.getName());
 
+    /**
+     * The process-wide {@link OpenTelemetry} instance, initialised once at class-load time.
+     */
     public static final OpenTelemetry openTelemetry = initOpenTelemetry();
 
+    /**
+     * @return a new {@link OpenTelemetry} SDK instance, registered as the global instance.
+     */
     public static OpenTelemetry initOpenTelemetry() {
 
         final SdkTracerProvider tracerProvider =

@@ -62,6 +62,11 @@ import static eu.project.surimi.poseidon.server.OpenTelemetryConfiguration.openT
 import static java.lang.System.Logger.Level.INFO;
 import static java.time.ZoneOffset.UTC;
 
+/**
+ * Entry point: parses command-line arguments and starts the gRPC server exposing
+ * {@link FisheryService}, wired with the full interceptor stack (exception enrichment,
+ * OpenTelemetry, protocol-version trailer, protovalidate validation).
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 public class Server {
@@ -85,6 +90,9 @@ public class Server {
     )
     private int port;
 
+    /**
+     * Parses {@code args} and starts the gRPC server, blocking until it terminates.
+     */
     static void main(final String[] args) {
         logger.log(INFO, () -> "Received arguments: " + Arrays.toString(args));
         final Server server = new Server();
@@ -101,6 +109,10 @@ public class Server {
         }
     }
 
+    /**
+     * @return a started gRPC server, listening on {@link #port} on all network interfaces, with
+     * a shutdown hook registered to stop it gracefully.
+     */
     io.grpc.Server startServer(final SimulationManager simulationManager) throws IOException,
         InterruptedException {
         final io.grpc.Server grpcServer = NettyServerBuilder
@@ -149,6 +161,9 @@ public class Server {
         );
     }
 
+    /**
+     * @return {@code timestamp} converted to an {@link Instant}.
+     */
     public static Instant toInstant(
         final Timestamp timestamp
     ) {
@@ -161,12 +176,18 @@ public class Server {
             .atOffset(UTC);
     }
 
+    /**
+     * @return {@code timestamp} converted to a UTC {@link LocalDateTime}.
+     */
     public static LocalDateTime toLocalDateTime(
         final Timestamp timestamp
     ) {
         return toOffsetDateTime(timestamp).toLocalDateTime();
     }
 
+    /**
+     * @return {@code localDateTime}, interpreted as UTC, converted to a {@link Timestamp}.
+     */
     public static Timestamp toTimestamp(
         final LocalDateTime localDateTime
     ) {

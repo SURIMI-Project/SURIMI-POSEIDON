@@ -41,11 +41,21 @@ import static io.grpc.Status.*;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
+/**
+ * Registry of live {@link Simulation}s, keyed by a {@link UUID} handed out at
+ * {@code Initialise}-time, plus each simulation's immutable {@link SimulationProperties}.
+ * Entries are held in unbounded caffeine caches with no eviction policy: a simulation lives until
+ * {@link #remove} is called (on {@code Finalise}/{@code Cancel}), and its properties are held
+ * with a weak key so they're reclaimable once the simulation itself is unreferenced.
+ */
 public class SimulationManager {
     private final Cache<UUID, Simulation> simulations = Caffeine.newBuilder().build();
     private final Cache<Simulation, SimulationProperties> simulationProperties =
         Caffeine.newBuilder().weakKeys().build();
 
+    /**
+     * @return {@code id} parsed as a {@link UUID}, or throws {@code INVALID_ARGUMENT}.
+     */
     public static UUID parseId(final String id) {
         try {
             return UUID.fromString(checkNotNull(id));
@@ -56,6 +66,9 @@ public class SimulationManager {
         }
     }
 
+    /**
+     * @return whether a simulation is registered under {@code simulationId}.
+     */
     public boolean contains(final String simulationId) {
         return contains(parseId(simulationId));
     }
@@ -64,6 +77,9 @@ public class SimulationManager {
         return simulations.asMap().containsKey(simulationId);
     }
 
+    /**
+     * @return the registered simulation, or throws {@code NOT_FOUND}.
+     */
     public Simulation getSimulation(final String simulationId) {
         return getSimulation(parseId(simulationId));
     }
@@ -78,6 +94,10 @@ public class SimulationManager {
         return simulation;
     }
 
+    /**
+     * @return the properties registered for {@code simulation} (via {@link #put}), or throws
+     * {@code INTERNAL} if none were registered.
+     */
     public SimulationProperties getSimulationProperties(final Simulation simulation) {
         final SimulationProperties properties = simulationProperties.getIfPresent(simulation);
         if (properties == null) throw INTERNAL
@@ -86,6 +106,9 @@ public class SimulationManager {
         return properties;
     }
 
+    /**
+     * Registers a simulation and its properties under {@code simulationId}.
+     */
     public void put(
         final UUID simulationId,
         final Simulation simulation,
@@ -95,6 +118,11 @@ public class SimulationManager {
         simulationProperties.put(simulation, properties);
     }
 
+    /**
+     * A simulation's configuration facts needed to translate gRPC requests/responses, fixed for
+     * the simulation's lifetime: its step size, mass unit, and the set of market, price-category,
+     * and species keys it was configured with.
+     */
     @Data
     public static class SimulationProperties {
 
@@ -120,6 +148,9 @@ public class SimulationManager {
             this.speciesKeys = ImmutableSet.copyOf(speciesKeys);
         }
 
+        /**
+         * @return {@code valueInKg} converted to {@link #standardMassUnit}.
+         */
         public double convertKgToStandardMassUnit(final double valueInKg) {
             return massUnitIsKg
                 ? valueInKg
@@ -128,6 +159,9 @@ public class SimulationManager {
                     .doubleValue();
         }
 
+        /**
+         * @return {@code mass}, expressed in {@link #standardMassUnit}, converted to kilograms.
+         */
         public double convertMassInStandardUnitToKg(final double mass) {
             return massUnitIsKg
                 ? mass
@@ -135,6 +169,9 @@ public class SimulationManager {
         }
     }
 
+    /**
+     * Unregisters a simulation; its properties are reclaimed once it becomes unreferenced.
+     */
     public void remove(final String simulationId) {
         remove(parseId(simulationId));
     }
