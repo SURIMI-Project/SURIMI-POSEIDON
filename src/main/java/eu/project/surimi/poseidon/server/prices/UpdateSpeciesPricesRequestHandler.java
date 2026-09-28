@@ -51,6 +51,13 @@ import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * Handles {@code UpdateSpeciesPrices}: sets each requested species price on the matching market
+ * (by {@code marketCode}), ignoring prices for unknown markets. Rejects a request that would mix
+ * a generic (no life stage) price with an already-staged one, or vice versa, for the same
+ * species/category/market, since {@link BiomassMarket#getPrice} falls back to
+ * {@link Species#covers} and such a mix would make that lookup ambiguous.
+ */
 public class UpdateSpeciesPricesRequestHandler extends
     WithSimulationRequestHandler<UpdateSpeciesPricesRequest, UpdateSpeciesPricesResponse> {
 
@@ -161,6 +168,10 @@ public class UpdateSpeciesPricesRequestHandler extends
         }
     }
 
+    /**
+     * @return the simulation's {@link MarketGrid} components, or throws {@code
+     * FAILED_PRECONDITION} if none are configured.
+     */
     static Set<MarketGrid> getMarketGrids(final Simulation simulation) {
         final Set<MarketGrid> marketGrids =
             simulation.getComponents(MarketGrid.class);
@@ -172,6 +183,10 @@ public class UpdateSpeciesPricesRequestHandler extends
         return marketGrids;
     }
 
+    /**
+     * @return every {@link BiomassMarket} across all of the simulation's {@link MarketGrid}s,
+     * keyed by market code.
+     */
     static Map<String, BiomassMarket> getMarketsById(final Simulation simulation) {
         return getMarketGrids(simulation)
             .stream()
