@@ -38,7 +38,6 @@ import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.time.DurationFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
-import uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFile;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
@@ -191,7 +190,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
         final var modelGrid =
             modelGridWithActiveCells(
-                new ModelGridFromGridFile<>(bathymetricGridPath),
+                modelGridFromGridFile(bathymetricGridPath),
                 cellSetFromGridFile(
                     inputPath.plus("exclusion_grid.asc"),
                     0
