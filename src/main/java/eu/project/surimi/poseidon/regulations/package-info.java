@@ -20,12 +20,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.regulations;
-
-import java.time.LocalDate;
-
 /**
- * A date range, inclusive of both ends, during which a port/gear pair is closed to fishing.
+ * SURIMI-specific regulations plugged into POSEIDON's regulations engine: TAC quotas
+ * ({@link eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas}), MPA closures
+ * ({@link eu.project.surimi.poseidon.regulations.MpaClosurePredicate}), and port closures
+ * ({@link eu.project.surimi.poseidon.regulations.PortClosurePredicate}). The MPA and port closure
+ * predicates are built from tables via a {@code *FromTableFactory} that groups rows into an
+ * {@code ImmutableMap} keyed by the relevant IDs; see {@link eu.project.surimi.poseidon.regulations.Factories}
+ * for the YAML-facing entry points.
  */
-public record PortClosureWindow(LocalDate startDate, LocalDate endDate) {
-}
+package eu.project.surimi.poseidon.regulations;

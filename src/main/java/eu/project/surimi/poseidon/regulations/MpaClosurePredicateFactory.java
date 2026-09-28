@@ -37,6 +37,10 @@ import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 import java.time.Month;
 
+/**
+ * Factory for {@link MpaClosurePredicate}, combining MPA grids, closed months, and fleet
+ * restrictions, and extracting each vessel's country tag with a {@link StringTagExtractor}.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
