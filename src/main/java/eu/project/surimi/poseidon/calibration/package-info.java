@@ -20,18 +20,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.calibration;
-
-import uk.ac.ox.poseidon.core.scopes.SimulationScope;
-import uk.ac.ox.poseidon.io.tables.SimulationEventListenerFactory;
-
 /**
- * Factory for {@link LandingsAccumulator}.
+ * SURIMI-specific support for POSEIDON's calibration framework:
+ * {@link eu.project.surimi.poseidon.calibration.LandingsAccumulator} tallies simulated landings
+ * so a {@code CalibrationProblem} (see {@code uk.ac.ox.poseidon.calibration}) can score them
+ * against real-world targets.
  */
-public class LandingsAccumulatorFactory
-    extends SimulationEventListenerFactory<LandingsAccumulator> {
-    @Override
-    protected LandingsAccumulator newListener(final SimulationScope scope) {
-        return new LandingsAccumulator();
-    }
-}
+package eu.project.surimi.poseidon.calibration;

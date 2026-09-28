@@ -35,6 +35,11 @@ import java.util.function.Supplier;
 import static java.util.stream.Collectors.toMap;
 import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
 
+/**
+ * Accumulates landed biomass from {@link Sale} events into a running total per year, gear, and
+ * species/life-stage key, for comparison against real-world landings targets during calibration
+ * (see {@code NorthwesternMedCalibration}).
+ */
 public class LandingsAccumulator extends AbstractListener<Sale>
     implements Supplier<Map<LandingsAccumulator.Key, Double>> {
 
@@ -44,6 +49,9 @@ public class LandingsAccumulator extends AbstractListener<Sale>
         super(Sale.class);
     }
 
+    /**
+     * Adds the sale's items to the running per-year/gear/species landings total.
+     */
     @Override
     public void receive(final Sale sale) {
         final int year = sale.getDateTime().getYear();
@@ -70,11 +78,19 @@ public class LandingsAccumulator extends AbstractListener<Sale>
             );
     }
 
+    /**
+     * @return an unmodifiable view of the accumulated landings, keyed by year/gear/species.
+     */
     @Override
     public Map<Key, Double> get() {
         return Collections.unmodifiableMap(landings);
     }
 
+    /**
+     * Year, gear code, and species/life-stage key ({@link #speciesKey} is built with
+     * {@link uk.ac.ox.poseidon.core.utils.Utils#multiStringKey}) identifying one accumulated
+     * landings total.
+     */
     public record Key(
         Integer year, String gearCode, String speciesKey
     ) implements Comparable<Key> {
@@ -88,6 +104,10 @@ public class LandingsAccumulator extends AbstractListener<Sale>
         }
     }
 
+    /**
+     * @return the accumulated landings as a table with columns {@code year}, {@code gear_code},
+     * {@code species_code}, {@code landings_kg}.
+     */
     public Table asTable() {
         final IntColumn year = ColumnType.INTEGER.create("year");
         final StringColumn gearCode = ColumnType.STRING.create("gear_code");

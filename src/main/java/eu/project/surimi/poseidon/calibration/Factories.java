@@ -22,9 +22,16 @@
 
 package eu.project.surimi.poseidon.calibration;
 
+/**
+ * Static entry points for building this package's calibration-support factories, mirroring the
+ * YAML factory-method convention used throughout POSEIDON scenarios.
+ */
 public class Factories {
     private Factories() {}
 
+    /**
+     * @return a {@link LandingsAccumulatorFactory}.
+     */
     public static LandingsAccumulatorFactory landingsAccumulator() {
         return new LandingsAccumulatorFactory();
     }
