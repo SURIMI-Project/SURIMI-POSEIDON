@@ -20,28 +20,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.project.surimi.poseidon.server.simulation;
-
-import build.buf.gen.surimi.v1.GetProtocolVersionRequest;
-import build.buf.gen.surimi.v1.GetProtocolVersionResponse;
-import eu.project.surimi.poseidon.server.RequestHandler;
-
-import static eu.project.surimi.poseidon.server.Server.PROTOCOL_VERSION;
-
 /**
- * Handles {@code GetProtocolVersion}: returns the running server's
- * {@link eu.project.surimi.poseidon.server.Server#PROTOCOL_VERSION}. Unlike every other handler,
- * this one needs no live simulation.
+ * Handlers for the simulation lifecycle methods: {@code Initialise}, {@code SimulateStep},
+ * {@code Finalise}, {@code Cancel}, and {@code GetProtocolVersion}. Each handler runs exactly
+ * once per gRPC method; see the enclosing {@code server} package for the shared
+ * {@code RequestHandler}/{@code WithSimulationRequestHandler} base classes.
  */
-public class GetProtocolVersionRequestHandler
-    extends RequestHandler<GetProtocolVersionRequest, GetProtocolVersionResponse> {
-
-    @Override
-    protected GetProtocolVersionResponse getResponse(final GetProtocolVersionRequest request) {
-        return GetProtocolVersionResponse
-            .newBuilder()
-            .setProtocolVersion(PROTOCOL_VERSION)
-            .build();
-    }
-
-}
+package eu.project.surimi.poseidon.server.simulation;

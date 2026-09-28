@@ -34,6 +34,10 @@ import static eu.project.surimi.poseidon.server.Utils.checkRequestDateTimeAlignm
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.INFO;
 
+/**
+ * Handles {@code SimulateStep}: checks the request's date-time is aligned with the simulation's
+ * current one, then advances the simulation's schedule by its configured step size.
+ */
 public class SimulateStepRequestHandler extends
     WithSimulationRequestHandler<SimulateStepRequest, SimulateStepResponse> {
 

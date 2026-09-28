@@ -58,6 +58,15 @@ import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
 import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
 
+/**
+ * Handles {@code InitialiseSimulation}: loads (and caches by name) the requested scenario from
+ * {@code scenarioFolder}, starts a new {@link Simulation} from it with the request's simulation
+ * ID and start date-time, and registers it plus its derived
+ * {@link SimulationManager.SimulationProperties} with the {@link SimulationManager}. Rejects a
+ * request whose simulation ID is already registered, whose scenario name doesn't match
+ * {@link #SCENARIO_NAME_PATTERN}, or whose raster cell origin isn't centroid-based (the only
+ * origin this service currently supports).
+ */
 @RequiredArgsConstructor
 public class InitialiseRequestHandler
     extends RequestHandler<InitialiseSimulationRequest, InitialiseSimulationResponse> {

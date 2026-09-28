@@ -28,6 +28,10 @@ import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.core.Simulation;
 
+/**
+ * Handles {@code CancelSimulation}: drops the simulation from the {@link SimulationManager}
+ * without calling {@link Simulation#finish()}, so it is not finalised, only unregistered.
+ */
 public class CancelRequestHandler
     extends WithSimulationRequestHandler<CancelSimulationRequest, CancelSimulationResponse> {
 

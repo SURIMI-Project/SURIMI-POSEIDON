@@ -30,6 +30,10 @@ import uk.ac.ox.poseidon.core.Simulation;
 
 import static java.lang.System.Logger.Level.INFO;
 
+/**
+ * Handles {@code FinaliseSimulation}: calls {@link Simulation#finish()} then drops the
+ * simulation from the {@link SimulationManager}.
+ */
 public class FinaliseRequestHandler
     extends WithSimulationRequestHandler<FinaliseSimulationRequest, FinaliseSimulationResponse> {
 
