@@ -33,6 +33,10 @@ import eu.project.surimi.poseidon.server.simulation.*;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * The {@code FisheryService} gRPC API: each method delegates to exactly one injected
+ * {@code RequestHandler}.
+ */
 @RequiredArgsConstructor
 public class FisheryService extends build.buf.gen.surimi.v1.FisheryServiceGrpc.FisheryServiceImplBase {
 
