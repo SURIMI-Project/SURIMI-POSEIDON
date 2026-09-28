@@ -42,6 +42,11 @@ import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpe
 import static java.lang.System.Logger.Level.INFO;
 import static java.util.stream.Collectors.*;
 
+/**
+ * Handles {@code GetCatchDisposition}: summarizes fishing events whose end date-time falls in the
+ * requested interval into gross catch, live discards, and dead discards per gear code, species,
+ * and end coordinate.
+ */
 public class GetCatchDispositionSummaryRequestHandler
     extends WithSimulationRequestHandler<GetCatchDispositionRequest, GetCatchDispositionResponse> {
 
@@ -189,6 +194,9 @@ public class GetCatchDispositionSummaryRequestHandler
             .build();
     }
 
+    /**
+     * Summed gross catch, live discards, and dead discards for one gear/species/coordinate.
+     */
     record Disposition(
         double grossCatchInKg,
         double liveDiscardsInKg,
