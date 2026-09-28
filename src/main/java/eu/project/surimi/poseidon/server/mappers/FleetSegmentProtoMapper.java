@@ -25,11 +25,20 @@ package eu.project.surimi.poseidon.server.mappers;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.emptyToNull;
 
+/**
+ * Converts between {@link eu.project.surimi.poseidon.server.fleet.FleetSegment} and the
+ * {@code surimi.v1.FleetSegment} proto. Each dimension is a wildcard when blank or unset on
+ * either side, so blank/unset is normalised to {@code null} in both directions.
+ */
 public final class FleetSegmentProtoMapper {
 
     private FleetSegmentProtoMapper() {
     }
 
+    /**
+     * @return the POSEIDON {@link eu.project.surimi.poseidon.server.fleet.FleetSegment} for a
+     * proto fleet segment, with each blank dimension normalised to {@code null}.
+     */
     public static eu.project.surimi.poseidon.server.fleet.FleetSegment toPoseidonFleetSegment(
         final build.buf.gen.surimi.v1.FleetSegment fleetSegment
     ) {
@@ -43,6 +52,11 @@ public final class FleetSegmentProtoMapper {
         );
     }
 
+    /**
+     * @return the proto fleet segment for a POSEIDON
+     * {@link eu.project.surimi.poseidon.server.fleet.FleetSegment}, leaving each wildcard ({@code
+     * null}) dimension unset.
+     */
     public static build.buf.gen.surimi.v1.FleetSegment toProtoFleetSegment(
         final eu.project.surimi.poseidon.server.fleet.FleetSegment fleetSegment
     ) {
