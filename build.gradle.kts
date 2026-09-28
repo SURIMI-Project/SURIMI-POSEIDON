@@ -61,7 +61,7 @@ dependencies {
     implementation(libs.bundles.opentelemetry)
     implementation(libs.protovalidate)
     compileOnly("${libs.spotbugs.annotations.get()}:${spotbugs.toolVersion.get()}")
-    implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.82.1.1.20260707100832.459c3b62a20e")
+    implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.84.0.2.20260924152849.d8eedf2f6694")
     testImplementation(libs.jqwik)
     testImplementation(libs.assertj)
     testImplementation(libs.mockito)

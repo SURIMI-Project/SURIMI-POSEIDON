@@ -138,6 +138,7 @@ public abstract class ServiceTest {
                 .newBuilder()
                 .setSimulationId(simulationId)
                 .setScenarioName(scenarioName)
+                .setClimateScenario("RCP_4.5")
                 .setSimulation(
                     Simulation
                         .newBuilder()
