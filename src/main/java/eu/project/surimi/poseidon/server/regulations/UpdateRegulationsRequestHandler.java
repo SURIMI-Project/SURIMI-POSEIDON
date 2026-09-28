@@ -35,6 +35,11 @@ import static eu.project.surimi.poseidon.server.Server.toInstant;
 import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toPoseidonFleetSegment;
 import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 
+/**
+ * Handles {@code UpdateRegulations}: registers each TAC entry in the request as a new quota on
+ * the simulation's {@link TotalAllowableCatchQuotas} for the given interval, fleet segment, and
+ * species.
+ */
 public class UpdateRegulationsRequestHandler extends
     WithSimulationRequestHandler<UpdateRegulationsRequest, UpdateRegulationsResponse> {
 

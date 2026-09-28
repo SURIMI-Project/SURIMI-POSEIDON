@@ -36,6 +36,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Server.toInstant;
 import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toProtoFleetSegment;
 
+/**
+ * Handles {@code GetFishingActivity}: returns, for each fleet segment with TAC quotas overlapping
+ * the requested interval, the proportion of that interval during which fishing was permitted (see
+ * {@link TotalAllowableCatchQuotas#getFishingActivityRatios}).
+ */
 public class GetFishingActivityRequestHandler extends
     WithSimulationRequestHandler<GetFishingActivityRequest, GetFishingActivityResponse> {
 
