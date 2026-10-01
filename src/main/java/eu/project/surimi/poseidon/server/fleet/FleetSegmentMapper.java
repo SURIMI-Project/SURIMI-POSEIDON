@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.server.fleet;
 
+import eu.project.surimi.poseidon.server.Server;
 import lombok.NonNull;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.agents.vessels.extractors.tags.DoubleTagExtractor;
@@ -42,7 +43,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <li>country code from a configured vessel tag</li>
  * <li>vessel length from a configured vessel tag, mapped to a vessel-length class
  * via a {@link NumericIntervalMapper}</li>
- * <li>scale and model from configured constants</li>
+ * <li>scale from a configured constant</li>
+ * <li>model from {@link Server#MODEL_NAME}</li>
  * </ul>
  *
  * <p>Tag values are normalised before use. Blank strings and {@code NA} are treated
@@ -58,20 +60,17 @@ public final class FleetSegmentMapper implements Function<Vessel, FleetSegment> 
     private final @NonNull DoubleTagExtractor vesselLengthExtractor;
     private final @NonNull NumericIntervalMapper<String> vesselLengthClassMapper;
     private final String scale;
-    private final String model;
 
     public FleetSegmentMapper(
         @NonNull final String countryCodeTag,
         @NonNull final String vesselLengthTag,
         @NonNull final NumericIntervalMapper<String> vesselLengthClassMapper,
-        final String scale,
-        final String model
+        final String scale
     ) {
         this.countryCodeExtractor = new StringTagExtractor(countryCodeTag);
         this.vesselLengthExtractor = new DoubleTagExtractor(vesselLengthTag);
         this.vesselLengthClassMapper = vesselLengthClassMapper;
         this.scale = scale;
-        this.model = model;
     }
 
     @Override
@@ -83,7 +82,7 @@ public final class FleetSegmentMapper implements Function<Vessel, FleetSegment> 
             getVesselLengthClass(vessel),
             scale,
             countryCodeExtractor.apply(vessel),
-            model
+            Server.MODEL_NAME
         );
     }
 

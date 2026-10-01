@@ -60,8 +60,7 @@ class TotalAllowableCatchQuotasFactoryTest {
                 new NumericIntervalMapper.Interval<>(12.0, 18.0, "VL1218"),
                 new NumericIntervalMapper.Interval<>(18.0, 24.0, "VL1824")
             )),
-            "Industrial",
-            "POSEIDON"
+            "Industrial"
         );
 
     @Test

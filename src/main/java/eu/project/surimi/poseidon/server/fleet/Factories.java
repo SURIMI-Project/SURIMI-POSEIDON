@@ -42,15 +42,13 @@ public class Factories {
         final String countryCodeTag,
         final String vesselLengthTag,
         final Factory<? super S, ? extends NumericIntervalMapper<String>> vesselLengthClassMapper,
-        final String scale,
-        final String model
+        final String scale
     ) {
         return new FleetSegmentMapperFactory<>(
             countryCodeTag,
             vesselLengthTag,
             vesselLengthClassMapper,
-            scale,
-            model
+            scale
         );
     }
 }

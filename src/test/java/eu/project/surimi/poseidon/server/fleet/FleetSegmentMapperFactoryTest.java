@@ -22,8 +22,7 @@ class FleetSegmentMapperFactoryTest {
                 "country_of_registration",
                 "loa",
                 numericIntervalToStringMapper(interval(0.0, 12.0, "VL0612")),
-                "Industrial",
-                "POSEIDON"
+                "Industrial"
             );
 
         final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
@@ -39,14 +38,13 @@ class FleetSegmentMapperFactoryTest {
                 "flag_state",
                 "lbp",
                 numericIntervalToStringMapper(interval(12.0, 18.0, "VL1218")),
-                "Artisanal",
-                "ALT_MODEL"
+                "Artisanal"
             );
 
         final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
 
         assertThat(mapper.apply(vessel("PS", "flag_state", "FRA", "lbp", 13.0)))
-            .isEqualTo(new FleetSegment("PS", "VL1218", "Artisanal", "FRA", "ALT_MODEL"));
+            .isEqualTo(new FleetSegment("PS", "VL1218", "Artisanal", "FRA", "POSEIDON"));
     }
 
     private static Vessel vessel(

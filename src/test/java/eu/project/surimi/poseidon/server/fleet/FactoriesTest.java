@@ -22,15 +22,13 @@ class FactoriesTest {
                 "country_of_registration",
                 "loa",
                 vesselLengthClassMapper,
-                "Industrial",
-                "POSEIDON"
+                "Industrial"
             );
 
         assertThat(factory.getCountryCodeTag()).isEqualTo("country_of_registration");
         assertThat(factory.getVesselLengthTag()).isEqualTo("loa");
         assertThat(factory.getVesselLengthClassMapper()).isSameAs(vesselLengthClassMapper);
         assertThat(factory.getScale()).isEqualTo("Industrial");
-        assertThat(factory.getModel()).isEqualTo("POSEIDON");
         assertThat(factory.get(GLOBAL_SCOPE)).isNotNull();
     }
 }

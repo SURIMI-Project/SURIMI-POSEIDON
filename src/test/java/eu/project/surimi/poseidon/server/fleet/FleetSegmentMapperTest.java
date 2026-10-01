@@ -25,8 +25,7 @@ class FleetSegmentMapperTest {
             "country_of_registration",
             "loa",
             VESSEL_LENGTH_CLASS_MAPPER,
-            "Industrial",
-            "POSEIDON"
+            "Industrial"
         );
         final Vessel vessel = mock(Vessel.class);
         final Gear gear = mock(Gear.class);
@@ -48,8 +47,7 @@ class FleetSegmentMapperTest {
             "country_of_registration",
             "loa",
             VESSEL_LENGTH_CLASS_MAPPER,
-            "Industrial",
-            "POSEIDON"
+            "Industrial"
         );
         final Vessel vessel = mock(Vessel.class);
         when(vessel.getTag("country_of_registration")).thenReturn(java.util.Optional.empty());
@@ -68,8 +66,7 @@ class FleetSegmentMapperTest {
             "country_of_registration",
             "loa",
             VESSEL_LENGTH_CLASS_MAPPER,
-            "Industrial",
-            "POSEIDON"
+            "Industrial"
         );
         final Vessel vessel = mock(Vessel.class);
         when(vessel.getTag("country_of_registration")).thenReturn(java.util.Optional.of(" NA "));
@@ -87,8 +84,7 @@ class FleetSegmentMapperTest {
             "country_of_registration",
             "loa",
             VESSEL_LENGTH_CLASS_MAPPER,
-            "Industrial",
-            "POSEIDON"
+            "Industrial"
         );
         final Vessel vessel = mock(Vessel.class);
         when(vessel.getTag("country_of_registration")).thenReturn(java.util.Optional.of("ESP"));

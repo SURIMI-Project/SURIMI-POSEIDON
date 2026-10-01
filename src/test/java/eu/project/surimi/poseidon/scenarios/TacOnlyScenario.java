@@ -48,8 +48,7 @@ public class TacOnlyScenario implements Supplier<Scenario> {
                             interval(12.0, 18.0, "VL1218"),
                             interval(18.0, 24.0, "VL1824")
                         ),
-                        "Industrial",
-                        "POSEIDON"
+                        "Industrial"
                     )
                 )
             )

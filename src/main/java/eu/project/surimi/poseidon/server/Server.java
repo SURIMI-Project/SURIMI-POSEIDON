@@ -74,6 +74,11 @@ public class Server {
     private static final System.Logger logger = System.getLogger(Server.class.getName());
     public static final String PROTOCOL_VERSION =
         ProtocolVersionExtractor.getSurimiProtocolVersion();
+    /**
+     * The name by which SURIMI identifies this model, e.g. in the {@code model} field of a fleet
+     * segment.
+     */
+    public static final String MODEL_NAME = "POSEIDON";
 
     @Parameter(
         names = {"-s", "--scenario_folder"},

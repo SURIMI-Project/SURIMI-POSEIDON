@@ -47,7 +47,6 @@ public class FleetSegmentMapperFactory<S extends Scope> extends RelativeScopeFac
     private String vesselLengthTag;
     private Factory<? super S, ? extends NumericIntervalMapper<String>> vesselLengthClassMapper;
     private String scale;
-    private String model;
 
     @Override
     protected FleetSegmentMapper newInstance(final S scope) {
@@ -55,8 +54,7 @@ public class FleetSegmentMapperFactory<S extends Scope> extends RelativeScopeFac
             checkNotNull(countryCodeTag),
             checkNotNull(vesselLengthTag),
             checkNotNull(vesselLengthClassMapper).get(scope),
-            scale,
-            model
+            scale
         );
     }
 }

@@ -62,8 +62,7 @@ class TotalAllowableCatchQuotasTest {
                 new NumericIntervalMapper.Interval<>(12.0, 18.0, "VL1218"),
                 new NumericIntervalMapper.Interval<>(18.0, 24.0, "VL1824")
             )),
-            "Industrial",
-            "POSEIDON"
+            "Industrial"
         );
     private static final FleetSegment BROAD_OTB_ESP_SEGMENT =
         new FleetSegment("OTB", null, "Industrial", "ESP", "POSEIDON");

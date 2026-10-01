@@ -584,8 +584,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         "country_of_registration",
                         "loa",
                         vesselLengthClassMapper,
-                        "Industrial",
-                        "POSEIDON"
+                        "Industrial"
                     )
                 )
             );
