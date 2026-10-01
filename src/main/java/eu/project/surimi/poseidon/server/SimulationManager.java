@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.server;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableSet;
+import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
@@ -121,7 +122,7 @@ public class SimulationManager {
     /**
      * A simulation's configuration facts needed to translate gRPC requests/responses, fixed for
      * the simulation's lifetime: its step size, mass unit, and the set of market, price-category,
-     * and species keys it was configured with.
+     * species keys, and fleet segments it was configured with.
      */
     @Data
     public static class SimulationProperties {
@@ -132,13 +133,15 @@ public class SimulationManager {
         private final ImmutableSet<String> marketCodes;
         private final ImmutableSet<String> priceCategoryCodes;
         private final ImmutableSet<SpeciesKey> speciesKeys;
+        private final ImmutableSet<FleetSegment> fleetSegments;
 
         public SimulationProperties(
             final Period stepSize,
             final Unit<Mass> standardMassUnit,
             final Set<String> marketCodes,
             final Set<String> priceCategoryCodes,
-            final Set<SpeciesKey> speciesKeys
+            final Set<SpeciesKey> speciesKeys,
+            final Set<FleetSegment> fleetSegments
         ) {
             this.stepSize = stepSize;
             this.standardMassUnit = standardMassUnit;
@@ -146,6 +149,7 @@ public class SimulationManager {
             this.marketCodes = ImmutableSet.copyOf(marketCodes);
             this.priceCategoryCodes = ImmutableSet.copyOf(priceCategoryCodes);
             this.speciesKeys = ImmutableSet.copyOf(speciesKeys);
+            this.fleetSegments = ImmutableSet.copyOf(fleetSegments);
         }
 
         /**

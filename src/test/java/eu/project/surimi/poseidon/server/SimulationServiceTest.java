@@ -74,6 +74,20 @@ class SimulationServiceTest extends ServiceTest {
     }
 
     @Test
+    void rejectsContractWithoutFleetSegments() {
+        final StatusRuntimeException error = assertThrows(
+            StatusRuntimeException.class,
+            () -> initialiseSimulation(
+                UUID.randomUUID().toString(),
+                MinimalScenario.class.getSimpleName(),
+                contractItems().clearFleetSegments().build()
+            )
+        );
+
+        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
+    }
+
+    @Test
     void canStartTwoSimulationsWithDifferentIds() {
         final String simulationId1 = UUID.randomUUID().toString();
         final String simulationId2 = UUID.randomUUID().toString();

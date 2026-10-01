@@ -30,6 +30,8 @@ import com.google.common.collect.ImmutableSet;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.SpeciesKey;
+import eu.project.surimi.poseidon.server.fleet.FleetSegment;
+import eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -64,8 +66,8 @@ import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
  * ID and start date-time, and registers it plus its derived
  * {@link SimulationManager.SimulationProperties} with the {@link SimulationManager}. Rejects a
  * request whose simulation ID is already registered, whose scenario name doesn't match
- * {@link #SCENARIO_NAME_PATTERN}, or whose raster cell origin isn't centroid-based (the only
- * origin this service currently supports).
+ * {@link #SCENARIO_NAME_PATTERN}, whose raster cell origin isn't centroid-based (the only
+ * origin this service currently supports), or whose contract lists no fleet segments.
  */
 @RequiredArgsConstructor
 public class InitialiseRequestHandler
@@ -125,6 +127,15 @@ public class InitialiseRequestHandler
                 .map(SpeciesKey::from)
                 .collect(toImmutableSet());
 
+        final ImmutableSet<FleetSegment> fleetSegments =
+            request
+                .getSimulation()
+                .getItems()
+                .getFleetSegmentsList()
+                .stream()
+                .map(FleetSegmentProtoMapper::toPoseidonFleetSegment)
+                .collect(toImmutableSet());
+
         validateContract(request);
 
         final Simulation simulation =
@@ -148,7 +159,8 @@ public class InitialiseRequestHandler
                 massUnit,
                 marketCodes,
                 priceCategoryCodes,
-                speciesKeys
+                speciesKeys,
+                fleetSegments
             )
         );
         return InitialiseSimulationResponse
@@ -175,6 +187,11 @@ public class InitialiseRequestHandler
         if (!isRasterCellOriginCentroid) {
             throw FAILED_PRECONDITION
                 .withDescription("Only centroid raster cell origin is supported.")
+                .asRuntimeException();
+        }
+        if (request.getSimulation().getItems().getFleetSegmentsCount() == 0) {
+            throw INVALID_ARGUMENT
+                .withDescription("Contract must list at least one fleet segment.")
                 .asRuntimeException();
         }
     }

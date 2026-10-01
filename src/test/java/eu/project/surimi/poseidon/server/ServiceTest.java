@@ -32,13 +32,11 @@ import io.grpc.ManagedChannel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.utils.Pair;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -135,20 +133,67 @@ public abstract class ServiceTest {
         final String simulationId,
         final String scenarioName
     ) {
-        return initialiseSimulation(
-            simulationId,
-            scenarioName,
-            MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE
-        );
+        return initialiseSimulation(simulationId, scenarioName, contractItems().build());
     }
 
     /**
-     * @param contractSpecies (species code, life stage) pairs to put in the contract.
+     * @return the contract items matching {@link MinimalScenario}, for tests to adjust.
      */
+    protected static Items.Builder contractItems() {
+        return Items
+            .newBuilder()
+            .addAllMarkets(
+                MinimalScenario.MARKET_CODES
+                    .stream()
+                    .map(marketCode ->
+                        Market
+                            .newBuilder()
+                            .setMarketCode(marketCode)
+                            .build()
+                    )
+                    .toList()
+            )
+            .addAllPriceCategories(
+                MinimalScenario.GEAR_CODES
+                    .stream()
+                    .map(gearCode ->
+                        PriceCategory
+                            .newBuilder()
+                            .setCategoryCode(gearCode)
+                            .build()
+                    )
+                    .toList()
+            )
+            .addAllSpecies(
+                MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE
+                    .stream()
+                    .map(pair -> {
+                        final Species.Builder builder = Species.newBuilder();
+                        builder.setSpeciesCode(pair.getFirst());
+                        if (pair.getSecond() != null) {
+                            builder.setLifeStage(pair.getSecond());
+                        }
+                        return builder.build();
+                    })
+                    .toList()
+            )
+            .addAllFleetSegments(
+                MinimalScenario.GEAR_CODES
+                    .stream()
+                    .map(gearCode ->
+                        FleetSegment
+                            .newBuilder()
+                            .setGearCode(gearCode)
+                            .build()
+                    )
+                    .toList()
+            );
+    }
+
     protected InitialiseSimulationResponse initialiseSimulation(
         final String simulationId,
         final String scenarioName,
-        final List<Pair<String, String>> contractSpecies
+        final Items contractItems
     ) {
         return simulationStub.initialiseSimulation(
             InitialiseSimulationRequest
@@ -180,46 +225,7 @@ public abstract class ServiceTest {
                                         )
                                 )
                         )
-                        .setItems(
-                            Items
-                                .newBuilder()
-                                .addAllMarkets(
-                                    MinimalScenario.MARKET_CODES
-                                        .stream()
-                                        .map(marketCode ->
-                                            Market
-                                                .newBuilder()
-                                                .setMarketCode(marketCode)
-                                                .build()
-                                        )
-                                        .toList()
-                                )
-                                .addAllPriceCategories(
-                                    MinimalScenario.GEAR_CODES
-                                        .stream()
-                                        .map(gearCode ->
-                                            PriceCategory
-                                                .newBuilder()
-                                                .setCategoryCode(gearCode)
-                                                .build()
-                                        )
-                                        .toList()
-                                )
-                                .addAllSpecies(
-                                    contractSpecies
-                                        .stream()
-                                        .map(pair -> {
-                                            final Species.Builder builder =
-                                                Species.newBuilder();
-                                            builder.setSpeciesCode(pair.getFirst());
-                                            if (pair.getSecond() != null) {
-                                                builder.setLifeStage(pair.getSecond());
-                                            }
-                                            return builder.build();
-                                        })
-                                        .toList()
-                                )
-                        )
+                        .setItems(contractItems)
                 )
                 .build()
         );
