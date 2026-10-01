@@ -84,6 +84,22 @@ class SimulationServiceTest extends ServiceTest {
     }
 
     @Test
+    void acceptsContractWithSingleFleetSegment() {
+        final String simulationId = UUID.randomUUID().toString();
+        final InitialiseSimulationResponse response = initialiseSimulation(
+            simulationId,
+            MinimalScenario.class.getSimpleName(),
+            contractItems()
+                .clearFleetSegments()
+                .addFleetSegments(
+                    FleetSegment.newBuilder().setGearCode("G1").setModel(Server.MODEL_NAME)
+                )
+                .build()
+        );
+        assertEquals(simulationId, response.getSimulationId());
+    }
+
+    @Test
     void rejectsContractWithoutFleetSegments() {
         final StatusRuntimeException error = assertThrows(
             StatusRuntimeException.class,

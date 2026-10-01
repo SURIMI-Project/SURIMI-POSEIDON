@@ -27,7 +27,6 @@ import build.buf.gen.surimi.v1.InitialiseSimulationResponse;
 import build.buf.gen.surimi.v1.Market;
 import build.buf.gen.surimi.v1.PriceCategory;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.Server;
 import eu.project.surimi.poseidon.server.SimulationManager;
@@ -52,7 +51,6 @@ import java.time.Period;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -203,15 +201,17 @@ public class InitialiseRequestHandler
                 .withDescription("Contract must list at least one fleet segment for " + Server.MODEL_NAME + ".")
                 .asRuntimeException();
         }
-        for (final Set<FleetSegment> pair : Sets.combinations(fleetSegments, 2)) {
-            final List<FleetSegment> segments = List.copyOf(pair);
-            if (segments.get(0).overlaps(segments.get(1))) {
-                throw INVALID_ARGUMENT
-                    .withDescription(
-                        "Contract fleet segments overlap: " + segments.get(0) + " and " +
-                            segments.get(1)
-                    )
-                    .asRuntimeException();
+        final List<FleetSegment> segments = fleetSegments.asList();
+        for (int i = 0; i < segments.size(); i++) {
+            for (int j = i + 1; j < segments.size(); j++) {
+                if (segments.get(i).overlaps(segments.get(j))) {
+                    throw INVALID_ARGUMENT
+                        .withDescription(
+                            "Contract fleet segments overlap: " + segments.get(i) + " and " +
+                                segments.get(j)
+                        )
+                        .asRuntimeException();
+                }
             }
         }
     }
