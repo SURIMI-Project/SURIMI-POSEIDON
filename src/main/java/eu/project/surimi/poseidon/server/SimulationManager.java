@@ -170,9 +170,7 @@ public class SimulationManager {
         public double convertKgToStandardMassUnit(final double valueInKg) {
             return massUnitIsKg
                 ? valueInKg
-                : getQuantity(valueInKg, standardMassUnit)
-                    .getValue()
-                    .doubleValue();
+                : getQuantity(valueInKg, KILOGRAM).to(standardMassUnit).getValue().doubleValue();
         }
 
         /**

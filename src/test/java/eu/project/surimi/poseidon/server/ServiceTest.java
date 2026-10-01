@@ -196,6 +196,20 @@ public abstract class ServiceTest {
         final String scenarioName,
         final Items contractItems
     ) {
+        return initialiseSimulation(
+            simulationId,
+            scenarioName,
+            contractItems,
+            KILOGRAM.getSymbol()
+        );
+    }
+
+    protected InitialiseSimulationResponse initialiseSimulation(
+        final String simulationId,
+        final String scenarioName,
+        final Items contractItems,
+        final String massUnit
+    ) {
         return simulationStub.initialiseSimulation(
             InitialiseSimulationRequest
                 .newBuilder()
@@ -222,7 +236,7 @@ public abstract class ServiceTest {
                                             Unit
                                                 .newBuilder()
                                                 .setQuantity("mass")
-                                                .setUnit(KILOGRAM.getSymbol())
+                                                .setUnit(massUnit)
                                         )
                                 )
                         )

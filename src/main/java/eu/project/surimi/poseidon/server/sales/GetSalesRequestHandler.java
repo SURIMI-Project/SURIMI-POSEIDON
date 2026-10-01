@@ -68,10 +68,13 @@ public class GetSalesRequestHandler extends
 
     /**
      * @return one summarised {@link Sale} for a list of sale entries sharing the same market,
-     * catch category, fleet segment, and species: quantity and value are the sums across all
-     * entries.
+     * catch category, fleet segment, and species: quantity (in the contract's mass unit) and value
+     * are the sums across all entries.
      */
-    private static Sale summariseSale(final List<SaleEntry> saleEntries) {
+    private static Sale summariseSale(
+        final List<SaleEntry> saleEntries,
+        final SimulationManager.SimulationProperties simulationProperties
+    ) {
         final SaleEntry firstEntry = saleEntries.getFirst();
         final String catchCategoryCode = firstEntry.catchCategory.getCode();
         final double totalKg = saleEntries.stream()
@@ -86,7 +89,7 @@ public class GetSalesRequestHandler extends
             .setSpecies(toProtoSpecies(firstEntry.species))
             .setFleetSegment(toProtoFleetSegment(firstEntry.fleetSegment))
             .setCategoryCode(catchCategoryCode)
-            .setQuantity(totalKg)
+            .setQuantity(simulationProperties.convertKgToStandardMassUnit(totalKg))
             .setValue(totalValue)
             .build();
     }
@@ -163,7 +166,8 @@ public class GetSalesRequestHandler extends
                                 ),
                                 collectingAndThen(
                                     toList(),
-                                    GetSalesRequestHandler::summariseSale
+                                    saleEntries ->
+                                        summariseSale(saleEntries, simulationProperties)
                                 )
                             ),
                             Map::values

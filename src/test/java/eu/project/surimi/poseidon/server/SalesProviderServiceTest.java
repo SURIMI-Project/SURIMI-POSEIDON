@@ -27,6 +27,7 @@ import build.buf.gen.surimi.v1.GetSalesRequest;
 import build.buf.gen.surimi.v1.Sale;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import org.junit.jupiter.api.Test;
+import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
 
 import java.util.List;
 import java.util.Set;
@@ -36,6 +37,8 @@ import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.RETAI
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.withinPercentage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SalesProviderServiceTest extends ServiceTest {
@@ -85,6 +88,30 @@ public class SalesProviderServiceTest extends ServiceTest {
                 .map(Sale::getFleetSegment)
                 .collect(toSet());
         assertEquals(Set.of(g1), reportedFleetSegments);
+    }
+
+    @Test
+    void getSalesReportsQuantitiesInContractMassUnit() {
+        final String simulationId = UUID.randomUUID().toString();
+        initialiseSimulation(
+            simulationId,
+            MinimalScenario.class.getSimpleName(),
+            contractItems().build(),
+            "g"
+        );
+        step(simulationId, START_DATE_TIME);
+        final double soldKg =
+            simulationManager
+                .getSimulation(simulationId)
+                .getComponent(BiomassSaleAccumulator.class)
+                .getEvents()
+                .flatMap(sale -> sale.getItems().stream())
+                .mapToDouble(item -> item.getContent().asBiomass().asKg())
+                .sum();
+        final double reportedGrams =
+            getSales(simulationId).stream().mapToDouble(Sale::getQuantity).sum();
+        assertThat(soldKg).isPositive();
+        assertThat(reportedGrams).isCloseTo(soldKg * 1000, withinPercentage(1e-6));
     }
 
     private List<Sale> getSales(final String simulationId) {
