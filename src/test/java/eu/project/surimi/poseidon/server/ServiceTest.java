@@ -184,6 +184,7 @@ public abstract class ServiceTest {
                         FleetSegment
                             .newBuilder()
                             .setGearCode(gearCode)
+                            .setModel(Server.MODEL_NAME)
                             .build()
                     )
                     .toList()

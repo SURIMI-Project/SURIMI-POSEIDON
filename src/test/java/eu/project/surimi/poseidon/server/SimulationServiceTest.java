@@ -88,6 +88,24 @@ class SimulationServiceTest extends ServiceTest {
     }
 
     @Test
+    void rejectsContractWithoutPoseidonFleetSegments() {
+        final StatusRuntimeException error = assertThrows(
+            StatusRuntimeException.class,
+            () -> initialiseSimulation(
+                UUID.randomUUID().toString(),
+                MinimalScenario.class.getSimpleName(),
+                contractItems()
+                    .clearFleetSegments()
+                    .addFleetSegments(FleetSegment.newBuilder().setGearCode("G1").setModel("EwE"))
+                    .addFleetSegments(FleetSegment.newBuilder().setGearCode("G2"))
+                    .build()
+            )
+        );
+
+        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
+    }
+
+    @Test
     void rejectsContractWithOverlappingFleetSegments() {
         final StatusRuntimeException error = assertThrows(
             StatusRuntimeException.class,
@@ -96,9 +114,15 @@ class SimulationServiceTest extends ServiceTest {
                 MinimalScenario.class.getSimpleName(),
                 contractItems()
                     .clearFleetSegments()
-                    .addFleetSegments(FleetSegment.newBuilder().setGearCode("G1"))
                     .addFleetSegments(
-                        FleetSegment.newBuilder().setGearCode("G1").setCountryCode("ESP")
+                        FleetSegment.newBuilder().setGearCode("G1").setModel(Server.MODEL_NAME)
+                    )
+                    .addFleetSegments(
+                        FleetSegment
+                            .newBuilder()
+                            .setGearCode("G1")
+                            .setCountryCode("ESP")
+                            .setModel(Server.MODEL_NAME)
                     )
                     .build()
             )
