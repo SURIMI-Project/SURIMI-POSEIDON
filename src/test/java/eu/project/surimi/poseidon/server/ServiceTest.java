@@ -32,11 +32,13 @@ import io.grpc.ManagedChannel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import uk.ac.ox.poseidon.core.Scenario;
+import uk.ac.ox.poseidon.core.utils.Pair;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -133,6 +135,21 @@ public abstract class ServiceTest {
         final String simulationId,
         final String scenarioName
     ) {
+        return initialiseSimulation(
+            simulationId,
+            scenarioName,
+            MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE
+        );
+    }
+
+    /**
+     * @param contractSpecies (species code, life stage) pairs to put in the contract.
+     */
+    protected InitialiseSimulationResponse initialiseSimulation(
+        final String simulationId,
+        final String scenarioName,
+        final List<Pair<String, String>> contractSpecies
+    ) {
         return simulationStub.initialiseSimulation(
             InitialiseSimulationRequest
                 .newBuilder()
@@ -189,7 +206,7 @@ public abstract class ServiceTest {
                                         .toList()
                                 )
                                 .addAllSpecies(
-                                    MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE
+                                    contractSpecies
                                         .stream()
                                         .map(pair -> {
                                             final Species.Builder builder =

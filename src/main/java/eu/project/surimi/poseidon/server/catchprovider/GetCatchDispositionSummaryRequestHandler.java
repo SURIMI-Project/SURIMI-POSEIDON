@@ -26,6 +26,7 @@ import build.buf.gen.surimi.v1.*;
 import com.google.common.collect.Range;
 import com.google.protobuf.Timestamp;
 import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.biology.species.Species;
@@ -45,7 +46,8 @@ import static java.util.stream.Collectors.*;
 /**
  * Handles {@code GetCatchDisposition}: summarizes fishing events whose end date-time falls in the
  * requested interval into gross catch, live discards, and dead discards per gear code, species,
- * and end coordinate.
+ * and end coordinate, restricted to species the simulation was configured with (see
+ * {@link SimulationManager.SimulationProperties}).
  */
 public class GetCatchDispositionSummaryRequestHandler
     extends WithSimulationRequestHandler<GetCatchDispositionRequest, GetCatchDispositionResponse> {
@@ -59,6 +61,7 @@ public class GetCatchDispositionSummaryRequestHandler
 
     private static Map<String, Map<Species, Map<Coordinate, Disposition>>> extractFishingActionData(
         final Simulation simulation,
+        final SimulationManager.SimulationProperties simulationProperties,
         final Timestamp startDateTime,
         final Timestamp endDateTime
     ) {
@@ -81,6 +84,12 @@ public class GetCatchDispositionSummaryRequestHandler
                     .getMap()
                     .entrySet()
                     .stream()
+                    // only report species in contract
+                    .filter(entry ->
+                        simulationProperties
+                            .getSpeciesKeys()
+                            .contains(SpeciesKey.from(entry.getKey()))
+                    )
                     .map(entry -> new Row(
                         fishingEvent.getAction().getGear().getCode(),
                         entry.getKey(),
@@ -153,6 +162,7 @@ public class GetCatchDispositionSummaryRequestHandler
             CatchDispositionSummary.newBuilder();
         extractFishingActionData(
             simulation,
+            simulationProperties,
             request.getStartDateTime(),
             request.getEndDateTime()
         ).forEach((gearCode, speciesData) -> {

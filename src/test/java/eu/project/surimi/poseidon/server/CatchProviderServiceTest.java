@@ -26,11 +26,14 @@ import build.buf.gen.surimi.v1.DispositionGrid;
 import build.buf.gen.surimi.v1.GetCatchDispositionRequest;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import org.junit.jupiter.api.Test;
+import uk.ac.ox.poseidon.core.utils.Pair;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.GEAR_CODES;
+import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE;
 import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.SPECIES_CODES;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.function.Function.identity;
@@ -80,5 +83,37 @@ public class CatchProviderServiceTest extends ServiceTest {
                     )
                 )
         );
+    }
+
+    @Test
+    void getCatchDispositionOnlyReportsSpeciesInContract() {
+        final List<Pair<String, String>> contractSpecies =
+            LIFE_STAGE_PER_SPECIES_CODE
+                .stream()
+                .filter(pair -> !pair.getFirst().equals("C"))
+                .toList();
+        final String simulationId = UUID.randomUUID().toString();
+        initialiseSimulation(simulationId, MinimalScenario.class.getSimpleName(), contractSpecies);
+        step(simulationId, START_DATE_TIME);
+        final Set<String> reportedSpeciesCodes =
+            catchProviderStub
+                .getCatchDisposition(
+                    GetCatchDispositionRequest
+                        .newBuilder()
+                        .setStartDateTime(
+                            toTimestamp(MinimalScenario.START_DATE.atStartOfDay())
+                        )
+                        .setEndDateTime(
+                            toTimestamp(MinimalScenario.START_DATE.plusMonths(1).atStartOfDay())
+                        )
+                        .setSimulationId(simulationId)
+                        .build()
+                )
+                .getCatchDispositionSummary()
+                .getDispositionGridsList()
+                .stream()
+                .map(grid -> grid.getSpecies().getSpeciesCode())
+                .collect(toSet());
+        assertEquals(Set.of("A", "B"), reportedSpeciesCodes);
     }
 }
