@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.server;
 
+import build.buf.gen.surimi.v1.FleetSegment;
 import build.buf.gen.surimi.v1.GetSalesRequest;
 import build.buf.gen.surimi.v1.Sale;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
@@ -29,8 +30,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
-import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.GEAR_CODES;
 import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.RETAINED_SPECIES_CODES;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.function.Function.identity;
@@ -47,36 +48,17 @@ public class SalesProviderServiceTest extends ServiceTest {
     void getSales() {
         final String simulationId = initialiseSimulation();
         step(simulationId, START_DATE_TIME);
-        final List<Sale> sales =
-            salesProviderStub
-                .getSales(
-                    GetSalesRequest
-                        .newBuilder()
-                        .setSimulationId(simulationId)
-                        .setStartDateTime(
-                            toTimestamp(MinimalScenario.START_DATE.atStartOfDay())
-                        )
-                        .setEndDateTime(
-                            toTimestamp(MinimalScenario.START_DATE.plusMonths(1).atStartOfDay())
-                        )
-                        .build()
-                )
-                .getSalesSummary()
-                .getMarketSalesList()
-                .stream()
-                .flatMap(marketSales -> marketSales.getSalesList().stream())
-                .toList();
-        // Just check that we get sales for each gear/species combination
+        // Just check that we get sales for each contract fleet segment/species combination
         assertEquals(
-            GEAR_CODES.stream().collect(toMap(
+            contractItems().getFleetSegmentsList().stream().collect(toMap(
                 identity(),
                 _ -> Set.copyOf(RETAINED_SPECIES_CODES)
             )),
-            sales
+            getSales(simulationId)
                 .stream()
                 .collect(
                     groupingBy(
-                        sale -> sale.getFleetSegment().getGearCode(),
+                        Sale::getFleetSegment,
                         mapping(
                             sale -> sale.getSpecies().getSpeciesCode(),
                             toSet()
@@ -84,5 +66,45 @@ public class SalesProviderServiceTest extends ServiceTest {
                     )
                 )
         );
+    }
+
+    @Test
+    void getSalesOnlyReportsFleetSegmentsInContract() {
+        final FleetSegment g1 =
+            FleetSegment.newBuilder().setGearCode("G1").setModel(Server.MODEL_NAME).build();
+        final String simulationId = UUID.randomUUID().toString();
+        initialiseSimulation(
+            simulationId,
+            MinimalScenario.class.getSimpleName(),
+            contractItems().clearFleetSegments().addFleetSegments(g1).build()
+        );
+        step(simulationId, START_DATE_TIME);
+        final Set<FleetSegment> reportedFleetSegments =
+            getSales(simulationId)
+                .stream()
+                .map(Sale::getFleetSegment)
+                .collect(toSet());
+        assertEquals(Set.of(g1), reportedFleetSegments);
+    }
+
+    private List<Sale> getSales(final String simulationId) {
+        return salesProviderStub
+            .getSales(
+                GetSalesRequest
+                    .newBuilder()
+                    .setSimulationId(simulationId)
+                    .setStartDateTime(
+                        toTimestamp(MinimalScenario.START_DATE.atStartOfDay())
+                    )
+                    .setEndDateTime(
+                        toTimestamp(MinimalScenario.START_DATE.plusMonths(1).atStartOfDay())
+                    )
+                    .build()
+            )
+            .getSalesSummary()
+            .getMarketSalesList()
+            .stream()
+            .flatMap(marketSales -> marketSales.getSalesList().stream())
+            .toList();
     }
 }
