@@ -27,6 +27,7 @@ import build.buf.gen.surimi.v1.InitialiseSimulationResponse;
 import build.buf.gen.surimi.v1.Market;
 import build.buf.gen.surimi.v1.PriceCategory;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import eu.project.surimi.poseidon.server.RequestHandler;
 import eu.project.surimi.poseidon.server.Server;
 import eu.project.surimi.poseidon.server.SimulationManager;
@@ -49,7 +50,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -69,7 +72,7 @@ import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
  * request whose simulation ID is already registered, whose scenario name doesn't match
  * {@link #SCENARIO_NAME_PATTERN}, whose raster cell origin isn't centroid-based (the only
  * origin this service currently supports), or whose contract lists no fleet segments simulated
- * by POSEIDON. Fleet segments belonging to other models are ignored.
+ * by POSEIDON, or two that overlap. Fleet segments belonging to other models are ignored.
  */
 @RequiredArgsConstructor
 public class InitialiseRequestHandler
@@ -199,6 +202,17 @@ public class InitialiseRequestHandler
             throw INVALID_ARGUMENT
                 .withDescription("Contract must list at least one fleet segment for " + Server.MODEL_NAME + ".")
                 .asRuntimeException();
+        }
+        for (final Set<FleetSegment> pair : Sets.combinations(fleetSegments, 2)) {
+            final List<FleetSegment> segments = List.copyOf(pair);
+            if (segments.get(0).overlaps(segments.get(1))) {
+                throw INVALID_ARGUMENT
+                    .withDescription(
+                        "Contract fleet segments overlap: " + segments.get(0) + " and " +
+                            segments.get(1)
+                    )
+                    .asRuntimeException();
+            }
         }
     }
 
