@@ -34,6 +34,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 import javax.measure.Unit;
 import javax.measure.quantity.Mass;
 import java.time.Period;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -150,6 +151,17 @@ public class SimulationManager {
             this.priceCategoryCodes = ImmutableSet.copyOf(priceCategoryCodes);
             this.speciesKeys = ImmutableSet.copyOf(speciesKeys);
             this.fleetSegments = ImmutableSet.copyOf(fleetSegments);
+        }
+
+        /**
+         * @return the contract fleet segment covering {@code fleetSegment}, if any. Contract
+         * segments are checked not to overlap on initialisation, so there is at most one.
+         */
+        public Optional<FleetSegment> findContractFleetSegment(final FleetSegment fleetSegment) {
+            return fleetSegments
+                .stream()
+                .filter(contractSegment -> contractSegment.covers(fleetSegment))
+                .findFirst();
         }
 
         /**

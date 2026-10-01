@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.server;
 
 import build.buf.gen.surimi.v1.DispositionGrid;
+import build.buf.gen.surimi.v1.FleetSegment;
 import build.buf.gen.surimi.v1.GetCatchDispositionRequest;
 import build.buf.gen.surimi.v1.Items;
 import build.buf.gen.surimi.v1.Species;
@@ -33,7 +34,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.GEAR_CODES;
 import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.SPECIES_CODES;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.function.Function.identity;
@@ -49,35 +49,19 @@ public class CatchProviderServiceTest extends ServiceTest {
     void getCatchDisposition() {
         final String simulationId = initialiseSimulation();
         step(simulationId, START_DATE_TIME);
-        final List<DispositionGrid> dispositionGrids =
-            catchProviderStub
-                .getCatchDisposition(
-                    GetCatchDispositionRequest
-                        .newBuilder()
-                        .setStartDateTime(
-                            toTimestamp(MinimalScenario.START_DATE.atStartOfDay())
-                        )
-                        .setEndDateTime(
-                            toTimestamp(MinimalScenario.START_DATE.plusMonths(1).atStartOfDay())
-                        )
-                        .setSimulationId(simulationId)
-                        .build()
-                )
-                .getCatchDispositionSummary()
-                .getDispositionGridsList();
-        // Just check that we get a grid for each gear/species combination
+        // Just check that we get a grid for each contract fleet segment/species combination
         assertEquals(
-            GEAR_CODES.stream().collect(toMap(
+            contractItems().getFleetSegmentsList().stream().collect(toMap(
                 identity(),
                 _ -> Set.copyOf(SPECIES_CODES)
             )),
-            dispositionGrids
+            getDispositionGrids(simulationId)
                 .stream()
                 .collect(
                     groupingBy(
-                        dispositionGrid -> dispositionGrid.getFleetSegment().getGearCode(),
+                        DispositionGrid::getFleetSegment,
                         mapping(
-                            species -> species.getSpecies().getSpeciesCode(),
+                            grid -> grid.getSpecies().getSpeciesCode(),
                             toSet()
                         )
                     )
@@ -102,24 +86,47 @@ public class CatchProviderServiceTest extends ServiceTest {
         );
         step(simulationId, START_DATE_TIME);
         final Set<String> reportedSpeciesCodes =
-            catchProviderStub
-                .getCatchDisposition(
-                    GetCatchDispositionRequest
-                        .newBuilder()
-                        .setStartDateTime(
-                            toTimestamp(MinimalScenario.START_DATE.atStartOfDay())
-                        )
-                        .setEndDateTime(
-                            toTimestamp(MinimalScenario.START_DATE.plusMonths(1).atStartOfDay())
-                        )
-                        .setSimulationId(simulationId)
-                        .build()
-                )
-                .getCatchDispositionSummary()
-                .getDispositionGridsList()
+            getDispositionGrids(simulationId)
                 .stream()
                 .map(grid -> grid.getSpecies().getSpeciesCode())
                 .collect(toSet());
         assertEquals(Set.of("A", "B"), reportedSpeciesCodes);
+    }
+
+    @Test
+    void getCatchDispositionOnlyReportsFleetSegmentsInContract() {
+        final FleetSegment g1 =
+            FleetSegment.newBuilder().setGearCode("G1").setModel(Server.MODEL_NAME).build();
+        final String simulationId = UUID.randomUUID().toString();
+        initialiseSimulation(
+            simulationId,
+            MinimalScenario.class.getSimpleName(),
+            contractItems().clearFleetSegments().addFleetSegments(g1).build()
+        );
+        step(simulationId, START_DATE_TIME);
+        final Set<FleetSegment> reportedFleetSegments =
+            getDispositionGrids(simulationId)
+                .stream()
+                .map(DispositionGrid::getFleetSegment)
+                .collect(toSet());
+        assertEquals(Set.of(g1), reportedFleetSegments);
+    }
+
+    private List<DispositionGrid> getDispositionGrids(final String simulationId) {
+        return catchProviderStub
+            .getCatchDisposition(
+                GetCatchDispositionRequest
+                    .newBuilder()
+                    .setStartDateTime(
+                        toTimestamp(MinimalScenario.START_DATE.atStartOfDay())
+                    )
+                    .setEndDateTime(
+                        toTimestamp(MinimalScenario.START_DATE.plusMonths(1).atStartOfDay())
+                    )
+                    .setSimulationId(simulationId)
+                    .build()
+            )
+            .getCatchDispositionSummary()
+            .getDispositionGridsList();
     }
 }
