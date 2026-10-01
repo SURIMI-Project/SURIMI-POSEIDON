@@ -576,17 +576,18 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 optionValuesRegister
             );
 
+        final var fleetSegmentMapper =
+            fleetSegmentMapper(
+                "country_of_registration",
+                "loa",
+                vesselLengthClassMapper,
+                "Industrial"
+            );
+
         final var totalAllowableCatchQuotas =
             scheduledRepeatingFromStart(
                 DAILY,
-                totalAllowableCatchQuotas(
-                    fleetSegmentMapper(
-                        "country_of_registration",
-                        "loa",
-                        vesselLengthClassMapper,
-                        "Industrial"
-                    )
-                )
+                totalAllowableCatchQuotas(fleetSegmentMapper)
             );
 
         final var purseSeinerReadyForDeparture =
@@ -933,6 +934,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("purseSeinerRegulations", purseSeinerRegulations)
             .component("bottomTrawlerRegulations", bottomTrawlerRegulations)
             .component("totalAllowableCatchQuotas", totalAllowableCatchQuotas)
+            .component("fleetSegmentMapper", fleetSegmentMapper)
             .component("vesselField", vesselField)
             .component("modelGrid", modelGrid)
             .component("monthlyProcesses", monthlyProcesses)

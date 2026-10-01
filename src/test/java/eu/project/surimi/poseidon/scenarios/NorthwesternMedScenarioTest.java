@@ -25,16 +25,27 @@ package eu.project.surimi.poseidon.scenarios;
 import build.buf.gen.surimi.v1.FinaliseSimulationRequest;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario;
 import eu.project.surimi.poseidon.server.ServiceTest;
+import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 class NorthwesternMedScenarioTest extends ServiceTest {
 
     public NorthwesternMedScenarioTest() {
         super(NorthwesternMedScenario.class);
+    }
+
+    @Test
+    void exposesFleetSegmentMapperComponent() {
+        final String simulationId = initialiseSimulation();
+        assertDoesNotThrow(() ->
+            simulationManager.getSimulation(simulationId).getComponent(FleetSegmentMapper.class)
+        );
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

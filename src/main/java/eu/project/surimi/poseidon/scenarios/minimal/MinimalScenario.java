@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.util.Collections.nCopies;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.KNOT;
@@ -73,6 +74,7 @@ import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacit
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.species;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesByCode;
+import static uk.ac.ox.poseidon.core.functions.Factories.numericIntervalToStringMapper;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.constantDouble;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
@@ -376,6 +378,15 @@ public class MinimalScenario implements Supplier<Scenario> {
             .component("marketGrid", marketGrid)
             .component("fishingActionAccumulator", fishingActionAccumulator)
             .component("biomassSaleAccumulator", biomassSaleAccumulator)
+            .component(
+                "fleetSegmentMapper",
+                fleetSegmentMapper(
+                    "country_of_registration",
+                    "loa",
+                    numericIntervalToStringMapper(),
+                    "Industrial"
+                )
+            )
             .build();
     }
 }

@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.server;
 
 import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
+import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Period;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -45,6 +47,14 @@ class SimulationServiceTest extends ServiceTest {
         final String simulationId = UUID.randomUUID().toString();
         final InitialiseSimulationResponse response = initialiseSimulation(simulationId);
         assertEquals(simulationId, response.getSimulationId());
+    }
+
+    @Test
+    void exposesFleetSegmentMapperComponent() {
+        final String simulationId = initialiseSimulation();
+        assertDoesNotThrow(() ->
+            simulationManager.getSimulation(simulationId).getComponent(FleetSegmentMapper.class)
+        );
     }
 
     @Test
