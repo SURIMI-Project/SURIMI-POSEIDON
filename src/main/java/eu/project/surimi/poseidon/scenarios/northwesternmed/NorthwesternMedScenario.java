@@ -39,7 +39,6 @@ import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.core.time.DurationFactory;
 import uk.ac.ox.poseidon.core.time.TimeFactory;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
-import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -166,15 +165,14 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final DurationFactory BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION = hours(12);
 
     /**
-     * Regenerates {@code inputs/northwestern_med.yaml} from this class and runs a 10-year
-     * simulation against it, printing the date-time reached at each step, as a sanity check.
+     * Runs a 10-year simulation of this scenario, printing the date-time reached at each step,
+     * as a sanity check. To regenerate {@code inputs/northwestern_med.yaml}, use the
+     * {@code writeNorthwesternMedScenario} Gradle task instead.
      */
     static void main(final String[] args) {
         final int numSteps = 12 * 10;
         final Period stepSize = Period.ofMonths(1);
         final Scenario scenario = new NorthwesternMedScenario().get();
-        final Path scenarioPath = INPUT_PATH.resolve("scenario.yaml");
-        new ScenarioWriter().write(scenario, scenarioPath);
         final Simulation simulation = scenario.startNewSimulation();
         final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
         range(0, numSteps).forEach(_ -> {
