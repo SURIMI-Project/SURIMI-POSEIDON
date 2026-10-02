@@ -45,6 +45,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toProtoFleetSegment;
@@ -71,6 +72,27 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
     UpdateRegulationsTacQuotasTest() {
         super(TacOnlyScenario.class);
+    }
+
+    /**
+     * Initialises a simulation whose contract assigns all OTB vessels to POSEIDON, so that the
+     * TACs used in these tests overlap a contract fleet segment and are not ignored.
+     */
+    @Override
+    protected String initialiseSimulation() {
+        return initialiseSimulation(
+            UUID.randomUUID().toString(),
+            TacOnlyScenario.class.getSimpleName(),
+            contractItems()
+                .clearFleetSegments()
+                .addFleetSegments(
+                    build.buf.gen.surimi.v1.FleetSegment
+                        .newBuilder()
+                        .setGearCode("OTB")
+                        .setModel(Server.MODEL_NAME)
+                )
+                .build()
+        ).getSimulationId();
     }
 
     private static TemporalFishingAction action(
@@ -273,6 +295,60 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
         assertThat(tac.getEffectiveClosureIntervals(quotaSegment(otbFra)))
             .containsExactly(Interval.of(START.plusDays(2).toInstant(UTC), END.toInstant(UTC)));
         assertThat(tac.isPermitted(action(otbFra, INTERVAL))).isFalse();
+    }
+
+    @Test
+    void updateRegulationsIgnoresTacsForFleetSegmentsOutsideTheContract() {
+        // The fisheries authority sends every model the TACs of all fleets; those for fleets
+        // simulated by other models must not be registered, nor reported by GetFishingActivity.
+        final String simulationId = initialiseSimulation();
+        final TotalAllowableCatchQuotas tac = getTac(simulationId);
+
+        updateQuotas(
+            simulationId,
+            new QuotaEntry(COD, COD_QUOTA, new FleetSegment("PS", null, null, "ESP", null)),
+            new QuotaEntry(COD, COD_QUOTA, new FleetSegment("OTB", null, null, "FRA", "EwE"))
+        );
+
+        assertThat(tac.getFishingActivityRatios(INTERVAL)).isEmpty();
+    }
+
+    @Test
+    void updateRegulationsKeepsTacsWithBlankModelOverlappingTheContract() {
+        // The fisheries authority leaves the model blank, which matches any model.
+        final String simulationId = initialiseSimulation();
+        final TotalAllowableCatchQuotas tac = getTac(simulationId);
+        final FleetSegment otbEspAnyModel = new FleetSegment("OTB", null, null, "ESP", null);
+
+        updateQuotas(simulationId, new QuotaEntry(COD, COD_QUOTA, otbEspAnyModel));
+
+        assertThat(tac.getFishingActivityRatios(INTERVAL)).containsOnlyKeys(otbEspAnyModel);
+        broadcastFishingEvent(simulationId, START.plusDays(1), COD, COD_QUOTA);
+        assertIntervalClosed(tac, INTERVAL);
+    }
+
+    @Test
+    void updateRegulationsSetsNoQuotaWhenOneEntryIsRejected() {
+        final String simulationId = initialiseSimulation();
+        final TotalAllowableCatchQuotas tac = getTac(simulationId);
+
+        final Throwable thrown = catchThrowable(() ->
+            updateQuotas(
+                simulationId,
+                new QuotaEntry(HADDOCK, 50.0),
+                new QuotaEntry(COD, 100.0, WILDCARD_COUNTRY_AND_LENGTH_SEGMENT),
+                new QuotaEntry(COD, 50.0, POSEIDON_FLEET_SEGMENT)
+            )
+        );
+
+        assertThat(thrown).isInstanceOf(StatusRuntimeException.class);
+        assertThat(((StatusRuntimeException) thrown).getStatus().getCode())
+            .isEqualTo(Status.Code.INVALID_ARGUMENT);
+        assertThat(tac.getFishingActivityRatios(INTERVAL)).isEmpty();
+
+        // A corrected request is then accepted, as nothing from the rejected one remains.
+        updateQuotas(simulationId, new QuotaEntry(HADDOCK, 50.0), new QuotaEntry(COD, 50.0));
+        assertThat(tac.getFishingActivityRatios(INTERVAL)).containsOnlyKeys(POSEIDON_FLEET_SEGMENT);
     }
 
     private void updateQuota(

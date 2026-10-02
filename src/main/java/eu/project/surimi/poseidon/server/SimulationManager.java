@@ -165,6 +165,14 @@ public class SimulationManager {
         }
 
         /**
+         * @return whether {@code fleetSegment} overlaps at least one contract fleet segment, i.e.,
+         * whether it can apply to any vessel POSEIDON reports on.
+         */
+        public boolean overlapsContractFleetSegment(final FleetSegment fleetSegment) {
+            return fleetSegments.stream().anyMatch(contractSegment -> contractSegment.overlaps(fleetSegment));
+        }
+
+        /**
          * @return {@code valueInKg} converted to {@link #standardMassUnit}.
          */
         public double convertKgToStandardMassUnit(final double valueInKg) {

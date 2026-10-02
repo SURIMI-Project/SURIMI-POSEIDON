@@ -121,7 +121,9 @@ TAC quotas are defined per interval, fleet segment, and species, and tracked by 
 any species' quota for a fleet segment and interval is reached, fishing is closed for that
 segment until the end of the interval; vessels in a closed segment do not depart. The controller
 sets quotas via `UpdateRegulations` and reads the resulting share of open fishing time via
-`GetFishingActivity`.
+`GetFishingActivity`. TACs whose fleet segment overlaps no contract segment (the fisheries
+authority sends every model the TACs of all fleets) are ignored; the rest of a request is
+registered all or nothing.
 
 **Regulations: spatial and port closures**  
 The Northwestern Mediterranean scenario also forbids fishing in marine protected areas during

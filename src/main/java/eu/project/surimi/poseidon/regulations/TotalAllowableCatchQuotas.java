@@ -39,6 +39,7 @@ import uk.ac.ox.poseidon.regulations.Regulations;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -178,9 +179,7 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
     /**
      * Sets a quota for a given interval/fleet-segment/species combination.
      * <p>
-     * Quota definitions are immutable once set for a given fleet-quota interval and species.
-     * Overlapping TAC definitions are also rejected when interval and fleet-segment applicability
-     * overlap, regardless of species.
+     * Equivalent to {@link #setQuotas(Interval, Collection)} with a single definition.
      *
      * @param interval     interval to which the quota applies
      * @param fleetSegment fleet segment to which the quota applies
@@ -193,14 +192,41 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
         final Species species,
         final double quotaInKg
     ) {
-        checkArgument(quotaInKg >= 0.0, "TAC quota must be non-negative.");
+        setQuotas(interval, List.of(new QuotaDefinition(fleetSegment, species, quotaInKg)));
+    }
+
+    /**
+     * Sets several quotas for the same interval, all or nothing.
+     * <p>
+     * Quota definitions are immutable once set for a given fleet-quota interval and species.
+     * Overlapping TAC definitions are also rejected when interval and fleet-segment applicability
+     * overlap, regardless of species. Each definition is checked against both the existing quotas
+     * and the definitions before it in {@code definitions}; if any is rejected, none is set.
+     *
+     * @param interval    interval to which the quotas apply
+     * @param definitions fleet segment, species and quota (in kilograms) of each quota
+     */
+    public void setQuotas(
+        final Interval interval,
+        final Collection<QuotaDefinition> definitions
+    ) {
         checkNotNull(interval, "TAC interval is required.");
-        checkNotNull(fleetSegment, "TAC fleet segment is required.");
-        checkNotNull(species, "TAC species is required.");
-        final QuotaKey quotaKey =
-            new QuotaKey(fleetSegment, interval);
-        validateNewQuotaDefinition(quotaKey, species);
-        quotas.computeIfAbsent(quotaKey, __ -> new HashMap<>()).put(species, quotaInKg);
+        checkNotNull(definitions, "TAC definitions are required.");
+        final Map<QuotaKey, Map<Species, Double>> staged = new HashMap<>();
+        quotas.forEach((quotaKey, quotaValues) -> staged.put(quotaKey, new HashMap<>(quotaValues)));
+        definitions.forEach(definition -> {
+            checkNotNull(definition, "TAC definition is required.");
+            checkArgument(definition.quotaInKg() >= 0.0, "TAC quota must be non-negative.");
+            checkNotNull(definition.fleetSegment(), "TAC fleet segment is required.");
+            checkNotNull(definition.species(), "TAC species is required.");
+            final QuotaKey quotaKey = new QuotaKey(definition.fleetSegment(), interval);
+            validateNewQuotaDefinition(staged, quotaKey, definition.species());
+            staged
+                .computeIfAbsent(quotaKey, __ -> new HashMap<>())
+                .put(definition.species(), definition.quotaInKg());
+        });
+        quotas.clear();
+        quotas.putAll(staged);
     }
 
     /**
@@ -251,7 +277,8 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
         return fishingActivityRatios;
     }
 
-    private void validateNewQuotaDefinition(
+    private static void validateNewQuotaDefinition(
+        final Map<QuotaKey, Map<Species, Double>> quotas,
         final QuotaKey quotaKey,
         final Species quotaSpecies
     ) {
@@ -370,6 +397,15 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
             .sum();
         return (double) (queryDurationSeconds - closedDurationSeconds) / queryDurationSeconds;
     }
+
+    /**
+     * One quota to set through {@link #setQuotas(Interval, Collection)}.
+     *
+     * @param fleetSegment fleet segment to which the quota applies
+     * @param species      quota-species key
+     * @param quotaInKg    allowed biomass in kilograms (must be non-negative)
+     */
+    public record QuotaDefinition(FleetSegment fleetSegment, Species species, double quotaInKg) {}
 
     @Value
     private static class QuotaKey {

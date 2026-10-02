@@ -25,10 +25,13 @@ package eu.project.surimi.poseidon.server.regulations;
 import build.buf.gen.surimi.v1.UpdateRegulationsRequest;
 import build.buf.gen.surimi.v1.UpdateRegulationsResponse;
 import eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas;
+import eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas.QuotaDefinition;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.core.Simulation;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Server.toInstant;
@@ -36,9 +39,11 @@ import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.
 import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 
 /**
- * Handles {@code UpdateRegulations}: registers each TAC entry in the request as a new quota on
+ * Handles {@code UpdateRegulations}: registers the TAC entries in the request as new quotas on
  * the simulation's {@link TotalAllowableCatchQuotas} for the given interval, fleet segment, and
- * species.
+ * species. Entries whose fleet segment overlaps no contract fleet segment are ignored: they apply
+ * to fleets simulated by other models (the fisheries authority sends every model the TACs of all
+ * fleets). The remaining entries are registered all or nothing: if one is rejected, none is set.
  */
 public class UpdateRegulationsRequestHandler extends
     WithSimulationRequestHandler<UpdateRegulationsRequest, UpdateRegulationsResponse> {
@@ -77,32 +82,35 @@ public class UpdateRegulationsRequestHandler extends
             "End date time must be on or after start date time."
         );
         final Interval interval = Interval.of(startInstant, endInstant);
-        final TotalAllowableCatchQuotas totalAllowableCatchQuotas =
-            simulation.getComponent(TotalAllowableCatchQuotas.class);
-        request
-            .getRegulationsSummary()
-            .getTotalAllowableCatchesList()
-            .forEach(totalAllowableCatch -> {
-                checkArgument(
-                    totalAllowableCatch.hasSpecies(),
-                    "TAC entry is missing a species."
-                );
-                checkArgument(
-                    totalAllowableCatch.hasFleetSegment(),
-                    "TAC entry is missing a fleet segment."
-                );
-                final double quotaInKg =
-                    simulationProperties
-                        .convertMassInStandardUnitToKg(
+        final List<QuotaDefinition> quotaDefinitions =
+            request
+                .getRegulationsSummary()
+                .getTotalAllowableCatchesList()
+                .stream()
+                .map(totalAllowableCatch -> {
+                    checkArgument(
+                        totalAllowableCatch.hasSpecies(),
+                        "TAC entry is missing a species."
+                    );
+                    checkArgument(
+                        totalAllowableCatch.hasFleetSegment(),
+                        "TAC entry is missing a fleet segment."
+                    );
+                    return new QuotaDefinition(
+                        toPoseidonFleetSegment(totalAllowableCatch.getFleetSegment()),
+                        toPoseidonSpecies(totalAllowableCatch.getSpecies()),
+                        simulationProperties.convertMassInStandardUnitToKg(
                             totalAllowableCatch.getCatch()
-                        );
-                totalAllowableCatchQuotas.setQuota(
-                    interval,
-                    toPoseidonFleetSegment(totalAllowableCatch.getFleetSegment()),
-                    toPoseidonSpecies(totalAllowableCatch.getSpecies()),
-                    quotaInKg
-                );
-            });
+                        )
+                    );
+                })
+                .filter(quotaDefinition ->
+                    simulationProperties.overlapsContractFleetSegment(quotaDefinition.fleetSegment())
+                )
+                .toList();
+        simulation
+            .getComponent(TotalAllowableCatchQuotas.class)
+            .setQuotas(interval, quotaDefinitions);
         return UpdateRegulationsResponse
             .newBuilder()
             .setSimulationId(request.getSimulationId())

@@ -472,6 +472,46 @@ class TotalAllowableCatchQuotasTest {
     }
 
     @Test
+    void setQuotasSetsNoneAndKeepsExistingQuotasWhenOneConflictsWithAnExistingQuota() {
+        final Species cod = new Species("COD", null, null);
+        final Species haddock = new Species("HAD", null, null);
+        final FleetSegment psEsp = new FleetSegment("PS", null, "Industrial", "ESP", "POSEIDON");
+        final LocalDateTime start = LocalDateTime.of(2027, 7, 1, 0, 0);
+        final Interval interval = interval(start, start.plusDays(30));
+
+        tac.setQuota(interval, BROAD_OTB_ESP_SEGMENT, cod, 100.0);
+
+        assertThatThrownBy(() -> tac.setQuotas(interval, List.of(
+            new TotalAllowableCatchQuotas.QuotaDefinition(psEsp, haddock, 50.0),
+            new TotalAllowableCatchQuotas.QuotaDefinition(BROAD_OTB_ESP_SEGMENT, cod, 200.0)
+        )))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Overlapping TAC definition");
+
+        assertThat(tac.getFishingActivityRatios(interval)).containsOnlyKeys(BROAD_OTB_ESP_SEGMENT);
+        recordEvent(start.plusDays(1), cod, 100.0);
+        stepAt(start.plusDays(1));
+        assertThat(tac.isPermitted(action(interval))).isFalse();
+    }
+
+    @Test
+    void setQuotasSetsNoneWhenOneQuotaIsNegative() {
+        final Species cod = new Species("COD", null, null);
+        final Species haddock = new Species("HAD", null, null);
+        final LocalDateTime start = LocalDateTime.of(2027, 8, 1, 0, 0);
+        final Interval interval = interval(start, start.plusDays(30));
+
+        assertThatThrownBy(() -> tac.setQuotas(interval, List.of(
+            new TotalAllowableCatchQuotas.QuotaDefinition(BROAD_OTB_ESP_SEGMENT, cod, 100.0),
+            new TotalAllowableCatchQuotas.QuotaDefinition(BROAD_OTB_ESP_SEGMENT, haddock, -1.0)
+        )))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("TAC quota must be non-negative.");
+
+        assertThat(tac.getFishingActivityRatios(interval)).isEmpty();
+    }
+
+    @Test
     void rejectsActionWithoutAgent() {
         assertThatThrownBy(() -> tac.isPermitted(actionWithoutAgent(interval(
             LocalDateTime.of(2027, 6, 1, 0, 0),
