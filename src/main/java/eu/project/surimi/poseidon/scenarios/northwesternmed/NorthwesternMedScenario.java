@@ -630,7 +630,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     ),
                     condition(
                         currentDayOfWeek(),
-                        in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
+                        in(constant(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY)))
                     )
                 )
             );
@@ -838,6 +838,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         distance,
                         currentTripDestinationCell(),
                         currentTripEventManager()
+                    ),
+                    payTripCost(
+                        composedFunction(
+                            costsKeyFromVessel,
+                            mapValueExtractor(hourlyCostsMap)
+                        )
                     ),
                     landCatches(constant(hours(1))),
                     endTrip()
