@@ -56,7 +56,7 @@ import static java.util.stream.Collectors.reducing;
  * Total Allowable Catch (TAC) regulation defined by interval, fleet segment, and species.
  * <p>
  * This regulation consumes {@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent}s and
- * accumulates landed biomass per fleet-quota interval, where a fleet-quota interval is a fleet
+ * accumulates caught biomass per fleet-quota interval, where a fleet-quota interval is a fleet
  * segment plus an interval. Fishing is permitted unless a requested fishing action overlaps a
  * closed portion of at least one fleet-quota interval that covers the acting vessel's fleet
  * segment.
@@ -72,8 +72,8 @@ import static java.util.stream.Collectors.reducing;
  *     <li>{@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent} is the accounting
  *     trigger. Accumulated catches from the
  *     {@link FishingEventAccumulator} are processed during the {@link #step(SimState)} call.</li>
- *     <li>Both sold and unsold biomass count against TAC, as reflected in the gross catch
- *     of the {@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome}.</li>
+ *     <li>Everything caught counts against TAC, discards included: catches are taken from the
+ *     gross catch of the {@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome}.</li>
  *     <li>Closure is per fleet-quota interval: once any configured quota-species in an
  *     interval/fleet-segment combination reaches or exceeds its limit at time {@code t}, fishing
  *     is closed for that fleet-quota interval
@@ -122,9 +122,9 @@ public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAct
     private final Map<QuotaKey, Map<Species, Double>> quotas = new HashMap<>();
 
     /**
-     * Accumulated landed catches in kilograms, keyed by fleet-quota interval and quota-species.
+     * Accumulated gross catches in kilograms, keyed by fleet-quota interval and quota-species.
      * <p>
-     * Keys in this map align with quota-species (not necessarily the raw sold species), because
+     * Keys in this map align with quota-species (not necessarily the raw caught species), because
      * catches are recorded after applying {@link Species#covers(Species)} matching.
      */
     private final Map<QuotaKey, Map<Species, Double>> catches = new HashMap<>();
