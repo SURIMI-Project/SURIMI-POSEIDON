@@ -26,7 +26,6 @@ import sim.util.Int2D;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.agents.choices.MutableOptionValues;
 import uk.ac.ox.poseidon.agents.components.VesselComponentRegisterFactory;
-import uk.ac.ox.poseidon.agents.market.PriceEntry;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
@@ -45,7 +44,6 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -546,10 +544,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var marketGrid =
             marketGrid(
                 portGrid,
-                oneBiomassMarketPerPort(
-                    portGrid,
-                    object(List.<PriceEntry>of())
-                )
+                oneBiomassMarketPerPort(portGrid)
             );
 
         final VesselComponentRegisterFactory<MutableOptionValues<Int2D>>

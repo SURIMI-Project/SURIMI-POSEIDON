@@ -24,7 +24,6 @@ package eu.project.surimi.poseidon.scenarios.minimal;
 
 import com.google.common.collect.Streams;
 import uk.ac.ox.poseidon.agents.catches.Factories;
-import uk.ac.ox.poseidon.agents.market.BiomassMarketFactory;
 import uk.ac.ox.poseidon.agents.market.PriceEntryFactory;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
@@ -231,12 +230,14 @@ public class MinimalScenario implements Supplier<Scenario> {
                 )
             ).toList();
 
-        final var markets =
-            mappedFactory(
-                biomassMarket(null, null, null),
-                mappedProperty(BiomassMarketFactory::setPort, List.of(port1, port2)),
-                mappedProperty(BiomassMarketFactory::setMarketCode, MARKET_CODES),
-                mappedProperty(BiomassMarketFactory::setPricesEntries, priceEntries)
+        final var market1 = biomassMarket(port1, MARKET_CODES.get(0));
+        final var market2 = biomassMarket(port2, MARKET_CODES.get(1));
+        final var markets = listOf(market1, market2);
+
+        final var initialPrices =
+            initialPrices(
+                marketPrices(market1, priceEntries.get(0)),
+                marketPrices(market2, priceEntries.get(1))
             );
 
         final var marketGrid = marketGrid(portGrid, markets);
@@ -376,6 +377,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             .component("portGrid", portGrid)
             .component("markets", markets)
             .component("marketGrid", marketGrid)
+            .component("initialPrices", initialPrices)
             .component("fishingActionAccumulator", fishingActionAccumulator)
             .component("biomassSaleAccumulator", biomassSaleAccumulator)
             .component(
