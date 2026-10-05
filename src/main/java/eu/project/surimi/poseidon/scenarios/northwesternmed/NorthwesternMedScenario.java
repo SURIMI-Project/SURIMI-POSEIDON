@@ -26,6 +26,7 @@ import sim.util.Int2D;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.agents.choices.MutableOptionValues;
 import uk.ac.ox.poseidon.agents.components.VesselComponentRegisterFactory;
+import uk.ac.ox.poseidon.agents.market.PriceEntry;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
@@ -44,6 +45,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -66,7 +68,8 @@ import static uk.ac.ox.poseidon.agents.components.Factories.registeredVesselComp
 import static uk.ac.ox.poseidon.agents.components.Factories.vesselComponentRegister;
 import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
-import static uk.ac.ox.poseidon.agents.market.Factories.biomassMarketGridFromPriceTable;
+import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
+import static uk.ac.ox.poseidon.agents.market.Factories.oneBiomassMarketPerPort;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
 import static uk.ac.ox.poseidon.agents.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
@@ -488,19 +491,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var fisheableBiomassGrids =
             fisheableBiomassGrids(biomassGrids);
 
-        final var timeIndexedBiomassGrids =
-            timeIndexedBiomassGridsFromNetCdf(
-                modelGrid,
-                species,
-                inputPath.plus("biomass_grids.nc")
-            );
-
-        final var timeIndexedBiomassGridUpdates =
-            timeIndexedBiomassGridUpdates(
-                fisheableBiomassGrids,
-                timeIndexedBiomassGrids
-            );
-
         final var biomassSaleAccumulator =
             biomassSaleAccumulator();
 
@@ -551,18 +541,15 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 stringTagExtractor("main_fishing_gear")
             );
 
+        // Markets start without prices: in SURIMI runs, prices arrive through
+        // UpdateSpeciesPrices; LocalNorthwesternMedScenario schedules them from prices.csv.
         final var marketGrid =
-            biomassMarketGridFromPriceTable(
-                tableFromCsvFile(inputPath.plus("prices.csv")),
-                "date",
-                "market_code",
-                "species_code",
-                "category_code",
-                "price",
-                "currency",
-                "measurement_unit",
+            marketGrid(
                 portGrid,
-                species
+                oneBiomassMarketPerPort(
+                    portGrid,
+                    object(List.<PriceEntry>of())
+                )
             );
 
         final VesselComponentRegisterFactory<MutableOptionValues<Int2D>>
@@ -932,7 +919,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("species", species)
             .component("bathymetricGrid", bathymetricGrid)
             .component("biomassGrids", biomassGrids)
-            .component("timeIndexedBiomassGridUpdates", timeIndexedBiomassGridUpdates)
+            .component("fisheableBiomassGrids", fisheableBiomassGrids)
             .component("marketGrid", marketGrid)
             .component("portGrid", portGrid)
             .component("purseSeinerRegulations", purseSeinerRegulations)

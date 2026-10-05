@@ -22,10 +22,13 @@
 
 /**
  * The production Northwestern Mediterranean scenario:
- * {@link eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario} builds it,
+ * {@link eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario} builds the
+ * scenario served to SURIMI,
+ * {@link eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario} adds
+ * the local biomass and price drivers for runs outside SURIMI,
  * {@link eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenarioWithUI} is
- * its GUI wrapper, and
- * {@link eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedCalibration} fits its
+ * the GUI wrapper, and
+ * {@link eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedCalibration} fits the
  * gear catchabilities against real-world landings.
  */
 package eu.project.surimi.poseidon.scenarios.northwesternmed;

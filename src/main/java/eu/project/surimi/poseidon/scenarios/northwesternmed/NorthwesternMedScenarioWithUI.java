@@ -139,11 +139,11 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
     }
 
     /**
-     * Opens the GUI for a freshly built {@link NorthwesternMedScenario}.
+     * Opens the GUI for a freshly built {@link LocalNorthwesternMedScenario}.
      */
     static void main(final String[] args) {
         final NorthwesternMedScenarioWithUI northwesternMedScenarioWithUI =
-            new NorthwesternMedScenarioWithUI(new NorthwesternMedScenario().get());
+            new NorthwesternMedScenarioWithUI(new LocalNorthwesternMedScenario().get());
         northwesternMedScenarioWithUI.createController();
     }
 

@@ -42,8 +42,8 @@ import static java.util.stream.Collectors.toMap;
 import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
 
 /**
- * Calibration entry point for {@link NorthwesternMedScenario}: fits each gear/species/life-stage
- * catchability against real-world landings targets read from
+ * Calibration entry point for {@link LocalNorthwesternMedScenario}: fits each
+ * gear/species/life-stage catchability against real-world landings targets read from
  * {@code inputs/northwestern_med/target_landings.csv}, using {@link CalibrationRunner}'s genetic
  * algorithm to minimise {@link SumSquaredErrors} against a
  * {@link eu.project.surimi.poseidon.calibration.LandingsAccumulator}. The parameter set to
@@ -99,7 +99,7 @@ public class NorthwesternMedCalibration {
 
         final CalibrationProblem problem =
             new CalibrationProblem(
-                new NorthwesternMedScenario().get(),
+                new LocalNorthwesternMedScenario().get(),
                 Period.ofYears(yearsSummary.getMax() - yearsSummary.getMin() + 1),
                 ImmutableMap.of("landingsAccumulator", landingsAccumulator()),
                 catchabilityParameterRanges,
