@@ -42,6 +42,7 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 ./gradlew spotbugsMain                                   # SpotBugs
 ./gradlew writeNorthwesternMedScenario                   # regenerate inputs/northwestern_med.yaml
 ./gradlew run --args="-p 50051 -s inputs"                # run the server locally
+./gradlew runNorthwesternMedGui                          # open the NW Med GUI (local inputs)
 ```
 
 ## Testing

@@ -104,7 +104,13 @@ val profileNorthwesternMedScenario = tasks.register("profileNorthwesternMedScena
     jvmArgs("-XX:StartFlightRecording=duration=120s,filename=build/profile.jfr,settings=profile")
 }
 
-val stageForImage = tasks.register<Sync>("stageForImage") {
+tasks.register("runNorthwesternMedGui", JavaExec::class) {
+    dependsOn("classes")
+    mainClass.set("eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenarioWithUI")
+    classpath = sourceSets["main"].runtimeClasspath
+}
+
+val stageForImage =tasks.register<Sync>("stageForImage") {
     val imageDir = layout.buildDirectory.dir("image")
     into(imageDir)
     dependsOn(tasks.named("jar"), writeNorthwesternMedScenario)
