@@ -157,8 +157,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // midpoint of 8-10 knots, per bottom trawler regulation doc
     private static final double BOTTOM_TRAWLER_TRAWLING_SPEED_IN_KNOTS = 3;
     // midpoint of 2-4 knots, per bottom trawler regulation doc
-    private static final String PURSE_SEINE_GEAR_CODE = "PS";
-    private static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
+    static final String PURSE_SEINE_GEAR_CODE = "PS";
+    static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
     private static final String CATCH_CATEGORY = "Fresh - Whole";
     private static final TimeFactory PURSE_SEINER_RETURN_TIME = time(6, 30, 0);
     private static final DurationFactory PURSE_SEINE_SET_DURATION = hours(1);

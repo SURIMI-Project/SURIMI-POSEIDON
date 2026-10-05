@@ -34,7 +34,12 @@ import uk.ac.ox.poseidon.gui.portrayals.*;
 
 import java.util.List;
 
+import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.BOTTOM_TRAWLER_GEAR_CODE;
+import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.PURSE_SEINE_GEAR_CODE;
 import static java.awt.Color.WHITE;
+import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
+import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
+import static uk.ac.ox.poseidon.core.predicates.Factories.equal;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 
@@ -104,6 +109,10 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
                             new RegulationGridPortrayalFactory(
                                 scenario.component("purseSeinerRegulations"),
                                 scenario.component("vesselField"),
+                                condition(
+                                    stringTagExtractor("main_fishing_gear"),
+                                    equal(PURSE_SEINE_GEAR_CODE)
+                                ),
                                 scenario.component("bathymetricGrid"),
                                 WIDTH,
                                 HEIGHT
@@ -115,6 +124,10 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
                             new RegulationGridPortrayalFactory(
                                 scenario.component("bottomTrawlerRegulations"),
                                 scenario.component("vesselField"),
+                                condition(
+                                    stringTagExtractor("main_fishing_gear"),
+                                    equal(BOTTOM_TRAWLER_GEAR_CODE)
+                                ),
                                 scenario.component("bathymetricGrid"),
                                 WIDTH,
                                 HEIGHT
