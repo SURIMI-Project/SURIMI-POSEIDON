@@ -20,7 +20,7 @@ The code is licensed under the **GNU General Public License v3 (GPL-3.0-or-later
 | Artifact | Gradle task | Description |
 |----------|-------------|-------------|
 | `SURIMI-POSEIDON.jar` | `jar` (via `build`) | Executable JAR containing the compiled service code. Runtime dependencies are placed alongside it in `build/image/lib/` by the `stageForImage` task. |
-| `ghcr.io/surimi-project/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties`, the `scenarios/northwestern_med.yaml` scenario file, and the `inputs/northwestern_med/` scenario data. This is the deployable artefact pushed to GHCR by CI. |
+| `ghcr.io/surimi-project/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties` and the `scenarios/northwestern_med.yaml` scenario file, but no input data (see [S3 bucket](#s3-bucket)). This is the deployable artefact pushed to GHCR by CI. |
 | `scenarios/northwestern_med.yaml` | `writeNorthwesternMedScenario` | Serialised YAML representation of the `NorthwesternMedScenario`. Generated from Java code and committed to this repo (users may edit it by hand for local runs); also regenerated at Docker image build time to ensure consistency. The data files it references (`inputs/northwestern_med/`) are produced upstream by the SURIMI data-preprocessing pipelines. |
 | Javadoc site | `javadoc` | API documentation, published to GitHub Pages by CI. |
 
@@ -309,14 +309,36 @@ container runtime.
 
 ## S3 bucket
 
-**POSEIDON does not use an S3 bucket.** All scenario input data (bathymetry, species tables,
-fleet register, port locations, prices, operating costs) is bundled directly into the Docker
-image at build time. The `stageForImage` Gradle task copies `scenarios/northwestern_med.yaml` into the image under
-`/app/scenarios/` and the `inputs/northwestern_med/` directory under `/app/inputs/`.
+The scenario input data (bathymetry, species tables, fleet register, port locations, costs, …) is
+not in the Docker image. On every push to `master`, a workflow in the inputs repository
+(`.github/workflows/s3-sync.yml`) mirrors the repository to `surimi-poseidon/` in the
+`project-surimi` bucket on EDITO's MinIO (`minio.dive.edito.eu`).
+
+When `AWS_BUCKET_NAME` is set, `S3Inputs` downloads everything under `surimi-poseidon/` into
+`inputs/` (`/app/inputs/` in the container) at startup, before the gRPC server starts:
+
+- `inputs/` must not exist yet. Nothing local is overwritten or deleted, so a local checkout of
+  the inputs submodule is never touched.
+- Any failure (missing variable, bad keys, Vault or S3 unreachable, empty prefix) stops startup
+  with an exception and exit code 1. There is no fallback.
+- The prefix is listed again after the download. If it changed (an upload was in progress), the
+  download may mix old and new files, so startup fails too; Kubernetes restarts the container,
+  which downloads again.
+- The service stays up across experiments, so each `InitialiseSimulation` lists the prefix again
+  and logs a warning if it no longer matches what was downloaded (compared by key and ETag).
+  The simulation still starts, with the inputs downloaded at startup; restart the service to
+  use the new ones.
+
+Without `AWS_BUCKET_NAME`, the service reads the local `inputs/` folder, as `./gradlew run` and
+the GUI do.
 
 ### S3 bucket authentication
 
-Not applicable — no object storage credentials are required.
+The keys come from `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and the optional
+`AWS_SESSION_TOKEN` if set. Otherwise they are read from the Vault secret (KV version 2) that the
+EDITO chart points to with the `VAULT_*` variables, whose keys are the same variable names; the
+other SURIMI services read the same secret. The chart sets all the variables below; none of them
+is set locally.
 
 ---
 
@@ -336,6 +358,12 @@ appropriate resource limits.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OTLP-compatible gRPC endpoint for OpenTelemetry trace export (e.g., `http://jaeger:4317`). When absent, tracing is disabled and no external connection is made. |
+| `AWS_BUCKET_NAME` | No | Bucket holding the inputs under `surimi-poseidon/`. When set, inputs are downloaded from S3 at startup (see [S3 bucket](#s3-bucket)); all variables below become required, except those marked otherwise. |
+| `AWS_S3_ENDPOINT` | With S3 | S3 endpoint, e.g. `minio.dive.edito.eu`; `https://` is added if no scheme is given. |
+| `AWS_DEFAULT_REGION` | With S3 | S3 region, e.g. `waw3-1`. |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | With S3, unless read from Vault | S3 keys. When `AWS_ACCESS_KEY_ID` is absent, both are read from Vault. |
+| `AWS_SESSION_TOKEN` | No | S3 session token, for temporary keys. |
+| `VAULT_ADDR`, `VAULT_TOKEN`, `VAULT_MOUNT`, `VAULT_TOP_DIR`, `VAULT_RELATIVE_PATH` | With S3, when the keys are not set | Location of the Vault secret holding the S3 keys: `${VAULT_ADDR}/v1/${VAULT_MOUNT}/data/${VAULT_TOP_DIR}/${VAULT_RELATIVE_PATH}`. |
 
 ### Command-line arguments (Docker `CMD`)
 
@@ -363,7 +391,9 @@ Triggered on every push to and pull request targeting the `main` branch.
 2. Set up **JDK 25** (Temurin distribution).
 3. Configure the Gradle wrapper cache.
 4. Run `./gradlew build` — compiles sources, executes unit tests, generates the JaCoCo coverage
-   report, and runs SpotBugs static analysis.
+   report, and runs SpotBugs static analysis. The `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+   secrets enable `S3InputsIntegrationTest`, which downloads the inputs from the real bucket; it
+   is skipped where the secrets are unavailable (forks, Dependabot pull requests).
 5. Authenticate with **GitHub Container Registry (GHCR)**.
 6. Run `./gradlew pushDockerImage` — builds and pushes the Docker image.
 
@@ -386,8 +416,8 @@ and deploys the result to GitHub Pages.
 | `ghcr.io/surimi-project/surimiposeidon:latest` | GitHub Container Registry |
 
 The image is built from `eclipse-temurin:25-jre` and contains the application JAR, all runtime
-dependencies, the `logging.properties` file, `scenarios/northwestern_med.yaml`, and the
-`inputs/northwestern_med/` scenario data.
+dependencies, the `logging.properties` file and `scenarios/northwestern_med.yaml`. The input
+data is downloaded from S3 at startup (see [S3 bucket](#s3-bucket)).
 
 ---
 
@@ -457,7 +487,7 @@ SURIMI-POSEIDON/
 │       ├── scenarios/                      # NorthwesternMedScenarioTest, TacOnlyScenario, ScenarioFilesForTesting
 │       └── server/                         # Integration tests (real in-process gRPC server); ecology/, prices/, fleet/, mappers/ subpackages
 ├── POSEIDON/                               # Git submodule — POSEIDON ABM framework
-├── inputs/                                 # Git submodule — scenario YAML and data (bundled in Docker image)
+├── inputs/                                 # Git submodule — scenario data (downloaded from S3 in the container)
 ├── outputs/                                # Simulation output directory (created in container)
 ├── Dockerfile                              # Single-stage image based on eclipse-temurin:25-jre
 ├── logging.properties                      # Java Util Logging configuration

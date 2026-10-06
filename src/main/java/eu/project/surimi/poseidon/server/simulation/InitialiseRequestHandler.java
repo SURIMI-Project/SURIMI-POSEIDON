@@ -83,11 +83,14 @@ public class InitialiseRequestHandler
     @NonNull private final SimulationManager simulationManager;
     @NonNull private final ScenarioLoader scenarioLoader;
     @NonNull private final Path scenarioFolder;
+    /** Run before each initialisation, e.g. to warn that the inputs have changed. */
+    @NonNull private final Runnable inputsCheck;
 
     private final Map<String, Scenario> scenarios = new ConcurrentHashMap<>();
 
     @Override
     protected InitialiseSimulationResponse getResponse(final InitialiseSimulationRequest request) {
+        inputsCheck.run();
         final UUID simulationId = SimulationManager.parseId(request.getSimulationId());
 
         if (simulationManager.contains(simulationId)) {

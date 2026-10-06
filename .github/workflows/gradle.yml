@@ -37,6 +37,10 @@ jobs:
       uses: gradle/actions/setup-gradle@v6
 
     - name: Build with Gradle Wrapper and check the Javadoc
+      env:
+        # For S3InputsIntegrationTest, which is skipped when they are absent (e.g. on forks)
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: ./gradlew build javadoc
 
     - name: Log in to GHCR

@@ -74,7 +74,7 @@ public abstract class ServiceTest {
         try {
             final Path scenarioPath = ScenarioFilesForTesting.getPath(scenarioSupplierClass);
             simulationManager = new SimulationManager();
-            server = new Server(scenarioPath.getParent(), PORT).startServer(simulationManager);
+            server = new Server(scenarioPath.getParent(), PORT).startServer(simulationManager, () -> {});
             final int boundPort = server.getPort();
             final ChannelCredentials credentials = InsecureChannelCredentials.create();
             channel = Grpc.newChannelBuilder("localhost:" + boundPort, credentials).build();

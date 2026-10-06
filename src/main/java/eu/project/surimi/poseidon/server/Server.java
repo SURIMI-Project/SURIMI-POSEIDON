@@ -57,6 +57,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 import static eu.project.surimi.poseidon.server.OpenTelemetryConfiguration.openTelemetry;
 import static java.lang.System.Logger.Level.INFO;
@@ -107,7 +108,14 @@ public class Server {
             .build();
         try {
             jCommander.parse(args);
-            final io.grpc.Server grpcServer = server.startServer(new SimulationManager());
+            // Failures here are unchecked and stop the server before it starts listening
+            final Optional<S3Inputs> s3Inputs =
+                S3Inputs.fromEnvironment(System.getenv(), Path.of("inputs"));
+            s3Inputs.ifPresent(S3Inputs::download);
+            final io.grpc.Server grpcServer = server.startServer(
+                new SimulationManager(),
+                s3Inputs.<Runnable>map(inputs -> inputs::warnIfChanged).orElse(() -> {})
+            );
             grpcServer.awaitTermination();
         } catch (final ParameterException | IOException | InterruptedException e) {
             System.err.println(e.getMessage());
@@ -115,11 +123,15 @@ public class Server {
     }
 
     /**
+     * @param inputsCheck run at the start of each simulation initialisation, e.g.
+     *                    {@link S3Inputs#warnIfChanged()}.
      * @return a started gRPC server, listening on {@link #port} on all network interfaces, with
      * a shutdown hook registered to stop it gracefully.
      */
-    io.grpc.Server startServer(final SimulationManager simulationManager) throws IOException,
-        InterruptedException {
+    io.grpc.Server startServer(
+        final SimulationManager simulationManager,
+        final Runnable inputsCheck
+    ) throws IOException, InterruptedException {
         final io.grpc.Server grpcServer = NettyServerBuilder
             // Bind to 0.0.0.0 so the server listens on all network interfaces
             .forAddress(new InetSocketAddress("0.0.0.0", this.port))
@@ -128,7 +140,7 @@ public class Server {
             .intercept(GrpcTelemetry.create(openTelemetry).newServerInterceptor())
             .intercept(createTrailerInterceptor())
             .addService(ServerInterceptors.intercept(
-                createFisheryService(simulationManager),
+                createFisheryService(simulationManager, inputsCheck),
                 new ValidationInterceptor(ValidatorFactory.newBuilder().build())
             ))
             .build();
@@ -146,12 +158,16 @@ public class Server {
         return new TrailerInterceptor(Map.of("protocol-version", PROTOCOL_VERSION));
     }
 
-    private FisheryService createFisheryService(final SimulationManager simulationManager) {
+    private FisheryService createFisheryService(
+        final SimulationManager simulationManager,
+        final Runnable inputsCheck
+    ) {
         return new FisheryService(
             new InitialiseRequestHandler(
                 simulationManager,
                 new ScenarioLoader("eu.project.surimi"),
-                scenarioFolder
+                scenarioFolder,
+                inputsCheck
             ),
             new SimulateStepRequestHandler(simulationManager),
             new FinaliseRequestHandler(simulationManager),

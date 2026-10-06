@@ -60,6 +60,14 @@ dependencies {
     implementation(libs.commons.io)
     implementation(libs.bundles.opentelemetry)
     implementation(libs.protovalidate)
+    implementation(libs.aws.s3) {
+        // S3Inputs uses the URL connection client; keep the SDK's other HTTP clients off the classpath
+        exclude(group = "software.amazon.awssdk", module = "apache-client")
+        exclude(group = "software.amazon.awssdk", module = "apache5-client")
+        exclude(group = "software.amazon.awssdk", module = "netty-nio-client")
+    }
+    implementation(libs.aws.url.connection.client)
+    implementation(libs.gson)
     compileOnly("${libs.spotbugs.annotations.get()}:${spotbugs.toolVersion.get()}")
     implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.84.0.2.20260924152849.d8eedf2f6694")
     testImplementation(libs.jqwik)
@@ -118,7 +126,6 @@ val stageForImage =tasks.register<Sync>("stageForImage") {
     from(configurations.runtimeClasspath) { into("lib") }
     from("logging.properties")
     from("scenarios/northwestern_med.yaml") { into("scenarios") }
-    from("inputs/northwestern_med/") { into("inputs/northwestern_med/") }
 }
 
 val buildDockerImage = tasks.register("buildDockerImage", Exec::class) {

@@ -61,6 +61,8 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 - `ServiceTest` instantiates the scenario's Java class to write its YAML, then serves the YAML.
   That loads classes production never loads (the server only reads YAML), so the test JVM can hide
   class-loading-order bugs such as unit labels registered by static initialisers.
+- `S3InputsIntegrationTest` downloads the inputs from the real SURIMI bucket and runs only when
+  `AWS_ACCESS_KEY_ID` is set (CI sets it from repository secrets); it is skipped otherwise.
 - Two simulations of the same scenario are not reproducible against each other. Compare values
   within one simulation, not across runs.
 - SpotBugs: suppress a one-off false positive in place with
@@ -144,13 +146,14 @@ After cloning or pulling: `git submodule update --init --recursive`.
 ## Docker image
 
 ```
-./gradlew stageForImage      # build/image/: jar, runtime libs, logging.properties, scenarios/northwestern_med.yaml, inputs/northwestern_med/
+./gradlew stageForImage      # build/image/: jar, runtime libs, logging.properties, scenarios/northwestern_med.yaml
 ./gradlew buildDockerImage    # docker build -t ghcr.io/surimi-project/surimiposeidon:latest .
 ./gradlew pushDockerImage     # docker push to GHCR — confirm with the user before running
 ```
 
 Entry point: `eu.project.surimi.poseidon.server.Server`. Default port `50051` (`-p`), scenario
-folder `scenarios` (`-s`).
+folder `scenarios` (`-s`). The image has no input data: with `AWS_BUCKET_NAME` set, `S3Inputs`
+downloads it into `inputs/` at startup (see `POSEIDON_architecture.md`, "S3 bucket").
 
 ## Code layout (`src/main/java/eu/project/surimi/poseidon/`)
 

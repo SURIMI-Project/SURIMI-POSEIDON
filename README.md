@@ -37,15 +37,22 @@ individual vessels. In this mode, biomass and prices are read from the files in
 ## Run the model as a SURIMI service
 
 Within SURIMI, the model runs as a gRPC service driven by the SURIMI controller, alongside the
-other models of the ensemble. The service is published as a Docker image:
+other models of the ensemble. The service is published as a Docker image. Run from this repository,
+with the inputs mounted:
 
 ```
-docker run -p 50051:50051 ghcr.io/surimi-project/surimiposeidon:latest
+docker run -p 50051:50051 -v "$PWD/inputs:/app/inputs" ghcr.io/surimi-project/surimiposeidon:latest
 ```
 
 It listens on port 50051; to use another port, pass `-p <port>` after the image name. To run it
 from source instead, use `./gradlew run --args="-p 50051"`. If `OTEL_EXPORTER_OTLP_ENDPOINT` is
 set, the service sends OpenTelemetry traces and metrics there.
+
+The image contains no input data. On EDITO, where `AWS_BUCKET_NAME` is set, the service downloads
+the contents of `surimi-poseidon/` in that bucket into `inputs/` at startup; the inputs repository
+uploads them there on every push. Instead of mounting the inputs, you can pass the bucket's
+variables, listed in [POSEIDON_architecture.md](POSEIDON_architecture.md#environment), with your
+own S3 keys.
 
 ### Protocol
 
