@@ -79,7 +79,10 @@ The data files in `inputs/northwestern_med/` come from the SURIMI data-preproces
 ## Funding
 
 <p>
-  <img src=".github/images/funded_by_the_eu.svg" alt="Funded by the European Union" height="60">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/images/funded_by_the_eu_dark.svg">
+    <img src=".github/images/funded_by_the_eu.svg" alt="Funded by the European Union" height="60">
+  </picture>
   &nbsp;
   <img src=".github/images/ukri_logo.png" alt="UK Research and Innovation" height="60">
 </p>
