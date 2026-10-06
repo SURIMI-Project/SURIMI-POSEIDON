@@ -44,9 +44,12 @@ jobs:
       run: ./gradlew build javadoc
 
     - name: Log in to GHCR
+      # Only pushes to main publish the image, not pull requests
+      if: github.event_name == 'push'
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
     - name: Push docker image with gradle
+      if: github.event_name == 'push'
       run: ./gradlew pushDockerImage
 
     - name: Upload coverage to Codecov
