@@ -3,13 +3,16 @@
 [![Java CI with Gradle](https://github.com/SURIMI-Project/SURIMI-POSEIDON/actions/workflows/gradle.yml/badge.svg)](https://github.com/SURIMI-Project/SURIMI-POSEIDON/actions/workflows/gradle.yml)
 [![Javadoc](https://github.com/SURIMI-Project/SURIMI-POSEIDON/actions/workflows/javadoc.yml/badge.svg)](https://surimi-project.github.io/SURIMI-POSEIDON/)
 
-SURIMI-POSEIDON is the agent-based fisheries model of the SURIMI project. It is built on
-[POSEIDON](https://github.com/poseidon-fisheries/POSEIDON) and simulates the Spanish and French
-trawlers and purse seiners of the Northwestern Mediterranean from 2013 onwards: where they fish,
-what they catch, land and sell, and how regulations constrain them.
+SURIMI-POSEIDON connects the [POSEIDON](https://github.com/poseidon-fisheries/POSEIDON)
+agent-based fisheries model to the SURIMI project. It runs POSEIDON as a gRPC service, which the
+SURIMI controller drives alongside the other models of the ensemble. It also contains the
+scenario through which SURIMI uses POSEIDON: the Northwestern Mediterranean fishery, where the
+model simulates the Spanish bottom trawlers and purse seiners from 2013 onwards. The scenario
+covers where the vessels fish, what they catch, land and sell, and how regulations constrain
+them.
 
-The model is described in SURIMI deliverable D3.3. Its API documentation is published at
-https://surimi-project.github.io/SURIMI-POSEIDON/.
+SURIMI-POSEIDON and its Northwestern Mediterranean scenario are described in SURIMI deliverable
+D3.3. The API documentation is published at https://surimi-project.github.io/SURIMI-POSEIDON/.
 
 ## Run the model with the GUI
 
