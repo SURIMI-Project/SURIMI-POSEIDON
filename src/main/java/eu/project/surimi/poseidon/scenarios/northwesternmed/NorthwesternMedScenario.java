@@ -167,7 +167,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     /**
      * Runs a 10-year simulation of this scenario, printing the date-time reached at each step,
-     * as a sanity check. To regenerate {@code inputs/northwestern_med.yaml}, use the
+     * as a sanity check. To regenerate {@code scenarios/northwestern_med.yaml}, use the
      * {@code writeNorthwesternMedScenario} Gradle task instead.
      */
     static void main(final String[] args) {

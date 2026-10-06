@@ -40,8 +40,8 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 ./gradlew test --tests "eu.project.surimi.poseidon.server.SimulationServiceTest.methodName"  # one method
 ./gradlew :POSEIDON:<module>:test                        # a submodule's tests (core, io, agents, …)
 ./gradlew spotbugsMain                                   # SpotBugs
-./gradlew writeNorthwesternMedScenario                   # regenerate inputs/northwestern_med.yaml
-./gradlew run --args="-p 50051 -s inputs"                # run the server locally
+./gradlew writeNorthwesternMedScenario                   # regenerate scenarios/northwestern_med.yaml
+./gradlew run --args="-p 50051"                          # run the server locally
 ./gradlew runNorthwesternMedGui                          # open the NW Med GUI (local inputs)
 ```
 
@@ -97,22 +97,26 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 
 ## Scenario generation
 
-`inputs/northwestern_med.yaml` is **generated**: `./gradlew writeNorthwesternMedScenario` runs
+`scenarios/northwestern_med.yaml` is **generated**: `./gradlew writeNorthwesternMedScenario` runs
 `uk.ac.ox.poseidon.io.ScenarioWriter` on `NorthwesternMedScenario`, and `stageForImage` runs it too,
-so the Docker image always embeds a fresh copy. The data files in `inputs/northwestern_med/` are
+so the Docker image always embeds a fresh copy. It lives in this repo, not in the `inputs`
+submodule, because it changes with the Java code. The data files in `inputs/northwestern_med/` are
 produced upstream by the SURIMI-data_preprocessing pipelines, not by this repo.
 
+Users may edit the YAML by hand to try things out locally; `./gradlew run` reads it as is. The rule
+below is for agents only.
+
 To change the scenario, edit `NorthwesternMedScenario.java` (or the factories it composes) and
-regenerate. The committed YAML must come from actually running the writer task — a hand edit or
-scripted find-and-replace is never acceptable, however safe it looks or however well it matches a
-regenerated copy.
+regenerate, committing the YAML with the Java change. The committed YAML must come from actually
+running the writer task — a hand edit or scripted find-and-replace by an agent is never
+acceptable, however safe it looks or however well it matches a regenerated copy.
 
 Reviewing a regenerated YAML: one added or removed anchor renumbers every later `&idNNN` /
 `*idNNN`, so the raw diff looks huge. Normalise before reading it:
 
 ```
-diff <(git -C inputs show HEAD:northwestern_med.yaml | sed -E 's/id[0-9]+/idN/g') \
-     <(sed -E 's/id[0-9]+/idN/g' inputs/northwestern_med.yaml)
+diff <(git show HEAD:scenarios/northwestern_med.yaml | sed -E 's/id[0-9]+/idN/g') \
+     <(sed -E 's/id[0-9]+/idN/g' scenarios/northwestern_med.yaml)
 ```
 
 If the regenerated diff is wider than your change (the committed YAML had drifted from what the
@@ -140,13 +144,13 @@ After cloning or pulling: `git submodule update --init --recursive`.
 ## Docker image
 
 ```
-./gradlew stageForImage      # build/image/: jar, runtime libs, logging.properties, inputs/northwestern_med*
+./gradlew stageForImage      # build/image/: jar, runtime libs, logging.properties, scenarios/northwestern_med.yaml, inputs/northwestern_med/
 ./gradlew buildDockerImage    # docker build -t ghcr.io/surimi-project/surimiposeidon:latest .
 ./gradlew pushDockerImage     # docker push to GHCR — confirm with the user before running
 ```
 
 Entry point: `eu.project.surimi.poseidon.server.Server`. Default port `50051` (`-p`), scenario
-folder `inputs` (`-s`).
+folder `scenarios` (`-s`).
 
 ## Code layout (`src/main/java/eu/project/surimi/poseidon/`)
 

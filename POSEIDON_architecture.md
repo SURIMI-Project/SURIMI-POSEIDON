@@ -20,8 +20,8 @@ The code is licensed under the **GNU General Public License v3 (GPL-3.0-or-later
 | Artifact | Gradle task | Description |
 |----------|-------------|-------------|
 | `SURIMI-POSEIDON.jar` | `jar` (via `build`) | Executable JAR containing the compiled service code. Runtime dependencies are placed alongside it in `build/image/lib/` by the `stageForImage` task. |
-| `ghcr.io/surimi-project/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties`, the `inputs/northwestern_med.yaml` scenario file, and the `inputs/northwestern_med/` scenario data. This is the deployable artefact pushed to GHCR by CI. |
-| `inputs/northwestern_med.yaml` | `writeNorthwesternMedScenario` | Serialised YAML representation of the `NorthwesternMedScenario`. Generated from Java code and committed to the `inputs` submodule; also regenerated at Docker image build time to ensure consistency. The data files it references (`inputs/northwestern_med/`) are produced upstream by the SURIMI data-preprocessing pipelines. |
+| `ghcr.io/surimi-project/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties`, the `scenarios/northwestern_med.yaml` scenario file, and the `inputs/northwestern_med/` scenario data. This is the deployable artefact pushed to GHCR by CI. |
+| `scenarios/northwestern_med.yaml` | `writeNorthwesternMedScenario` | Serialised YAML representation of the `NorthwesternMedScenario`. Generated from Java code and committed to this repo (users may edit it by hand for local runs); also regenerated at Docker image build time to ensure consistency. The data files it references (`inputs/northwestern_med/`) are produced upstream by the SURIMI data-preprocessing pipelines. |
 | Javadoc site | `javadoc` | API documentation, published to GitHub Pages by CI. |
 
 ---
@@ -311,8 +311,8 @@ container runtime.
 
 **POSEIDON does not use an S3 bucket.** All scenario input data (bathymetry, species tables,
 fleet register, port locations, prices, operating costs) is bundled directly into the Docker
-image at build time. The `stageForImage` Gradle task copies `inputs/northwestern_med.yaml`
-and the `inputs/northwestern_med/` directory into the image under `/app/inputs/`.
+image at build time. The `stageForImage` Gradle task copies `scenarios/northwestern_med.yaml` into the image under
+`/app/scenarios/` and the `inputs/northwestern_med/` directory under `/app/inputs/`.
 
 ### S3 bucket authentication
 
@@ -343,7 +343,7 @@ These are passed as arguments to the Java process and can be overridden in Kuber
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `-s` / `--scenario_folder` | `inputs` | Path to the folder containing scenario YAML files inside the container. |
+| `-s` / `--scenario_folder` | `scenarios` | Path to the folder containing scenario YAML files inside the container. |
 | `-p` / `--port` | `50051` | TCP port on which the gRPC server listens. |
 
 ---
@@ -386,7 +386,7 @@ and deploys the result to GitHub Pages.
 | `ghcr.io/surimi-project/surimiposeidon:latest` | GitHub Container Registry |
 
 The image is built from `eclipse-temurin:25-jre` and contains the application JAR, all runtime
-dependencies, the `logging.properties` file, `inputs/northwestern_med.yaml`, and the
+dependencies, the `logging.properties` file, `scenarios/northwestern_med.yaml`, and the
 `inputs/northwestern_med/` scenario data.
 
 ---

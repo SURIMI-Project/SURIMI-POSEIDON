@@ -83,10 +83,10 @@ public class Server {
     @Parameter(
         names = {"-s", "--scenario_folder"},
         description = "Path to the folder containing scenario files.",
-        defaultValueDescription = "Defaults to `inputs`.",
+        defaultValueDescription = "Defaults to `scenarios`.",
         converter = CustomPathConverter.class
     )
-    private Path scenarioFolder = Path.of("inputs");
+    private Path scenarioFolder = Path.of("scenarios");
 
     @Parameter(
         names = {"-p", "--port"},

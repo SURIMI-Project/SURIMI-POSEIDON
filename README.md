@@ -72,8 +72,10 @@ enabled, so `grpcurl -plaintext localhost:50051 list` shows the API.
 ./gradlew buildDockerImage   # build the Docker image locally
 ```
 
-The scenario served to SURIMI, `inputs/northwestern_med.yaml`, is generated from
-`NorthwesternMedScenario.java` by `./gradlew writeNorthwesternMedScenario`; don't edit it by hand.
+The scenario served to SURIMI, `scenarios/northwestern_med.yaml`, is generated from
+`NorthwesternMedScenario.java` by `./gradlew writeNorthwesternMedScenario`. To try things out
+locally, you can edit it by hand: `./gradlew run` reads it as is, and the writer task restores it
+from the code. The Docker image always regenerates it.
 The data files in `inputs/northwestern_med/` come from the SURIMI data-preprocessing pipelines.
 
 ## Funding
