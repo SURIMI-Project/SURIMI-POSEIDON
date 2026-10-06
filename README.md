@@ -82,6 +82,12 @@ GPL-3.0; see `LICENSE`.
 
 ## Funding
 
+<p>
+  <img src=".github/images/funded_by_the_eu.svg" alt="Funded by the European Union" height="60">
+  &nbsp;
+  <img src=".github/images/ukri_logo.png" alt="UK Research and Innovation" height="60">
+</p>
+
 Funded by the European Union under the Horizon Europe Program, Grant Agreement No. 101157456
 (SURIMI). Views and opinions expressed are however those of the author(s) only and do not
 necessarily reflect those of the European Union or the European Climate, Infrastructure and
