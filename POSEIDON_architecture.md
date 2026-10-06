@@ -334,11 +334,14 @@ the GUI do.
 
 ### S3 bucket authentication
 
-The keys come from `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and the optional
-`AWS_SESSION_TOKEN` if set. Otherwise they are read from the Vault secret (KV version 2) that the
-EDITO chart points to with the `VAULT_*` variables, whose keys are the same variable names; the
-other SURIMI services read the same secret. The chart sets all the variables below; none of them
-is set locally.
+When `VAULT_ADDR` is set, as on EDITO, the keys are read from the Vault secret (KV version 2)
+that the chart points to with the `VAULT_*` variables. It holds long-lived keys made in the
+[MinIO console](https://minio-console.dive.edito.eu/access-keys), under the same variable names,
+and the other SURIMI services read it too (see the SURIMI-project wiki page "S3 bucket
+authentication"). EDITO also puts `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and
+`AWS_SESSION_TOKEN` in the environment, but those expire after 24 hours, so they are ignored
+when Vault is configured. Without `VAULT_ADDR` (local tests, CI), the keys come from those
+environment variables.
 
 ---
 
@@ -361,9 +364,9 @@ appropriate resource limits.
 | `AWS_BUCKET_NAME` | No | Bucket holding the inputs under `surimi-poseidon/`. When set, inputs are downloaded from S3 at startup (see [S3 bucket](#s3-bucket)); all variables below become required, except those marked otherwise. |
 | `AWS_S3_ENDPOINT` | With S3 | S3 endpoint, e.g. `minio.dive.edito.eu`; `https://` is added if no scheme is given. |
 | `AWS_DEFAULT_REGION` | With S3 | S3 region, e.g. `waw3-1`. |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | With S3, unless read from Vault | S3 keys. When `AWS_ACCESS_KEY_ID` is absent, both are read from Vault. |
-| `AWS_SESSION_TOKEN` | No | S3 session token, for temporary keys. |
-| `VAULT_ADDR`, `VAULT_TOKEN`, `VAULT_MOUNT`, `VAULT_TOP_DIR`, `VAULT_RELATIVE_PATH` | With S3, when the keys are not set | Location of the Vault secret holding the S3 keys: `${VAULT_ADDR}/v1/${VAULT_MOUNT}/data/${VAULT_TOP_DIR}/${VAULT_RELATIVE_PATH}`. |
+| `VAULT_ADDR`, `VAULT_TOKEN`, `VAULT_MOUNT`, `VAULT_TOP_DIR`, `VAULT_RELATIVE_PATH` | With S3 on EDITO | Location of the Vault secret holding the S3 keys: `${VAULT_ADDR}/v1/${VAULT_MOUNT}/data/${VAULT_TOP_DIR}/${VAULT_RELATIVE_PATH}`. When `VAULT_ADDR` is set, all are required and the `AWS_*` keys below are ignored. |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | With S3, without Vault | S3 keys, for local tests and CI. |
+| `AWS_SESSION_TOKEN` | No | S3 session token, for temporary keys; only read without Vault. |
 
 ### Command-line arguments (Docker `CMD`)
 

@@ -61,8 +61,7 @@ class S3InputsTest {
     }
 
     @Test
-    void keysInEnvironmentWinOverVault() {
-        // No VAULT_* variables: reading Vault would throw
+    void withoutVaultUsesKeysInEnvironment() {
         final Map<String, String> env = with(
             "AWS_ACCESS_KEY_ID", "id",
             "AWS_SECRET_ACCESS_KEY", "secret"
@@ -71,10 +70,36 @@ class S3InputsTest {
     }
 
     @Test
-    void withoutKeysNeedsVault() {
+    void vaultWinsOverKeysInEnvironment() {
+        // EDITO's own keys in the environment expire after 24 hours, so Vault must be read even
+        // when they are present; this Vault is unreachable, so reading it fails
+        final Map<String, String> env = with(
+            "AWS_ACCESS_KEY_ID", "id",
+            "AWS_SECRET_ACCESS_KEY", "secret",
+            "VAULT_ADDR", "http://localhost:1",
+            "VAULT_MOUNT", "secret-kv",
+            "VAULT_TOP_DIR", "project-surimi",
+            "VAULT_RELATIVE_PATH", "s3-credentials",
+            "VAULT_TOKEN", "token"
+        );
+        assertThatThrownBy(() -> S3Inputs.fromEnvironment(env, tempDir.resolve("inputs")))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Vault");
+    }
+
+    @Test
+    void vaultNeedsAllItsVariables() {
+        final Map<String, String> env = with("VAULT_ADDR", "https://vault.dive.edito.eu");
+        assertThatThrownBy(() -> S3Inputs.fromEnvironment(env, tempDir.resolve("inputs")))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("VAULT_MOUNT");
+    }
+
+    @Test
+    void withoutVaultNeedsKeysInEnvironment() {
         assertThatThrownBy(() -> S3Inputs.fromEnvironment(S3_ENV, tempDir.resolve("inputs")))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("VAULT_ADDR");
+            .hasMessageContaining("AWS_ACCESS_KEY_ID");
     }
 
     @Test

@@ -59,11 +59,13 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
  * {@code inputs} folder as usual.
  * <p>
  * Everything under {@value #PREFIX} in the bucket is downloaded once, at startup, into the inputs
- * folder, which must not exist yet: nothing local is ever overwritten or deleted. The S3 keys
- * come from {@code AWS_ACCESS_KEY_ID}, {@code AWS_SECRET_ACCESS_KEY} and the optional
- * {@code AWS_SESSION_TOKEN} if set, otherwise from the Vault secret the deployment points to with
- * the {@code VAULT_*} variables. Any failure stops startup; stale inputs must not be used
- * silently.
+ * folder, which must not exist yet: nothing local is ever overwritten or deleted. When
+ * {@code VAULT_ADDR} is set, the S3 keys come from the Vault secret the deployment points to with
+ * the {@code VAULT_*} variables: long-lived keys made in the MinIO console, as the other SURIMI
+ * services use. EDITO also sets {@code AWS_ACCESS_KEY_ID} and friends, but those keys expire
+ * after 24 hours, so they are ignored then. Without Vault (local tests, CI), the keys come from
+ * {@code AWS_ACCESS_KEY_ID}, {@code AWS_SECRET_ACCESS_KEY} and the optional
+ * {@code AWS_SESSION_TOKEN}. Any failure stops startup; stale inputs must not be used silently.
  * <p>
  * The service stays up across many experiments, so {@link #warnIfChanged()} is called at each
  * simulation initialisation to warn when the bucket no longer matches what was downloaded.
@@ -220,11 +222,10 @@ public final class S3Inputs {
     }
 
     private static AwsCredentials credentials(final Map<String, String> env) {
-        final String accessKeyIdInEnvironment = env.get("AWS_ACCESS_KEY_ID");
-        final boolean inEnvironment =
-            accessKeyIdInEnvironment != null && !accessKeyIdInEnvironment.isBlank();
-        final Map<String, String> keys = inEnvironment ? env : readVaultSecret(env);
-        final String source = inEnvironment ? "the environment" : "the Vault secret";
+        final String vaultAddress = env.get("VAULT_ADDR");
+        final boolean fromVault = vaultAddress != null && !vaultAddress.isBlank();
+        final Map<String, String> keys = fromVault ? readVaultSecret(env) : env;
+        final String source = fromVault ? "the Vault secret" : "the environment";
         final String accessKeyId = required(keys, "AWS_ACCESS_KEY_ID", source);
         final String secretAccessKey = required(keys, "AWS_SECRET_ACCESS_KEY", source);
         final String sessionToken = keys.get("AWS_SESSION_TOKEN");
