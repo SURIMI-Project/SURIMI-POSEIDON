@@ -4,4 +4,4 @@
   branch = main
 [submodule "SURIMI-POSEIDON_inputs"]
 	path = inputs
-	url = https://github.com/Official-EwE/SURIMI-POSEIDON_inputs.git
+	url = https://github.com/SURIMI-Project/SURIMI-POSEIDON_inputs.git

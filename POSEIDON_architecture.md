@@ -479,7 +479,7 @@ The repository contains **two Git submodules**:
 | Submodule | Local path | Remote | Branch / note |
 |-----------|------------|--------|---------------|
 | POSEIDON ABM framework | `POSEIDON/` | `https://github.com/poseidon-fisheries/POSEIDON.git` | `main` branch |
-| Scenario input data | `inputs/` | `https://github.com/Official-EwE/SURIMI-POSEIDON_inputs.git` | `master` branch — kept in a separate repository because input files are large and versioned independently of the service code |
+| Scenario input data | `inputs/` | `https://github.com/SURIMI-Project/SURIMI-POSEIDON_inputs.git` | `master` branch — kept in a separate repository because input files are large and versioned independently of the service code |
 
 A change to a submodule takes two commits: one in the submodule, then a pointer update in this
 repository. Push the submodule commit first.

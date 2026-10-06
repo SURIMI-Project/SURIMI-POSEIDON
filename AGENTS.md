@@ -126,7 +126,7 @@ run.
 Two submodules (`.gitmodules`), each its own repo:
 
 - `POSEIDON/` — framework code, `main` branch of `poseidon-fisheries/POSEIDON`.
-- `inputs/` — scenario data (`Official-EwE/SURIMI-POSEIDON_inputs`, `master` branch); large files
+- `inputs/` — scenario data (`SURIMI-Project/SURIMI-POSEIDON_inputs`, `master` branch); large files
   are in Git LFS.
 
 After cloning or pulling: `git submodule update --init --recursive`.
