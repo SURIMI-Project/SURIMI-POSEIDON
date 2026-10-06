@@ -1,7 +1,11 @@
 # SURIMI-POSEIDON
 
 [![Java CI with Gradle](https://github.com/SURIMI-Project/SURIMI-POSEIDON/actions/workflows/gradle.yml/badge.svg)](https://github.com/SURIMI-Project/SURIMI-POSEIDON/actions/workflows/gradle.yml)
+[![codecov](https://codecov.io/gh/SURIMI-Project/SURIMI-POSEIDON/graph/badge.svg)](https://codecov.io/gh/SURIMI-Project/SURIMI-POSEIDON)
 [![Javadoc](https://github.com/SURIMI-Project/SURIMI-POSEIDON/actions/workflows/javadoc.yml/badge.svg)](https://surimi-project.github.io/SURIMI-POSEIDON/)
+[![Licence: GPL-3.0](https://img.shields.io/github/license/SURIMI-Project/SURIMI-POSEIDON)](LICENSE)
+[![Java 25](https://img.shields.io/badge/Java-25-blue)](https://openjdk.org/projects/jdk/25/)
+[![Docker image](https://img.shields.io/badge/docker-ghcr.io-blue?logo=docker)](https://github.com/SURIMI-Project/SURIMI-POSEIDON/pkgs/container/surimiposeidon)
 
 SURIMI-POSEIDON connects the [POSEIDON](https://github.com/poseidon-fisheries/POSEIDON)
 agent-based fisheries model to the SURIMI project. It runs POSEIDON as a gRPC service, which the
@@ -75,3 +79,10 @@ The data files in `inputs/northwestern_med/` come from the SURIMI data-preproces
 ## Licence
 
 GPL-3.0; see `LICENSE`.
+
+## Funding
+
+Funded by the European Union under grant agreement No. 101157456 (SURIMI). Views and opinions
+expressed are however those of the author(s) only and do not necessarily reflect those of the
+European Union or the granting authority. Neither the European Union nor the granting authority
+can be held responsible for them.
