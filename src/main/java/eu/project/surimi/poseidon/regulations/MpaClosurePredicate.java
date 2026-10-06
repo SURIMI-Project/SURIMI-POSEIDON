@@ -68,8 +68,10 @@ public class MpaClosurePredicate implements Predicate<ExtendedFishingAction> {
             .filter(entry -> entry.getValue().getValue(cell) > 0)
             .anyMatch(entry -> {
                 final String mpaId = entry.getKey();
-                return mpaFleetRestrictions.getOrDefault(mpaId, ImmutableSet.of()).contains(gearCountry) &&
-                    mpaClosedMonths.getOrDefault(mpaId, ImmutableSet.of()).contains(month);
+                final var restrictedFleets = mpaFleetRestrictions.get(mpaId);
+                final var closedMonths = mpaClosedMonths.get(mpaId);
+                return restrictedFleets != null && restrictedFleets.contains(gearCountry) &&
+                    closedMonths != null && closedMonths.contains(month);
             });
     }
 
