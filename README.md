@@ -76,10 +76,6 @@ The scenario served to SURIMI, `inputs/northwestern_med.yaml`, is generated from
 `NorthwesternMedScenario.java` by `./gradlew writeNorthwesternMedScenario`; don't edit it by hand.
 The data files in `inputs/northwestern_med/` come from the SURIMI data-preprocessing pipelines.
 
-## Licence
-
-GPL-3.0; see `LICENSE`.
-
 ## Funding
 
 <p>
