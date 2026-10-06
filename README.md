@@ -82,7 +82,11 @@ GPL-3.0; see `LICENSE`.
 
 ## Funding
 
-Funded by the European Union under grant agreement No. 101157456 (SURIMI). Views and opinions
-expressed are however those of the author(s) only and do not necessarily reflect those of the
-European Union or the granting authority. Neither the European Union nor the granting authority
-can be held responsible for them.
+Funded by the European Union under the Horizon Europe Program, Grant Agreement No. 101157456
+(SURIMI). Views and opinions expressed are however those of the author(s) only and do not
+necessarily reflect those of the European Union or the European Climate, Infrastructure and
+Environment Executive Agency (CINEA). Neither the European Union nor the granting authority can be
+held responsible for them.
+
+UK participants in SURIMI are funded by UK Research and Innovation (UKRI) under the UK government’s
+Horizon Europe funding Guarantee [grant number 10132993].
