@@ -79,15 +79,11 @@ The data files in `inputs/northwestern_med/` come from the SURIMI data-preproces
 ## Funding
 
 <p>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset=".github/images/funded_by_the_eu_dark.svg">
-    <img src=".github/images/funded_by_the_eu.svg" alt="Funded by the European Union" height="60">
-  </picture>
+  <img src=".github/images/funded_by_the_eu.svg#gh-light-mode-only" alt="Funded by the European Union" height="60">
+  <img src=".github/images/funded_by_the_eu_dark.svg#gh-dark-mode-only" alt="Funded by the European Union" height="60">
   &nbsp;
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset=".github/images/ukri_logo_dark.png">
-    <img src=".github/images/ukri_logo.png" alt="UK Research and Innovation" height="60">
-  </picture>
+  <img src=".github/images/ukri_logo.png#gh-light-mode-only" alt="UK Research and Innovation" height="60">
+  <img src=".github/images/ukri_logo_dark.png#gh-dark-mode-only" alt="UK Research and Innovation" height="60">
 </p>
 
 Funded by the European Union under the Horizon Europe Program, Grant Agreement No. 101157456
