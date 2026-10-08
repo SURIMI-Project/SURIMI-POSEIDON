@@ -327,7 +327,9 @@ When `AWS_BUCKET_NAME` is set, `S3Inputs` downloads everything under `poseidon/`
 - The service stays up across experiments, so each `InitialiseSimulation` lists the prefix again
   and logs a warning if it no longer matches what was downloaded (compared by key and ETag).
   The simulation still starts, with the inputs downloaded at startup; restart the service to
-  use the new ones.
+  use the new ones. Refreshing the inputs in place would mean changing files under experiments
+  running in parallel; doing it safely would need a new folder per experiment and the scenario
+  pointed at it.
 
 Without `AWS_BUCKET_NAME`, the service reads the local `inputs/` folder, as `./gradlew run` and
 the GUI do.
@@ -350,6 +352,14 @@ environment variables.
 POSEIDON is deployed as a container in the **EDITO Datalab** Kubernetes cluster. The controller
 discovers and calls the service over the cluster-internal network. The default gRPC port is
 `50051` (configurable via the `-p` command-line argument, set in the Docker `CMD` directive).
+
+The deployment is described by the `surimi-poseidon` Helm chart, which lives on EDITO's GitLab,
+not in this repository: `gitlab.mercator-ocean.fr/pub/edito-infra/service-playground`, branch
+`Surimi`, `charts/surimi-poseidon/`. It sets `AWS_BUCKET_NAME` (the namespace with `user-`
+replaced by `oidc-`, so `project-surimi` when deployed from that namespace), the S3 endpoint and
+region, and the `VAULT_*` variables (see [Environment](#environment)), but not the S3 keys. It
+mounts no volume, so a restarted container starts from the image again and downloads the inputs
+anew.
 
 JVM heap is bounded to a maximum of 8 GB (`-Xmx8g`) to allow the Kubernetes scheduler to set
 appropriate resource limits.
