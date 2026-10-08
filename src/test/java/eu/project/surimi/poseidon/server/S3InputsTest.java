@@ -125,9 +125,9 @@ class S3InputsTest {
     @Test
     void mapsKeysIntoInputsFolder() {
         final Path inputs = Path.of("inputs");
-        assertThat(S3Inputs.targetPath(inputs, "surimi-poseidon/northwestern_med/species.csv"))
+        assertThat(S3Inputs.targetPath(inputs, "poseidon/northwestern_med/species.csv"))
             .isEqualTo(Path.of("inputs/northwestern_med/species.csv"));
-        assertThatThrownBy(() -> S3Inputs.targetPath(inputs, "surimi-poseidon/../escaped.csv"))
+        assertThatThrownBy(() -> S3Inputs.targetPath(inputs, "poseidon/../escaped.csv"))
             .isInstanceOf(IllegalStateException.class);
     }
 

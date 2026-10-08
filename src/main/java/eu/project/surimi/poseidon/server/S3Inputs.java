@@ -72,7 +72,7 @@ import static java.util.stream.Collectors.toUnmodifiableMap;
  */
 public final class S3Inputs {
 
-    static final String PREFIX = "surimi-poseidon/";
+    static final String PREFIX = "poseidon/";
 
     private static final System.Logger logger = System.getLogger(S3Inputs.class.getName());
     private static final Duration TIMEOUT = Duration.ofMinutes(2);

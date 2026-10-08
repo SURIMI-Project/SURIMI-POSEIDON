@@ -311,10 +311,10 @@ container runtime.
 
 The scenario input data (bathymetry, species tables, fleet register, port locations, costs, …) is
 not in the Docker image. On every push to `master`, a workflow in the inputs repository
-(`.github/workflows/s3-sync.yml`) mirrors the repository to `surimi-poseidon/` in the
+(`.github/workflows/s3-sync.yml`) mirrors the repository to `poseidon/` in the
 `project-surimi` bucket on EDITO's MinIO (`minio.dive.edito.eu`).
 
-When `AWS_BUCKET_NAME` is set, `S3Inputs` downloads everything under `surimi-poseidon/` into
+When `AWS_BUCKET_NAME` is set, `S3Inputs` downloads everything under `poseidon/` into
 `inputs/` (`/app/inputs/` in the container) at startup, before the gRPC server starts:
 
 - `inputs/` must not exist yet. Nothing local is overwritten or deleted, so a local checkout of
@@ -361,7 +361,7 @@ appropriate resource limits.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OTLP-compatible gRPC endpoint for OpenTelemetry trace export (e.g., `http://jaeger:4317`). When absent, tracing is disabled and no external connection is made. |
-| `AWS_BUCKET_NAME` | No | Bucket holding the inputs under `surimi-poseidon/`. When set, inputs are downloaded from S3 at startup (see [S3 bucket](#s3-bucket)); all variables below become required, except those marked otherwise. |
+| `AWS_BUCKET_NAME` | No | Bucket holding the inputs under `poseidon/`. When set, inputs are downloaded from S3 at startup (see [S3 bucket](#s3-bucket)); all variables below become required, except those marked otherwise. |
 | `AWS_S3_ENDPOINT` | With S3 | S3 endpoint, e.g. `minio.dive.edito.eu`; `https://` is added if no scheme is given. |
 | `AWS_DEFAULT_REGION` | With S3 | S3 region, e.g. `waw3-1`. |
 | `VAULT_ADDR`, `VAULT_TOKEN`, `VAULT_MOUNT`, `VAULT_TOP_DIR`, `VAULT_RELATIVE_PATH` | With S3 on EDITO | Location of the Vault secret holding the S3 keys: `${VAULT_ADDR}/v1/${VAULT_MOUNT}/data/${VAULT_TOP_DIR}/${VAULT_RELATIVE_PATH}`. When `VAULT_ADDR` is set, all are required and the `AWS_*` keys below are ignored. |
