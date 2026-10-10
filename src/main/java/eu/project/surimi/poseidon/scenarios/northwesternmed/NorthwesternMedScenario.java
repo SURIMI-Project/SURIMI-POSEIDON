@@ -24,13 +24,14 @@ package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
 import sim.util.Int2D;
 import tech.tablesaw.api.Table;
-import uk.ac.ox.poseidon.agents.choices.MutableOptionValues;
-import uk.ac.ox.poseidon.agents.components.VesselComponentRegisterFactory;
+import uk.ac.ox.poseidon.agents.choices.KeyedMemory;
 import uk.ac.ox.poseidon.agents.tasks.Behaviour;
 import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
+import uk.ac.ox.poseidon.agents.vessels.PerVesselFactory;
 import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
 import uk.ac.ox.poseidon.agents.vessels.engines.Engine;
 import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
+import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
@@ -60,15 +61,12 @@ import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
 import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
 import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.*;
 import static uk.ac.ox.poseidon.agents.choices.Factories.*;
-import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.totalBiomassCaughtPerHour;
-import static uk.ac.ox.poseidon.agents.choices.evaluation.Factories.tripEvaluator;
-import static uk.ac.ox.poseidon.agents.components.Factories.registeredVesselComponent;
-import static uk.ac.ox.poseidon.agents.components.Factories.vesselComponentRegister;
 import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
 import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
 import static uk.ac.ox.poseidon.agents.market.Factories.oneBiomassMarketPerPort;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
+import static uk.ac.ox.poseidon.agents.market.Factories.homePortCatchValuation;
 import static uk.ac.ox.poseidon.agents.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingLocationLegalityChecker;
@@ -80,17 +78,20 @@ import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
+import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventProperty;
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.*;
 import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.*;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
+import static uk.ac.ox.poseidon.agents.vessels.Factories.perVessel;
+import static uk.ac.ox.poseidon.agents.vessels.Factories.vesselEventListener;
 import static uk.ac.ox.poseidon.agents.vessels.accounts.Factories.fixedCostCollector;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.infiniteTank;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.Factories.tripCostFromHourlyCosts;
+import static uk.ac.ox.poseidon.agents.vessels.extractors.Factories.vesselProperty;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
-import static uk.ac.ox.poseidon.agents.vessels.friends.Factories.dynamicFriendsSupplier;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.indexedBiomassCatchabilityGear;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
@@ -143,7 +144,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
     static final Path INPUT_PATH = Path.of("inputs", "northwestern_med");
-    private static final double LEARNING_ALPHA = 1;
+    private static final double OWN_LEARNING_ALPHA = 1;
     private static final double PURSE_SEINER_EXPLORATION_PROBABILITY = 0.2;
     private static final double BOTTOM_TRAWLER_EXPLORATION_PROBABILITY = 0.2;
     private static final int PURSE_SEINER_MEAN_EXPLORATION_RADIUS = 1;
@@ -550,13 +551,17 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 oneBiomassMarketPerPort(portGrid)
             );
 
-        final VesselComponentRegisterFactory<MutableOptionValues<Int2D>>
-            optionValuesRegister = vesselComponentRegister();
+        final var catchCategoriser = uniformCatchCategoriser(catchCategory(CATCH_CATEGORY));
+
+        // One memory per vessel, keyed by gear code: what the vessel learns from its hauls and
+        // what it decides from must be this same instance.
+        final PerVesselFactory<KeyedMemory<String, Int2D, Bucket>> vesselMemory =
+            perVessel(keyedMemory());
 
         final var optionValues =
-            registeredVesselComponent(
-                exponentialMovingAverageOptionValues(LEARNING_ALPHA),
-                optionValuesRegister
+            memoryBasedOptionValues(
+                keyedMemorySelector(vesselMemory, vesselProperty("gear.code")),
+                homePortCatchValuation(catchCategoriser)
             );
 
         final var fleetSegmentMapper =
@@ -627,25 +632,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
             );
 
-        final var tripEvaluator =
-            tripEvaluator(
-                optionValues,
-                totalBiomassCaughtPerHour()
-            );
-
-        final var bestOptionsFromFriends =
-            bestOptionsFromFriends(
-                optionValuesRegister,
-                dynamicFriendsSupplier(
-                    5,
-                    optionValuesRegister,
-                    allOf(
-                        vesselIsActive(),
-                        vesselHasSameHomePort()
-                    )
-                )
-            );
-
         final var purseSeinerStartTrip =
             startTrip(
                 epsilonGreedyDestination(
@@ -657,10 +643,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
                         currentCell()
                     ),
-                    imitatingPicker(
+                    greedyPicker(
                         optionValues,
-                        purseSeinerFishingLocationChecker,
-                        bestOptionsFromFriends
+                        purseSeinerFishingLocationChecker
                     )
                 )
             );
@@ -676,10 +661,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
                         currentCell()
                     ),
-                    imitatingPicker(
+                    greedyPicker(
                         optionValues,
-                        bottomTrawlerFishingLocationChecker,
-                        bestOptionsFromFriends
+                        bottomTrawlerFishingLocationChecker
                     )
                 )
             );
@@ -882,17 +866,24 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .data(tableFromCsvFile(inputPath.plus("fleet_register.csv")))
                 .behaviour(behaviour)
                 .dataMapping("behaviour.code", "main_fishing_gear")
-                .hold(
-                    infiniteBiomassHold(
-                        uniformCatchCategoriser(catchCategory(CATCH_CATEGORY))
-                    )
-                )
+                .hold(infiniteBiomassHold(catchCategoriser))
                 .gear(fishingGear)
                 .dataMapping("gear.code", "main_fishing_gear")
                 .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
                 .engine(engine)
                 .dataMapping("engine.code", "main_fishing_gear")
-                .extraFactory(tripEvaluator)
+                .extraFactory(
+                    vesselEventListener(
+                        haulRecorder(
+                            modelGrid,
+                            keyedMemorySelector(
+                                vesselMemory,
+                                fishingEventProperty("action.gear.code")
+                            ),
+                            exponentialMovingAverageOfBuckets(OWN_LEARNING_ALPHA)
+                        )
+                    )
+                )
                 .build();
 
         final var fixedCostCollector =
