@@ -625,50 +625,51 @@ components:
               guard: null
               pathFinder: *id014
             - !!uk.ac.ox.poseidon.agents.tasks.accounting.PayTripCostFactory
-              tripCostExtractor: !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
-                function1: &id027 !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
-                  functions:
-                  - !!uk.ac.ox.poseidon.agents.vessels.extractors.tags.StringTagExtractorFactory {
-                    tagName: country_of_registration
-                  }
-                  - !!uk.ac.ox.poseidon.core.providers.math.MinIntFactory
-                    a: !!uk.ac.ox.poseidon.core.providers.math.MaxIntFactory
-                      a: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentYearProviderFactory {
+              tripCostExtractor: !!uk.ac.ox.poseidon.agents.vessels.extractors.TripCostFromHourlyCostsFactory
+                hourlyCostsExtractor: !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
+                  function1: &id027 !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
+                    functions:
+                    - !!uk.ac.ox.poseidon.agents.vessels.extractors.tags.StringTagExtractorFactory {
+                      tagName: country_of_registration
+                    }
+                    - !!uk.ac.ox.poseidon.core.providers.math.MinIntFactory
+                      a: !!uk.ac.ox.poseidon.core.providers.math.MaxIntFactory
+                        a: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentYearProviderFactory {
+                          }
+                        b: !!uk.ac.ox.poseidon.core.providers.constant.ConstantIntProviderFromValueFactory {
+                          value: 2013
                         }
                       b: !!uk.ac.ox.poseidon.core.providers.constant.ConstantIntProviderFromValueFactory {
-                        value: 2013
+                        value: 2023
                       }
-                    b: !!uk.ac.ox.poseidon.core.providers.constant.ConstantIntProviderFromValueFactory {
-                      value: 2023
+                    - !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
+                      function1: !!uk.ac.ox.poseidon.agents.vessels.extractors.tags.DoubleTagExtractorFactory {
+                        tagName: loa
+                      }
+                      function2: *id020
+                    - !!uk.ac.ox.poseidon.agents.vessels.extractors.tags.StringTagExtractorFactory {
+                      tagName: main_fishing_gear
                     }
-                  - !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
-                    function1: !!uk.ac.ox.poseidon.agents.vessels.extractors.tags.DoubleTagExtractorFactory {
-                      tagName: loa
-                    }
-                    function2: *id020
-                  - !!uk.ac.ox.poseidon.agents.vessels.extractors.tags.StringTagExtractorFactory {
-                    tagName: main_fishing_gear
-                  }
-                function2: !!uk.ac.ox.poseidon.core.functions.MapValueExtractorFactory
-                  map: &id028 !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
-                    keyBuilder: &id035 !!uk.ac.ox.poseidon.io.tables.MultiStringKeyFromRowFactory
-                      keyColumnNames: [
-                        country_code,
-                        year,
-                        vessel_length,
-                        gear_code
-                      ]
-                      
-                    table: !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
-                      dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
-                        encoding: UTF-8
-                        path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
-                          parent: *id001
-                          path: operating_costs.csv
-                    valueBuilder: !!uk.ac.ox.poseidon.agents.money.MoneyFromRowFactory {
-                      amountColumnName: cost_per_hour_at_sea,
-                      currencyColumnName: currency
-                    }
+                  function2: !!uk.ac.ox.poseidon.core.functions.MapValueExtractorFactory
+                    map: &id028 !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
+                      keyBuilder: &id035 !!uk.ac.ox.poseidon.io.tables.MultiStringKeyFromRowFactory
+                        keyColumnNames: [
+                          country_code,
+                          year,
+                          vessel_length,
+                          gear_code
+                        ]
+                        
+                      table: !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
+                        dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
+                          encoding: UTF-8
+                          path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
+                            parent: *id001
+                            path: operating_costs.csv
+                      valueBuilder: !!uk.ac.ox.poseidon.agents.money.MoneyFromRowFactory {
+                        amountColumnName: cost_per_hour_at_sea,
+                        currencyColumnName: currency
+                      }
             - !!uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory
               durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
                 object: !!uk.ac.ox.poseidon.core.time.DurationFactory {
@@ -847,10 +848,11 @@ components:
               guard: null
               pathFinder: *id014
             - !!uk.ac.ox.poseidon.agents.tasks.accounting.PayTripCostFactory
-              tripCostExtractor: !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
-                function1: *id027
-                function2: !!uk.ac.ox.poseidon.core.functions.MapValueExtractorFactory
-                  map: *id028
+              tripCostExtractor: !!uk.ac.ox.poseidon.agents.vessels.extractors.TripCostFromHourlyCostsFactory
+                hourlyCostsExtractor: !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
+                  function1: *id027
+                  function2: !!uk.ac.ox.poseidon.core.functions.MapValueExtractorFactory
+                    map: *id028
             - !!uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory
               durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
                 object: !!uk.ac.ox.poseidon.core.time.DurationFactory {

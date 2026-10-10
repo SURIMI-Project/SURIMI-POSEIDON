@@ -87,6 +87,7 @@ import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import static uk.ac.ox.poseidon.agents.vessels.accounts.Factories.fixedCostCollector;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.infiniteTank;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
+import static uk.ac.ox.poseidon.agents.vessels.extractors.Factories.tripCostFromHourlyCosts;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
 import static uk.ac.ox.poseidon.agents.vessels.friends.Factories.dynamicFriendsSupplier;
@@ -778,9 +779,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         currentTripEventManager()
                     ),
                     payTripCost(
-                        composedFunction(
-                            costsKeyFromVessel,
-                            mapValueExtractor(hourlyCostsMap)
+                        tripCostFromHourlyCosts(
+                            composedFunction(
+                                costsKeyFromVessel,
+                                mapValueExtractor(hourlyCostsMap)
+                            )
                         )
                     ),
                     landCatches(constant(hours(1))),
@@ -822,9 +825,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         currentTripEventManager()
                     ),
                     payTripCost(
-                        composedFunction(
-                            costsKeyFromVessel,
-                            mapValueExtractor(hourlyCostsMap)
+                        tripCostFromHourlyCosts(
+                            composedFunction(
+                                costsKeyFromVessel,
+                                mapValueExtractor(hourlyCostsMap)
+                            )
                         )
                     ),
                     landCatches(constant(hours(1))),
