@@ -22,10 +22,8 @@
 
 package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
-import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.Factories;
-import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
@@ -72,8 +70,7 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
                             scenario.component("bathymetricGrid")
                         ),
                         new SpeciesBiomassFieldsPortrayalFactory(
-                            (Factory<? super SimulationScope, List<? extends BiomassGrid>>)
-                                scenario.component("biomassGrids"),
+                            scenario.component("biomassGrids"),
                             listOf(
                                 (CarryingCapacityGridFactory) Factories.<SimulationScope>uniformCarryingCapacityGrid(
                                     scenario.component("modelGrid"),

@@ -22,13 +22,8 @@
 
 package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
-import uk.ac.ox.poseidon.agents.market.MarketGrid;
-import uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGrids;
-import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.INPUT_PATH;
@@ -64,10 +59,10 @@ public class LocalNorthwesternMedScenario implements Supplier<Scenario> {
                 "biomassUpdates",
                 scheduledByDateTime(
                     timeIndexedBiomassGridUpdates(
-                        base.<FisheableBiomassGrids>component("fisheableBiomassGrids"),
+                        base.component("fisheableBiomassGrids"),
                         timeIndexedBiomassGridsFromNetCdf(
-                            base.<ModelGrid>component("modelGrid"),
-                            base.<List<? extends Species>>component("species"),
+                            base.component("modelGrid"),
+                            base.component("species"),
                             inputPath.plus("biomass_grids.nc")
                         )
                     )
@@ -85,8 +80,8 @@ public class LocalNorthwesternMedScenario implements Supplier<Scenario> {
                         "price",
                         "currency",
                         "measurement_unit",
-                        base.<MarketGrid>component("marketGrid"),
-                        base.<List<? extends Species>>component("species")
+                        base.component("marketGrid"),
+                        base.component("species")
                     )
                 )
             )
