@@ -447,7 +447,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         species,
                         defaultIfNull(
                             composedFunction(
-                                speciesKey(),
+                                speciesProperty("key"),
                                 mapValueExtractor(purseSeinerCatchabilities)
                             ),
                             0.0
@@ -463,7 +463,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         species,
                         defaultIfNull(
                             composedFunction(
-                                speciesKey(),
+                                speciesProperty("key"),
                                 mapValueExtractor(bottomTrawlerCatchabilities)
                             ),
                             0.0
@@ -693,8 +693,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 defaultIfNull(
                     tableLookup(
                         multiStringKeyFromFunctions(
-                            speciesCode(),
-                            speciesLifeStage(),
+                            speciesProperty("code"),
+                            speciesProperty("lifeStage"),
                             constant(PURSE_SEINE_GEAR_CODE)
                         ),
                         discardRatiosTable,
@@ -710,8 +710,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 defaultIfNull(
                     tableLookup(
                         multiStringKeyFromFunctions(
-                            speciesCode(),
-                            speciesLifeStage(),
+                            speciesProperty("code"),
+                            speciesProperty("lifeStage"),
                             constant(BOTTOM_TRAWLER_GEAR_CODE)
                         ),
                         discardRatiosTable,

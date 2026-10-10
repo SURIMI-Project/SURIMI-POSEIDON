@@ -579,10 +579,12 @@ components:
                     delegate: !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
                       function1: !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
                         functions:
-                        - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesCodeExtractorFactory {
-                          }
-                        - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesLifeStageExtractorFactory {
-                          }
+                        - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                          propertyPath: code
+                        }
+                        - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                          propertyPath: lifeStage
+                        }
                         - !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
                           object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                             value: PS
@@ -814,10 +816,12 @@ components:
                     delegate: !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
                       function1: !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
                         functions:
-                        - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesCodeExtractorFactory {
-                          }
-                        - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesLifeStageExtractorFactory {
-                          }
+                        - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                          propertyPath: code
+                        }
+                        - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                          propertyPath: lifeStage
+                        }
                         - !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
                           object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                             value: OTB
@@ -949,8 +953,9 @@ components:
               value: 0.0
             }
             delegate: !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
-              function1: !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesKeyExtractorFactory {
-                }
+              function1: !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                propertyPath: key
+              }
               function2: !!uk.ac.ox.poseidon.core.functions.MapValueExtractorFactory
                 map: *id032
           species: *id005
@@ -972,8 +977,9 @@ components:
               value: 0.0
             }
             delegate: !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
-              function1: !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesKeyExtractorFactory {
-                }
+              function1: !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                propertyPath: key
+              }
               function2: !!uk.ac.ox.poseidon.core.functions.MapValueExtractorFactory
                 map: *id033
           species: *id005
