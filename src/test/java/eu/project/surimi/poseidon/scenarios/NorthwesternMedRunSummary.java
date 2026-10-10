@@ -33,18 +33,25 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.events.Listener;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 
 /**
  * Runs the local Northwestern Mediterranean scenario and prints a one-line summary of what the
  * fleet did, to compare model behaviour before and after a change: trips, hauls, catch, distance
- * from the trip's port to the hauls, distinct fished cells, and trip profit. Not a test: run its
- * {@code main} from the repository root. Uses only APIs that are stable across the
+ * from the trip's port to the hauls, distinct fished cells, and trip profit. Optionally also
+ * writes the mean retained catch per gear, species and life stage, to compare with
+ * {@code target_landings.csv}. Not a test: run its {@code main} from the repository root. Uses only APIs that are stable across the
  * shared-observations work, so that it also runs against older POSEIDON versions.
  */
 public class NorthwesternMedRunSummary {
@@ -60,17 +67,31 @@ public class NorthwesternMedRunSummary {
     private final Map<Vessel, Coordinate> tripOrigins = new HashMap<>();
     private double tripProfit;
     private int endedTrips;
+    private final Map<String, Double> retainedKgByKey = new TreeMap<>();
 
-    /** @param args the number of months to run (default 12) and of runs (default 3) */
-    public static void main(final String[] args) {
+    /**
+     * @param args the number of months to run (default 12), the number of runs (default 3), and
+     *             optionally a CSV file to write the mean retained catch per gear, species and
+     *             life stage to
+     */
+    public static void main(final String[] args) throws IOException {
         final int months = args.length > 0 ? Integer.parseInt(args[0]) : 12;
         final int runs = args.length > 1 ? Integer.parseInt(args[1]) : 3;
+        final Map<String, Double> totalRetainedKgByKey = new TreeMap<>();
         System.out.println(
             "run,trips,hauls,gross_catch_t,retained_catch_t,mean_km_from_port," +
                 "distinct_cells,mean_trip_profit"
         );
         for (int run = 1; run <= runs; run++) {
-            System.out.println(run + "," + new NorthwesternMedRunSummary().run(months));
+            final NorthwesternMedRunSummary summary = new NorthwesternMedRunSummary();
+            System.out.println(run + "," + summary.run(months));
+            summary.retainedKgByKey.forEach((key, kg) -> totalRetainedKgByKey.merge(key, kg, Double::sum));
+        }
+        if (args.length > 2) {
+            final List<String> lines = new ArrayList<>();
+            lines.add("gear_code,species_code,life_stage,retained_kg");
+            totalRetainedKgByKey.forEach((key, kg) -> lines.add(key + "," + kg / runs));
+            Files.write(Path.of(args[2]), lines);
         }
     }
 
@@ -104,6 +125,15 @@ public class NorthwesternMedRunSummary {
                 event.getAction().getStartCoordinate()
             );
             fishedCells.add(vessel.getCell());
+            final String gearCode = event.getAction().getGear().getCode();
+            event.getOutcome().getDisposition().getRetained().forEachBiomassValue((species, kg) ->
+                retainedKgByKey.merge(
+                    gearCode + "," + species.getCode() + "," +
+                        (species.getLifeStage() == null ? "NA" : species.getLifeStage()),
+                    kg,
+                    Double::sum
+                )
+            );
         }));
         simulation.getEventManager().addListener(listener(TripEndEvent.class, event -> {
             endedTrips++;
