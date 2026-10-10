@@ -55,28 +55,28 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
                             scenario.component("carryingCapacityGrid", ListFactory.class),
                             false
                         ),
-                        new SimpleFieldPortrayalFactory(
+                        new SimpleFieldPortrayalFactory<>(
                             "Markets",
                             new MarketGridPortrayalFactory(
                                 scenario.component("marketGrid")
                             ),
                             true
                         ),
-                        new SimpleFieldPortrayalFactory(
+                        new SimpleFieldPortrayalFactory<>(
                             "Ports",
                             new PortGridPortrayalFactory(
                                 scenario.component("portGrid")
                             ),
                             true
                         ),
-                        new SimpleFieldPortrayalFactory(
+                        new SimpleFieldPortrayalFactory<>(
                             "Vessels",
                             new VesselFieldPortrayalFactory(
                                 scenario.component("vesselField")
                             ),
                             true
                         ),
-                        new SimpleFieldPortrayalFactory(
+                        new SimpleFieldPortrayalFactory<>(
                             "Coordinates",
                             new CoordinatesPortrayalFactory(
                                 scenario.component("modelGrid"),
