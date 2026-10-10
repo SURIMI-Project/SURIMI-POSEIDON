@@ -148,7 +148,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final double BOTTOM_TRAWLER_EXPLORATION_PROBABILITY = 0.2;
     private static final int PURSE_SEINER_MEAN_EXPLORATION_RADIUS = 1;
     private static final int BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS = 1;
-    private static final double DEFAULT_CATCH_PROPORTION = 0.1;
+    // Rough values, rescaled against target_landings.csv, until catchability is calibrated.
+    private static final Path PLACEHOLDER_CATCHABILITIES_PATH =
+        Path.of("scenarios", "northwestern_med_placeholder_catchabilities.csv");
     private static final double PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD = -35.0;
     private static final double BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD = -50.0;
     private static final double BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD = -1000.0;
@@ -411,7 +413,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var catchabilityMapsByGearCode =
             Table
                 .read()
-                .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
+                .csv(PLACEHOLDER_CATCHABILITIES_PATH.toFile())
                 .stream()
                 .collect(groupingBy(
                     row -> row.getString("gear_code"),
@@ -421,7 +423,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                             row.getString("species_code"),
                             row.getString("life_stage")
                         ),
-                        _ -> DEFAULT_CATCH_PROPORTION,
+                        row -> row.getDouble("catchability"),
                         (a, _) -> a,
                         LinkedHashMap::new
                     )
