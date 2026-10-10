@@ -22,8 +22,8 @@
 
 package eu.project.surimi.poseidon.calibration;
 
+import uk.ac.ox.poseidon.core.events.SimulationEventListenerFactory;
 import uk.ac.ox.poseidon.core.scopes.SimulationScope;
-import uk.ac.ox.poseidon.io.tables.SimulationEventListenerFactory;
 
 /**
  * Factory for {@link LandingsAccumulator}.
