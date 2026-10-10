@@ -82,6 +82,10 @@ import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventPrope
 import static uk.ac.ox.poseidon.agents.tasks.general.Factories.*;
 import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.*;
+import static uk.ac.ox.poseidon.agents.travel.Factories.routeProperty;
+import static uk.ac.ox.poseidon.agents.travel.Factories.routeViaDestination;
+import static uk.ac.ox.poseidon.agents.travel.Factories.timeCost;
+import static uk.ac.ox.poseidon.agents.travel.Factories.travelCost;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.perVessel;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.vesselEventListener;
@@ -366,6 +370,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 distance
             );
 
+        // The route a vessel would sail to fish at a cell and come back: one definition of the
+        // journey for both the fishing-location checks and the travel cost.
+        final var routeFunction = routeViaDestination(pathFinder, distance);
+
         final var purseSeinerFishingLocationChecker =
             allOf(
                 fishingLocationLegalityChecker(
@@ -375,7 +383,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 ),
                 condition(
                     combinedDuration(
-                        travelTimeToPortViaDestination(pathFinder, distance),
+                        composedFunction(routeFunction, routeProperty("duration")),
                         constant(PURSE_SEINE_SET_DURATION)
                     ),
                     lessThan(
@@ -394,7 +402,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 condition(
                     combinedDuration(
                         currentTripDuration(),
-                        travelTimeToPortViaDestination(pathFinder, distance),
+                        composedFunction(routeFunction, routeProperty("duration")),
                         constant(BOTTOM_TRAWLER_SET_DURATION)
                     ),
                     lessThan(
@@ -543,6 +551,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 stringTagExtractor("main_fishing_gear")
             );
 
+        final var hourlyCost =
+            composedFunction(
+                costsKeyFromVessel,
+                mapValueExtractor(hourlyCostsMap)
+            );
+
         // Markets start without prices: in SURIMI runs, prices arrive through
         // UpdateSpeciesPrices; LocalNorthwesternMedScenario schedules them from prices.csv.
         final var marketGrid =
@@ -561,7 +575,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var optionValues =
             memoryBasedOptionValues(
                 keyedMemorySelector(vesselMemory, vesselProperty("gear.code")),
-                homePortCatchValuation(catchCategoriser)
+                netValuation(
+                    homePortCatchValuation(catchCategoriser),
+                    travelCost(routeFunction, timeCost(hourlyCost))
+                )
             );
 
         final var fleetSegmentMapper =
@@ -764,14 +781,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         currentTripDestinationCell(),
                         currentTripEventManager()
                     ),
-                    payTripCost(
-                        tripCostFromHourlyCosts(
-                            composedFunction(
-                                costsKeyFromVessel,
-                                mapValueExtractor(hourlyCostsMap)
-                            )
-                        )
-                    ),
+                    payTripCost(tripCostFromHourlyCosts(hourlyCost)),
                     landCatches(constant(hours(1))),
                     endTrip()
                 )
@@ -810,14 +820,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         currentTripDestinationCell(),
                         currentTripEventManager()
                     ),
-                    payTripCost(
-                        tripCostFromHourlyCosts(
-                            composedFunction(
-                                costsKeyFromVessel,
-                                mapValueExtractor(hourlyCostsMap)
-                            )
-                        )
-                    ),
+                    payTripCost(tripCostFromHourlyCosts(hourlyCost)),
                     landCatches(constant(hours(1))),
                     endTrip()
                 )
