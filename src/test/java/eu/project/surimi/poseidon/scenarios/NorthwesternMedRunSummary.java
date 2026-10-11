@@ -37,6 +37,7 @@ import uk.ac.ox.poseidon.geography.Coordinate;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,8 +50,9 @@ import java.util.function.Consumer;
 
 /**
  * Runs the local Northwestern Mediterranean scenario and prints a one-line summary of what the
- * fleet did, to compare model behaviour before and after a change: trips, hauls, catch, distance
- * from the trip's port to the hauls, distinct fished cells, and trip profit. Optionally also
+ * fleet did, to compare model behaviour before and after a change: the schedule's date-time before
+ * the first step and after the last, trips, hauls, catch, distance from the trip's port to the
+ * hauls, distinct fished cells, and trip profit. Optionally also
  * writes the mean retained catch per gear, species and life stage, to compare with
  * {@code target_landings.csv}. Not a test: run its {@code main} from the repository root. Uses only APIs that are stable across the
  * shared-observations work, so that it also runs against older POSEIDON versions.
@@ -81,7 +83,7 @@ public class NorthwesternMedRunSummary {
         final int runs = args.length > 1 ? Integer.parseInt(args[1]) : 3;
         final Map<String, Double> totalRetainedKgByKey = new TreeMap<>();
         System.out.println(
-            "run,trips,hauls,gross_catch_t,retained_catch_t,mean_km_from_port," +
+            "run,start,end,trips,hauls,gross_catch_t,retained_catch_t,mean_km_from_port," +
                 "distinct_cells,mean_trip_profit,shared_hauls_per_haul,clique_sizes,seconds"
         );
         for (int run = 1; run <= runs; run++) {
@@ -146,9 +148,11 @@ public class NorthwesternMedRunSummary {
                 tripProfit += money.getAmount().doubleValue();
             }
         }));
+        final LocalDateTime startDateTime = simulation.getTemporalSchedule().getDateTime();
         for (int month = 0; month < months; month++) {
             simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
         }
+        final LocalDateTime endDateTime = simulation.getTemporalSchedule().getDateTime();
         // Clique sizes at the end of the run, over the vessels that made a trip: "size:vessels".
         final Map<Integer, Integer> vesselsByCliqueSize = new TreeMap<>();
         tripOrigins.keySet().forEach(vessel ->
@@ -159,7 +163,9 @@ public class NorthwesternMedRunSummary {
             cliqueSizes.append(cliqueSizes.isEmpty() ? "" : " ").append(size).append(':').append(vessels)
         );
         simulation.finish();
-        return "%d,%d,%.1f,%.1f,%.1f,%d,%.0f,%.2f,%s,%.0f".formatted(
+        return "%s,%s,%d,%d,%.1f,%.1f,%.1f,%d,%.0f,%.2f,%s,%.0f".formatted(
+            startDateTime,
+            endDateTime,
             trips,
             hauls,
             grossCatchInKg / 1000,

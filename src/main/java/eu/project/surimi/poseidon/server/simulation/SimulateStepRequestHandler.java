@@ -37,9 +37,9 @@ import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.INFO;
 
 /**
- * Handles {@code SimulateStep}: checks the request's date-time is aligned with the simulation's
- * current one, then advances the simulation's schedule to one second before the request's
- * date-time plus its configured step size.
+ * Handles {@code SimulateStep}: checks the request's date-time is the simulation's current one,
+ * then advances the simulation's schedule to the request's date-time plus its configured step
+ * size. The events dated exactly then run in the next step.
  */
 public class SimulateStepRequestHandler extends
     WithSimulationRequestHandler<SimulateStepRequest, SimulateStepResponse> {
@@ -65,17 +65,14 @@ public class SimulateStepRequestHandler extends
         checkRequestDateTimeAlignment(request.getCurrentDateTime(), simulation);
         final Period stepSize = simulationManager.getSimulationProperties(simulation).getStepSize();
         log(INFO, simulation, "Step requested");
-        // Step to a date-time computed from the controller's, not by adding the step size to the
-        // simulation's own: adding a month to a month's end drifts to the 28th. Stop one second
-        // short of the next step's start because TemporalSchedule.stepUntil also runs the events
-        // dated at its target, and events at the next step's start (such as the monthly clearing
-        // of the accumulators the controller reads after this step) belong to the next step.
-        // Temporary, until TemporalSchedule's steps exclude their end (see the design note on
-        // TemporalSchedule in SURIMI-notes).
+        // Step to a date-time computed from the controller's, so that steps stay on the
+        // controller's calendar. stepUntil leaves the events dated at its target to the next step:
+        // events at the next step's start (such as the monthly clearing of the accumulators the
+        // controller reads after this step) belong to it.
         final LocalDateTime nextStepStart =
             toLocalDateTime(request.getCurrentDateTime()).plus(stepSize);
-        simulation.getTemporalSchedule().stepUntil(simulation, nextStepStart.minusSeconds(1));
-        log(DEBUG, simulation, "Stepped to {0}", nextStepStart.minusSeconds(1));
+        simulation.getTemporalSchedule().stepUntil(simulation, nextStepStart);
+        log(DEBUG, simulation, "Stepped to {0}", nextStepStart);
         logMemoryUsage(simulation);
         return SimulateStepResponse
             .newBuilder()

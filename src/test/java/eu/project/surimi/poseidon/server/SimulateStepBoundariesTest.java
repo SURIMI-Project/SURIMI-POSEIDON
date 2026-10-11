@@ -45,6 +45,8 @@ import uk.ac.ox.poseidon.geography.Coordinate;
 
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.HashMap;
+import java.util.Map;
 
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,8 +56,8 @@ import static org.assertj.core.api.Assertions.withinPercentage;
 
 /**
  * Steps a served simulation month by month, as the controller does, across a leap February and a
- * year end, and checks that each step covers its whole month and that the controller's reads after
- * each step report everything that happened in it.
+ * year end, and checks that each step covers its whole month, up to and including its last second,
+ * and that the controller's reads after each step report everything that happened in it.
  */
 public class SimulateStepBoundariesTest extends ServiceTest {
 
@@ -67,7 +69,7 @@ public class SimulateStepBoundariesTest extends ServiceTest {
     }
 
     @Test
-    void eachStepEndsJustBeforeTheControllersNextDateTime() {
+    void eachStepEndsAtTheControllersNextDateTime() {
         final String simulationId = initialiseSimulation();
         final TemporalSchedule schedule =
             simulationManager.getSimulation(simulationId).getTemporalSchedule();
@@ -77,7 +79,7 @@ public class SimulateStepBoundariesTest extends ServiceTest {
             controllerDateTime = controllerDateTime.plus(MONTH);
             assertThat(schedule.getDateTime())
                 .as("simulation date-time after step %d", month)
-                .isEqualTo(controllerDateTime.minusSeconds(1));
+                .isEqualTo(controllerDateTime);
         }
     }
 
@@ -108,26 +110,61 @@ public class SimulateStepBoundariesTest extends ServiceTest {
         simulation.getEventManager().addListener(allSales);
         simulation.getEventManager().addListener(allCatches);
 
+        // A sale in the last second of each month: a step that ended a second short, or left
+        // that second to the next step (where the monthly clearing discards it before the
+        // reads), would lose it. It copies the latest sale with a positive weight, so that its
+        // loss shows in the reported weight.
+        final Map<Integer, Double> lastSecondSaleKgByMonth = new HashMap<>();
         double salesReadInKg = 0;
         double grossCatchReadInKg = 0;
         LocalDateTime controllerDateTime = START_DATE_TIME;
         for (int month = 1; month <= MONTHS; month++) {
+            final LocalDateTime nextControllerDateTime = controllerDateTime.plus(MONTH);
+            final int thisMonth = month;
+            simulation.getTemporalSchedule().scheduleOnce(
+                nextControllerDateTime.minusSeconds(1),
+                (Steppable) _ -> {
+                    final Sale latest = allSales
+                        .getEvents()
+                        .filter(sale -> kg(sale) > 0)
+                        .reduce((first, second) -> second)
+                        .orElseThrow(() -> new AssertionError("No sale with a positive weight"));
+                    lastSecondSaleKgByMonth.put(thisMonth, kg(latest));
+                    simulation.getEventManager().broadcast(new Sale(
+                        simulation.getTemporalSchedule().getDateTime(),
+                        "last second of month " + thisMonth,
+                        latest.getMarket(),
+                        latest.getVessel(),
+                        latest.getItems(),
+                        latest.getUnsold()
+                    ));
+                }
+            );
             updateBiomass(simulationId, controllerDateTime, initialBiomass);
             step(simulationId, controllerDateTime);
-            final LocalDateTime nextControllerDateTime = controllerDateTime.plus(MONTH);
-            salesReadInKg +=
+            final double monthSalesReadInKg =
                 getSalesInKg(simulationId, controllerDateTime, nextControllerDateTime);
+            final LocalDateTime monthStart = controllerDateTime;
+            final double monthSoldKg =
+                allSales
+                    .getEvents()
+                    .filter(sale -> !sale.getDateTime().isBefore(monthStart))
+                    .filter(sale -> sale.getDateTime().isBefore(nextControllerDateTime))
+                    .mapToDouble(SimulateStepBoundariesTest::kg)
+                    .sum();
+            assertThat(lastSecondSaleKgByMonth.get(month))
+                .as("weight of the sale in the last second of month %d", month)
+                .isPositive();
+            assertThat(monthSalesReadInKg)
+                .as("sales read for month %d", month)
+                .isCloseTo(monthSoldKg, withinPercentage(1e-6));
+            salesReadInKg += monthSalesReadInKg;
             grossCatchReadInKg +=
                 getGrossCatchInKg(simulationId, controllerDateTime, nextControllerDateTime);
             controllerDateTime = nextControllerDateTime;
         }
 
-        final double soldKg =
-            allSales
-                .getEvents()
-                .flatMap(sale -> sale.getItems().stream())
-                .mapToDouble(item -> item.getContent().asBiomass().asKg())
-                .sum();
+        final double soldKg = allSales.getEvents().mapToDouble(SimulateStepBoundariesTest::kg).sum();
         final double caughtKg =
             allCatches
                 .getEvents()
@@ -140,26 +177,24 @@ public class SimulateStepBoundariesTest extends ServiceTest {
     }
 
     @Test
-    void acceptsRequestsWithinOneSecondOfTheSimulationDateTime() {
-        // Before its first step, the simulation reads one second before its start
-        final String oneSecondAfter = initialiseSimulation();
-        assertThatCode(() -> step(oneSecondAfter, START_DATE_TIME)).doesNotThrowAnyException();
-        final String oneSecondBefore = initialiseSimulation();
-        assertThatCode(() -> step(oneSecondBefore, START_DATE_TIME.minusSeconds(2)))
+    void acceptsRequestsAtTheSimulationDateTime() {
+        final String simulationId = initialiseSimulation();
+        assertThatCode(() -> step(simulationId, START_DATE_TIME)).doesNotThrowAnyException();
+        assertThatCode(() -> step(simulationId, START_DATE_TIME.plus(MONTH)))
             .doesNotThrowAnyException();
     }
 
     @Test
-    void rejectsRequestsMoreThanOneSecondAfterTheSimulationDateTime() {
+    void rejectsRequestsAfterTheSimulationDateTime() {
         final String simulationId = initialiseSimulation();
         assertRejected(() -> step(simulationId, START_DATE_TIME.plusSeconds(1)));
         assertRejected(() -> step(simulationId, START_DATE_TIME.plus(MONTH)));
     }
 
     @Test
-    void rejectsRequestsMoreThanOneSecondBeforeTheSimulationDateTime() {
+    void rejectsRequestsBeforeTheSimulationDateTime() {
         final String simulationId = initialiseSimulation();
-        assertRejected(() -> step(simulationId, START_DATE_TIME.minusSeconds(3)));
+        assertRejected(() -> step(simulationId, START_DATE_TIME.minusSeconds(1)));
         step(simulationId, START_DATE_TIME);
         assertRejected(() -> step(simulationId, START_DATE_TIME));
     }
@@ -170,6 +205,14 @@ public class SimulateStepBoundariesTest extends ServiceTest {
                 StatusRuntimeException.class,
                 e -> assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.INVALID_ARGUMENT)
             );
+    }
+
+    private static double kg(final Sale sale) {
+        return sale
+            .getItems()
+            .stream()
+            .mapToDouble(item -> item.getContent().asBiomass().asKg())
+            .sum();
     }
 
     private static BiomassSummary biomassSummary(final Simulation simulation) {

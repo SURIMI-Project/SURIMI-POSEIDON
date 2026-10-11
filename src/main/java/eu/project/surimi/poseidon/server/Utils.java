@@ -27,7 +27,6 @@ import uk.ac.ox.poseidon.core.Simulation;
 
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static io.grpc.Status.INVALID_ARGUMENT;
-import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
  * Small request-validation helpers shared across gRPC handlers.
@@ -37,8 +36,8 @@ public class Utils {
     private Utils() {}
 
     /**
-     * Throws {@code INVALID_ARGUMENT} if {@code requestTimestamp} is more than one second away
-     * from the simulation's current date-time.
+     * Throws {@code INVALID_ARGUMENT} if {@code requestTimestamp} is not the simulation's current
+     * date-time.
      */
     public static void checkRequestDateTimeAlignment(
         final Timestamp requestTimestamp,
@@ -46,10 +45,10 @@ public class Utils {
     ) {
         final var requestDateTime = toLocalDateTime(requestTimestamp);
         final var simulationDateTime = simulation.getTemporalSchedule().getDateTime();
-        if (Math.abs(SECONDS.between(requestDateTime, simulationDateTime)) > 1) {
+        if (!requestDateTime.equals(simulationDateTime)) {
             throw INVALID_ARGUMENT.withDescription(
-                ("Request date-time %s is more than one second away from current simulation " +
-                    "date-time %s.").formatted(requestDateTime, simulationDateTime)
+                "Request date-time %s is not the current simulation date-time %s."
+                    .formatted(requestDateTime, simulationDateTime)
             ).asRuntimeException();
         }
     }
