@@ -205,11 +205,13 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var outputPath = simulationFolder(path("outputs"));
         final var bathymetricGridPath = inputPath.plus("bathymetry_grid.asc");
 
+        final var allCellsGrid = modelGridFromGridFile(bathymetricGridPath);
         final var modelGrid =
             modelGridWithActiveCells(
-                modelGridFromGridFile(bathymetricGridPath),
+                allCellsGrid,
                 cellSetFromGridFile(
                     inputPath.plus("exclusion_grid.asc"),
+                    allCellsGrid,
                     0
                 )
             );
@@ -279,6 +281,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         constant(
                             cellSetFromGridFile(
                                 inputPath.plus("french_eez.asc"),
+                                modelGrid,
                                 1
                             )
                         )
