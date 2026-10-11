@@ -72,6 +72,7 @@ import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingLocationLegalityChecker;
 import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
 import static uk.ac.ox.poseidon.agents.tasks.Factories.inactiveBehaviour;
+import static uk.ac.ox.poseidon.agents.social.Factories.*;
 import static uk.ac.ox.poseidon.agents.tasks.accounting.Factories.payTripCost;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.selectorTask;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
@@ -148,7 +149,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
     static final Path INPUT_PATH = Path.of("inputs", "northwestern_med");
-    private static final double OWN_LEARNING_ALPHA = 1;
+    private static final double OWN_LEARNING_ALPHA = 0.5;
+    private static final double SOCIAL_LEARNING_ALPHA = 0.2;
+    private static final int MAXIMUM_CLIQUE_SIZE = 5;
     private static final double PURSE_SEINER_EXPLORATION_PROBABILITY = 0.2;
     private static final double BOTTOM_TRAWLER_EXPLORATION_PROBABILITY = 0.2;
     private static final int PURSE_SEINER_MEAN_EXPLORATION_RADIUS = 1;
@@ -862,10 +865,25 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
                 .build();
 
-        final var fleet =
+        // The fleet before any vessel is loaded: the social network takes it, not the loader,
+        // whose shared haul listeners depend on the network (a factory cycle otherwise).
+        final var fleet = fleet(vesselField, portGrid, marketGrid);
+        final var socialNetwork = socialNetwork(fleet);
+        final var cliqueDynamics =
+            cliqueDynamics(
+                socialNetwork,
+                multiStringKeyFromFunctions(
+                    vesselProperty("homePort.code"),
+                    vesselProperty("gear.code")
+                ),
+                MAXIMUM_CLIQUE_SIZE
+            );
+        final var haulSharer = haulSharer(socialNetwork);
+
+        final var fleetLoader =
             FleetFromVesselRegisterFactory
                 .builder()
-                .fleet(fleet(vesselField, portGrid, marketGrid))
+                .fleet(fleet)
                 .data(tableFromCsvFile(inputPath.plus("fleet_register.csv")))
                 .behaviour(behaviour)
                 .dataMapping("behaviour.code", "main_fishing_gear")
@@ -887,13 +905,26 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         )
                     )
                 )
+                .extraFactory(
+                    sharedHaulListener(
+                        haulRecorder(
+                            modelGrid,
+                            keyedMemorySelector(
+                                vesselMemory,
+                                fishingEventProperty("action.gear.code")
+                            ),
+                            exponentialMovingAverageOfBuckets(SOCIAL_LEARNING_ALPHA)
+                        ),
+                        haulSharer
+                    )
+                )
                 .build();
 
         final var fixedCostCollector =
             scheduledRepeatingFromStart(
                 DAILY,
                 fixedCostCollector(
-                    fleet,
+                    fleetLoader,
                     tableLookup(
                         costsKeyFromVessel,
                         tableFromCsvFile(inputPath.plus("operating_costs.csv")),
@@ -925,7 +956,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("vesselField", vesselField)
             .component("modelGrid", modelGrid)
             .component("monthlyProcesses", monthlyProcesses)
-            .component("fleet", fleet)
+            .component("fleet", fleetLoader)
+            .component("socialNetwork", socialNetwork)
+            .component("cliqueDynamics", cliqueDynamics)
+            .component("haulSharer", haulSharer)
             .component("fixedCostCollector", fixedCostCollector)
             .component("fishingActionAccumulator", fishingActionAccumulator)
             .component("biomassSaleAccumulator", biomassSaleAccumulator)
