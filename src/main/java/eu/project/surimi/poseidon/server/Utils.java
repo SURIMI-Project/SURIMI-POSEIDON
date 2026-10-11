@@ -46,7 +46,7 @@ public class Utils {
     ) {
         final var requestDateTime = toLocalDateTime(requestTimestamp);
         final var simulationDateTime = simulation.getTemporalSchedule().getDateTime();
-        if (SECONDS.between(requestDateTime, simulationDateTime) > 1) {
+        if (Math.abs(SECONDS.between(requestDateTime, simulationDateTime)) > 1) {
             throw INVALID_ARGUMENT.withDescription(
                 ("Request date-time %s is more than one second away from current simulation " +
                     "date-time %s.").formatted(requestDateTime, simulationDateTime)
