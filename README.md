@@ -50,9 +50,9 @@ set, the service sends OpenTelemetry traces and metrics there.
 
 The image contains no input data. On EDITO, where `AWS_BUCKET_NAME` is set, the service downloads
 the contents of `poseidon/` in that bucket into `inputs/` at startup; the inputs repository
-uploads them there on every push. Instead of mounting the inputs, you can pass the bucket's
-variables, listed in [POSEIDON_architecture.md](POSEIDON_architecture.md#environment), with your
-own S3 keys.
+uploads them there on every push, leaving out the files only local runs and calibration read.
+Instead of mounting the inputs, you can pass the bucket's variables, listed in
+[POSEIDON_architecture.md](POSEIDON_architecture.md#environment), with your own S3 keys.
 
 ### Protocol
 

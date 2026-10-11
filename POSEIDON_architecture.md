@@ -317,7 +317,10 @@ container runtime.
 The scenario input data (bathymetry, species tables, fleet register, port locations, costs, …) is
 not in the Docker image. On every push to `master`, a workflow in the inputs repository
 (`.github/workflows/s3-sync.yml`) mirrors the repository to `poseidon/` in the
-`project-surimi` bucket on EDITO's MinIO (`minio.dive.edito.eu`).
+`project-surimi` bucket on EDITO's MinIO (`minio.dive.edito.eu`). It leaves out the inputs that
+only local runs and calibration read (`biomass_grids.nc`, `prices.csv` and
+`target_landings.csv`), which the workflow lists in `LOCAL_ONLY`: the served scenario gets
+biomass and prices from the controller.
 
 When `AWS_BUCKET_NAME` is set, `S3Inputs` downloads everything under `poseidon/` into
 `inputs/` (`/app/inputs/` in the container) at startup, before the gRPC server starts:
