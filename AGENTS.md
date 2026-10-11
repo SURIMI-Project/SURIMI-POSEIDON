@@ -151,6 +151,10 @@ After cloning or pulling: `git submodule update --init --recursive`.
 ./gradlew pushDockerImage     # docker push to GHCR — confirm with the user before running
 ```
 
+CI already rebuilds and pushes the image: the Java CI workflow (`.github/workflows/gradle.yml`)
+runs `pushDockerImage` on every push to `main`, though not on pull requests. A merge to `main`
+therefore publishes a new `:latest` with no manual push.
+
 Entry point: `eu.project.surimi.poseidon.server.Server`. Default port `50051` (`-p`), scenario
 folder `scenarios` (`-s`). The image has no input data: with `AWS_BUCKET_NAME` set, `S3Inputs`
 downloads it into `inputs/` at startup (see `POSEIDON_architecture.md`, "S3 bucket").
