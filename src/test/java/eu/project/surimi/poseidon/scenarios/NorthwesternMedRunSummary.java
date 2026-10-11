@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.scenarios;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
 import org.joda.money.Money;
 import sim.util.Int2D;
+import uk.ac.ox.poseidon.agents.social.SocialNetwork;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent;
 import uk.ac.ox.poseidon.agents.trips.TripEndEvent;
 import uk.ac.ox.poseidon.agents.trips.TripStartEvent;
@@ -68,6 +69,7 @@ public class NorthwesternMedRunSummary {
     private double tripProfit;
     private int endedTrips;
     private final Map<String, Double> retainedKgByKey = new TreeMap<>();
+    private long sharedHauls;
 
     /**
      * @param args the number of months to run (default 12), the number of runs (default 3), and
@@ -80,7 +82,7 @@ public class NorthwesternMedRunSummary {
         final Map<String, Double> totalRetainedKgByKey = new TreeMap<>();
         System.out.println(
             "run,trips,hauls,gross_catch_t,retained_catch_t,mean_km_from_port," +
-                "distinct_cells,mean_trip_profit"
+                "distinct_cells,mean_trip_profit,shared_hauls_per_haul,clique_sizes,seconds"
         );
         for (int run = 1; run <= runs; run++) {
             final NorthwesternMedRunSummary summary = new NorthwesternMedRunSummary();
@@ -108,7 +110,9 @@ public class NorthwesternMedRunSummary {
     }
 
     private String run(final int months) {
+        final long startNanos = System.nanoTime();
         final Simulation simulation = new LocalNorthwesternMedScenario().get().startNewSimulation();
+        final SocialNetwork network = simulation.getComponent(SocialNetwork.class);
         simulation.getEventManager().addListener(listener(TripStartEvent.class, event -> {
             trips++;
             final Vessel vessel = event.getTrip().getVessel();
@@ -117,6 +121,7 @@ public class NorthwesternMedRunSummary {
         simulation.getEventManager().addListener(listener(FishingEvent.class, event -> {
             final Vessel vessel = event.getAction().getAgent();
             hauls++;
+            sharedHauls += network.getRecipients(vessel).size();
             grossCatchInKg += event.getOutcome().getGrossCatch().getTotalBiomassInKg();
             retainedCatchInKg +=
                 event.getOutcome().getDisposition().getRetained().getTotalBiomassInKg();
@@ -144,15 +149,27 @@ public class NorthwesternMedRunSummary {
         for (int month = 0; month < months; month++) {
             simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
         }
+        // Clique sizes at the end of the run, over the vessels that made a trip: "size:vessels".
+        final Map<Integer, Integer> vesselsByCliqueSize = new TreeMap<>();
+        tripOrigins.keySet().forEach(vessel ->
+            vesselsByCliqueSize.merge(network.getRecipients(vessel).size() + 1, 1, Integer::sum)
+        );
+        final StringBuilder cliqueSizes = new StringBuilder();
+        vesselsByCliqueSize.forEach((size, vessels) ->
+            cliqueSizes.append(cliqueSizes.isEmpty() ? "" : " ").append(size).append(':').append(vessels)
+        );
         simulation.finish();
-        return "%d,%d,%.1f,%.1f,%.1f,%d,%.0f".formatted(
+        return "%d,%d,%.1f,%.1f,%.1f,%d,%.0f,%.2f,%s,%.0f".formatted(
             trips,
             hauls,
             grossCatchInKg / 1000,
             retainedCatchInKg / 1000,
             hauls == 0 ? 0.0 : distanceFromPortInKm / hauls,
             fishedCells.size(),
-            endedTrips == 0 ? 0.0 : tripProfit / endedTrips
+            endedTrips == 0 ? 0.0 : tripProfit / endedTrips,
+            hauls == 0 ? 0.0 : (double) sharedHauls / hauls,
+            cliqueSizes,
+            (System.nanoTime() - startNanos) / 1e9
         );
     }
 
