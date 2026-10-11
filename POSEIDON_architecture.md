@@ -109,11 +109,16 @@ Fish biomass is distributed across the spatial grid up to a per-cell carrying ca
 is treated as a scalar (kg) per species per cell and is updated externally each step by the
 ecology model.
 
-**Reinforcement learning / bandit-style destination choice**  
-Vessels maintain exponential-moving-average option values for each grid cell. On each trip they
-choose a destination by ε-greedy exploration: with probability ε they explore a random nearby
-cell; otherwise they imitate the best-performing cell known to their social network of peers
-sharing the same home port.
+**Bandit-style destination choice with shared observations**  
+Each vessel remembers the catch it expects in each grid cell it knows, as an exponential moving
+average of the hauls made there, so that recent hauls count more. Vessels also form small,
+exclusive cliques (at most five vessels) with others of the same home port and gear: each haul is
+passed on to the vessel's partners, which record it in their own memory with a lower weight than
+their own hauls. A cell's value is its expected catch priced at the vessel's home-port market,
+minus the cost of the time needed to sail there and back. On each trip, vessels choose a
+destination by ε-greedy exploration: with probability ε they explore a cell near the best one
+they know; otherwise they go to the most valuable cell they are allowed to fish and can reach
+within their trip limits.
 
 **Regulations: Total Allowable Catch (TAC)**  
 TAC quotas are defined per interval, fleet segment, and species, and tracked by a
