@@ -172,6 +172,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
     private static final String CATCH_CATEGORY = "Fresh - Whole";
     private static final TimeFactory PURSE_SEINER_RETURN_TIME = time(6, 30, 0);
+    // A set's typical duration. Fishers can't know how long a given set will take, so the checks
+    // that a set fits (before the return time, within the trip's length) and is legal plan with
+    // this; the gear's sets last this long too, for now.
     private static final DurationFactory PURSE_SEINE_SET_DURATION = hours(1);
     private static final DurationFactory BOTTOM_TRAWLER_SET_DURATION = hours(3);
     private static final DurationFactory BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION = hours(12);
@@ -385,7 +388,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 fishingLocationLegalityChecker(
                     purseSeinerRegulations,
                     pathFinder,
-                    distance
+                    distance,
+                    PURSE_SEINE_SET_DURATION
                 ),
                 condition(
                     combinedDuration(
@@ -403,7 +407,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 fishingLocationLegalityChecker(
                     bottomTrawlerRegulations,
                     pathFinder,
-                    distance
+                    distance,
+                    BOTTOM_TRAWLER_SET_DURATION
                 ),
                 condition(
                     combinedDuration(
