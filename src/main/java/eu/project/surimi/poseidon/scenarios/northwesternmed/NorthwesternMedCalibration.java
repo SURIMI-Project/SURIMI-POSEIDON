@@ -22,6 +22,9 @@
 
 package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.ImmutableLongArray;
 import eu.project.surimi.poseidon.calibration.LandingsAccumulator;
@@ -47,24 +50,51 @@ import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
  * {@code inputs/northwestern_med/target_landings.csv}, using {@link CalibrationRunner}'s genetic
  * algorithm to minimise {@link SumSquaredErrors} against a
  * {@link eu.project.surimi.poseidon.calibration.LandingsAccumulator}. The parameter set to
- * calibrate is derived from {@code discard_ratios.csv}'s (gear, species, life-stage) rows.
+ * calibrate is derived from {@code discard_ratios.csv}'s (gear, species, life-stage) rows. The
+ * population size is a command-line option ({@code --population}), so a run can be sized to the
+ * machine: about {@code 0.6 × population × 3 seeds} simulations run at once after the first
+ * generation, and every individual of the first.
  */
 public class NorthwesternMedCalibration {
 
     private static final double MIN_CATCHABILITY = 0.0;
     private static final double MAX_CATCHABILITY = 1.0;
 
-    private static final int POPULATION_SIZE = 10;
     private static final long GENERATIONS = 5;
     private static final int STEADY_GENERATIONS = 5;
     private static final double MUTATION_PROBABILITY = 0.20;
     private static final double RECOMBINATION_PROBABILITY = 0.35;
     private static final ImmutableLongArray SEEDS = ImmutableLongArray.of(1, 2, 3);
 
+    @Parameter(
+        names = "--population",
+        description = "Individuals per generation, at least 2."
+    )
+    private int populationSize = 10;
+
     /**
-     * Runs the calibration and prints the best parameters, fitness, and generation count found.
+     * Parses {@code args}, runs the calibration and prints the best parameters, fitness, and
+     * generation count found.
      */
-    static void main() {
+    static void main(final String[] args) {
+        final NorthwesternMedCalibration calibration = new NorthwesternMedCalibration();
+        final JCommander jCommander = JCommander.newBuilder().addObject(calibration).build();
+        try {
+            jCommander.parse(args);
+            if (calibration.populationSize < 2) {
+                throw new ParameterException(
+                    "--population must be at least 2 but was " + calibration.populationSize
+                );
+            }
+        } catch (final ParameterException e) {
+            System.err.println(e.getMessage());
+            jCommander.usage();
+            return;
+        }
+        calibration.run();
+    }
+
+    private void run() {
 
         final var targetLandings =
             readTargetLandings(INPUT_PATH.resolve("target_landings.csv"));
@@ -114,7 +144,7 @@ public class NorthwesternMedCalibration {
             CalibrationRunner.minimize(
                 problem,
                 new CalibrationRunner.Options(
-                    POPULATION_SIZE,
+                    populationSize,
                     GENERATIONS,
                     MUTATION_PROBABILITY,
                     RECOMBINATION_PROBABILITY,
