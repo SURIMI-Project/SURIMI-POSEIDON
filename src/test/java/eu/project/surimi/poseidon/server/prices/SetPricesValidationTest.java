@@ -37,8 +37,6 @@ import uk.ac.ox.poseidon.agents.market.BiomassMarket;
 import uk.ac.ox.poseidon.agents.market.Price;
 import uk.ac.ox.poseidon.biology.species.Species;
 
-import java.util.Map;
-
 import static eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler.getMarketsById;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -49,6 +47,8 @@ class SetPricesValidationTest extends ServiceTest {
     private static final String MARKET_CODE = "M1";
     private static final String GEAR_CODE = "G1";
     private static final String SPECIES_CODE = "A";
+    // No price in the scenario, generic or staged.
+    private static final String UNPRICED_SPECIES_CODE = "Z";
 
     SetPricesValidationTest() {
         super(MinimalScenario.class);
@@ -75,18 +75,16 @@ class SetPricesValidationTest extends ServiceTest {
     void genericUpdateRejectedWhenStagedPricesExist() {
         final BiomassMarket market = getMarketsById(simulationManager.getSimulation(simulationId))
             .get(MARKET_CODE);
-        final CatchCategory catchCategory = new CatchCategory(GEAR_CODE);
-        final Map<Species, Price> pricesBySpecies = market.getPrices().get(catchCategory);
-        pricesBySpecies.remove(new Species(SPECIES_CODE, null, null));
         market.setPrice(
-            catchCategory,
-            new Species(SPECIES_CODE, "juvenile", null),
-            new Price(Money.parse("GBP 1.0"), KILOGRAM)
+            new CatchCategory(GEAR_CODE),
+            new Species(UNPRICED_SPECIES_CODE, "juvenile", null),
+            new Price(Money.parse("GBP 1.0"), KILOGRAM),
+            START_DATE_TIME
         );
 
         final StatusRuntimeException error = assertThrows(
             StatusRuntimeException.class,
-            () -> updatePrice(SPECIES_CODE, null, 2.0)
+            () -> updatePrice(UNPRICED_SPECIES_CODE, null, 2.0)
         );
         assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
     }

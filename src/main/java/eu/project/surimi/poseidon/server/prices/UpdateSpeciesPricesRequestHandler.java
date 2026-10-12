@@ -100,7 +100,12 @@ public class UpdateSpeciesPricesRequestHandler extends
                     final Species requestSpecies = toPoseidonSpecies(price.getSpecies());
                     validateNoGenericStagedConflict(market, catchCategory, requestSpecies);
 
-                    market.setPrice(catchCategory, requestSpecies, marketPrice);
+                    market.setPrice(
+                        catchCategory,
+                        requestSpecies,
+                        marketPrice,
+                        simulation.getTemporalSchedule().getDateTime()
+                    );
                     logger.log(
                         DEBUG,
                         "Updated price of species {0} at port market {1} to {2}/{3}.",
