@@ -156,6 +156,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     private static final double BOTTOM_TRAWLER_EXPLORATION_PROBABILITY = 0.2;
     private static final int PURSE_SEINER_MEAN_EXPLORATION_RADIUS = 1;
     private static final int BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS = 1;
+    // Beyond the initial radius. In January 2013 every search that found a legal cell only after
+    // widening found it within three cells; most that widen find nothing legal anywhere.
+    private static final int MAXIMUM_EXPLORATION_WIDENING = 3;
     // Rough values, rescaled against target_landings.csv, until catchability is calibrated.
     private static final Path PLACEHOLDER_CATCHABILITIES_PATH =
         Path.of("scenarios", "northwestern_med_placeholder_catchabilities.csv");
@@ -669,6 +672,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         pathFinder,
                         purseSeinerFishingLocationChecker,
                         shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
+                        MAXIMUM_EXPLORATION_WIDENING,
                         currentCell()
                     ),
                     greedyPicker(
@@ -687,6 +691,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         pathFinder,
                         bottomTrawlerFishingLocationChecker,
                         shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
+                        MAXIMUM_EXPLORATION_WIDENING,
                         currentCell()
                     ),
                     greedyPicker(

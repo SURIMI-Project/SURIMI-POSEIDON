@@ -588,6 +588,7 @@ components:
                       cellPredicate: *id020
                       fallbackCellPicker: !!uk.ac.ox.poseidon.agents.vessels.providers.CurrentCellFactory {
                         }
+                      maximumWidening: 3
                       neighbourhoodSizeSupplier: !!uk.ac.ox.poseidon.core.providers.ShiftedIntProviderFactory
                         delegateIntProvider: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonProviderFactory {
                           mean: 1.0
@@ -789,6 +790,7 @@ components:
                       cellPredicate: *id026
                       fallbackCellPicker: !!uk.ac.ox.poseidon.agents.vessels.providers.CurrentCellFactory {
                         }
+                      maximumWidening: 3
                       neighbourhoodSizeSupplier: !!uk.ac.ox.poseidon.core.providers.ShiftedIntProviderFactory
                         delegateIntProvider: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonProviderFactory {
                           mean: 1.0
