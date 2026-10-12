@@ -185,7 +185,7 @@ components:
         cellPredicate: !!uk.ac.ox.poseidon.geography.predicates.IsActiveWaterCellFactory
           bathymetricGrid: *id004
         delegateAllocator: !!uk.ac.ox.poseidon.geography.allocators.SupplierAllocatorFactory
-          doubleSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantDoubleProviderFromValueFactory {
+          doubleSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantDoubleFromValueFactory {
             value: 0.0
           }
     modelGrid: *id005
@@ -219,7 +219,7 @@ components:
           extractor: !!uk.ac.ox.poseidon.geography.grids.extractors.CellValueFactory
             grid: *id004
           predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.GreaterThanFactory
-            value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+            value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
               object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                 value: -35.0
               }
@@ -228,7 +228,7 @@ components:
         predicates:
         - !!uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFactory
           cellPredicate: !!uk.ac.ox.poseidon.core.predicates.InSetFactory
-            values: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+            values: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
               object: !!uk.ac.ox.poseidon.geography.grids.CellSetFromGridFileFactory
                 includedValue: 1.0
                 modelGrid: *id005
@@ -293,7 +293,7 @@ components:
                       parent: *id001
                       path: habitat_grids.nc
             predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.GreaterThanFactory
-              value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+              value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                 object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                   value: 0.0
                 }
@@ -305,7 +305,7 @@ components:
                 key: posidonia
                 map: *id009
             predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.GreaterThanFactory
-              value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+              value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                 object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                   value: 0.0
                 }
@@ -317,7 +317,7 @@ components:
                 key: cymodocea
                 map: *id009
             predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.GreaterThanFactory
-              value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+              value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                 object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                   value: 0.0
                 }
@@ -330,7 +330,7 @@ components:
           extractor: !!uk.ac.ox.poseidon.geography.grids.extractors.CellValueFactory
             grid: *id004
           predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.GreaterThanFactory
-            value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+            value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
               object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                 value: -50.0
               }
@@ -340,7 +340,7 @@ components:
           extractor: !!uk.ac.ox.poseidon.geography.grids.extractors.CellValueFactory
             grid: *id004
           predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
-            value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+            value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
               object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                 value: -1000.0
               }
@@ -466,20 +466,20 @@ components:
                         }
                       regulations: *id014
                     - !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
-                      extractor: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentTimeProviderFactory {
+                      extractor: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentTimeFactory {
                         }
                       predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.GreaterThanFactory
-                        value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+                        value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                           object: !!uk.ac.ox.poseidon.core.time.TimeFactory {
                             hour: 21,
                             minute: 59,
                             second: 59
                           }
                     - !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
-                      extractor: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentDayOfWeekProviderFactory {
+                      extractor: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentDayOfWeekFactory {
                         }
                       predicate: !!uk.ac.ox.poseidon.core.predicates.InSetFactory
-                        values: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+                        values: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                           object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory
                             value: !!set {
                               !!java.time.DayOfWeek 'SUNDAY': null,
@@ -517,10 +517,10 @@ components:
                               function2: !!uk.ac.ox.poseidon.agents.travel.RoutePropertyFactory {
                                 propertyPath: duration
                               }
-                            - !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+                            - !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                               object: *id017
                           predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
-                            value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilProviderFactory
+                            value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
                               referenceDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextTimeAtProviderFactory
                                 times:
                                 - !!uk.ac.ox.poseidon.core.time.TimeFactory {
@@ -548,12 +548,12 @@ components:
                                   }
                                   - !!uk.ac.ox.poseidon.core.providers.math.MinIntFactory
                                     a: !!uk.ac.ox.poseidon.core.providers.math.MaxIntFactory
-                                      a: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentYearProviderFactory {
+                                      a: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentYearFactory {
                                         }
-                                      b: !!uk.ac.ox.poseidon.core.providers.constant.ConstantIntProviderFromValueFactory {
+                                      b: !!uk.ac.ox.poseidon.core.providers.constant.ConstantIntFromValueFactory {
                                         value: 2013
                                       }
-                                    b: !!uk.ac.ox.poseidon.core.providers.constant.ConstantIntProviderFromValueFactory {
+                                    b: !!uk.ac.ox.poseidon.core.providers.constant.ConstantIntFromValueFactory {
                                       value: 2023
                                     }
                                   - !!uk.ac.ox.poseidon.core.functions.ComposedFunctionFactory
@@ -593,8 +593,8 @@ components:
                     explorer: !!uk.ac.ox.poseidon.agents.choices.NeighbourhoodGridExplorerFactory
                       cellPredicate: *id020
                       maximumWidening: 3
-                      neighbourhoodSizeSupplier: !!uk.ac.ox.poseidon.core.providers.ShiftedIntProviderFactory
-                        delegateIntProvider: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonProviderFactory {
+                      neighbourhoodSizeSupplier: !!uk.ac.ox.poseidon.core.providers.ShiftedIntFactory
+                        delegateIntProvider: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonFactory {
                           mean: 1.0
                         }
                         shift: 1
@@ -606,7 +606,7 @@ components:
                   guard: null
                 guard: null
               waitTask: !!uk.ac.ox.poseidon.agents.tasks.general.WaitForFactory
-                durationSupplier: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilProviderFactory
+                durationSupplier: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
                   referenceDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextTimeAtProviderFactory
                     times:
                     - !!uk.ac.ox.poseidon.core.time.TimeFactory {
@@ -645,7 +645,7 @@ components:
                         - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
                           propertyPath: lifeStage
                         }
-                        - !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+                        - !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                           object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                             value: PS
                           }
@@ -690,7 +690,7 @@ components:
               tripCostExtractor: !!uk.ac.ox.poseidon.agents.vessels.extractors.TripCostFromHourlyCostsFactory
                 hourlyCostsExtractor: *id023
             - !!uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory
-              durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+              durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                 object: !!uk.ac.ox.poseidon.core.time.DurationFactory {
                   days: 0,
                   hours: 1,
@@ -734,20 +734,20 @@ components:
                         }
                       regulations: *id014
                     - !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
-                      extractor: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentTimeProviderFactory {
+                      extractor: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentTimeFactory {
                         }
                       predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.GreaterThanFactory
-                        value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+                        value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                           object: !!uk.ac.ox.poseidon.core.time.TimeFactory {
                             hour: 6,
                             minute: 59,
                             second: 59
                           }
                     - !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
-                      extractor: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentDayOfWeekProviderFactory {
+                      extractor: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentDayOfWeekFactory {
                         }
                       predicate: !!uk.ac.ox.poseidon.core.predicates.InSetFactory
-                        values: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+                        values: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                           object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory
                             value: !!set {
                               !!java.time.DayOfWeek 'MONDAY': null,
@@ -785,10 +785,10 @@ components:
                               function2: !!uk.ac.ox.poseidon.agents.travel.RoutePropertyFactory {
                                 propertyPath: duration
                               }
-                            - !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+                            - !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                               object: *id025
                           predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
-                            value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+                            value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                               object: !!uk.ac.ox.poseidon.core.time.DurationFactory {
                                 days: 0,
                                 hours: 12,
@@ -799,8 +799,8 @@ components:
                     explorer: !!uk.ac.ox.poseidon.agents.choices.NeighbourhoodGridExplorerFactory
                       cellPredicate: *id026
                       maximumWidening: 3
-                      neighbourhoodSizeSupplier: !!uk.ac.ox.poseidon.core.providers.ShiftedIntProviderFactory
-                        delegateIntProvider: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonProviderFactory {
+                      neighbourhoodSizeSupplier: !!uk.ac.ox.poseidon.core.providers.ShiftedIntFactory
+                        delegateIntProvider: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonFactory {
                           mean: 1.0
                         }
                         shift: 1
@@ -812,7 +812,7 @@ components:
                   guard: null
                 guard: null
               waitTask: !!uk.ac.ox.poseidon.agents.tasks.general.WaitForFactory
-                durationSupplier: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilProviderFactory
+                durationSupplier: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
                   referenceDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextTimeAtProviderFactory
                     times:
                     - !!uk.ac.ox.poseidon.core.time.TimeFactory {
@@ -846,7 +846,7 @@ components:
                         - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
                           propertyPath: lifeStage
                         }
-                        - !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+                        - !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                           object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
                             value: OTB
                           }
@@ -879,7 +879,7 @@ components:
               tripCostExtractor: !!uk.ac.ox.poseidon.agents.vessels.extractors.TripCostFromHourlyCostsFactory
                 hourlyCostsExtractor: *id023
             - !!uk.ac.ox.poseidon.agents.tasks.landings.LandCatchesFactory
-              durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+              durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                 object: !!uk.ac.ox.poseidon.core.time.DurationFactory {
                   days: 0,
                   hours: 1,
@@ -984,7 +984,7 @@ components:
       factories:
         PS: !!uk.ac.ox.poseidon.agents.vessels.gears.IndexedBiomassCatchabilityGearFactory
           code: PS
-          durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+          durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
             object: *id017
           minimumCatchThreshold: !!uk.ac.ox.poseidon.core.quantities.MassFactory {
             unitString: kg,
@@ -1003,7 +1003,7 @@ components:
           species: *id006
         OTB: !!uk.ac.ox.poseidon.agents.vessels.gears.IndexedBiomassCatchabilityGearFactory
           code: OTB
-          durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantProviderFactory
+          durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
             object: !!uk.ac.ox.poseidon.core.time.DurationFactory {
               days: 0,
               hours: 1,
