@@ -616,22 +616,27 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 purseSeinerFishingLocationLegalityChecker
             );
 
+        // Whether a vessel at sea could sail to a cell, fish there once, and be back in port by
+        // the first PURSE_SEINER_RETURN_TIME after its trip started.
+        final var purseSeinerFishAndReturnInTime =
+            condition(
+                purseSeinerFishAndReturnDurationFunction,
+                lessThan(
+                    durationUntil(
+                        nextOccurrenceAfter(
+                            currentTripStartDateTime(),
+                            PURSE_SEINER_RETURN_TIME
+                        )
+                    )
+                )
+            );
+
         // At sea, a vessel does not fish the same cell twice in a trip. Tested first, before the
         // checks that need a path.
         final var purseSeinerFishingLocationAtSeaChecker =
             allOf(
                 not(cellWasFishedThisTrip()),
-                condition(
-                    purseSeinerFishAndReturnDurationFunction,
-                    lessThan(
-                        durationUntil(
-                            nextOccurrenceAfter(
-                                currentTripStartDateTime(),
-                                PURSE_SEINER_RETURN_TIME
-                            )
-                        )
-                    )
-                ),
+                purseSeinerFishAndReturnInTime,
                 purseSeinerFishingLocationLegalityChecker
             );
 
@@ -646,20 +651,25 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 bottomTrawlerFishingLocationLegalityChecker
             );
 
+        // Whether a vessel at sea could sail to a cell, fish there once, and be back in port
+        // within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of its trip's start.
+        final var bottomTrawlerFishAndReturnInTime =
+            condition(
+                bottomTrawlerFishAndReturnDurationFunction,
+                lessThan(
+                    durationUntil(
+                        dateTimeAfter(
+                            currentTripStartDateTime(),
+                            BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION
+                        )
+                    )
+                )
+            );
+
         final var bottomTrawlerFishingLocationAtSeaChecker =
             allOf(
                 not(cellWasFishedThisTrip()),
-                condition(
-                    bottomTrawlerFishAndReturnDurationFunction,
-                    lessThan(
-                        durationUntil(
-                            dateTimeAfter(
-                                currentTripStartDateTime(),
-                                BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION
-                            )
-                        )
-                    )
-                ),
+                bottomTrawlerFishAndReturnInTime,
                 bottomTrawlerFishingLocationLegalityChecker
             );
 
@@ -882,6 +892,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                                 currentTripEventManager()
                             ),
                             purseSeinerFishingTask,
+                            // No time to fish once more here and sail home: going via any
+                            // other cell takes longer, so the trip ends without a search.
+                            checkThat(vesselProperty("cell"), purseSeinerFishAndReturnInTime),
                             chooseNextPurseSeinerDestination
                         )
                     ),
@@ -926,6 +939,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                                 currentTripEventManager()
                             ),
                             bottomTrawlerFishingTask,
+                            // No time to fish once more here and sail home: going via any
+                            // other cell takes longer, so the trip ends without a search.
+                            checkThat(vesselProperty("cell"), bottomTrawlerFishAndReturnInTime),
                             chooseNextBottomTrawlerDestination
                         )
                     ),
