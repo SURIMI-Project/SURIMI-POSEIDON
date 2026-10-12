@@ -946,7 +946,7 @@ components:
     eventDateColumn: event_start_date
     extraFactories:
     - !!uk.ac.ox.poseidon.agents.vessels.VesselEventListenerFactory
-      listener: !!uk.ac.ox.poseidon.agents.choices.HaulRecorderFactory
+      listener: !!uk.ac.ox.poseidon.agents.choices.FishingEventRecorderFactory
         memorySelector: !!uk.ac.ox.poseidon.agents.choices.KeyedMemorySelectorFactory
           keyExtractor: !!uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventPropertyFactory {
             propertyPath: action.gear.code
@@ -956,14 +956,14 @@ components:
         updateRule: !!uk.ac.ox.poseidon.agents.choices.ExponentialMovingAverageOfBucketsFactory {
           alpha: 0.5
         }
-    - !!uk.ac.ox.poseidon.agents.social.SharedHaulListenerFactory
-      haulSharer: &id038 !!uk.ac.ox.poseidon.agents.social.HaulSharerFactory
+    - !!uk.ac.ox.poseidon.agents.social.SharedFishingEventListenerFactory
+      fishingEventSharer: &id038 !!uk.ac.ox.poseidon.agents.social.FishingEventSharerFactory
         network: &id037 !!uk.ac.ox.poseidon.agents.social.SocialNetworkFactory
           candidates: &id033 !!uk.ac.ox.poseidon.agents.vessels.FleetFactory
             marketGrid: *id031
             portGrid: *id008
             vesselField: *id032
-      listener: !!uk.ac.ox.poseidon.agents.choices.HaulRecorderFactory
+      listener: !!uk.ac.ox.poseidon.agents.choices.FishingEventRecorderFactory
         memorySelector: !!uk.ac.ox.poseidon.agents.choices.KeyedMemorySelectorFactory
           keyExtractor: !!uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventPropertyFactory {
             propertyPath: action.gear.code
@@ -1046,7 +1046,7 @@ components:
       }
     maximumCliqueSize: 5
     network: *id037
-  haulSharer: *id038
+  fishingEventSharer: *id038
   fixedCostCollector: !!uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFromStartFactory
     interval: *id039
     ordering: 0

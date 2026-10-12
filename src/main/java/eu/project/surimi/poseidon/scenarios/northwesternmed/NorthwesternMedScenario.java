@@ -582,8 +582,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
         final var catchCategoriser = uniformCatchCategoriser(catchCategory(CATCH_CATEGORY));
 
-        // One memory per vessel, keyed by gear code: what the vessel learns from its hauls and
-        // what it decides from must be this same instance.
+        // One memory per vessel, keyed by gear code: what the vessel learns from its fishing
+        // operations and what it decides from must be this same instance.
         final PerVesselFactory<KeyedMemory<String, Int2D, Bucket>> vesselMemory =
             perVessel(keyedMemory());
 
@@ -882,7 +882,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .build();
 
         // The fleet before any vessel is loaded: the social network takes it, not the loader,
-        // whose shared haul listeners depend on the network (a factory cycle otherwise).
+        // whose shared fishing event listeners depend on the network (a factory cycle otherwise).
         final var fleet = fleet(vesselField, portGrid, marketGrid);
         final var socialNetwork = socialNetwork(fleet);
         final var cliqueDynamics =
@@ -894,7 +894,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 ),
                 MAXIMUM_CLIQUE_SIZE
             );
-        final var haulSharer = haulSharer(socialNetwork);
+        final var fishingEventSharer = fishingEventSharer(socialNetwork);
 
         final var fleetLoader =
             FleetFromVesselRegisterFactory
@@ -911,7 +911,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .dataMapping("engine.code", "main_fishing_gear")
                 .extraFactory(
                     vesselEventListener(
-                        haulRecorder(
+                        fishingEventRecorder(
                             modelGrid,
                             keyedMemorySelector(
                                 vesselMemory,
@@ -922,8 +922,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     )
                 )
                 .extraFactory(
-                    sharedHaulListener(
-                        haulRecorder(
+                    sharedFishingEventListener(
+                        fishingEventRecorder(
                             modelGrid,
                             keyedMemorySelector(
                                 vesselMemory,
@@ -931,7 +931,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                             ),
                             exponentialMovingAverageOfBuckets(SOCIAL_LEARNING_ALPHA)
                         ),
-                        haulSharer
+                        fishingEventSharer
                     )
                 )
                 .build();
@@ -975,7 +975,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("fleet", fleetLoader)
             .component("socialNetwork", socialNetwork)
             .component("cliqueDynamics", cliqueDynamics)
-            .component("haulSharer", haulSharer)
+            .component("fishingEventSharer", fishingEventSharer)
             .component("fixedCostCollector", fixedCostCollector)
             .component("fishingActionAccumulator", fishingActionAccumulator)
             .component("biomassSaleAccumulator", biomassSaleAccumulator)

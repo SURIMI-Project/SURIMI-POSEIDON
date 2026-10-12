@@ -51,8 +51,8 @@ import java.util.function.Consumer;
 /**
  * Runs the local Northwestern Mediterranean scenario and prints a one-line summary of what the
  * fleet did, to compare model behaviour before and after a change: the schedule's date-time before
- * the first step and after the last, trips, hauls, catch, distance from the trip's port to the
- * hauls, distinct fished cells, and trip profit. Optionally also
+ * the first step and after the last, trips, fishing events, catch, distance from the trip's port
+ * to the fishing actions, distinct fished cells, and trip profit. Optionally also
  * writes the mean retained catch per gear, species and life stage, to compare with
  * {@code target_landings.csv}. Not a test: run its {@code main} from the repository root. Uses only APIs that are stable across the
  * shared-observations work, so that it also runs against older POSEIDON versions.
@@ -62,7 +62,7 @@ public class NorthwesternMedRunSummary {
     private static final double EARTH_RADIUS_IN_KM = 6371.0;
 
     private int trips;
-    private int hauls;
+    private int fishingEvents;
     private double grossCatchInKg;
     private double retainedCatchInKg;
     private double distanceFromPortInKm;
@@ -71,7 +71,7 @@ public class NorthwesternMedRunSummary {
     private double tripProfit;
     private int endedTrips;
     private final Map<String, Double> retainedKgByKey = new TreeMap<>();
-    private long sharedHauls;
+    private long sharedFishingEvents;
 
     /**
      * @param args the number of months to run (default 12), the number of runs (default 3), and
@@ -83,8 +83,8 @@ public class NorthwesternMedRunSummary {
         final int runs = args.length > 1 ? Integer.parseInt(args[1]) : 3;
         final Map<String, Double> totalRetainedKgByKey = new TreeMap<>();
         System.out.println(
-            "run,start,end,trips,hauls,gross_catch_t,retained_catch_t,mean_km_from_port," +
-                "distinct_cells,mean_trip_profit,shared_hauls_per_haul,clique_sizes,seconds"
+            "run,start,end,trips,fishing_events,gross_catch_t,retained_catch_t,mean_km_from_port," +
+                "distinct_cells,mean_trip_profit,shared_per_fishing_event,clique_sizes,seconds"
         );
         for (int run = 1; run <= runs; run++) {
             final NorthwesternMedRunSummary summary = new NorthwesternMedRunSummary();
@@ -122,8 +122,8 @@ public class NorthwesternMedRunSummary {
         }));
         simulation.getEventManager().addListener(listener(FishingEvent.class, event -> {
             final Vessel vessel = event.getAction().getAgent();
-            hauls++;
-            sharedHauls += network.getRecipients(vessel).size();
+            fishingEvents++;
+            sharedFishingEvents += network.getRecipients(vessel).size();
             grossCatchInKg += event.getOutcome().getGrossCatch().getTotalBiomassInKg();
             retainedCatchInKg +=
                 event.getOutcome().getDisposition().getRetained().getTotalBiomassInKg();
@@ -167,13 +167,13 @@ public class NorthwesternMedRunSummary {
             startDateTime,
             endDateTime,
             trips,
-            hauls,
+            fishingEvents,
             grossCatchInKg / 1000,
             retainedCatchInKg / 1000,
-            hauls == 0 ? 0.0 : distanceFromPortInKm / hauls,
+            fishingEvents == 0 ? 0.0 : distanceFromPortInKm / fishingEvents,
             fishedCells.size(),
             endedTrips == 0 ? 0.0 : tripProfit / endedTrips,
-            hauls == 0 ? 0.0 : (double) sharedHauls / hauls,
+            fishingEvents == 0 ? 0.0 : (double) sharedFishingEvents / fishingEvents,
             cliqueSizes,
             (System.nanoTime() - startNanos) / 1e9
         );
