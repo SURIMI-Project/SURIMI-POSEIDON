@@ -43,6 +43,7 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 ./gradlew writeNorthwesternMedScenario                   # regenerate scenarios/northwestern_med.yaml
 ./gradlew run --args="-p 50051"                          # run the server locally
 ./gradlew runNorthwesternMedGui                          # open the NW Med GUI (local inputs)
+./gradlew runNorthwesternMedCalibration                  # calibrate NW Med (local inputs, heap 75% of RAM)
 ```
 
 ## Testing

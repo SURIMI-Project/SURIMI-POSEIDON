@@ -118,6 +118,15 @@ tasks.register("runNorthwesternMedGui", JavaExec::class) {
     classpath = sourceSets["main"].runtimeClasspath
 }
 
+tasks.register("runNorthwesternMedCalibration", JavaExec::class) {
+    dependsOn("classes")
+    mainClass.set("eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedCalibration")
+    classpath = sourceSets["main"].runtimeClasspath
+    // The population is evaluated in parallel, about 0.35 to 0.7 GB live per simulation, so the
+    // heap scales with the machine's memory rather than being fixed
+    jvmArgs("-XX:MaxRAMPercentage=75")
+}
+
 val stageForImage =tasks.register<Sync>("stageForImage") {
     val imageDir = layout.buildDirectory.dir("image")
     into(imageDir)
