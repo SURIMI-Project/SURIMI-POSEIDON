@@ -1098,12 +1098,7 @@ components:
         OTB: !!uk.ac.ox.poseidon.agents.vessels.gears.IndexedBiomassCatchabilityGearFactory
           code: OTB
           durationSupplier: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
-            object: !!uk.ac.ox.poseidon.core.time.DurationFactory {
-              days: 0,
-              hours: 1,
-              minutes: 0,
-              seconds: 0
-            }
+            object: *id029
           minimumCatchThreshold: !!uk.ac.ox.poseidon.core.quantities.MassFactory {
             unitString: kg,
             value: 1.0

@@ -450,7 +450,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     BOTTOM_TRAWLER_GEAR_CODE,
                     indexedBiomassCatchabilityGear(
                         BOTTOM_TRAWLER_GEAR_CODE,
-                        constant(hours(1)),
+                        constant(BOTTOM_TRAWLER_SET_DURATION),
                         species,
                         defaultIfNull(
                             composedFunction(
