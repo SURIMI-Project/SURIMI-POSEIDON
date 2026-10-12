@@ -128,6 +128,13 @@ separate the drift from your own change: stash your Java changes, regenerate and
 alone, then unstash, regenerate and commit your change — each commit then comes from a real writer
 run.
 
+## Code style
+
+Follow the "Code style" section of `POSEIDON/AGENTS.md` (`final` everywhere, lambdas over
+anonymous classes, method references over lambdas). Scenario classes such as
+`NorthwesternMedScenario` are the exception: they stay readable for people new to Java, with no
+method references or other clever tricks; safety nets belong in tests, not in call-site syntax.
+
 ## Submodules
 
 Two submodules (`.gitmodules`), each its own repo:
