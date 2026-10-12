@@ -31,6 +31,7 @@ import uk.ac.ox.poseidon.agents.trips.TripEndEvent;
 import uk.ac.ox.poseidon.agents.trips.TripStartEvent;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.SimulationStartOptions;
 import uk.ac.ox.poseidon.core.events.Listener;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
@@ -58,13 +59,16 @@ import java.util.stream.IntStream;
  * made a trip, the ended trips, their fishing events and hours, trips per vessel-day, and how many
  * trips had 0, 1, 2... fishing events. Optionally also
  * writes the mean retained catch per gear, species and life stage, to compare with
- * {@code target_landings.csv}. The runs run in parallel, so {@code seconds} is each run's wall
+ * {@code target_landings.csv}. Each run's seed is its number, so the runs differ from each other
+ * and an invocation can be repeated. The runs run in parallel, so {@code seconds} is each run's wall
  * time while sharing the machine. Not a test: run its {@code main} from the repository root. Uses only APIs that are stable across the
  * shared-observations work, so that it also runs against older POSEIDON versions.
  */
 public class NorthwesternMedRunSummary {
 
     private static final double EARTH_RADIUS_IN_KM = 6371.0;
+
+    private final long seed;
 
     private int trips;
     private int fishingEvents;
@@ -121,7 +125,7 @@ public class NorthwesternMedRunSummary {
         // The runs are independent simulations, so they run in parallel; each line is printed
         // once all are done, in run order.
         final List<NorthwesternMedRunSummary> summaries =
-            IntStream.rangeClosed(1, runs).mapToObj(run -> new NorthwesternMedRunSummary()).toList();
+            IntStream.rangeClosed(1, runs).mapToObj(NorthwesternMedRunSummary::new).toList();
         final List<String> lines = summaries.parallelStream().map(summary -> summary.run(months)).toList();
         for (int run = 1; run <= runs; run++) {
             System.out.println(run + "," + lines.get(run - 1));
@@ -133,6 +137,11 @@ public class NorthwesternMedRunSummary {
             totalRetainedKgByKey.forEach((key, kg) -> csvLines.add(key + "," + kg / runs));
             Files.write(Path.of(args[2]), csvLines);
         }
+    }
+
+    /** @param seed the seed of this summary's simulation */
+    private NorthwesternMedRunSummary(final long seed) {
+        this.seed = seed;
     }
 
     private static double haversineInKm(
@@ -149,7 +158,9 @@ public class NorthwesternMedRunSummary {
 
     private String run(final int months) {
         final long startNanos = System.nanoTime();
-        final Simulation simulation = new LocalNorthwesternMedScenario().get().startNewSimulation();
+        final Simulation simulation = new LocalNorthwesternMedScenario().get().startNewSimulation(
+            SimulationStartOptions.builder().seed(seed).build()
+        );
         final SocialNetwork network = simulation.getComponent(SocialNetwork.class);
         simulation.getEventManager().addListener(listener(TripStartEvent.class, event -> {
             trips++;
