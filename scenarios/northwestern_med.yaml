@@ -442,6 +442,9 @@ components:
                   }
                 guard: null
                 pathFinder: &id015 !!uk.ac.ox.poseidon.geography.paths.DefaultPathFinderFactory
+                  accessibleWaterCellsCache: !!uk.ac.ox.poseidon.geography.paths.AccessibleWaterCellsCacheFactory
+                    bathymetricGrid: *id004
+                    portGrid: *id008
                   bathymetricGrid: *id004
                   distance: *id013
                   pathCache: !!uk.ac.ox.poseidon.geography.paths.DefaultPathCacheFactory
