@@ -591,7 +591,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 BOTTOM_TRAWLER_SET_DURATION
             );
 
-        // How long it would take to sail to a cell, fish there once, and sail back to port.
+        // How long it would take to sail to a cell, fish there once, and sail back to port. The
+        // checkers below test it before the legality checker: it is cheaper than the regulations,
+        // and late in a trip it turns down most cells.
         final var purseSeinerFishAndReturnDurationFunction =
             combinedDuration(
                 composedFunction(routeFunction, routeProperty("duration")),
@@ -607,11 +609,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         // depart: at departure, the trip would depart now.
         final var purseSeinerFishingLocationAtDepartureChecker =
             allOf(
-                purseSeinerFishingLocationLegalityChecker,
                 condition(
                     purseSeinerFishAndReturnDurationFunction,
                     lessThan(durationUntil(nextOccurrenceOf(PURSE_SEINER_RETURN_TIME)))
-                )
+                ),
+                purseSeinerFishingLocationLegalityChecker
             );
 
         // At sea, a vessel does not fish the same cell twice in a trip. Tested first, before the
@@ -619,7 +621,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         final var purseSeinerFishingLocationAtSeaChecker =
             allOf(
                 not(cellWasFishedThisTrip()),
-                purseSeinerFishingLocationLegalityChecker,
                 condition(
                     purseSeinerFishAndReturnDurationFunction,
                     lessThan(
@@ -630,24 +631,24 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                             )
                         )
                     )
-                )
+                ),
+                purseSeinerFishingLocationLegalityChecker
             );
 
         // Bottom trawlers must be back in port within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of
         // departing: at departure, that is the whole of it.
         final var bottomTrawlerFishingLocationAtDepartureChecker =
             allOf(
-                bottomTrawlerFishingLocationLegalityChecker,
                 condition(
                     bottomTrawlerFishAndReturnDurationFunction,
                     lessThan(constant(BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION))
-                )
+                ),
+                bottomTrawlerFishingLocationLegalityChecker
             );
 
         final var bottomTrawlerFishingLocationAtSeaChecker =
             allOf(
                 not(cellWasFishedThisTrip()),
-                bottomTrawlerFishingLocationLegalityChecker,
                 condition(
                     bottomTrawlerFishAndReturnDurationFunction,
                     lessThan(
@@ -658,7 +659,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                             )
                         )
                     )
-                )
+                ),
+                bottomTrawlerFishingLocationLegalityChecker
             );
 
         final var purseSeinerReadyForDeparture =
