@@ -115,6 +115,7 @@ import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.greaterThan
 import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
+import static uk.ac.ox.poseidon.core.predicates.logical.Factories.not;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.*;
@@ -623,7 +624,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     condition(
                         currentDayOfWeek(),
                         in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
-                    )
+                    ),
+                    not(vesselHasStartedTripToday())
                 )
             );
 
@@ -652,7 +654,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     condition(
                         currentDayOfWeek(),
                         in(constant(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY)))
-                    )
+                    ),
+                    not(vesselHasStartedTripToday())
                 )
             );
 

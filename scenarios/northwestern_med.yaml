@@ -488,6 +488,9 @@ components:
                               !!java.time.DayOfWeek 'WEDNESDAY': null,
                               !!java.time.DayOfWeek 'THURSDAY': null
                             }
+                    - !!uk.ac.ox.poseidon.core.predicates.logical.NotFactory
+                      predicate: !!uk.ac.ox.poseidon.agents.vessels.predicates.VesselHasStartedTripTodayFactory {
+                        }
                 - !!uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory
                   destinationSupplier: !!uk.ac.ox.poseidon.agents.choices.EpsilonGreedyDestinationSupplierFactory
                     epsilon: 0.2
@@ -752,6 +755,9 @@ components:
                               !!java.time.DayOfWeek 'THURSDAY': null,
                               !!java.time.DayOfWeek 'FRIDAY': null
                             }
+                    - !!uk.ac.ox.poseidon.core.predicates.logical.NotFactory
+                      predicate: !!uk.ac.ox.poseidon.agents.vessels.predicates.VesselHasStartedTripTodayFactory {
+                        }
                 - !!uk.ac.ox.poseidon.agents.tasks.destinations.StartTripFactory
                   destinationSupplier: !!uk.ac.ox.poseidon.agents.choices.EpsilonGreedyDestinationSupplierFactory
                     epsilon: 0.2
