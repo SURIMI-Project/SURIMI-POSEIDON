@@ -671,12 +671,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 epsilonGreedyDestination(
                     PURSE_SEINER_EXPLORATION_PROBABILITY,
                     neighbourhoodGridExplorer(
-                        optionValues,
                         pathFinder,
                         purseSeinerFishingLocationChecker,
                         shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
                         MAXIMUM_EXPLORATION_WIDENING,
-                        currentCell()
+                        bestKnownOption(optionValues, currentCell())
                     ),
                     greedyPicker(
                         optionValues,
@@ -690,12 +689,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 epsilonGreedyDestination(
                     BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
                     neighbourhoodGridExplorer(
-                        optionValues,
                         pathFinder,
                         bottomTrawlerFishingLocationChecker,
                         shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
                         MAXIMUM_EXPLORATION_WIDENING,
-                        currentCell()
+                        bestKnownOption(optionValues, currentCell())
                     ),
                     greedyPicker(
                         optionValues,

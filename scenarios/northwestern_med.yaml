@@ -592,16 +592,17 @@ components:
                               }
                     explorer: !!uk.ac.ox.poseidon.agents.choices.NeighbourhoodGridExplorerFactory
                       cellPredicate: *id020
-                      fallbackCellPicker: !!uk.ac.ox.poseidon.agents.vessels.providers.CurrentCellFactory {
-                        }
                       maximumWidening: 3
                       neighbourhoodSizeSupplier: !!uk.ac.ox.poseidon.core.providers.ShiftedIntProviderFactory
                         delegateIntProvider: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonProviderFactory {
                           mean: 1.0
                         }
                         shift: 1
-                      optionValues: *id021
                       pathFinder: *id015
+                      searchCentre: !!uk.ac.ox.poseidon.agents.choices.BestKnownOptionFactory
+                        fallback: !!uk.ac.ox.poseidon.agents.vessels.providers.CurrentCellFactory {
+                          }
+                        optionValues: *id021
                   guard: null
                 guard: null
               waitTask: !!uk.ac.ox.poseidon.agents.tasks.general.WaitForFactory
@@ -797,16 +798,17 @@ components:
                       optionValues: *id021
                     explorer: !!uk.ac.ox.poseidon.agents.choices.NeighbourhoodGridExplorerFactory
                       cellPredicate: *id026
-                      fallbackCellPicker: !!uk.ac.ox.poseidon.agents.vessels.providers.CurrentCellFactory {
-                        }
                       maximumWidening: 3
                       neighbourhoodSizeSupplier: !!uk.ac.ox.poseidon.core.providers.ShiftedIntProviderFactory
                         delegateIntProvider: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonProviderFactory {
                           mean: 1.0
                         }
                         shift: 1
-                      optionValues: *id021
                       pathFinder: *id015
+                      searchCentre: !!uk.ac.ox.poseidon.agents.choices.BestKnownOptionFactory
+                        fallback: !!uk.ac.ox.poseidon.agents.vessels.providers.CurrentCellFactory {
+                          }
+                        optionValues: *id021
                   guard: null
                 guard: null
               waitTask: !!uk.ac.ox.poseidon.agents.tasks.general.WaitForFactory
