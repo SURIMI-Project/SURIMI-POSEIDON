@@ -202,10 +202,7 @@ public class NorthwesternMedRunSummary {
             gearSummary.vessels.add(vessel);
             gearSummary.trips++;
             gearSummary.fishingEvents += tripFishingEvents;
-            gearSummary.hours += Duration.between(
-                event.getTrip().getStartDateTime(),
-                event.getTrip().getEndDateTime()
-            ).toSeconds() / 3600.0;
+            gearSummary.hours += event.getTrip().getTimeAtSea().toSeconds() / 3600.0;
             gearSummary.tripsByFishingEvents.merge(tripFishingEvents, 1, Integer::sum);
             for (final Money money : event.getTrip().getAccount().getBalances().values()) {
                 tripProfit += money.getAmount().doubleValue();
