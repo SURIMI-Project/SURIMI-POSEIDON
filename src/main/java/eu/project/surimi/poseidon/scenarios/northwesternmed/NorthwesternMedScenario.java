@@ -905,6 +905,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         currentTripDestinationCell(),
                         currentTripEventManager()
                     ),
+                    arriveInPort(),
                     payTripCost(tripCostFromHourlyCosts(hourlyCost)),
                     landCatches(constant(hours(1))),
                     endTrip()
@@ -952,6 +953,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         currentTripDestinationCell(),
                         currentTripEventManager()
                     ),
+                    arriveInPort(),
                     payTripCost(tripCostFromHourlyCosts(hourlyCost)),
                     landCatches(constant(hours(1))),
                     endTrip()

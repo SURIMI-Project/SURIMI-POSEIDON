@@ -743,6 +743,9 @@ components:
                 }
               guard: null
               pathFinder: *id015
+            - !!uk.ac.ox.poseidon.agents.tasks.travel.ArriveInPortFactory {
+              guard: null
+            }
             - !!uk.ac.ox.poseidon.agents.tasks.accounting.PayTripCostFactory
               tripCostExtractor: !!uk.ac.ox.poseidon.agents.vessels.extractors.TripCostFromHourlyCostsFactory
                 hourlyCostsExtractor: *id028
@@ -983,6 +986,9 @@ components:
                 }
               guard: null
               pathFinder: *id015
+            - !!uk.ac.ox.poseidon.agents.tasks.travel.ArriveInPortFactory {
+              guard: null
+            }
             - !!uk.ac.ox.poseidon.agents.tasks.accounting.PayTripCostFactory
               tripCostExtractor: !!uk.ac.ox.poseidon.agents.vessels.extractors.TripCostFromHourlyCostsFactory
                 hourlyCostsExtractor: *id028
