@@ -6,3 +6,6 @@
 
 # Reflow Javadoc to 80 columns
 8c5bbb674338999b661b664cdf20e9a5cd45b76b
+
+# Rewrap line comments to 80 columns
+084003d6367a4ad8f33fc8052faefdc7b11bf6aa
