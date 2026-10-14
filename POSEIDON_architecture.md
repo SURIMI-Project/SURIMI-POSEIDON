@@ -412,9 +412,11 @@ Triggered on every push to and pull request targeting the `main` branch.
 2. Set up **JDK 25** (Temurin distribution).
 3. Configure the Gradle wrapper cache.
 4. Run `./gradlew build` — compiles sources, executes unit tests, generates the JaCoCo coverage
-   report, and runs SpotBugs static analysis. The `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-   secrets enable `S3InputsIntegrationTest`, which downloads the inputs from the real bucket; it
-   is skipped where the secrets are unavailable (forks, Dependabot pull requests).
+   report, runs SpotBugs static analysis, and checks formatting and license headers
+   (`spotlessCheck`, with Prettier on a Node.js that Gradle downloads). The `AWS_ACCESS_KEY_ID`
+   and `AWS_SECRET_ACCESS_KEY` secrets enable `S3InputsIntegrationTest`, which downloads the
+   inputs from the real bucket; it is skipped where the secrets are unavailable (forks,
+   Dependabot pull requests).
 5. Authenticate with **GitHub Container Registry (GHCR)** (pushes to `main` only).
 6. Run `./gradlew pushDockerImage` — builds and pushes the Docker image (pushes to `main` only;
    pull requests never publish it).

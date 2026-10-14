@@ -77,7 +77,15 @@ enabled, so `grpcurl -plaintext localhost:50051 list` shows the API.
 ```
 ./gradlew build              # compile and run all tests
 ./gradlew buildDockerImage   # build the Docker image locally
+./gradlew spotlessApply      # format Java sources and add missing license headers
 ```
+
+Java sources are formatted with [Prettier](https://prettier.io/) (prettier-plugin-java) and carry
+a GPLv3 license header, both enforced by Spotless, here and in `POSEIDON/`: `./gradlew build`
+fails on unformatted files, and `./gradlew spotlessApply` fixes them. Gradle downloads Node.js
+itself, so this needs no local install. For format on save in IntelliJ, a pre-push check and
+`git blame` that skips reformatting commits, see the "Development" section of
+`POSEIDON/README.md`; run its commands in each repository.
 
 The scenario served to SURIMI, `scenarios/northwestern_med.yaml`, is generated from
 `NorthwesternMedScenario.java` by `./gradlew writeNorthwesternMedScenario`. To try things out

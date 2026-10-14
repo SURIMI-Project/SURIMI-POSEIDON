@@ -40,6 +40,8 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 ./gradlew test --tests "eu.project.surimi.poseidon.server.SimulationServiceTest.methodName"  # one method
 ./gradlew :POSEIDON:<module>:test                        # a submodule's tests (core, io, agents, …)
 ./gradlew spotbugsMain                                   # SpotBugs
+./gradlew spotlessApply                                  # format src/ with Prettier, add missing license headers
+./gradlew :POSEIDON:spotlessApply                        # the same for the submodule
 ./gradlew writeNorthwesternMedScenario                   # regenerate scenarios/northwestern_med.yaml
 ./gradlew run --args="-p 50051"                          # run the server locally
 ./gradlew runNorthwesternMedGui                          # open the NW Med GUI (local inputs)
@@ -134,9 +136,16 @@ run.
 ## Code style
 
 Follow the "Code style" section of `POSEIDON/AGENTS.md` (`final` everywhere, lambdas over
-anonymous classes, method references over lambdas). Scenario classes such as
-`NorthwesternMedScenario` are the exception: they stay readable for people new to Java, with no
-method references or other clever tricks; safety nets belong in tests, not in call-site syntax.
+anonymous classes, method references over lambdas, Prettier formatting with comments wrapped by
+hand at 80 columns). Scenario classes such as `NorthwesternMedScenario` are the exception: they
+stay readable for people new to Java, with no method references or other clever tricks; safety
+nets belong in tests, not in call-site syntax.
+
+`build` runs `spotlessCheck`, which fails on any Java file `spotlessApply` would change: run
+`./gradlew spotlessApply` after editing Java. The formatting setup is duplicated in `POSEIDON/`
+(`.prettierrc`, `package.json`, the Spotless block and license header in `build.gradle.kts`, the
+`nodejs`/`node-gradle`/`spotless` versions, the Node.js repository in `settings.gradle.kts`):
+change both repos together.
 
 ## Submodules
 
@@ -183,8 +192,10 @@ downloads it into `inputs/` at startup (see `POSEIDON_architecture.md`, "S3 buck
 
 ## Licensing
 
-Every source file carries the GNU GPLv3 header (University of Oxford copyright). Copy it from a
-neighbouring file when creating a new one.
+Every source file carries the GNU GPLv3 header (University of Oxford copyright); `./gradlew
+spotlessApply` adds it to new Java files. Spotless keeps whatever year a header has, so when you
+modify a file, end its year range at the current year yourself: with `YYYY` the current year,
+`2024` and `2024-2025` both become `2024-YYYY`, and `YYYY` stays.
 
 ## Design docs
 
