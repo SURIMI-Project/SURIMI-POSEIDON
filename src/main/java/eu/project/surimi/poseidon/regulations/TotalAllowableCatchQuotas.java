@@ -52,61 +52,70 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.regulations.Regulations;
 
 /**
- * Total Allowable Catch (TAC) regulation defined by interval, fleet segment, and species.
+ * Total Allowable Catch (TAC) regulation defined by interval, fleet segment,
+ * and species.
  * <p>
- * This regulation consumes {@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent}s and
- * accumulates caught biomass per fleet-quota interval, where a fleet-quota interval is a fleet
- * segment plus an interval. Fishing is permitted unless a requested fishing action overlaps a
- * closed portion of at least one fleet-quota interval that covers the acting vessel's fleet
- * segment.
+ * This regulation consumes
+ * {@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent}s and accumulates
+ * caught biomass per fleet-quota interval, where a fleet-quota interval is a
+ * fleet segment plus an interval. Fishing is permitted unless a requested
+ * fishing action overlaps a closed portion of at least one fleet-quota interval
+ * that covers the acting vessel's fleet segment.
  * <p>
- * This class implements {@link Steppable} and processes accumulated fishing events in batch during
- * each simulation step. Closure is determined based on the total catch recorded up to the point of
- * the {@code step} call.
+ * This class implements {@link Steppable} and processes accumulated fishing
+ * events in batch during each simulation step. Closure is determined based on
+ * the total catch recorded up to the point of the {@code step} call.
  * <p>
  * Model assumptions implemented here:
  * <ul>
- *     <li>TAC accounting is limited to fleet segment, species, and time. Area and stock
- *     dimensions are intentionally not modelled here.</li>
- *     <li>{@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent} is the accounting
- *     trigger. Accumulated catches from the
- *     {@link FishingEventAccumulator} are processed during the {@link #step(SimState)} call.</li>
- *     <li>Everything caught counts against TAC, discards included: catches are taken from the
- *     gross catch of the {@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome}.</li>
- *     <li>Closure is per fleet-quota interval: once any configured quota-species in an
- *     interval/fleet-segment combination reaches or exceeds its limit at time {@code t}, fishing
- *     is closed for that fleet-quota interval
- *     from {@code t} until the end of the interval.</li>
- *     <li>Closure is sticky. Once an interval closes, later events do not reopen it.</li>
- *     <li>A fishing event contributes to every configured fleet-quota interval whose interval
- *     contains the event timestamp and whose fleet segment covers the vessel's fleet
- *     segment.</li>
+ * <li>TAC accounting is limited to fleet segment, species, and time. Area and
+ * stock dimensions are intentionally not modelled here.</li>
+ * <li>{@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent} is the
+ * accounting trigger. Accumulated catches from the
+ * {@link FishingEventAccumulator} are processed during the
+ * {@link #step(SimState)} call.</li>
+ * <li>Everything caught counts against TAC, discards included: catches are
+ * taken from the gross catch of the
+ * {@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome}.</li>
+ * <li>Closure is per fleet-quota interval: once any configured quota-species in
+ * an interval/fleet-segment combination reaches or exceeds its limit at time
+ * {@code t}, fishing is closed for that fleet-quota interval from {@code t}
+ * until the end of the interval.</li>
+ * <li>Closure is sticky. Once an interval closes, later events do not reopen
+ * it.</li>
+ * <li>A fishing event contributes to every configured fleet-quota interval
+ * whose interval contains the event timestamp and whose fleet segment covers
+ * the vessel's fleet segment.</li>
  * </ul>
  * <p>
  * Quota definition rules:
  * <ul>
- *     <li>Quota units are kilograms.</li>
- *     <li>Quota definitions are immutable per interval/fleet-segment/species combination.
- *     Re-setting the same combination is rejected.</li>
- *     <li>Overlapping TAC definitions are rejected whenever their intervals overlap and their
- *     fleet segments overlap, regardless of species.</li>
- *     <li>Within one fleet segment, all quota-species must therefore be defined on the same
- *     non-overlapping interval partition.</li>
- *     <li>Species matching for catch accounting uses {@link Species#covers(Species)} semantics,
- *     not strict equality. A generic quota such as "HKE" therefore counts staged catches such as
- *     "HKE;juvenile", provided no overlapping TAC interval already exists for that fleet
- *     segment.</li>
+ * <li>Quota units are kilograms.</li>
+ * <li>Quota definitions are immutable per interval/fleet-segment/species
+ * combination. Re-setting the same combination is rejected.</li>
+ * <li>Overlapping TAC definitions are rejected whenever their intervals overlap
+ * and their fleet segments overlap, regardless of species.</li>
+ * <li>Within one fleet segment, all quota-species must therefore be defined on
+ * the same non-overlapping interval partition.</li>
+ * <li>Species matching for catch accounting uses
+ * {@link Species#covers(Species)} semantics, not strict equality. A generic
+ * quota such as "HKE" therefore counts staged catches such as "HKE;juvenile",
+ * provided no overlapping TAC interval already exists for that fleet
+ * segment.</li>
  * </ul>
  * <p>
  * Internal representation notes:
  * <ul>
- *     <li>Configured quotas are stored by fleet-quota interval and quota-species.</li>
- *     <li>Accumulated catches are stored by fleet-quota interval and matched quota-species.</li>
- *     <li>Closures are stored by fleet-quota interval plus the first exhaustion timestamp.
- *     Effective closed sub-intervals are derived as needed as
- *     {@code [closureStart, quotaIntervalEnd)}.</li>
- *     <li>Intervals are treated independently once defined; closure in one interval does not imply
- *     closure in another unless a fishing action overlaps both. Closures are segment-specific.</li>
+ * <li>Configured quotas are stored by fleet-quota interval and
+ * quota-species.</li>
+ * <li>Accumulated catches are stored by fleet-quota interval and matched
+ * quota-species.</li>
+ * <li>Closures are stored by fleet-quota interval plus the first exhaustion
+ * timestamp. Effective closed sub-intervals are derived as needed as
+ * {@code [closureStart, quotaIntervalEnd)}.</li>
+ * <li>Intervals are treated independently once defined; closure in one interval
+ * does not imply closure in another unless a fishing action overlaps both.
+ * Closures are segment-specific.</li>
  * </ul>
  */
 @RequiredArgsConstructor
@@ -118,15 +127,18 @@ public class TotalAllowableCatchQuotas
   private final @NonNull FleetSegmentMapper fleetSegmentMapper;
 
   /**
-   * Configured TAC quotas in kilograms, keyed by fleet-quota interval and quota-species.
+   * Configured TAC quotas in kilograms, keyed by fleet-quota interval and
+   * quota-species.
    */
   private final Map<QuotaKey, Map<Species, Double>> quotas = new HashMap<>();
 
   /**
-   * Accumulated gross catches in kilograms, keyed by fleet-quota interval and quota-species.
+   * Accumulated gross catches in kilograms, keyed by fleet-quota interval and
+   * quota-species.
    * <p>
-   * Keys in this map align with quota-species (not necessarily the raw caught species), because
-   * catches are recorded after applying {@link Species#covers(Species)} matching.
+   * Keys in this map align with quota-species (not necessarily the raw caught
+   * species), because catches are recorded after applying
+   * {@link Species#covers(Species)} matching.
    */
   private final Map<QuotaKey, Map<Species, Double>> catches = new HashMap<>();
 
@@ -136,10 +148,12 @@ public class TotalAllowableCatchQuotas
   private final Map<QuotaKey, Instant> closureInstants = new LinkedHashMap<>();
 
   /**
-   * Returns whether a fishing action is permitted for the acting vessel's fleet segment.
+   * Returns whether a fishing action is permitted for the acting vessel's fleet
+   * segment.
    * <p>
-   * The action is rejected if its interval overlaps any effective closure interval for a
-   * fleet-quota interval that covers the acting vessel's fleet segment.
+   * The action is rejected if its interval overlaps any effective closure
+   * interval for a fleet-quota interval that covers the acting vessel's fleet
+   * segment.
    *
    * @param action fishing action to evaluate
    * @return {@code true} when the action does not overlap any closed interval
@@ -185,7 +199,8 @@ public class TotalAllowableCatchQuotas
   /**
    * Sets a quota for a given interval/fleet-segment/species combination.
    * <p>
-   * Equivalent to {@link #setQuotas(Interval, Collection)} with a single definition.
+   * Equivalent to {@link #setQuotas(Interval, Collection)} with a single
+   * definition.
    *
    * @param interval     interval to which the quota applies
    * @param fleetSegment fleet segment to which the quota applies
@@ -207,13 +222,15 @@ public class TotalAllowableCatchQuotas
   /**
    * Sets several quotas for the same interval, all or nothing.
    * <p>
-   * Quota definitions are immutable once set for a given fleet-quota interval and species.
-   * Overlapping TAC definitions are also rejected when interval and fleet-segment applicability
-   * overlap, regardless of species. Each definition is checked against both the existing quotas
-   * and the definitions before it in {@code definitions}; if any is rejected, none is set.
+   * Quota definitions are immutable once set for a given fleet-quota interval
+   * and species. Overlapping TAC definitions are also rejected when interval
+   * and fleet-segment applicability overlap, regardless of species. Each
+   * definition is checked against both the existing quotas and the definitions
+   * before it in {@code definitions}; if any is rejected, none is set.
    *
    * @param interval    interval to which the quotas apply
-   * @param definitions fleet segment, species and quota (in kilograms) of each quota
+   * @param definitions fleet segment, species and quota (in kilograms) of each
+   *                    quota
    */
   public void setQuotas(
     final Interval interval,
@@ -249,8 +266,9 @@ public class TotalAllowableCatchQuotas
   /**
    * Returns effective closure intervals for a fleet segment.
    * <p>
-   * The returned intervals are derived from recorded exhaustion timestamps for fleet-quota
-   * intervals whose fleet segment covers the requested fleet segment.
+   * The returned intervals are derived from recorded exhaustion timestamps for
+   * fleet-quota intervals whose fleet segment covers the requested fleet
+   * segment.
    *
    * @param fleetSegment fleet segment to query
    * @return closed sub-intervals in insertion order
@@ -269,8 +287,9 @@ public class TotalAllowableCatchQuotas
   }
 
   /**
-   * Returns the proportion of a query interval during which fishing is permitted for each fleet
-   * segment with TAC definitions overlapping that interval.
+   * Returns the proportion of a query interval during which fishing is
+   * permitted for each fleet segment with TAC definitions overlapping that
+   * interval.
    *
    * @param queryInterval interval to query
    * @return permitted fishing ratio per fleet segment in sorted order

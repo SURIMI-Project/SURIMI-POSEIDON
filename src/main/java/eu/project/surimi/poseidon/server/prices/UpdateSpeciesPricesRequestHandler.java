@@ -51,11 +51,12 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.grids.ObjectGrid;
 
 /**
- * Handles {@code UpdateSpeciesPrices}: sets each requested species price on the matching market
- * (by {@code marketCode}), ignoring prices for unknown markets. Rejects a request that would mix
- * a generic (no life stage) price with an already-staged one, or vice versa, for the same
- * species/category/market, since {@link BiomassMarket#getPrice} falls back to
- * {@link Species#covers} and such a mix would make that lookup ambiguous.
+ * Handles {@code UpdateSpeciesPrices}: sets each requested species price on the
+ * matching market (by {@code marketCode}), ignoring prices for unknown markets.
+ * Rejects a request that would mix a generic (no life stage) price with an
+ * already-staged one, or vice versa, for the same species/category/market,
+ * since {@link BiomassMarket#getPrice} falls back to {@link Species#covers} and
+ * such a mix would make that lookup ambiguous.
  */
 public class UpdateSpeciesPricesRequestHandler
   extends WithSimulationRequestHandler<
@@ -210,8 +211,8 @@ public class UpdateSpeciesPricesRequestHandler
   }
 
   /**
-   * @return every {@link BiomassMarket} across all of the simulation's {@link MarketGrid}s,
-   * keyed by market code.
+   * @return every {@link BiomassMarket} across all of the simulation's
+   *         {@link MarketGrid}s, keyed by market code.
    */
   static Map<String, BiomassMarket> getMarketsById(
     final Simulation simulation

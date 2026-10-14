@@ -31,8 +31,8 @@ import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.core.Simulation;
 
 /**
- * Handles {@code FinaliseSimulation}: calls {@link Simulation#finish()} then drops the
- * simulation from the {@link SimulationManager}.
+ * Handles {@code FinaliseSimulation}: calls {@link Simulation#finish()} then
+ * drops the simulation from the {@link SimulationManager}.
  */
 public class FinaliseRequestHandler
   extends WithSimulationRequestHandler<

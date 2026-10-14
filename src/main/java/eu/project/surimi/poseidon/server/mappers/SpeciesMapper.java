@@ -30,15 +30,16 @@ import java.util.Optional;
 import uk.ac.ox.poseidon.biology.species.Species;
 
 /**
- * Converts between POSEIDON's {@link Species} and the {@code surimi.v1.Species} proto.
+ * Converts between POSEIDON's {@link Species} and the {@code surimi.v1.Species}
+ * proto.
  */
 public final class SpeciesMapper {
 
   private SpeciesMapper() {}
 
   /**
-   * @return the POSEIDON {@link Species} for a proto species; {@code lifeStage} is left
-   * {@code null} when the proto omits it.
+   * @return the POSEIDON {@link Species} for a proto species; {@code lifeStage}
+   *         is left {@code null} when the proto omits it.
    */
   public static Species toPoseidonSpecies(
     final build.buf.gen.surimi.v1.Species species
@@ -56,8 +57,8 @@ public final class SpeciesMapper {
   }
 
   /**
-   * @return the proto species for a POSEIDON {@link Species}; {@code lifeStage} is left unset
-   * when blank or {@code null}.
+   * @return the proto species for a POSEIDON {@link Species}; {@code lifeStage}
+   *         is left unset when blank or {@code null}.
    */
   public static build.buf.gen.surimi.v1.Species toProtoSpecies(
     final Species species

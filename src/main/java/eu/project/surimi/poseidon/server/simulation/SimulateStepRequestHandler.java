@@ -36,9 +36,10 @@ import java.time.Period;
 import uk.ac.ox.poseidon.core.Simulation;
 
 /**
- * Handles {@code SimulateStep}: checks the request's date-time is the simulation's current one,
- * then advances the simulation's schedule to the request's date-time plus its configured step
- * size. The events dated exactly then run in the next step.
+ * Handles {@code SimulateStep}: checks the request's date-time is the
+ * simulation's current one, then advances the simulation's schedule to the
+ * request's date-time plus its configured step size. The events dated exactly
+ * then run in the next step.
  */
 public class SimulateStepRequestHandler
   extends WithSimulationRequestHandler<

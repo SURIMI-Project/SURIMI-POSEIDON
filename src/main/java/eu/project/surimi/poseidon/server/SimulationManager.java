@@ -44,10 +44,11 @@ import uk.ac.ox.poseidon.core.Simulation;
 
 /**
  * Registry of live {@link Simulation}s, keyed by a {@link UUID} handed out at
- * {@code Initialise}-time, plus each simulation's immutable {@link SimulationProperties}.
- * Entries are held in unbounded caffeine caches with no eviction policy: a simulation lives until
- * {@link #remove} is called (on {@code Finalise}/{@code Cancel}), and its properties are held
- * with a weak key so they're reclaimable once the simulation itself is unreferenced.
+ * {@code Initialise}-time, plus each simulation's immutable
+ * {@link SimulationProperties}. Entries are held in unbounded caffeine caches
+ * with no eviction policy: a simulation lives until {@link #remove} is called
+ * (on {@code Finalise}/{@code Cancel}), and its properties are held with a weak
+ * key so they're reclaimable once the simulation itself is unreferenced.
  */
 public class SimulationManager {
 
@@ -57,7 +58,8 @@ public class SimulationManager {
     Caffeine.newBuilder().weakKeys().build();
 
   /**
-   * @return {@code id} parsed as a {@link UUID}, or throws {@code INVALID_ARGUMENT}.
+   * @return {@code id} parsed as a {@link UUID}, or throws
+   *         {@code INVALID_ARGUMENT}.
    */
   public static UUID parseId(final String id) {
     try {
@@ -98,8 +100,8 @@ public class SimulationManager {
   }
 
   /**
-   * @return the properties registered for {@code simulation} (via {@link #put}), or throws
-   * {@code INTERNAL} if none were registered.
+   * @return the properties registered for {@code simulation} (via
+   *         {@link #put}), or throws {@code INTERNAL} if none were registered.
    */
   public SimulationProperties getSimulationProperties(
     final Simulation simulation
@@ -126,9 +128,10 @@ public class SimulationManager {
   }
 
   /**
-   * A simulation's configuration facts needed to translate gRPC requests/responses, fixed for
-   * the simulation's lifetime: its step size, mass unit, and the set of market, price-category,
-   * species keys, and fleet segments it was configured with.
+   * A simulation's configuration facts needed to translate gRPC
+   * requests/responses, fixed for the simulation's lifetime: its step size,
+   * mass unit, and the set of market, price-category, species keys, and fleet
+   * segments it was configured with.
    */
   @Data
   public static class SimulationProperties {
@@ -162,8 +165,9 @@ public class SimulationManager {
     }
 
     /**
-     * @return the contract fleet segment covering {@code fleetSegment}, if any. Contract
-     * segments are checked not to overlap on initialisation, so there is at most one.
+     * @return the contract fleet segment covering {@code fleetSegment}, if any.
+     *         Contract segments are checked not to overlap on initialisation,
+     *         so there is at most one.
      */
     public Optional<FleetSegment> findContractFleetSegment(
       final FleetSegment fleetSegment
@@ -175,8 +179,9 @@ public class SimulationManager {
     }
 
     /**
-     * @return whether {@code fleetSegment} overlaps at least one contract fleet segment, i.e.,
-     * whether it can apply to any vessel POSEIDON reports on.
+     * @return whether {@code fleetSegment} overlaps at least one contract fleet
+     *         segment, i.e., whether it can apply to any vessel POSEIDON
+     *         reports on.
      */
     public boolean overlapsContractFleetSegment(
       final FleetSegment fleetSegment
@@ -199,7 +204,8 @@ public class SimulationManager {
     }
 
     /**
-     * @return {@code mass}, expressed in {@link #standardMassUnit}, converted to kilograms.
+     * @return {@code mass}, expressed in {@link #standardMassUnit}, converted
+     *         to kilograms.
      */
     public double convertMassInStandardUnitToKg(final double mass) {
       return massUnitIsKg
@@ -212,7 +218,8 @@ public class SimulationManager {
   }
 
   /**
-   * Unregisters a simulation; its properties are reclaimed once it becomes unreferenced.
+   * Unregisters a simulation; its properties are reclaimed once it becomes
+   * unreferenced.
    */
   public void remove(final String simulationId) {
     remove(parseId(simulationId));

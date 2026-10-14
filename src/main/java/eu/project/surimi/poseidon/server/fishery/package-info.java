@@ -22,7 +22,7 @@
 
 /**
  * The generated {@code FisheryServiceGrpc} base class's single implementation:
- * {@link eu.project.surimi.poseidon.server.fishery.FisheryService} wires each gRPC method to its
- * {@code RequestHandler}.
+ * {@link eu.project.surimi.poseidon.server.fishery.FisheryService} wires each
+ * gRPC method to its {@code RequestHandler}.
  */
 package eu.project.surimi.poseidon.server.fishery;

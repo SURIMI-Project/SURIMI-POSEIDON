@@ -33,7 +33,8 @@ import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 
 /**
- * Factory for {@link PortClosurePredicate}, sourcing its port closure windows from a table.
+ * Factory for {@link PortClosurePredicate}, sourcing its port closure windows
+ * from a table.
  */
 @Data
 @NoArgsConstructor

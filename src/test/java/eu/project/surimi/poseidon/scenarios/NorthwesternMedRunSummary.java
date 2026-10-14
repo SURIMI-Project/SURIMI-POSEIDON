@@ -51,17 +51,20 @@ import uk.ac.ox.poseidon.core.events.Listener;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
 /**
- * Runs the local Northwestern Mediterranean scenario and prints a one-line summary of what the
- * fleet did, to compare model behaviour before and after a change: the schedule's date-time before
- * the first step and after the last, trips, fishing events, catch, distance from the trip's port
- * to the fishing actions, distinct fished cells, and trip profit; and, per gear, the vessels that
- * made a trip, the ended trips, their fishing events and hours, trips per vessel-day, and how many
- * trips had 0, 1, 2... fishing events. Optionally also
- * writes the mean retained catch per gear, species and life stage, to compare with
- * {@code target_landings.csv}. Each run's seed is its number, so the runs differ from each other
- * and an invocation can be repeated. The runs run in parallel, so {@code seconds} is each run's wall
- * time while sharing the machine. Not a test: run its {@code main} from the repository root. Uses only APIs that are stable across the
- * shared-observations work, so that it also runs against older POSEIDON versions.
+ * Runs the local Northwestern Mediterranean scenario and prints a one-line
+ * summary of what the fleet did, to compare model behaviour before and after a
+ * change: the schedule's date-time before the first step and after the last,
+ * trips, fishing events, catch, distance from the trip's port to the fishing
+ * actions, distinct fished cells, and trip profit; and, per gear, the vessels
+ * that made a trip, the ended trips, their fishing events and hours, trips per
+ * vessel-day, and how many trips had 0, 1, 2... fishing events. Optionally also
+ * writes the mean retained catch per gear, species and life stage, to compare
+ * with {@code target_landings.csv}. Each run's seed is its number, so the runs
+ * differ from each other and an invocation can be repeated. The runs run in
+ * parallel, so {@code seconds} is each run's wall time while sharing the
+ * machine. Not a test: run its {@code main} from the repository root. Uses only
+ * APIs that are stable across the shared-observations work, so that it also
+ * runs against older POSEIDON versions.
  */
 public class NorthwesternMedRunSummary {
 
@@ -113,9 +116,9 @@ public class NorthwesternMedRunSummary {
   }
 
   /**
-   * @param args the number of months to run (default 12), the number of runs (default 3), and
-   *             optionally a CSV file to write the mean retained catch per gear, species and
-   *             life stage to
+   * @param args the number of months to run (default 12), the number of runs
+   *             (default 3), and optionally a CSV file to write the mean
+   *             retained catch per gear, species and life stage to
    */
   public static void main(final String[] args) throws IOException {
     final int months = args.length > 0 ? Integer.parseInt(args[0]) : 12;

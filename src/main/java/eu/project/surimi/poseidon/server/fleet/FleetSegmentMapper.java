@@ -35,23 +35,27 @@ import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
 /**
  * Maps a {@link Vessel} to a {@link FleetSegment} object.
  *
- * <p>The mapper reads:
+ * <p>
+ * The mapper reads:
  *
  * <ul>
  * <li>gear code from {@code vessel.getGear().getCode()}</li>
  * <li>country code from a configured vessel tag</li>
- * <li>vessel length from a configured vessel tag, mapped to a vessel-length class
- * via a {@link NumericIntervalMapper}</li>
+ * <li>vessel length from a configured vessel tag, mapped to a vessel-length
+ * class via a {@link NumericIntervalMapper}</li>
  * <li>scale from a configured constant</li>
  * <li>model from {@link Server#MODEL_NAME}</li>
  * </ul>
  *
- * <p>Tag values are normalised before use. Blank strings and {@code NA} are treated
- * as missing. Numeric tag values may be provided either as {@link Number} instances
- * or as parseable strings.
+ * <p>
+ * Tag values are normalised before use. Blank strings and {@code NA} are
+ * treated as missing. Numeric tag values may be provided either as
+ * {@link Number} instances or as parseable strings.
  *
- * <p>Missing, invalid, or unclassified values are mapped to {@code null}. This
- * preserves the wildcard semantics used by {@link FleetSegment#covers(FleetSegment)}.
+ * <p>
+ * Missing, invalid, or unclassified values are mapped to {@code null}. This
+ * preserves the wildcard semantics used by
+ * {@link FleetSegment#covers(FleetSegment)}.
  */
 public final class FleetSegmentMapper
   implements Function<Vessel, FleetSegment>

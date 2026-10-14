@@ -21,17 +21,21 @@
  */
 
 /**
- * gRPC plumbing for the {@code FisheryService} API: {@link eu.project.surimi.poseidon.server.Server}
- * is the entry point, {@link eu.project.surimi.poseidon.server.fishery.FisheryService}
- * (see the {@code fishery} subpackage) delegates each method to one
- * {@link eu.project.surimi.poseidon.server.RequestHandler} subclass (one per subpackage:
- * {@code simulation}, {@code ecology}, {@code catchprovider}, {@code regulations}, {@code sales},
- * {@code prices}, {@code fleet}). {@link eu.project.surimi.poseidon.server.WithSimulationRequestHandler}
- * extends that for handlers needing a live {@link eu.project.surimi.poseidon.server.SimulationManager}-tracked
- * simulation. Interceptors ({@link eu.project.surimi.poseidon.server.ExceptionInterceptor},
+ * gRPC plumbing for the {@code FisheryService} API:
+ * {@link eu.project.surimi.poseidon.server.Server} is the entry point,
+ * {@link eu.project.surimi.poseidon.server.fishery.FisheryService} (see the
+ * {@code fishery} subpackage) delegates each method to one
+ * {@link eu.project.surimi.poseidon.server.RequestHandler} subclass (one per
+ * subpackage: {@code simulation}, {@code ecology}, {@code catchprovider},
+ * {@code regulations}, {@code sales}, {@code prices}, {@code fleet}).
+ * {@link eu.project.surimi.poseidon.server.WithSimulationRequestHandler}
+ * extends that for handlers needing a live
+ * {@link eu.project.surimi.poseidon.server.SimulationManager}-tracked
+ * simulation. Interceptors
+ * ({@link eu.project.surimi.poseidon.server.ExceptionInterceptor},
  * {@link eu.project.surimi.poseidon.server.ValidationInterceptor},
  * {@link eu.project.surimi.poseidon.server.TrailerInterceptor}) and
- * {@link eu.project.surimi.poseidon.server.OpenTelemetryConfiguration} form the server-wide
- * request pipeline wired up in {@code Server}.
+ * {@link eu.project.surimi.poseidon.server.OpenTelemetryConfiguration} form the
+ * server-wide request pipeline wired up in {@code Server}.
  */
 package eu.project.surimi.poseidon.server;

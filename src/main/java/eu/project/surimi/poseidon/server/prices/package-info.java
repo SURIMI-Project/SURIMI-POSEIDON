@@ -21,7 +21,7 @@
  */
 
 /**
- * Handler for {@code UpdateSpeciesPrices}, letting an external price feed push per-market species
- * prices into the simulation.
+ * Handler for {@code UpdateSpeciesPrices}, letting an external price feed push
+ * per-market species prices into the simulation.
  */
 package eu.project.surimi.poseidon.server.prices;

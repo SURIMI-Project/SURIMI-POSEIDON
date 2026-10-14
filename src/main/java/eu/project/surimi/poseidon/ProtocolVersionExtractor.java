@@ -52,8 +52,8 @@ public class ProtocolVersionExtractor {
   // Retrieved 2026-03-18, License - CC BY-SA 3.0
 
   /**
-   * Reads a library's version if the library contains a Maven pom.properties file. You probably
-   * want to cache the output or write it to a constant.
+   * Reads a library's version if the library contains a Maven pom.properties
+   * file. You probably want to cache the output or write it to a constant.
    *
    * @param referenceClass any class from the library to check
    * @return an Optional containing the version String, if present
@@ -70,8 +70,8 @@ public class ProtocolVersionExtractor {
   }
 
   /**
-   * Locate the pom.properties file in the Jar, if present, and return a Properties object
-   * representing the properties in that file.
+   * Locate the pom.properties file in the Jar, if present, and return a
+   * Properties object representing the properties in that file.
    *
    * @param jarInputStream the jar stream to read from
    * @param referenceClass the reference class, whose ClassLoader we'll be using
@@ -100,8 +100,8 @@ public class ProtocolVersionExtractor {
   }
 
   /**
-   * Wrap a Callable with code that returns null when an exception occurs, so it can be used in an
-   * Optional.map() chain.
+   * Wrap a Callable with code that returns null when an exception occurs, so it
+   * can be used in an Optional.map() chain.
    */
   private static <T> T unthrow(final Callable<T> code) {
     try {

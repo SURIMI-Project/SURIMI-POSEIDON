@@ -37,9 +37,9 @@ import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import java.util.Optional;
 
 /**
- * Configures the process-wide OpenTelemetry SDK used to trace gRPC requests. Exports spans via
- * OTLP/gRPC when the {@code OTEL_EXPORTER_OTLP_ENDPOINT} environment variable is set; otherwise
- * traces are collected but not exported.
+ * Configures the process-wide OpenTelemetry SDK used to trace gRPC requests.
+ * Exports spans via OTLP/gRPC when the {@code OTEL_EXPORTER_OTLP_ENDPOINT}
+ * environment variable is set; otherwise traces are collected but not exported.
  */
 public class OpenTelemetryConfiguration {
 
@@ -48,12 +48,14 @@ public class OpenTelemetryConfiguration {
   );
 
   /**
-   * The process-wide {@link OpenTelemetry} instance, initialised once at class-load time.
+   * The process-wide {@link OpenTelemetry} instance, initialised once at
+   * class-load time.
    */
   public static final OpenTelemetry openTelemetry = initOpenTelemetry();
 
   /**
-   * @return a new {@link OpenTelemetry} SDK instance, registered as the global instance.
+   * @return a new {@link OpenTelemetry} SDK instance, registered as the global
+   *         instance.
    */
   public static OpenTelemetry initOpenTelemetry() {
     final SdkTracerProvider tracerProvider = Optional.ofNullable(

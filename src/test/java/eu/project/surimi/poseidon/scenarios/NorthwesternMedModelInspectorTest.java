@@ -36,9 +36,10 @@ import uk.ac.ox.poseidon.gui.ComponentView;
 import uk.ac.ox.poseidon.gui.SimulationWithUI;
 
 /**
- * Checks that the GUI's model inspector stays cheap to refresh: MASON rebuilds the text of every
- * row it shows at each refresh, so a row showing a large component's own text (e.g. the 246,240
- * scheduled price updates of the local scenario) slows the GUI to a crawl.
+ * Checks that the GUI's model inspector stays cheap to refresh: MASON rebuilds
+ * the text of every row it shows at each refresh, so a row showing a large
+ * component's own text (e.g. the 246,240 scheduled price updates of the local
+ * scenario) slows the GUI to a crawl.
  */
 class NorthwesternMedModelInspectorTest {
 

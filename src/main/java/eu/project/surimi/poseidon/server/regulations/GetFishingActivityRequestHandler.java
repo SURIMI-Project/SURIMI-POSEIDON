@@ -37,8 +37,9 @@ import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.core.Simulation;
 
 /**
- * Handles {@code GetFishingActivity}: returns, for each fleet segment with TAC quotas overlapping
- * the requested interval, the proportion of that interval during which fishing was permitted (see
+ * Handles {@code GetFishingActivity}: returns, for each fleet segment with TAC
+ * quotas overlapping the requested interval, the proportion of that interval
+ * during which fishing was permitted (see
  * {@link TotalAllowableCatchQuotas#getFishingActivityRatios}).
  */
 public class GetFishingActivityRequestHandler

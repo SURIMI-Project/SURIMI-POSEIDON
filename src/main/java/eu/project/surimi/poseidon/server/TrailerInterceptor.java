@@ -31,8 +31,8 @@ import io.grpc.ServerInterceptor;
 import java.util.Map;
 
 /**
- * Attaches a fixed set of key/value pairs (e.g. the protocol version) to the trailers of every
- * response, regardless of status.
+ * Attaches a fixed set of key/value pairs (e.g. the protocol version) to the
+ * trailers of every response, regardless of status.
  */
 public class TrailerInterceptor implements ServerInterceptor {
 

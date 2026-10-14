@@ -36,8 +36,8 @@ public class Utils {
   private Utils() {}
 
   /**
-   * Throws {@code INVALID_ARGUMENT} if {@code requestTimestamp} is not the simulation's current
-   * date-time.
+   * Throws {@code INVALID_ARGUMENT} if {@code requestTimestamp} is not the
+   * simulation's current date-time.
    */
   public static void checkRequestDateTimeAlignment(
     final Timestamp requestTimestamp,

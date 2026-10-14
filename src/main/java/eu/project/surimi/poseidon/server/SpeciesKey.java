@@ -31,10 +31,11 @@ import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.utils.Pair;
 
 /**
- * A species code plus an optional life stage, used as a lightweight, hashable key wherever a
- * simulation's configured species set needs to be looked up or compared (e.g. in
- * {@link SimulationManager.SimulationProperties}), independent of a full POSEIDON
- * {@link Species} or the proto {@code Species} message.
+ * A species code plus an optional life stage, used as a lightweight, hashable
+ * key wherever a simulation's configured species set needs to be looked up or
+ * compared (e.g. in {@link SimulationManager.SimulationProperties}),
+ * independent of a full POSEIDON {@link Species} or the proto {@code Species}
+ * message.
  */
 @Value
 public class SpeciesKey {
@@ -67,7 +68,8 @@ public class SpeciesKey {
   }
 
   /**
-   * @return the equivalent proto species, with {@code lifeStage} left unset when {@code null}.
+   * @return the equivalent proto species, with {@code lifeStage} left unset
+   *         when {@code null}.
    */
   public build.buf.gen.surimi.v1.Species toProtobufSpecies() {
     final build.buf.gen.surimi.v1.Species.Builder builder =

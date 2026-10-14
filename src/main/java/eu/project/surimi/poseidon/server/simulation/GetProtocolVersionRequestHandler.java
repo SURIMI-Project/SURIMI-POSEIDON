@@ -30,8 +30,8 @@ import eu.project.surimi.poseidon.server.RequestHandler;
 
 /**
  * Handles {@code GetProtocolVersion}: returns the running server's
- * {@link eu.project.surimi.poseidon.server.Server#PROTOCOL_VERSION}. Unlike every other handler,
- * this one needs no live simulation.
+ * {@link eu.project.surimi.poseidon.server.Server#PROTOCOL_VERSION}. Unlike
+ * every other handler, this one needs no live simulation.
  */
 public class GetProtocolVersionRequestHandler
   extends RequestHandler<GetProtocolVersionRequest, GetProtocolVersionResponse>

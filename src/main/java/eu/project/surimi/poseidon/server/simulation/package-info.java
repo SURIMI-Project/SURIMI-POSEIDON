@@ -21,9 +21,10 @@
  */
 
 /**
- * Handlers for the simulation lifecycle methods: {@code Initialise}, {@code SimulateStep},
- * {@code Finalise}, {@code Cancel}, and {@code GetProtocolVersion}. Each handler runs exactly
- * once per gRPC method; see the enclosing {@code server} package for the shared
+ * Handlers for the simulation lifecycle methods: {@code Initialise},
+ * {@code SimulateStep}, {@code Finalise}, {@code Cancel}, and
+ * {@code GetProtocolVersion}. Each handler runs exactly once per gRPC method;
+ * see the enclosing {@code server} package for the shared
  * {@code RequestHandler}/{@code WithSimulationRequestHandler} base classes.
  */
 package eu.project.surimi.poseidon.server.simulation;

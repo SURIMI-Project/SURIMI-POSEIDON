@@ -45,9 +45,10 @@ import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 
 /**
- * Reads a table of {@code (mpa_id, month, closed)} rows and groups it into the set of months each
- * MPA is closed for. An MPA with no {@code closed = TRUE} rows is simply absent from the result;
- * consumers should use {@code getOrDefault(mpaId, ImmutableSet.of())}.
+ * Reads a table of {@code (mpa_id, month, closed)} rows and groups it into the
+ * set of months each MPA is closed for. An MPA with no {@code closed = TRUE}
+ * rows is simply absent from the result; consumers should use
+ * {@code getOrDefault(mpaId, ImmutableSet.of())}.
  */
 @Data
 @NoArgsConstructor

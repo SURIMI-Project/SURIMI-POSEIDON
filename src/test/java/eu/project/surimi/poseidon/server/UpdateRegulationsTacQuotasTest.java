@@ -86,8 +86,9 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
   }
 
   /**
-   * Initialises a simulation whose contract assigns all OTB vessels to POSEIDON, so that the
-   * TACs used in these tests overlap a contract fleet segment and are not ignored.
+   * Initialises a simulation whose contract assigns all OTB vessels to
+   * POSEIDON, so that the TACs used in these tests overlap a contract fleet
+   * segment and are not ignored.
    */
   @Override
   protected String initialiseSimulation() {

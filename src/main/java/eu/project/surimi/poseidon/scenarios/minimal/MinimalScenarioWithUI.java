@@ -32,8 +32,9 @@ import uk.ac.ox.poseidon.gui.ScenarioWithUI;
 import uk.ac.ox.poseidon.gui.portrayals.*;
 
 /**
- * GUI wrapper for {@link MinimalScenario}: displays bathymetry, species biomass, markets, ports,
- * vessels, and grid coordinates over the scenario's model grid.
+ * GUI wrapper for {@link MinimalScenario}: displays bathymetry, species
+ * biomass, markets, ports, vessels, and grid coordinates over the scenario's
+ * model grid.
  */
 public class MinimalScenarioWithUI extends ScenarioWithUI {
 

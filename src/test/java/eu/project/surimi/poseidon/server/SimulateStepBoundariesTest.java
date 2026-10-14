@@ -54,9 +54,10 @@ import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
 /**
- * Steps a served simulation month by month, as the controller does, across a leap February and a
- * year end, and checks that each step covers its whole month, up to and including its last second,
- * and that the controller's reads after each step report everything that happened in it.
+ * Steps a served simulation month by month, as the controller does, across a
+ * leap February and a year end, and checks that each step covers its whole
+ * month, up to and including its last second, and that the controller's reads
+ * after each step report everything that happened in it.
  */
 public class SimulateStepBoundariesTest extends ServiceTest {
 

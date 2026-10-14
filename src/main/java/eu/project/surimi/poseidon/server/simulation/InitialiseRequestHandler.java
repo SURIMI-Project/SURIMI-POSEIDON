@@ -62,14 +62,17 @@ import uk.ac.ox.poseidon.core.utils.Measurements;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
 /**
- * Handles {@code InitialiseSimulation}: loads (and caches by name) the requested scenario from
- * {@code scenarioFolder}, starts a new {@link Simulation} from it with the request's simulation
- * ID and start date-time, and registers it plus its derived
- * {@link SimulationManager.SimulationProperties} with the {@link SimulationManager}. Rejects a
- * request whose simulation ID is already registered, whose scenario name doesn't match
- * {@link #SCENARIO_NAME_PATTERN}, whose raster cell origin isn't centroid-based (the only
- * origin this service currently supports), or whose contract lists no fleet segments simulated
- * by POSEIDON, or two that overlap. Fleet segments belonging to other models are ignored.
+ * Handles {@code InitialiseSimulation}: loads (and caches by name) the
+ * requested scenario from {@code scenarioFolder}, starts a new
+ * {@link Simulation} from it with the request's simulation ID and start
+ * date-time, and registers it plus its derived
+ * {@link SimulationManager.SimulationProperties} with the
+ * {@link SimulationManager}. Rejects a request whose simulation ID is already
+ * registered, whose scenario name doesn't match {@link #SCENARIO_NAME_PATTERN},
+ * whose raster cell origin isn't centroid-based (the only origin this service
+ * currently supports), or whose contract lists no fleet segments simulated by
+ * POSEIDON, or two that overlap. Fleet segments belonging to other models are
+ * ignored.
  */
 @RequiredArgsConstructor
 public class InitialiseRequestHandler
@@ -95,7 +98,9 @@ public class InitialiseRequestHandler
   @NonNull
   private final Path scenarioFolder;
 
-  /** Run before each initialisation, e.g. to warn that the inputs have changed. */
+  /**
+   * Run before each initialisation, e.g. to warn that the inputs have changed.
+   */
   @NonNull
   private final Runnable inputsCheck;
 

@@ -160,7 +160,8 @@ public abstract class ServiceTest {
   }
 
   /**
-   * @return the contract items matching {@link MinimalScenario}, for tests to adjust.
+   * @return the contract items matching {@link MinimalScenario}, for tests to
+   *         adjust.
    */
   protected static Items.Builder contractItems() {
     return Items.newBuilder()

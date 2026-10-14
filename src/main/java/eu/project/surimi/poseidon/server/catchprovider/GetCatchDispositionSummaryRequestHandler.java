@@ -46,10 +46,11 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
 /**
- * Handles {@code GetCatchDisposition}: summarizes fishing events whose end date-time falls in the
- * requested interval into gross catch, live discards, and dead discards per contract fleet
- * segment, species, and end coordinate, restricted to species and fleet segments the simulation
- * was configured with (see {@link SimulationManager.SimulationProperties}). Each vessel's catch is
+ * Handles {@code GetCatchDisposition}: summarizes fishing events whose end
+ * date-time falls in the requested interval into gross catch, live discards,
+ * and dead discards per contract fleet segment, species, and end coordinate,
+ * restricted to species and fleet segments the simulation was configured with
+ * (see {@link SimulationManager.SimulationProperties}). Each vessel's catch is
  * reported under the contract fleet segment covering it.
  */
 public class GetCatchDispositionSummaryRequestHandler
@@ -236,7 +237,8 @@ public class GetCatchDispositionSummaryRequestHandler
   }
 
   /**
-   * Summed gross catch, live discards, and dead discards for one gear/species/coordinate.
+   * Summed gross catch, live discards, and dead discards for one
+   * gear/species/coordinate.
    */
   record Disposition(
     double grossCatchInKg,

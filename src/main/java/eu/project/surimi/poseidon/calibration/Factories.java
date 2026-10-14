@@ -23,8 +23,9 @@
 package eu.project.surimi.poseidon.calibration;
 
 /**
- * Static entry points for building this package's calibration-support factories, mirroring the
- * YAML factory-method convention used throughout POSEIDON scenarios.
+ * Static entry points for building this package's calibration-support
+ * factories, mirroring the YAML factory-method convention used throughout
+ * POSEIDON scenarios.
  */
 public class Factories {
 

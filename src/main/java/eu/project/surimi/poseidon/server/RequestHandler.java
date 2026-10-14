@@ -35,11 +35,12 @@ import sim.engine.SimState;
 import uk.ac.ox.poseidon.core.Simulation;
 
 /**
- * Base class for one gRPC method handler: logs the request, delegates to {@link #getResponse},
- * and translates any thrown exception into a {@link StatusRuntimeException} ({@code
- * INVALID_ARGUMENT} for an {@link IllegalArgumentException}, a pass-through for an existing
- * {@link StatusRuntimeException}, {@code INTERNAL} otherwise) before completing the response
- * observer.
+ * Base class for one gRPC method handler: logs the request, delegates to
+ * {@link #getResponse}, and translates any thrown exception into a
+ * {@link StatusRuntimeException} ({@code
+ * INVALID_ARGUMENT} for an {@link IllegalArgumentException}, a pass-through for
+ * an existing {@link StatusRuntimeException}, {@code INTERNAL} otherwise)
+ * before completing the response observer.
  */
 @RequiredArgsConstructor
 public abstract class RequestHandler<ReqT, RespT> {
@@ -49,8 +50,8 @@ public abstract class RequestHandler<ReqT, RespT> {
   );
 
   /**
-   * @return {@code map.get(key)}, or throws {@code NOT_FOUND} naming the missing key and the
-   * map's known keys.
+   * @return {@code map.get(key)}, or throws {@code NOT_FOUND} naming the
+   *         missing key and the map's known keys.
    */
   protected static <K, V> V getOrThrow(
     final Map<K, V> map,
@@ -71,14 +72,16 @@ public abstract class RequestHandler<ReqT, RespT> {
   }
 
   /**
-   * @return the response for the given request; may throw, which {@link #handle} translates
-   * into an appropriate {@link StatusRuntimeException}.
+   * @return the response for the given request; may throw, which
+   *         {@link #handle} translates into an appropriate
+   *         {@link StatusRuntimeException}.
    */
   protected abstract RespT getResponse(final ReqT request);
 
   /**
-   * Logs the request, computes and sends the response via {@link #getResponse}, and translates
-   * any thrown exception into an error on {@code responseObserver}.
+   * Logs the request, computes and sends the response via {@link #getResponse},
+   * and translates any thrown exception into an error on
+   * {@code responseObserver}.
    */
   public void handle(
     final ReqT request,
@@ -115,8 +118,8 @@ public abstract class RequestHandler<ReqT, RespT> {
   }
 
   /**
-   * @return a {@link StatusRuntimeException} with the given status and {@code e}'s message and
-   * cause.
+   * @return a {@link StatusRuntimeException} with the given status and
+   *         {@code e}'s message and cause.
    */
   @SuppressWarnings("SameParameterValue")
   protected static StatusRuntimeException wrap(
@@ -143,8 +146,8 @@ public abstract class RequestHandler<ReqT, RespT> {
   }
 
   /**
-   * Logs current JVM heap usage at {@code INFO}, tagged with the simulation's current step and
-   * date-time.
+   * Logs current JVM heap usage at {@code INFO}, tagged with the simulation's
+   * current step and date-time.
    */
   protected void logMemoryUsage(final SimState simState) {
     log(INFO, simState, "Memory usage: {0}", memoryUsage());

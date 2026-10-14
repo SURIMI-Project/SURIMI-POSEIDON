@@ -35,13 +35,14 @@ import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 /**
- * Forbids a fishing action inside any MPA whose fleet restrictions cover the acting vessel's
- * (gear, country) pair AND whose closed months cover the action's month. An MPA is "inside" for a
- * cell whenever its mask in {@code mpaGrids} has a positive value there. An MPA missing from
- * {@code mpaClosedMonths} or {@code mpaFleetRestrictions} is treated as never closed / restricting
- * nobody, matching {@link MpaClosedMonthsFromTableFactory} and
- * {@link MpaFleetRestrictionsFromTableFactory}'s absence semantics. A cell covered by more than
- * one MPA is forbidden if any one of them applies.
+ * Forbids a fishing action inside any MPA whose fleet restrictions cover the
+ * acting vessel's (gear, country) pair AND whose closed months cover the
+ * action's month. An MPA is "inside" for a cell whenever its mask in
+ * {@code mpaGrids} has a positive value there. An MPA missing from
+ * {@code mpaClosedMonths} or {@code mpaFleetRestrictions} is treated as never
+ * closed / restricting nobody, matching {@link MpaClosedMonthsFromTableFactory}
+ * and {@link MpaFleetRestrictionsFromTableFactory}'s absence semantics. A cell
+ * covered by more than one MPA is forbidden if any one of them applies.
  */
 @RequiredArgsConstructor
 public class MpaClosurePredicate implements Predicate<ExtendedFishingAction> {

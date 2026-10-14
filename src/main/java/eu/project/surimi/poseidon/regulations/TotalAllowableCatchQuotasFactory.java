@@ -37,8 +37,9 @@ import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 /**
  * Factory for {@link TotalAllowableCatchQuotas} in simulation scope.
  * <p>
- * The regulation depends on a {@link FleetSegmentMapper}, but its lifetime remains pinned to the
- * simulation regardless of the mapper factory's own scope.
+ * The regulation depends on a {@link FleetSegmentMapper}, but its lifetime
+ * remains pinned to the simulation regardless of the mapper factory's own
+ * scope.
  */
 @Data
 @NoArgsConstructor

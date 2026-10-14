@@ -32,11 +32,12 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Downloads the inputs from the real SURIMI bucket on EDITO, to catch what a mock S3 server
- * can't, such as an SDK upgrade that EDITO's MinIO rejects. Runs only when
- * {@code AWS_ACCESS_KEY_ID} is set (CI sets it from a repository secret), with the keys from the
- * environment; the Vault route is not covered. The bucket, endpoint and region default to
- * SURIMI's and can be overridden with the usual variables.
+ * Downloads the inputs from the real SURIMI bucket on EDITO, to catch what a
+ * mock S3 server can't, such as an SDK upgrade that EDITO's MinIO rejects. Runs
+ * only when {@code AWS_ACCESS_KEY_ID} is set (CI sets it from a repository
+ * secret), with the keys from the environment; the Vault route is not covered.
+ * The bucket, endpoint and region default to SURIMI's and can be overridden
+ * with the usual variables.
  */
 @EnabledIfEnvironmentVariable(named = "AWS_ACCESS_KEY_ID", matches = ".+")
 class S3InputsIntegrationTest {

@@ -21,8 +21,8 @@
  */
 
 /**
- * {@link eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario}: a small, hand-built
- * scenario used by this repo's tests, plus its GUI wrapper
+ * {@link eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario}: a
+ * small, hand-built scenario used by this repo's tests, plus its GUI wrapper
  * {@link eu.project.surimi.poseidon.scenarios.minimal.MinimalScenarioWithUI}.
  */
 package eu.project.surimi.poseidon.scenarios.minimal;

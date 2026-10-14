@@ -35,9 +35,9 @@ import uk.ac.ox.poseidon.agents.market.Sale;
 import uk.ac.ox.poseidon.core.events.AbstractListener;
 
 /**
- * Accumulates landed biomass from {@link Sale} events into a running total per year, gear, and
- * species/life-stage key, for comparison against real-world landings targets during calibration
- * (see {@code NorthwesternMedCalibration}).
+ * Accumulates landed biomass from {@link Sale} events into a running total per
+ * year, gear, and species/life-stage key, for comparison against real-world
+ * landings targets during calibration (see {@code NorthwesternMedCalibration}).
  */
 public class LandingsAccumulator
   extends AbstractListener<Sale>
@@ -79,7 +79,8 @@ public class LandingsAccumulator
   }
 
   /**
-   * @return an unmodifiable view of the accumulated landings, keyed by year/gear/species.
+   * @return an unmodifiable view of the accumulated landings, keyed by
+   *         year/gear/species.
    */
   @Override
   public Map<Key, Double> get() {
@@ -87,9 +88,9 @@ public class LandingsAccumulator
   }
 
   /**
-   * Year, gear code, and species/life-stage key ({@link #speciesKey} is built with
-   * {@link uk.ac.ox.poseidon.core.utils.Utils#multiStringKey}) identifying one accumulated
-   * landings total.
+   * Year, gear code, and species/life-stage key ({@link #speciesKey} is built
+   * with {@link uk.ac.ox.poseidon.core.utils.Utils#multiStringKey}) identifying
+   * one accumulated landings total.
    */
   public record Key(
     Integer year,
@@ -107,8 +108,8 @@ public class LandingsAccumulator
   }
 
   /**
-   * @return the accumulated landings as a table with columns {@code year}, {@code gear_code},
-   * {@code species_code}, {@code landings_kg}.
+   * @return the accumulated landings as a table with columns {@code year},
+   *         {@code gear_code}, {@code species_code}, {@code landings_kg}.
    */
   public Table asTable() {
     final IntColumn year = ColumnType.INTEGER.create("year");

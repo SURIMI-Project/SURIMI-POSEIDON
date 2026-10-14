@@ -41,10 +41,10 @@ import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 
 /**
- * Reads a table of {@code (mpa_id, gear_code, country_code)} rows, where each row's presence means
- * that gear/country pair is restricted from fishing in that MPA, and groups it by MPA. An MPA with
- * no rows is simply absent from the result; consumers should use
- * {@code getOrDefault(mpaId, ImmutableSet.of())}.
+ * Reads a table of {@code (mpa_id, gear_code, country_code)} rows, where each
+ * row's presence means that gear/country pair is restricted from fishing in
+ * that MPA, and groups it by MPA. An MPA with no rows is simply absent from the
+ * result; consumers should use {@code getOrDefault(mpaId, ImmutableSet.of())}.
  */
 @Data
 @NoArgsConstructor

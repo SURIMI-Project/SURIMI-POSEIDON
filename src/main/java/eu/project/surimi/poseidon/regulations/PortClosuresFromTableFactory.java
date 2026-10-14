@@ -41,9 +41,10 @@ import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 
 /**
- * Reads a table of {@code (port_code, gear_code, start_date, end_date)} rows and groups it by
- * port, then by gear, into the set of date windows that gear is closed for at that port. A
- * port/gear pair with no rows is simply absent from the result; consumers should use
+ * Reads a table of {@code (port_code, gear_code, start_date, end_date)} rows
+ * and groups it by port, then by gear, into the set of date windows that gear
+ * is closed for at that port. A port/gear pair with no rows is simply absent
+ * from the result; consumers should use
  * {@code getOrDefault(portCode, ImmutableMap.of()).getOrDefault(gearCode, ImmutableSet.of())}.
  */
 @Data

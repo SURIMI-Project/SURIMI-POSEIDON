@@ -34,22 +34,25 @@ import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 /**
- * Static entry points for building this package's regulation factories, mirroring the YAML
- * factory-method convention used throughout POSEIDON scenarios.
+ * Static entry points for building this package's regulation factories,
+ * mirroring the YAML factory-method convention used throughout POSEIDON
+ * scenarios.
  */
 public class Factories {
 
   private Factories() {}
 
   /**
-   * @return a {@link TotalAllowableCatchQuotasFactory} with a default fleet segment mapper.
+   * @return a {@link TotalAllowableCatchQuotasFactory} with a default fleet
+   *         segment mapper.
    */
   public static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotas() {
     return new TotalAllowableCatchQuotasFactory();
   }
 
   /**
-   * @return a {@link TotalAllowableCatchQuotasFactory} using the given fleet segment mapper.
+   * @return a {@link TotalAllowableCatchQuotasFactory} using the given fleet
+   *         segment mapper.
    */
   public static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotas(
     final Factory<
@@ -61,7 +64,8 @@ public class Factories {
   }
 
   /**
-   * @return a {@link MpaClosedMonthsFromTableFactory} reading the given table columns.
+   * @return a {@link MpaClosedMonthsFromTableFactory} reading the given table
+   *         columns.
    */
   public static <S extends Scope> MpaClosedMonthsFromTableFactory<S> mpaClosedMonths(
     final Factory<? super S, Table> table,
@@ -78,7 +82,8 @@ public class Factories {
   }
 
   /**
-   * @return a {@link MpaFleetRestrictionsFromTableFactory} reading the given table columns.
+   * @return a {@link MpaFleetRestrictionsFromTableFactory} reading the given
+   *         table columns.
    */
   public static <S extends Scope> MpaFleetRestrictionsFromTableFactory<S> mpaFleetRestrictions(
     final Factory<? super S, Table> table,
@@ -95,8 +100,9 @@ public class Factories {
   }
 
   /**
-   * @return a {@link MpaClosurePredicateFactory} combining MPA grids, closed months, and fleet
-   * restrictions into a single fishing-action predicate.
+   * @return a {@link MpaClosurePredicateFactory} combining MPA grids, closed
+   *         months, and fleet restrictions into a single fishing-action
+   *         predicate.
    */
   public static <S extends Scope> MpaClosurePredicateFactory<S> mpaClosurePredicate(
     final Factory<? super S, ? extends ModelGrid> modelGrid,
@@ -121,7 +127,8 @@ public class Factories {
   }
 
   /**
-   * @return a {@link PortClosuresFromTableFactory} reading the given table columns.
+   * @return a {@link PortClosuresFromTableFactory} reading the given table
+   *         columns.
    */
   public static <S extends Scope> PortClosuresFromTableFactory<S> portClosures(
     final Factory<? super S, Table> table,
@@ -140,8 +147,8 @@ public class Factories {
   }
 
   /**
-   * @return a {@link PortClosurePredicateFactory} turning port closure windows into a
-   * fishing-action predicate.
+   * @return a {@link PortClosurePredicateFactory} turning port closure windows
+   *         into a fishing-action predicate.
    */
   public static <S extends Scope> PortClosurePredicateFactory<S> portClosurePredicate(
     final Factory<

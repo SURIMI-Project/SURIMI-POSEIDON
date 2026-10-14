@@ -21,7 +21,7 @@
  */
 
 /**
- * Handler for {@code UpdateBiomass}, letting an external ecology model push biomass values into
- * the simulation's per-species grids.
+ * Handler for {@code UpdateBiomass}, letting an external ecology model push
+ * biomass values into the simulation's per-species grids.
  */
 package eu.project.surimi.poseidon.server.ecology;

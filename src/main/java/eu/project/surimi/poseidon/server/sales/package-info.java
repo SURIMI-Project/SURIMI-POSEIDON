@@ -21,6 +21,7 @@
  */
 
 /**
- * Handler for {@code GetSales}, summarizing simulated sales for an external consumer.
+ * Handler for {@code GetSales}, summarizing simulated sales for an external
+ * consumer.
  */
 package eu.project.surimi.poseidon.server.sales;

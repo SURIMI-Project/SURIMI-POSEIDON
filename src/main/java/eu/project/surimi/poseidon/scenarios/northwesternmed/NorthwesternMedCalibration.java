@@ -45,13 +45,15 @@ import uk.ac.ox.poseidon.calibration.errors.SumSquaredErrors;
 
 /**
  * Calibration entry point for {@link LocalNorthwesternMedScenario}: fits each
- * gear/species/life-stage catchability against real-world landings targets read from
- * {@code inputs/northwestern_med/target_landings.csv}, using {@link CalibrationRunner}'s genetic
- * algorithm to minimise {@link SumSquaredErrors} against a
- * {@link eu.project.surimi.poseidon.calibration.LandingsAccumulator}. The parameter set to
- * calibrate is derived from {@code discard_ratios.csv}'s (gear, species, life-stage) rows. The
- * population size is a command-line option ({@code --population}), so a run can be sized to the
- * machine: about {@code 0.6 × population × 3 seeds} simulations run at once after the first
+ * gear/species/life-stage catchability against real-world landings targets read
+ * from {@code inputs/northwestern_med/target_landings.csv}, using
+ * {@link CalibrationRunner}'s genetic algorithm to minimise
+ * {@link SumSquaredErrors} against a
+ * {@link eu.project.surimi.poseidon.calibration.LandingsAccumulator}. The
+ * parameter set to calibrate is derived from {@code discard_ratios.csv}'s
+ * (gear, species, life-stage) rows. The population size is a command-line
+ * option ({@code --population}), so a run can be sized to the machine: about
+ * {@code 0.6 × population × 3 seeds} simulations run at once after the first
  * generation, and every individual of the first.
  */
 public class NorthwesternMedCalibration {
@@ -76,8 +78,8 @@ public class NorthwesternMedCalibration {
   private int populationSize = 10;
 
   /**
-   * Parses {@code args}, runs the calibration and prints the best parameters, fitness, and
-   * generation count found.
+   * Parses {@code args}, runs the calibration and prints the best parameters,
+   * fitness, and generation count found.
    */
   static void main(final String[] args) {
     final NorthwesternMedCalibration calibration =
@@ -178,8 +180,9 @@ public class NorthwesternMedCalibration {
   }
 
   /**
-   * @return real-world landings targets read from a CSV with columns {@code year},
-   * {@code gear_code}, {@code species_code}, {@code life_stage}, {@code landings_kg}.
+   * @return real-world landings targets read from a CSV with columns
+   *         {@code year}, {@code gear_code}, {@code species_code},
+   *         {@code life_stage}, {@code landings_kg}.
    */
   private static Map<LandingsAccumulator.Key, Double> readTargetLandings(
     final Path path

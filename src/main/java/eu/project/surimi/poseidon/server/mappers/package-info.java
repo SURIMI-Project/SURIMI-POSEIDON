@@ -21,8 +21,9 @@
  */
 
 /**
- * Shared converters between gRPC proto types and their POSEIDON/domain equivalents, used by
- * multiple {@code RequestHandler}s: {@link eu.project.surimi.poseidon.server.mappers.SpeciesMapper}
- * and {@link eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper}.
+ * Shared converters between gRPC proto types and their POSEIDON/domain
+ * equivalents, used by multiple {@code RequestHandler}s:
+ * {@link eu.project.surimi.poseidon.server.mappers.SpeciesMapper} and
+ * {@link eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper}.
  */
 package eu.project.surimi.poseidon.server.mappers;

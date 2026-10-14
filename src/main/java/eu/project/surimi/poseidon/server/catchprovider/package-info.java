@@ -21,7 +21,7 @@
  */
 
 /**
- * Handler for {@code GetCatchDisposition}, summarizing simulated catch and discards for an
- * external catch-provider consumer.
+ * Handler for {@code GetCatchDisposition}, summarizing simulated catch and
+ * discards for an external catch-provider consumer.
  */
 package eu.project.surimi.poseidon.server.catchprovider;

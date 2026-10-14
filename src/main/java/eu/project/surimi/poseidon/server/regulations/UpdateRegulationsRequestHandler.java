@@ -38,11 +38,13 @@ import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.core.Simulation;
 
 /**
- * Handles {@code UpdateRegulations}: registers the TAC entries in the request as new quotas on
- * the simulation's {@link TotalAllowableCatchQuotas} for the given interval, fleet segment, and
- * species. Entries whose fleet segment overlaps no contract fleet segment are ignored: they apply
- * to fleets simulated by other models (the fisheries authority sends every model the TACs of all
- * fleets). The remaining entries are registered all or nothing: if one is rejected, none is set.
+ * Handles {@code UpdateRegulations}: registers the TAC entries in the request
+ * as new quotas on the simulation's {@link TotalAllowableCatchQuotas} for the
+ * given interval, fleet segment, and species. Entries whose fleet segment
+ * overlaps no contract fleet segment are ignored: they apply to fleets
+ * simulated by other models (the fisheries authority sends every model the TACs
+ * of all fleets). The remaining entries are registered all or nothing: if one
+ * is rejected, none is set.
  */
 public class UpdateRegulationsRequestHandler
   extends WithSimulationRequestHandler<

@@ -33,16 +33,18 @@ import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.regulations.predicates.temporal.BetweenDates;
 
 /**
- * Forbids a fishing action at a port/gear whose closure windows cover the action's date. A
- * port/gear pair missing from {@code portClosures} is treated as never closed, matching
- * {@link PortClosuresFromTableFactory}'s absence semantics. A vessel with no home port yet
- * (possible before it's first assigned one) is permitted, for the same reason.
+ * Forbids a fishing action at a port/gear whose closure windows cover the
+ * action's date. A port/gear pair missing from {@code portClosures} is treated
+ * as never closed, matching {@link PortClosuresFromTableFactory}'s absence
+ * semantics. A vessel with no home port yet (possible before it's first
+ * assigned one) is permitted, for the same reason.
  * <p>
- * {@code portClosures} only covers the years the source data was built for. For an action whose
- * year falls after the latest year recorded for its port/gear, the window with the latest
- * {@code endDate} is shifted forward by the year difference and re-checked — the closure
- * calendar is assumed to repeat indefinitely into the future. No such extrapolation is done
- * backwards: an action before the earliest recorded year is simply permitted.
+ * {@code portClosures} only covers the years the source data was built for. For
+ * an action whose year falls after the latest year recorded for its port/gear,
+ * the window with the latest {@code endDate} is shifted forward by the year
+ * difference and re-checked — the closure calendar is assumed to repeat
+ * indefinitely into the future. No such extrapolation is done backwards: an
+ * action before the earliest recorded year is simply permitted.
  */
 @RequiredArgsConstructor
 public class PortClosurePredicate implements Predicate<ExtendedFishingAction> {

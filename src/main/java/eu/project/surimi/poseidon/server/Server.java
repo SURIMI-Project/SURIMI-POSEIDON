@@ -60,9 +60,10 @@ import uk.ac.ox.poseidon.core.utils.CustomPathConverter;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
 /**
- * Entry point: parses command-line arguments and starts the gRPC server exposing
- * {@link FisheryService}, wired with the full interceptor stack (exception enrichment,
- * OpenTelemetry, protocol-version trailer, protovalidate validation).
+ * Entry point: parses command-line arguments and starts the gRPC server
+ * exposing {@link FisheryService}, wired with the full interceptor stack
+ * (exception enrichment, OpenTelemetry, protocol-version trailer, protovalidate
+ * validation).
  */
 @NoArgsConstructor
 @AllArgsConstructor
@@ -74,8 +75,8 @@ public class Server {
   public static final String PROTOCOL_VERSION =
     ProtocolVersionExtractor.getSurimiProtocolVersion();
   /**
-   * The name by which SURIMI identifies this model, e.g. in the {@code model} field of a fleet
-   * segment.
+   * The name by which SURIMI identifies this model, e.g. in the {@code model}
+   * field of a fleet segment.
    */
   public static final String MODEL_NAME = "POSEIDON";
 
@@ -95,7 +96,8 @@ public class Server {
   private int port;
 
   /**
-   * Parses {@code args} and starts the gRPC server, blocking until it terminates.
+   * Parses {@code args} and starts the gRPC server, blocking until it
+   * terminates.
    */
   static void main(final String[] args) {
     logger.log(INFO, () -> "Received arguments: " + Arrays.toString(args));
@@ -124,8 +126,8 @@ public class Server {
   /**
    * @param inputsCheck run at the start of each simulation initialisation, e.g.
    *                    {@link S3Inputs#warnIfChanged()}.
-   * @return a started gRPC server, listening on {@link #port} on all network interfaces, with
-   * a shutdown hook registered to stop it gracefully.
+   * @return a started gRPC server, listening on {@link #port} on all network
+   *         interfaces, with a shutdown hook registered to stop it gracefully.
    */
   io.grpc.Server startServer(
     final SimulationManager simulationManager,
@@ -207,7 +209,8 @@ public class Server {
   }
 
   /**
-   * @return {@code localDateTime}, interpreted as UTC, converted to a {@link Timestamp}.
+   * @return {@code localDateTime}, interpreted as UTC, converted to a
+   *         {@link Timestamp}.
    */
   public static Timestamp toTimestamp(final LocalDateTime localDateTime) {
     return Timestamp.newBuilder()

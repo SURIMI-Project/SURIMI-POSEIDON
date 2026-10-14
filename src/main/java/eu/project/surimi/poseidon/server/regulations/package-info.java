@@ -23,6 +23,7 @@
 /**
  * Handlers for the TAC-quota gRPC methods, {@code UpdateRegulations} and
  * {@code GetFishingActivity}, both operating on the simulation's
- * {@link eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas} component.
+ * {@link eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas}
+ * component.
  */
 package eu.project.surimi.poseidon.server.regulations;

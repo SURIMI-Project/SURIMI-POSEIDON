@@ -38,10 +38,10 @@ import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
 
 /**
- * Checks where the Northwestern Mediterranean scenario gets its biomass and prices from: the
- * scenario served to SURIMI must leave them to the gRPC messages, while the local scenario reads
- * them from its data files. Runs start in 2015, when both {@code biomass_grids.nc} and
- * {@code prices.csv} have data.
+ * Checks where the Northwestern Mediterranean scenario gets its biomass and
+ * prices from: the scenario served to SURIMI must leave them to the gRPC
+ * messages, while the local scenario reads them from its data files. Runs start
+ * in 2015, when both {@code biomass_grids.nc} and {@code prices.csv} have data.
  */
 class NorthwesternMedInputDriversTest {
 

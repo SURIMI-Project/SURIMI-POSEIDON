@@ -49,11 +49,12 @@ import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 
 /**
- * Handles {@code GetSales}: summarizes recorded sales in the requested date-time range into
- * per-market, per-catch-category, per-contract-fleet-segment, per-species totals, restricted to
- * markets, price categories, species, and fleet segments the simulation was configured with (see
- * {@link SimulationManager.SimulationProperties}). Each vessel's sales are reported under the
- * contract fleet segment covering it.
+ * Handles {@code GetSales}: summarizes recorded sales in the requested
+ * date-time range into per-market, per-catch-category,
+ * per-contract-fleet-segment, per-species totals, restricted to markets, price
+ * categories, species, and fleet segments the simulation was configured with
+ * (see {@link SimulationManager.SimulationProperties}). Each vessel's sales are
+ * reported under the contract fleet segment covering it.
  */
 public class GetSalesRequestHandler
   extends WithSimulationRequestHandler<GetSalesRequest, GetSalesResponse>
@@ -68,9 +69,10 @@ public class GetSalesRequestHandler
   }
 
   /**
-   * @return one summarised {@link Sale} for a list of sale entries sharing the same market,
-   * catch category, fleet segment, and species: quantity (in the contract's mass unit) and value
-   * are the sums across all entries.
+   * @return one summarised {@link Sale} for a list of sale entries sharing the
+   *         same market, catch category, fleet segment, and species: quantity
+   *         (in the contract's mass unit) and value are the sums across all
+   *         entries.
    */
   private static Sale summariseSale(
     final List<SaleEntry> saleEntries,
@@ -209,8 +211,8 @@ public class GetSalesRequestHandler
   }
 
   /**
-   * One sold item, flattened out of a {@code Sale} event for grouping by market/catch
-   * category/fleet segment/species.
+   * One sold item, flattened out of a {@code Sale} event for grouping by
+   * market/catch category/fleet segment/species.
    */
   private record SaleEntry(
     Market market,

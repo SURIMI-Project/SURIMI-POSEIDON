@@ -35,10 +35,10 @@ import io.grpc.*;
 import io.grpc.protobuf.StatusProto;
 
 /**
- * Validates every incoming request message against its protovalidate constraints before it
- * reaches the service, closing the call with {@code INVALID_ARGUMENT} and up to
- * {@value #MAX_VIOLATIONS} violation details when validation fails, or {@code INTERNAL} if
- * validation itself throws.
+ * Validates every incoming request message against its protovalidate
+ * constraints before it reaches the service, closing the call with
+ * {@code INVALID_ARGUMENT} and up to {@value #MAX_VIOLATIONS} violation details
+ * when validation fails, or {@code INTERNAL} if validation itself throws.
  */
 public class ValidationInterceptor implements ServerInterceptor {
 
@@ -47,7 +47,8 @@ public class ValidationInterceptor implements ServerInterceptor {
   private final Validator validator;
 
   /**
-   * @param validator protovalidate validator to check each request message against.
+   * @param validator protovalidate validator to check each request message
+   *                  against.
    */
   public ValidationInterceptor(final Validator validator) {
     this.validator = validator;

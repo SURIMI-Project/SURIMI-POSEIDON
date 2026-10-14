@@ -28,8 +28,8 @@ import lombok.Value;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Domain fleet-segment descriptor with wildcard coverage semantics: null fields broaden the segment
- * and therefore match any corresponding value.
+ * Domain fleet-segment descriptor with wildcard coverage semantics: null fields
+ * broaden the segment and therefore match any corresponding value.
  */
 @Value
 public class FleetSegment implements Comparable<FleetSegment> {
@@ -54,8 +54,8 @@ public class FleetSegment implements Comparable<FleetSegment> {
   }
 
   /**
-   * Returns true when this segment and {@code other} share at least one common concrete
-   * fleet-segment combination under the null-as-wildcard semantics.
+   * Returns true when this segment and {@code other} share at least one common
+   * concrete fleet-segment combination under the null-as-wildcard semantics.
    */
   public boolean overlaps(final FleetSegment other) {
     return (

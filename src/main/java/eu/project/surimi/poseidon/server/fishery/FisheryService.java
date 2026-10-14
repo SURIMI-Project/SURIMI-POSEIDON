@@ -34,8 +34,8 @@ import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 
 /**
- * The {@code FisheryService} gRPC API: each method delegates to exactly one injected
- * {@code RequestHandler}.
+ * The {@code FisheryService} gRPC API: each method delegates to exactly one
+ * injected {@code RequestHandler}.
  */
 @RequiredArgsConstructor
 public class FisheryService

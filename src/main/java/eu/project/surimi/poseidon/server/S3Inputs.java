@@ -53,21 +53,24 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 /**
- * Downloads the scenario inputs from S3 when POSEIDON runs inside SURIMI on EDITO, where the
- * deployment sets {@code AWS_BUCKET_NAME}. Without that variable, POSEIDON reads the local
- * {@code inputs} folder as usual.
+ * Downloads the scenario inputs from S3 when POSEIDON runs inside SURIMI on
+ * EDITO, where the deployment sets {@code AWS_BUCKET_NAME}. Without that
+ * variable, POSEIDON reads the local {@code inputs} folder as usual.
  * <p>
- * Everything under {@value #PREFIX} in the bucket is downloaded once, at startup, into the inputs
- * folder, which must not exist yet: nothing local is ever overwritten or deleted. When
- * {@code VAULT_ADDR} is set, the S3 keys come from the Vault secret the deployment points to with
- * the {@code VAULT_*} variables: long-lived keys made in the MinIO console, as the other SURIMI
- * services use. EDITO also sets {@code AWS_ACCESS_KEY_ID} and friends, but those keys expire
- * after 24 hours, so they are ignored then. Without Vault (local tests, CI), the keys come from
- * {@code AWS_ACCESS_KEY_ID}, {@code AWS_SECRET_ACCESS_KEY} and the optional
- * {@code AWS_SESSION_TOKEN}. Any failure stops startup; stale inputs must not be used silently.
+ * Everything under {@value #PREFIX} in the bucket is downloaded once, at
+ * startup, into the inputs folder, which must not exist yet: nothing local is
+ * ever overwritten or deleted. When {@code VAULT_ADDR} is set, the S3 keys come
+ * from the Vault secret the deployment points to with the {@code VAULT_*}
+ * variables: long-lived keys made in the MinIO console, as the other SURIMI
+ * services use. EDITO also sets {@code AWS_ACCESS_KEY_ID} and friends, but
+ * those keys expire after 24 hours, so they are ignored then. Without Vault
+ * (local tests, CI), the keys come from {@code AWS_ACCESS_KEY_ID},
+ * {@code AWS_SECRET_ACCESS_KEY} and the optional {@code AWS_SESSION_TOKEN}. Any
+ * failure stops startup; stale inputs must not be used silently.
  * <p>
- * The service stays up across many experiments, so {@link #warnIfChanged()} is called at each
- * simulation initialisation to warn when the bucket no longer matches what was downloaded.
+ * The service stays up across many experiments, so {@link #warnIfChanged()} is
+ * called at each simulation initialisation to warn when the bucket no longer
+ * matches what was downloaded.
  */
 public final class S3Inputs {
 
@@ -97,10 +100,12 @@ public final class S3Inputs {
   }
 
   /**
-   * @return empty if {@code AWS_BUCKET_NAME} is not set in {@code env}, otherwise an
-   * {@code S3Inputs} ready to {@link #download()} into {@code inputsFolder}.
-   * @throws IllegalStateException if {@code inputsFolder} already exists, a required variable
-   *                               is missing, or the keys can't be read from Vault.
+   * @return empty if {@code AWS_BUCKET_NAME} is not set in {@code env},
+   *         otherwise an {@code S3Inputs} ready to {@link #download()} into
+   *         {@code inputsFolder}.
+   * @throws IllegalStateException if {@code inputsFolder} already exists, a
+   *                               required variable is missing, or the keys
+   *                               can't be read from Vault.
    */
   public static Optional<S3Inputs> fromEnvironment(
     final Map<String, String> env,
@@ -141,11 +146,13 @@ public final class S3Inputs {
   /**
    * Downloads every object under {@value #PREFIX} into the inputs folder.
    *
-   * @throws IllegalStateException if there is nothing to download, a key would land outside
-   *                               the inputs folder, or the objects changed during the download
-   *                               (e.g. an upload was in progress), which could have mixed old
-   *                               and new files.
-   * @throws SdkException          if S3 can't be reached or refuses the request.
+   * @throws IllegalStateException if there is nothing to download, a key would
+   *                               land outside the inputs folder, or the
+   *                               objects changed during the download (e.g. an
+   *                               upload was in progress), which could have
+   *                               mixed old and new files.
+   * @throws SdkException          if S3 can't be reached or refuses the
+   *                               request.
    */
   public void download() {
     final String source = "s3://" + bucket + "/" + PREFIX;
@@ -183,9 +190,9 @@ public final class S3Inputs {
   }
 
   /**
-   * Logs a warning if the objects under {@value #PREFIX} differ from those downloaded at
-   * startup, or if that can't be checked. Never throws: it must not stop a simulation from
-   * starting.
+   * Logs a warning if the objects under {@value #PREFIX} differ from those
+   * downloaded at startup, or if that can't be checked. Never throws: it must
+   * not stop a simulation from starting.
    */
   public void warnIfChanged() {
     try {
@@ -225,8 +232,8 @@ public final class S3Inputs {
   }
 
   /**
-   * @return where the object {@code key} goes: its path under {@value #PREFIX}, resolved
-   * against {@code inputsFolder}.
+   * @return where the object {@code key} goes: its path under {@value #PREFIX},
+   *         resolved against {@code inputsFolder}.
    * @throws IllegalStateException if that path is outside {@code inputsFolder}.
    */
   static Path targetPath(final Path inputsFolder, final String key) {
@@ -243,8 +250,8 @@ public final class S3Inputs {
   }
 
   /**
-   * @return {@code endpoint} as a URI, with {@code https://} added if it has no scheme (the
-   * deployment passes a bare host name).
+   * @return {@code endpoint} as a URI, with {@code https://} added if it has no
+   *         scheme (the deployment passes a bare host name).
    */
   static URI endpointUri(final String endpoint) {
     return URI.create(
@@ -274,9 +281,10 @@ public final class S3Inputs {
   }
 
   /**
-   * Reads the key-value secret the {@code VAULT_*} variables point to (KV version 2). The
-   * other SURIMI services read the same secret and copy its entries into environment
-   * variables, so its keys are the variable names. Never log its values.
+   * Reads the key-value secret the {@code VAULT_*} variables point to (KV
+   * version 2). The other SURIMI services read the same secret and copy its
+   * entries into environment variables, so its keys are the variable names.
+   * Never log its values.
    */
   private static Map<String, String> readVaultSecret(
     final Map<String, String> env
@@ -320,7 +328,8 @@ public final class S3Inputs {
   }
 
   /**
-   * @return the entries of a Vault KV version 2 response, found under {@code data.data}.
+   * @return the entries of a Vault KV version 2 response, found under
+   *         {@code data.data}.
    */
   static Map<String, String> parseVaultSecret(final String json) {
     final JsonObject data = JsonParser.parseString(json)

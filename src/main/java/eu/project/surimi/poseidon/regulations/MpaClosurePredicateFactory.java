@@ -37,8 +37,9 @@ import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 /**
- * Factory for {@link MpaClosurePredicate}, combining MPA grids, closed months, and fleet
- * restrictions, and extracting each vessel's country tag with a {@link StringTagExtractor}.
+ * Factory for {@link MpaClosurePredicate}, combining MPA grids, closed months,
+ * and fleet restrictions, and extracting each vessel's country tag with a
+ * {@link StringTagExtractor}.
  */
 @Data
 @NoArgsConstructor

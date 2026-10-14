@@ -46,10 +46,11 @@ import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 /**
- * Handles {@code UpdateBiomass}: overwrites each cell of the simulation's per-species
- * {@link BiomassGrid}s with the biomass values in the request (converted from the simulation's
- * standard mass unit to kilograms). A species in the request with no matching
- * {@link BiomassGrid} in the simulation is silently skipped.
+ * Handles {@code UpdateBiomass}: overwrites each cell of the simulation's
+ * per-species {@link BiomassGrid}s with the biomass values in the request
+ * (converted from the simulation's standard mass unit to kilograms). A species
+ * in the request with no matching {@link BiomassGrid} in the simulation is
+ * silently skipped.
  */
 public class UpdateBiomassRequestHandler
   extends WithSimulationRequestHandler<

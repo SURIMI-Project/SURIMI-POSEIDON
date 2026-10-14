@@ -27,15 +27,16 @@ import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
 import uk.ac.ox.poseidon.core.scopes.Scope;
 
 /**
- * Static entry points for building this package's factories, mirroring the YAML factory-method
- * convention used throughout POSEIDON scenarios.
+ * Static entry points for building this package's factories, mirroring the YAML
+ * factory-method convention used throughout POSEIDON scenarios.
  */
 public class Factories {
 
   private Factories() {}
 
   /**
-   * @return a {@link FleetSegmentMapperFactory} using the given tags and length classifier.
+   * @return a {@link FleetSegmentMapperFactory} using the given tags and length
+   *         classifier.
    */
   public static <S extends Scope> FleetSegmentMapperFactory<S> fleetSegmentMapper(
     final String countryCodeTag,

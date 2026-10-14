@@ -35,18 +35,20 @@ import uk.ac.ox.poseidon.core.Scenario;
 
 /**
  * The Northwestern Mediterranean scenario run on its own, outside SURIMI: the
- * {@link NorthwesternMedScenario} served to SURIMI, plus local drivers that read biomass from
- * {@code biomass_grids.nc} and prices from {@code prices.csv}, standing in for the
- * {@code UpdateBiomass} and {@code UpdateSpeciesPrices} messages. Used by the GUI and the
- * calibration.
+ * {@link NorthwesternMedScenario} served to SURIMI, plus local drivers that
+ * read biomass from {@code biomass_grids.nc} and prices from
+ * {@code prices.csv}, standing in for the {@code UpdateBiomass} and
+ * {@code UpdateSpeciesPrices} messages. Used by the GUI and the calibration.
  * <p>
- * The drivers find the objects they update through the base scenario's named components, so
- * renaming one of those components breaks this scenario at simulation start.
+ * The drivers find the objects they update through the base scenario's named
+ * components, so renaming one of those components breaks this scenario at
+ * simulation start.
  */
 public class LocalNorthwesternMedScenario implements Supplier<Scenario> {
 
   /**
-   * @return a freshly built {@link NorthwesternMedScenario} with the local drivers added.
+   * @return a freshly built {@link NorthwesternMedScenario} with the local
+   *         drivers added.
    */
   @Override
   public Scenario get() {

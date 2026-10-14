@@ -22,8 +22,9 @@
 
 /**
  * SURIMI-specific support for POSEIDON's calibration framework:
- * {@link eu.project.surimi.poseidon.calibration.LandingsAccumulator} tallies simulated landings
- * so a {@code CalibrationProblem} (see {@code uk.ac.ox.poseidon.calibration}) can score them
- * against real-world targets.
+ * {@link eu.project.surimi.poseidon.calibration.LandingsAccumulator} tallies
+ * simulated landings so a {@code CalibrationProblem} (see
+ * {@code uk.ac.ox.poseidon.calibration}) can score them against real-world
+ * targets.
  */
 package eu.project.surimi.poseidon.calibration;
