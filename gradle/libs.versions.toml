@@ -6,10 +6,13 @@ lombok = "1.18.46"
 opentelemetry-core = "1.62.0"
 opentelemetry-instrumentation = "2.14.0-alpha"
 spotbugs = "6.5.12"
+spotless = "8.10.4"
 jcommander = "2.0"
 junit = "5.14.3"
 jqwik = "1.9.3"
 mockito = "5.23.0"
+node-gradle = "7.1.0"
+nodejs = "24.14.0"
 commons-beanutils = "1.11.0"
 commons-io = "2.22.0"
 protovalidate = "1.2.2"
@@ -47,4 +50,6 @@ opentelemetry = [
 ]
 
 [plugins]
+node-gradle = { id = "com.github.node-gradle.node", version.ref = "node-gradle" }
 spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugs" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
