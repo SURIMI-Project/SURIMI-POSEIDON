@@ -52,9 +52,10 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
 
   // purely a color-scale ceiling for the per-species biomass panel below;
   // decoupled from the scenario's own (now zero-initialized) biomass state.
-  // 700 t comfortably covers the largest single-cell biomass value seen across every
-  // species and every yearly snapshot in inputs/northwestern_med/biomass_grids.nc
-  // (BOY tops out at ~673.9 t), so the scale doesn't clip the most abundant stocks.
+  // 700 t comfortably covers the largest single-cell biomass value seen across
+  // every species and every yearly snapshot in
+  // inputs/northwestern_med/biomass_grids.nc (BOY tops out at ~673.9 t), so the
+  // scale doesn't clip the most abundant stocks.
   private static final String DISPLAY_CARRYING_CAPACITY = "700000 kg";
 
   @SuppressWarnings({ "unchecked", "rawtypes" })

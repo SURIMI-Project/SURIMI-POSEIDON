@@ -49,7 +49,8 @@ public class CatchProviderServiceTest extends ServiceTest {
   void getCatchDisposition() {
     final String simulationId = initialiseSimulation();
     step(simulationId, START_DATE_TIME);
-    // Just check that we get a grid for each contract fleet segment/species combination
+    // Just check that we get a grid for each contract fleet segment/species
+    // combination
     assertEquals(
       contractItems()
         .getFleetSegmentsList()

@@ -125,15 +125,19 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
   @Test
   void updateRegulationsAppliesTacQuotasToSimulation() {
-    // Verifies the API wires a TAC quota into the simulation and closes on matching catch.
-    // Start a minimal simulation that only includes the TAC regulation component.
+    // Verifies the API wires a TAC quota into the simulation and closes on
+    // matching catch.
+    // Start a minimal simulation that only includes the TAC regulation
+    // component.
     final String simulationId = initialiseSimulation();
     final TotalAllowableCatchQuotas tac = getTac(simulationId);
 
-    // Send a regulation update defining a COD quota for the requested time window.
+    // Send a regulation update defining a COD quota for the requested time
+    // window.
     updateQuota(simulationId, COD, COD_QUOTA);
 
-    // Emit a matching catch and verify that the TAC component closes the interval.
+    // Emit a matching catch and verify that the TAC component closes the
+    // interval.
     broadcastFishingEvent(simulationId, START.plusDays(1), COD, COD_QUOTA);
 
     assertIntervalClosed(tac, INTERVAL);
@@ -141,7 +145,8 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
   @Test
   void updateRegulationsAppliesMultipleTacEntriesFromOneRequest() {
-    // Verifies one gRPC request can install multiple TAC species quotas in the same interval.
+    // Verifies one gRPC request can install multiple TAC species quotas in the
+    // same interval.
     final String simulationId = initialiseSimulation();
     final TotalAllowableCatchQuotas tac = getTac(simulationId);
 
@@ -160,7 +165,8 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
   @Test
   void updateRegulationsMapsLifeStageSpeciesFromRequestPayload() {
-    // Verifies request species payloads preserve life-stage data when installing TAC quotas.
+    // Verifies request species payloads preserve life-stage data when
+    // installing TAC quotas.
     final String simulationId = initialiseSimulation();
     final TotalAllowableCatchQuotas tac = getTac(simulationId);
 
@@ -172,7 +178,8 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
   @Test
   void updateRegulationsRejectsOverlappingQuotaDefinitionForSameSpecies() {
-    // Verifies gRPC updates reject re-defining the same species in overlapping TAC definitions.
+    // Verifies gRPC updates reject re-defining the same species in overlapping
+    // TAC definitions.
     final String simulationId = initialiseSimulation();
     updateQuota(simulationId, COD, 100.0);
 
@@ -191,7 +198,8 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
   @Test
   void updateRegulationsRejectsOverlappingQuotaSpeciesWithinOverlappingIntervals() {
-    // Verifies gRPC updates reject overlapping TAC intervals within one fleet segment.
+    // Verifies gRPC updates reject overlapping TAC intervals within one fleet
+    // segment.
     final String simulationId = initialiseSimulation();
     final Species hakeAllStages = new Species("HKE", null, null);
     final Species hakeJuvenile = new Species("HKE", "juvenile", null);
@@ -237,7 +245,8 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
   @Test
   void updateRegulationsKeepsNonOverlappingIntervalsIndependent() {
-    // Verifies separate requests for disjoint intervals do not interfere with each other.
+    // Verifies separate requests for disjoint intervals do not interfere with
+    // each other.
     final String simulationId = initialiseSimulation();
     final TotalAllowableCatchQuotas tac = getTac(simulationId);
     final LocalDateTime laterStart = END.plusDays(1);
@@ -325,8 +334,9 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
   @Test
   void updateRegulationsIgnoresTacsForFleetSegmentsOutsideTheContract() {
-    // The fisheries authority sends every model the TACs of all fleets; those for fleets
-    // simulated by other models must not be registered, nor reported by GetFishingActivity.
+    // The fisheries authority sends every model the TACs of all fleets; those
+    // for fleets simulated by other models must not be registered, nor reported
+    // by GetFishingActivity.
     final String simulationId = initialiseSimulation();
     final TotalAllowableCatchQuotas tac = getTac(simulationId);
 
@@ -389,7 +399,8 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
     ).isEqualTo(Status.Code.INVALID_ARGUMENT);
     assertThat(tac.getFishingActivityRatios(INTERVAL)).isEmpty();
 
-    // A corrected request is then accepted, as nothing from the rejected one remains.
+    // A corrected request is then accepted, as nothing from the rejected one
+    // remains.
     updateQuotas(
       simulationId,
       new QuotaEntry(HADDOCK, 50.0),

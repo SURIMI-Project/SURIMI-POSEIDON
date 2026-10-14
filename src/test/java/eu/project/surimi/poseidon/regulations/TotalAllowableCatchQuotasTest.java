@@ -126,8 +126,8 @@ class TotalAllowableCatchQuotasTest {
 
   @Test
   void closesFisheryWhenQuotaIsReachedForExactSpecies() {
-    // Verifies exact-species catch closes the interval for that fleet segment once quota is
-    // reached.
+    // Verifies exact-species catch closes the interval for that fleet segment
+    // once quota is reached.
     final Species cod = new Species("COD", null, null);
     final LocalDateTime start = LocalDateTime.of(2026, 1, 1, 0, 0);
     final LocalDateTime end = start.plusDays(31);
@@ -189,7 +189,8 @@ class TotalAllowableCatchQuotasTest {
 
   @Test
   void consecutiveSalesAccumulateUntilLaterSaleClosesInterval() {
-    // Verifies multiple sales accumulate and closure happens only on threshold reach.
+    // Verifies multiple sales accumulate and closure happens only on threshold
+    // reach.
     final Species cod = new Species("COD", null, null);
     final LocalDateTime start = LocalDateTime.of(2026, 7, 1, 0, 0);
     final LocalDateTime end = start.plusDays(31);
@@ -213,7 +214,8 @@ class TotalAllowableCatchQuotasTest {
 
   @Test
   void fisheryRemainsOpenBeforeExhaustionTimestampAndClosesFromThatTimestampOnward() {
-    // Verifies effective closure starts at exhaustion time rather than interval start.
+    // Verifies effective closure starts at exhaustion time rather than interval
+    // start.
     final Species cod = new Species("COD", null, null);
     final LocalDateTime start = LocalDateTime.of(2026, 7, 1, 0, 0);
     final LocalDateTime closureTime = start.plusDays(10);
@@ -232,7 +234,8 @@ class TotalAllowableCatchQuotasTest {
 
   @Test
   void exhaustingEitherSpeciesQuotaClosesSharedInterval() {
-    // Verifies exhausting any quota-species closes the shared interval for that fleet segment.
+    // Verifies exhausting any quota-species closes the shared interval for that
+    // fleet segment.
     final Species cod = new Species("COD", null, null);
     final Species haddock = new Species("HAD", null, null);
     final LocalDateTime start = LocalDateTime.of(2026, 8, 1, 0, 0);
@@ -274,7 +277,8 @@ class TotalAllowableCatchQuotasTest {
 
   @Test
   void stageSpecificQuotaDoesNotCountOtherStagesWhenNotCovered() {
-    // Verifies a stage-specific quota ignores other stages of the same species code.
+    // Verifies a stage-specific quota ignores other stages of the same species
+    // code.
     final Species hakeJuvenile = new Species("HKE", "juvenile", null);
     final Species hakeAdult = new Species("HKE", "adult", null);
     final LocalDateTime start = LocalDateTime.of(2026, 10, 1, 0, 0);
@@ -290,8 +294,8 @@ class TotalAllowableCatchQuotasTest {
 
   @Test
   void rejectsOverlappingQuotaSpeciesWithinOverlappingIntervals() {
-    // Verifies overlapping quota species scopes are rejected within the same interval and
-    // fleet segment.
+    // Verifies overlapping quota species scopes are rejected within the same
+    // interval and fleet segment.
     final Species hakeAllStages = new Species("HKE", null, null);
     final Species hakeJuvenile = new Species("HKE", "juvenile", null);
     final LocalDateTime start = LocalDateTime.of(2026, 11, 1, 0, 0);
@@ -311,7 +315,8 @@ class TotalAllowableCatchQuotasTest {
 
   @Test
   void rejectsOverlappingQuotaDefinitionForSameSpeciesInOverlappingIntervals() {
-    // Verifies the same species quota cannot be defined twice in overlapping intervals.
+    // Verifies the same species quota cannot be defined twice in overlapping
+    // intervals.
     final Species cod = new Species("COD", null, null);
     final LocalDateTime start = LocalDateTime.of(2026, 11, 1, 0, 0);
     final LocalDateTime end = start.plusDays(30);
@@ -403,7 +408,8 @@ class TotalAllowableCatchQuotasTest {
 
   @Test
   void fishingActionOverlappingClosedIntervalIsRejected() {
-    // Verifies actions overlapping an effective closure interval are not permitted.
+    // Verifies actions overlapping an effective closure interval are not
+    // permitted.
     final Species cod = new Species("COD", null, null);
     final LocalDateTime start = LocalDateTime.of(2027, 3, 1, 0, 0);
     final Interval closedInterval = interval(start, start.plusDays(10));

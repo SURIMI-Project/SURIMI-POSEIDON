@@ -128,8 +128,8 @@ public class NorthwesternMedRunSummary {
       "run,start,end,trips,fishing_events,gross_catch_t,retained_catch_t,mean_km_from_port," +
         "distinct_cells,mean_trip_profit,shared_per_fishing_event,clique_sizes,seconds,by_gear"
     );
-    // The runs are independent simulations, so they run in parallel; each line is printed
-    // once all are done, in run order.
+    // The runs are independent simulations, so they run in parallel; each line
+    // is printed once all are done, in run order.
     final List<NorthwesternMedRunSummary> summaries = IntStream.rangeClosed(
       1,
       runs
@@ -265,7 +265,8 @@ public class NorthwesternMedRunSummary {
     final LocalDateTime endDateTime = simulation
       .getTemporalSchedule()
       .getDateTime();
-    // Clique sizes at the end of the run, over the vessels that made a trip: "size:vessels".
+    // Clique sizes at the end of the run, over the vessels that made a trip:
+    // "size:vessels".
     final Map<Integer, Integer> vesselsByCliqueSize = new TreeMap<>();
     tripOrigins
       .keySet()

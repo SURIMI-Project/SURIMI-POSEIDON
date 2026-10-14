@@ -50,7 +50,8 @@ public class SalesProviderServiceTest extends ServiceTest {
   void getSales() {
     final String simulationId = initialiseSimulation();
     step(simulationId, START_DATE_TIME);
-    // Just check that we get sales for each contract fleet segment/species combination
+    // Just check that we get sales for each contract fleet segment/species
+    // combination
     assertEquals(
       contractItems()
         .getFleetSegmentsList()

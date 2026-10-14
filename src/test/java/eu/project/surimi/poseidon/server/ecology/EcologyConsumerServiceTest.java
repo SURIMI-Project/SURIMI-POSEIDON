@@ -189,7 +189,8 @@ public class EcologyConsumerServiceTest extends ServiceTest {
               .isLessThanOrEqualTo(entry.getValue())
           )
       );
-      // and that some biomass has been removed (i.e., fished) in at least one cell
+      // and that some biomass has been removed (i.e., fished) in at least one
+      // cell
       assertTrue(
         initialGrid
           .entrySet()

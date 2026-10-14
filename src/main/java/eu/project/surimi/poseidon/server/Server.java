@@ -107,7 +107,8 @@ public class Server {
       .build();
     try {
       jCommander.parse(args);
-      // Failures here are unchecked and stop the server before it starts listening
+      // Failures here are unchecked and stop the server before it starts
+      // listening
       final Optional<S3Inputs> s3Inputs = S3Inputs.fromEnvironment(
         System.getenv(),
         Path.of("inputs")

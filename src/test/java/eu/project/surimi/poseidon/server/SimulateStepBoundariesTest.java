@@ -88,11 +88,12 @@ public class SimulateStepBoundariesTest extends ServiceTest {
   void monthlyReadsReportEverySaleAndCatchWhenAccumulatorsAreClearedMonthly() {
     final String simulationId = initialiseSimulation();
     final Simulation simulation = simulationManager.getSimulation(simulationId);
-    // MinimalScenario's vessels empty its biomass within a month: restore it at each step, as
-    // the controller's biomass updates would, so that every month has catches and sales.
+    // MinimalScenario's vessels empty its biomass within a month: restore it at
+    // each step, as the controller's biomass updates would, so that every month
+    // has catches and sales.
     final BiomassSummary initialBiomass = biomassSummary(simulation);
-    // What GetSales and GetCatchDisposition report from, cleared at the start of each month
-    // as in the NW Med scenario
+    // What GetSales and GetCatchDisposition report from, cleared at the start
+    // of each month as in the NW Med scenario
     final BiomassSaleAccumulator reportedSales = simulation.getComponent(
       BiomassSaleAccumulator.class
     );
@@ -115,10 +116,10 @@ public class SimulateStepBoundariesTest extends ServiceTest {
     simulation.getEventManager().addListener(allSales);
     simulation.getEventManager().addListener(allCatches);
 
-    // A sale in the last second of each month: a step that ended a second short, or left
-    // that second to the next step (where the monthly clearing discards it before the
-    // reads), would lose it. It copies the latest sale with a positive weight, so that its
-    // loss shows in the reported weight.
+    // A sale in the last second of each month: a step that ended a second
+    // short, or left that second to the next step (where the monthly clearing
+    // discards it before the reads), would lose it. It copies the latest sale
+    // with a positive weight, so that its loss shows in the reported weight.
     final Map<Integer, Double> lastSecondSaleKgByMonth = new HashMap<>();
     double salesReadInKg = 0;
     double grossCatchReadInKg = 0;

@@ -72,10 +72,11 @@ public class SimulateStepRequestHandler
       .getSimulationProperties(simulation)
       .getStepSize();
     log(INFO, simulation, "Step requested");
-    // Step to a date-time computed from the controller's, so that steps stay on the
-    // controller's calendar. stepUntil leaves the events dated at its target to the next step:
-    // events at the next step's start (such as the monthly clearing of the accumulators the
-    // controller reads after this step) belong to it.
+    // Step to a date-time computed from the controller's, so that steps stay on
+    // the controller's calendar. stepUntil leaves the events dated at its
+    // target to the next step: events at the next step's start (such as the
+    // monthly clearing of the accumulators the controller reads after this
+    // step) belong to it.
     final LocalDateTime nextStepStart = toLocalDateTime(
       request.getCurrentDateTime()
     ).plus(stepSize);

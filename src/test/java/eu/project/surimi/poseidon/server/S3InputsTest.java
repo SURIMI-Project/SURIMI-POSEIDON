@@ -81,8 +81,9 @@ class S3InputsTest {
 
   @Test
   void vaultWinsOverKeysInEnvironment() {
-    // EDITO's own keys in the environment expire after 24 hours, so Vault must be read even
-    // when they are present; this Vault is unreachable, so reading it fails
+    // EDITO's own keys in the environment expire after 24 hours, so Vault must
+    // be read even when they are present; this Vault is unreachable, so reading
+    // it fails
     final Map<String, String> env = with(
       "AWS_ACCESS_KEY_ID",
       "id",

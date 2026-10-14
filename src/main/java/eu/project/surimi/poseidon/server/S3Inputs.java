@@ -86,7 +86,8 @@ public final class S3Inputs {
   private final S3Client s3;
   private final String bucket;
   private final Path inputsFolder;
-  // Key -> ETag of each object downloaded; the ETag changes whenever the content does
+  // Key -> ETag of each object downloaded; the ETag changes whenever the
+  // content does
   private Map<String, String> downloaded = Map.of();
 
   private S3Inputs(
@@ -167,16 +168,18 @@ public final class S3Inputs {
     for (final String key : listing.keySet()) {
       final Path target = targetPath(inputsFolder, key);
       try {
-        // Never null: targetPath only returns paths strictly inside the inputs folder
+        // Never null: targetPath only returns paths strictly inside the inputs
+        // folder
         Files.createDirectories(Objects.requireNonNull(target.getParent()));
       } catch (final IOException e) {
         throw new UncheckedIOException(e);
       }
       s3.getObject(b -> b.bucket(bucket).key(key), target);
     }
-    // Misses a mix that persists across both listings (a large file still uploading
-    // while smaller ones are already new); warnIfChanged flags it later. A manifest written
-    // last by the upload workflow would close that gap.
+    // Misses a mix that persists across both listings (a large file still
+    // uploading while smaller ones are already new); warnIfChanged flags it
+    // later. A manifest written last by the upload workflow would close that
+    // gap.
     if (!list(TIMEOUT).equals(listing)) {
       throw new IllegalStateException(
         "The inputs in " +

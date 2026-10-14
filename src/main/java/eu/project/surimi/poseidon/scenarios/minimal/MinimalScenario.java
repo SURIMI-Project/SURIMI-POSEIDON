@@ -116,7 +116,8 @@ public class MinimalScenario implements Supplier<Scenario> {
    */
   public static final List<Pair<String, String>> LIFE_STAGE_PER_SPECIES_CODE =
     Streams.zip(
-      // this is a just very roundabout way to generate Stream.of("A", "A", "B", "C")...
+      // this is a just very roundabout way to generate Stream.of("A", "A", "B",
+      // "C")...
       Stream.concat(
         Stream.generate(SPECIES_CODES::getFirst).limit(LIFE_STAGES.size()),
         SPECIES_CODES.stream().skip(1)

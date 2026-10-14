@@ -160,10 +160,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
   private static final double BOTTOM_TRAWLER_EXPLORATION_PROBABILITY = 0.2;
   private static final int PURSE_SEINER_MEAN_EXPLORATION_RADIUS = 1;
   private static final int BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS = 1;
-  // Beyond the initial radius. In January 2013 every search that found a legal cell only after
-  // widening found it within three cells; most that widen find nothing legal anywhere.
+  // Beyond the initial radius. In January 2013 every search that found a legal
+  // cell only after widening found it within three cells; most that widen find
+  // nothing legal anywhere.
   private static final int MAXIMUM_EXPLORATION_WIDENING = 3;
-  // Rough values, rescaled against target_landings.csv, until catchability is calibrated.
+  // Rough values, rescaled against target_landings.csv, until catchability is
+  // calibrated.
   private static final Path PLACEHOLDER_CATCHABILITIES_PATH = Path.of(
     "scenarios",
     "northwestern_med_placeholder_catchabilities.csv"
@@ -181,9 +183,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
   static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
   private static final String CATCH_CATEGORY = "Fresh - Whole";
   private static final TimeFactory PURSE_SEINER_RETURN_TIME = time(6, 30, 0);
-  // A set's typical duration. Fishers can't know how long a given set will take, so the checks
-  // that a set fits (before the return time, within the trip's length) and is legal plan with
-  // this; the gear's sets last this long too, for now.
+  // A set's typical duration. Fishers can't know how long a given set will
+  // take, so the checks that a set fits (before the return time, within the
+  // trip's length) and is legal plan with this; the gear's sets last this long
+  // too, for now.
   private static final DurationFactory PURSE_SEINE_SET_DURATION = hours(1);
   private static final DurationFactory BOTTOM_TRAWLER_SET_DURATION = hours(3);
   private static final DurationFactory BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION =
@@ -358,8 +361,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var pathFinder = pathFinder(bathymetricGrid, portGrid, distance);
 
-    // The route a vessel would sail to fish at a cell and come back: one definition of the
-    // journey for both the fishing-location checks and the travel cost.
+    // The route a vessel would sail to fish at a cell and come back: one
+    // definition of the journey for both the fishing-location checks and the
+    // travel cost.
     final var routeFunction = routeViaDestination(pathFinder, distance);
 
     final var species = speciesFromData(
@@ -501,7 +505,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     );
 
     // Markets start without prices: in SURIMI runs, prices arrive through
-    // UpdateSpeciesPrices; LocalNorthwesternMedScenario schedules them from prices.csv.
+    // UpdateSpeciesPrices; LocalNorthwesternMedScenario schedules them from
+    // prices.csv.
     final var marketGrid = marketGrid(
       portGrid,
       oneBiomassMarketPerPort(portGrid)
@@ -511,8 +516,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       catchCategory(CATCH_CATEGORY)
     );
 
-    // One memory per vessel, keyed by gear code: what the vessel learns from its fishing
-    // operations and what it decides from must be this same instance.
+    // One memory per vessel, keyed by gear code: what the vessel learns from
+    // its fishing operations and what it decides from must be this same
+    // instance.
     final PerVesselFactory<KeyedMemory<String, Int2D, Bucket>> vesselMemory =
       perVessel(keyedMemory());
 
@@ -552,9 +558,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         BOTTOM_TRAWLER_SET_DURATION
       );
 
-    // How long it would take to sail to a cell, fish there once, and sail back to port. The
-    // checkers below test it before the legality checker: it is cheaper than the regulations,
-    // and late in a trip it turns down most cells.
+    // How long it would take to sail to a cell, fish there once, and sail back
+    // to port. The checkers below test it before the legality checker: it is
+    // cheaper than the regulations, and late in a trip it turns down most
+    // cells.
     final var purseSeinerFishAndReturnDurationFunction = combinedDuration(
       composedFunction(routeFunction, routeProperty("duration")),
       constant(PURSE_SEINE_SET_DURATION)
@@ -564,8 +571,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       constant(BOTTOM_TRAWLER_SET_DURATION)
     );
 
-    // Purse seiners must be back in port by the first PURSE_SEINER_RETURN_TIME after they
-    // depart: at departure, the trip would depart now.
+    // Purse seiners must be back in port by the first PURSE_SEINER_RETURN_TIME
+    // after they depart: at departure, the trip would depart now.
     final var purseSeinerFishingLocationAtDepartureChecker = allOf(
       condition(
         purseSeinerFishAndReturnDurationFunction,
@@ -574,8 +581,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       purseSeinerFishingLocationLegalityChecker
     );
 
-    // Whether a vessel at sea could sail to a cell, fish there once, and be back in port by
-    // the first PURSE_SEINER_RETURN_TIME after its trip started.
+    // Whether a vessel at sea could sail to a cell, fish there once, and be
+    // back in port by the first PURSE_SEINER_RETURN_TIME after its trip
+    // started.
     final var purseSeinerFishAndReturnInTime = condition(
       purseSeinerFishAndReturnDurationFunction,
       lessThan(
@@ -588,16 +596,17 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    // At sea, a vessel does not fish the same cell twice in a trip. Tested first, before the
-    // checks that need a path.
+    // At sea, a vessel does not fish the same cell twice in a trip. Tested
+    // first, before the checks that need a path.
     final var purseSeinerFishingLocationAtSeaChecker = allOf(
       not(cellWasFishedThisTrip()),
       purseSeinerFishAndReturnInTime,
       purseSeinerFishingLocationLegalityChecker
     );
 
-    // Bottom trawlers must be back in port within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of
-    // departing: at departure, that is the whole of it.
+    // Bottom trawlers must be back in port within
+    // BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of departing: at departure, that is
+    // the whole of it.
     final var bottomTrawlerFishingLocationAtDepartureChecker = allOf(
       condition(
         bottomTrawlerFishAndReturnDurationFunction,
@@ -606,8 +615,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       bottomTrawlerFishingLocationLegalityChecker
     );
 
-    // Whether a vessel at sea could sail to a cell, fish there once, and be back in port
-    // within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of its trip's start.
+    // Whether a vessel at sea could sail to a cell, fish there once, and be
+    // back in port within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of its trip's
+    // start.
     final var bottomTrawlerFishAndReturnInTime = condition(
       bottomTrawlerFishAndReturnDurationFunction,
       lessThan(
@@ -642,10 +652,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       durationUntil(nextOccurrenceOf(time(6, 0, 0), time(22, 0, 0)))
     );
 
-    // Bottom trawlers depart in the morning and return the same day (per Miquel Ortega:
-    // ~07:00 departure, ~16:30-18:00 return), unlike purse seiners' overnight schedule
-    // above - this used to share the purse seiner's 06:00/22:00 checkpoint pair, which
-    // made trawlers only eligible to depart after 22:00.
+    // Bottom trawlers depart in the morning and return the same day (per Miquel
+    // Ortega: ~07:00 departure, ~16:30-18:00 return), unlike purse seiners'
+    // overnight schedule above - this used to share the purse seiner's
+    // 06:00/22:00 checkpoint pair, which made trawlers only eligible to depart
+    // after 22:00.
     final var bottomTrawlerReadyForDeparture = checkThat(
       allOf(
         isPermitted(departNow(), totalAllowableCatchQuotas),
@@ -896,14 +907,16 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       .defaultFactory(
         simpleEngine(
           infiniteTank(),
-          speedOf(0, KNOT), // inactive vessels never travel, so this is never read
+          // inactive vessels never travel, so this is never read
+          speedOf(0, KNOT),
           volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
         )
       )
       .build();
 
-    // The fleet before any vessel is loaded: the social network takes it, not the loader,
-    // whose shared fishing event listeners depend on the network (a factory cycle otherwise).
+    // The fleet before any vessel is loaded: the social network takes it, not
+    // the loader, whose shared fishing event listeners depend on the network (a
+    // factory cycle otherwise).
     final var fleet = fleet(vesselField, portGrid, marketGrid);
     final var socialNetwork = socialNetwork(fleet);
     final var cliqueDynamics = cliqueDynamics(
