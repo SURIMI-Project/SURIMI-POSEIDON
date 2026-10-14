@@ -69,7 +69,9 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
   `AWS_ACCESS_KEY_ID` is set (CI sets it from repository secrets); it is skipped otherwise.
 - Two simulations of the same scenario are not reproducible against each other unless they share
   a seed (`SimulationStartOptions.seed`, which defaults to the current time in milliseconds). With
-  the same seed, they are, even across JVMs. Otherwise, compare values within one simulation, not
+  the same seed, they are, in one JVM or across JVMs, as long as model code never iterates a
+  collection in identity-hash order (POSEIDON `docs/agents/architecture.md`, "Determinism");
+  `ScenarioReproducibilityTest` checks it. Otherwise, compare values within one simulation, not
   across runs.
 - SpotBugs: suppress a one-off false positive in place with
   `@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "...", justification = "...")` (see
