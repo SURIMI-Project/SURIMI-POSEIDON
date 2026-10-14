@@ -76,6 +76,8 @@ import static uk.ac.ox.poseidon.agents.social.Factories.*;
 import static uk.ac.ox.poseidon.agents.tasks.accounting.Factories.payTripCost;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.selectorTask;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
+import static uk.ac.ox.poseidon.agents.tasks.decorators.Factories.untilFail;
+import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.chooseNextDestination;
 import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
 import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
@@ -87,6 +89,7 @@ import static uk.ac.ox.poseidon.agents.travel.Factories.routeProperty;
 import static uk.ac.ox.poseidon.agents.travel.Factories.routeViaDestination;
 import static uk.ac.ox.poseidon.agents.travel.Factories.timeCost;
 import static uk.ac.ox.poseidon.agents.travel.Factories.travelCost;
+import static uk.ac.ox.poseidon.agents.trips.Factories.cellWasFishedThisTrip;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.perVessel;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.vesselEventListener;
@@ -115,6 +118,7 @@ import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.greaterThan
 import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
+import static uk.ac.ox.poseidon.core.predicates.logical.Factories.not;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.*;
@@ -141,6 +145,7 @@ import static uk.ac.ox.poseidon.io.Factories.directoryRemover;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.paths.Factories.simulationFolder;
 import static uk.ac.ox.poseidon.io.tables.Factories.*;
+import static uk.ac.ox.poseidon.regulations.Factories.allOf;
 import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
 import static uk.ac.ox.poseidon.regulations.predicates.Factories.isPermitted;
 import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionCellPredicate;
@@ -386,45 +391,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         // journey for both the fishing-location checks and the travel cost.
         final var routeFunction = routeViaDestination(pathFinder, distance);
 
-        final var purseSeinerFishingLocationChecker =
-            allOf(
-                fishingLocationLegalityChecker(
-                    purseSeinerRegulations,
-                    pathFinder,
-                    distance,
-                    PURSE_SEINE_SET_DURATION
-                ),
-                condition(
-                    combinedDuration(
-                        composedFunction(routeFunction, routeProperty("duration")),
-                        constant(PURSE_SEINE_SET_DURATION)
-                    ),
-                    lessThan(
-                        durationUntil(nextTimeAt(PURSE_SEINER_RETURN_TIME))
-                    )
-                )
-            );
-
-        final var bottomTrawlerFishingLocationChecker =
-            allOf(
-                fishingLocationLegalityChecker(
-                    bottomTrawlerRegulations,
-                    pathFinder,
-                    distance,
-                    BOTTOM_TRAWLER_SET_DURATION
-                ),
-                condition(
-                    combinedDuration(
-                        currentTripDuration(),
-                        composedFunction(routeFunction, routeProperty("duration")),
-                        constant(BOTTOM_TRAWLER_SET_DURATION)
-                    ),
-                    lessThan(
-                        constant(BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION)
-                    )
-                )
-            );
-
         final var species =
             speciesFromData(
                 tableFromCsvFile(inputPath.plus("species.csv")),
@@ -484,7 +450,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     BOTTOM_TRAWLER_GEAR_CODE,
                     indexedBiomassCatchabilityGear(
                         BOTTOM_TRAWLER_GEAR_CODE,
-                        constant(hours(1)),
+                        constant(BOTTOM_TRAWLER_SET_DURATION),
                         species,
                         defaultIfNull(
                             composedFunction(
@@ -581,8 +547,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
         final var catchCategoriser = uniformCatchCategoriser(catchCategory(CATCH_CATEGORY));
 
-        // One memory per vessel, keyed by gear code: what the vessel learns from its hauls and
-        // what it decides from must be this same instance.
+        // One memory per vessel, keyed by gear code: what the vessel learns from its fishing
+        // operations and what it decides from must be this same instance.
         final PerVesselFactory<KeyedMemory<String, Int2D, Bucket>> vesselMemory =
             perVessel(keyedMemory());
 
@@ -609,6 +575,104 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 totalAllowableCatchQuotas(fleetSegmentMapper)
             );
 
+        final var purseSeinerFishingLocationLegalityChecker =
+            fishingLocationLegalityChecker(
+                allOf(purseSeinerRegulations, totalAllowableCatchQuotas),
+                pathFinder,
+                distance,
+                PURSE_SEINE_SET_DURATION
+            );
+
+        final var bottomTrawlerFishingLocationLegalityChecker =
+            fishingLocationLegalityChecker(
+                allOf(bottomTrawlerRegulations, totalAllowableCatchQuotas),
+                pathFinder,
+                distance,
+                BOTTOM_TRAWLER_SET_DURATION
+            );
+
+        // How long it would take to sail to a cell, fish there once, and sail back to port. The
+        // checkers below test it before the legality checker: it is cheaper than the regulations,
+        // and late in a trip it turns down most cells.
+        final var purseSeinerFishAndReturnDurationFunction =
+            combinedDuration(
+                composedFunction(routeFunction, routeProperty("duration")),
+                constant(PURSE_SEINE_SET_DURATION)
+            );
+        final var bottomTrawlerFishAndReturnDurationFunction =
+            combinedDuration(
+                composedFunction(routeFunction, routeProperty("duration")),
+                constant(BOTTOM_TRAWLER_SET_DURATION)
+            );
+
+        // Purse seiners must be back in port by the first PURSE_SEINER_RETURN_TIME after they
+        // depart: at departure, the trip would depart now.
+        final var purseSeinerFishingLocationAtDepartureChecker =
+            allOf(
+                condition(
+                    purseSeinerFishAndReturnDurationFunction,
+                    lessThan(durationUntil(nextOccurrenceOf(PURSE_SEINER_RETURN_TIME)))
+                ),
+                purseSeinerFishingLocationLegalityChecker
+            );
+
+        // Whether a vessel at sea could sail to a cell, fish there once, and be back in port by
+        // the first PURSE_SEINER_RETURN_TIME after its trip started.
+        final var purseSeinerFishAndReturnInTime =
+            condition(
+                purseSeinerFishAndReturnDurationFunction,
+                lessThan(
+                    durationUntil(
+                        nextOccurrenceAfter(
+                            currentTripStartDateTime(),
+                            PURSE_SEINER_RETURN_TIME
+                        )
+                    )
+                )
+            );
+
+        // At sea, a vessel does not fish the same cell twice in a trip. Tested first, before the
+        // checks that need a path.
+        final var purseSeinerFishingLocationAtSeaChecker =
+            allOf(
+                not(cellWasFishedThisTrip()),
+                purseSeinerFishAndReturnInTime,
+                purseSeinerFishingLocationLegalityChecker
+            );
+
+        // Bottom trawlers must be back in port within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of
+        // departing: at departure, that is the whole of it.
+        final var bottomTrawlerFishingLocationAtDepartureChecker =
+            allOf(
+                condition(
+                    bottomTrawlerFishAndReturnDurationFunction,
+                    lessThan(constant(BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION))
+                ),
+                bottomTrawlerFishingLocationLegalityChecker
+            );
+
+        // Whether a vessel at sea could sail to a cell, fish there once, and be back in port
+        // within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of its trip's start.
+        final var bottomTrawlerFishAndReturnInTime =
+            condition(
+                bottomTrawlerFishAndReturnDurationFunction,
+                lessThan(
+                    durationUntil(
+                        dateTimeAfter(
+                            currentTripStartDateTime(),
+                            BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION
+                        )
+                    )
+                )
+            );
+
+        final var bottomTrawlerFishingLocationAtSeaChecker =
+            allOf(
+                not(cellWasFishedThisTrip()),
+                bottomTrawlerFishAndReturnInTime,
+                bottomTrawlerFishingLocationLegalityChecker
+            );
+
         final var purseSeinerReadyForDeparture =
             checkThat(
                 allOf(
@@ -623,14 +687,15 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     condition(
                         currentDayOfWeek(),
                         in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
-                    )
+                    ),
+                    not(vesselHasStartedTripToday())
                 )
             );
 
         final var purseSeinerWaitUntilNextCheckpoint =
             waitFor(
                 durationUntil(
-                    nextTimeAt(time(6, 0, 0), time(22, 0, 0))
+                    nextOccurrenceOf(time(6, 0, 0), time(22, 0, 0))
                 )
             );
 
@@ -652,51 +717,86 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     condition(
                         currentDayOfWeek(),
                         in(constant(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY)))
-                    )
+                    ),
+                    not(vesselHasStartedTripToday())
                 )
             );
 
         final var bottomTrawlerWaitUntilNextCheckpoint =
             waitFor(
                 durationUntil(
-                    nextTimeAt(time(7, 0, 0))
+                    nextOccurrenceOf(time(7, 0, 0))
                 )
             );
 
-        final var purseSeinerStartTrip =
+        final var startPurseSeinerTrip =
             startTrip(
                 epsilonGreedyDestination(
                     PURSE_SEINER_EXPLORATION_PROBABILITY,
                     neighbourhoodGridExplorer(
-                        optionValues,
                         pathFinder,
-                        purseSeinerFishingLocationChecker,
+                        purseSeinerFishingLocationAtDepartureChecker,
+                        shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
+                        MAXIMUM_EXPLORATION_WIDENING,
+                        bestKnownOption(optionValues, currentCell())
+                    ),
+                    greedyPicker(
+                        optionValues,
+                        purseSeinerFishingLocationAtDepartureChecker
+                    )
+                )
+            );
+
+        final var chooseNextPurseSeinerDestination =
+            chooseNextDestination(
+                epsilonGreedyDestination(
+                    PURSE_SEINER_EXPLORATION_PROBABILITY,
+                    neighbourhoodGridExplorer(
+                        pathFinder,
+                        purseSeinerFishingLocationAtSeaChecker,
                         shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
                         MAXIMUM_EXPLORATION_WIDENING,
                         currentCell()
                     ),
                     greedyPicker(
                         optionValues,
-                        purseSeinerFishingLocationChecker
+                        purseSeinerFishingLocationAtSeaChecker
                     )
                 )
             );
 
-        final var bottomTrawlerStartTrip =
+        final var startBottomTrawlerTrip =
             startTrip(
                 epsilonGreedyDestination(
                     BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
                     neighbourhoodGridExplorer(
-                        optionValues,
                         pathFinder,
-                        bottomTrawlerFishingLocationChecker,
+                        bottomTrawlerFishingLocationAtDepartureChecker,
+                        shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
+                        MAXIMUM_EXPLORATION_WIDENING,
+                        bestKnownOption(optionValues, currentCell())
+                    ),
+                    greedyPicker(
+                        optionValues,
+                        bottomTrawlerFishingLocationAtDepartureChecker
+                    )
+                )
+            );
+
+        final var chooseNextBottomTrawlerDestination =
+            chooseNextDestination(
+                epsilonGreedyDestination(
+                    BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
+                    neighbourhoodGridExplorer(
+                        pathFinder,
+                        bottomTrawlerFishingLocationAtSeaChecker,
                         shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
                         MAXIMUM_EXPLORATION_WIDENING,
                         currentCell()
                     ),
                     greedyPicker(
                         optionValues,
-                        bottomTrawlerFishingLocationChecker
+                        bottomTrawlerFishingLocationAtSeaChecker
                     )
                 )
             );
@@ -779,17 +879,25 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     succeedOrWait(
                         sequenceTask(
                             purseSeinerReadyForDeparture,
-                            purseSeinerStartTrip
+                            startPurseSeinerTrip
                         ),
                         purseSeinerWaitUntilNextCheckpoint
                     ),
-                    travelAlongPathTo(
-                        pathFinder,
-                        distance,
-                        currentTripDestinationCell(),
-                        currentTripEventManager()
+                    untilFail(
+                        sequenceTask(
+                            travelAlongPathTo(
+                                pathFinder,
+                                distance,
+                                currentTripDestinationCell(),
+                                currentTripEventManager()
+                            ),
+                            purseSeinerFishingTask,
+                            // No time to fish once more here and sail home: going via any
+                            // other cell takes longer, so the trip ends without a search.
+                            checkThat(vesselProperty("cell"), purseSeinerFishAndReturnInTime),
+                            chooseNextPurseSeinerDestination
+                        )
                     ),
-                    purseSeinerFishingTask,
                     setDestinationToOrigin(),
                     travelAlongPathTo(
                         pathFinder,
@@ -797,6 +905,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         currentTripDestinationCell(),
                         currentTripEventManager()
                     ),
+                    arriveInPort(),
                     payTripCost(tripCostFromHourlyCosts(hourlyCost)),
                     landCatches(constant(hours(1))),
                     endTrip()
@@ -818,17 +927,25 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     succeedOrWait(
                         sequenceTask(
                             bottomTrawlerReadyForDeparture,
-                            bottomTrawlerStartTrip
+                            startBottomTrawlerTrip
                         ),
                         bottomTrawlerWaitUntilNextCheckpoint
                     ),
-                    travelAlongPathTo(
-                        pathFinder,
-                        distance,
-                        currentTripDestinationCell(),
-                        currentTripEventManager()
+                    untilFail(
+                        sequenceTask(
+                            travelAlongPathTo(
+                                pathFinder,
+                                distance,
+                                currentTripDestinationCell(),
+                                currentTripEventManager()
+                            ),
+                            bottomTrawlerFishingTask,
+                            // No time to fish once more here and sail home: going via any
+                            // other cell takes longer, so the trip ends without a search.
+                            checkThat(vesselProperty("cell"), bottomTrawlerFishAndReturnInTime),
+                            chooseNextBottomTrawlerDestination
+                        )
                     ),
-                    bottomTrawlerFishingTask,
                     setDestinationToOrigin(),
                     travelAlongPathTo(
                         pathFinder,
@@ -836,6 +953,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                         currentTripDestinationCell(),
                         currentTripEventManager()
                     ),
+                    arriveInPort(),
                     payTripCost(tripCostFromHourlyCosts(hourlyCost)),
                     landCatches(constant(hours(1))),
                     endTrip()
@@ -879,7 +997,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .build();
 
         // The fleet before any vessel is loaded: the social network takes it, not the loader,
-        // whose shared haul listeners depend on the network (a factory cycle otherwise).
+        // whose shared fishing event listeners depend on the network (a factory cycle otherwise).
         final var fleet = fleet(vesselField, portGrid, marketGrid);
         final var socialNetwork = socialNetwork(fleet);
         final var cliqueDynamics =
@@ -891,7 +1009,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 ),
                 MAXIMUM_CLIQUE_SIZE
             );
-        final var haulSharer = haulSharer(socialNetwork);
+        final var fishingEventSharer = fishingEventSharer(socialNetwork);
 
         final var fleetLoader =
             FleetFromVesselRegisterFactory
@@ -908,7 +1026,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 .dataMapping("engine.code", "main_fishing_gear")
                 .extraFactory(
                     vesselEventListener(
-                        haulRecorder(
+                        fishingEventRecorder(
                             modelGrid,
                             keyedMemorySelector(
                                 vesselMemory,
@@ -919,8 +1037,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                     )
                 )
                 .extraFactory(
-                    sharedHaulListener(
-                        haulRecorder(
+                    sharedFishingEventListener(
+                        fishingEventRecorder(
                             modelGrid,
                             keyedMemorySelector(
                                 vesselMemory,
@@ -928,7 +1046,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                             ),
                             exponentialMovingAverageOfBuckets(SOCIAL_LEARNING_ALPHA)
                         ),
-                        haulSharer
+                        fishingEventSharer
                     )
                 )
                 .build();
@@ -972,7 +1090,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
             .component("fleet", fleetLoader)
             .component("socialNetwork", socialNetwork)
             .component("cliqueDynamics", cliqueDynamics)
-            .component("haulSharer", haulSharer)
+            .component("fishingEventSharer", fishingEventSharer)
             .component("fixedCostCollector", fixedCostCollector)
             .component("fishingActionAccumulator", fishingActionAccumulator)
             .component("biomassSaleAccumulator", biomassSaleAccumulator)

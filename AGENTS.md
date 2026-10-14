@@ -65,8 +65,10 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
   class-loading-order bugs such as unit labels registered by static initialisers.
 - `S3InputsIntegrationTest` downloads the inputs from the real SURIMI bucket and runs only when
   `AWS_ACCESS_KEY_ID` is set (CI sets it from repository secrets); it is skipped otherwise.
-- Two simulations of the same scenario are not reproducible against each other. Compare values
-  within one simulation, not across runs.
+- Two simulations of the same scenario are not reproducible against each other unless they share
+  a seed (`SimulationStartOptions.seed`, which defaults to the current time in milliseconds). With
+  the same seed, they are, even across JVMs. Otherwise, compare values within one simulation, not
+  across runs.
 - SpotBugs: suppress a one-off false positive in place with
   `@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "...", justification = "...")` (see
   `WithSimulationRequestHandler.java`). `spotbugs_exclude.xml` is for broad, structural exclusions
@@ -128,6 +130,13 @@ Java produces), stop and tell the user; how to resolve the drift is their call. 
 separate the drift from your own change: stash your Java changes, regenerate and commit the drift
 alone, then unstash, regenerate and commit your change — each commit then comes from a real writer
 run.
+
+## Code style
+
+Follow the "Code style" section of `POSEIDON/AGENTS.md` (`final` everywhere, lambdas over
+anonymous classes, method references over lambdas). Scenario classes such as
+`NorthwesternMedScenario` are the exception: they stay readable for people new to Java, with no
+method references or other clever tricks; safety nets belong in tests, not in call-site syntax.
 
 ## Submodules
 
