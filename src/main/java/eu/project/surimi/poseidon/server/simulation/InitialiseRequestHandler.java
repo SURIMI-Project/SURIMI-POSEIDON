@@ -22,6 +22,13 @@
 
 package eu.project.surimi.poseidon.server.simulation;
 
+import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
+import static io.grpc.Status.*;
+import static java.lang.System.Logger.Level.INFO;
+import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
+
 import build.buf.gen.surimi.v1.InitialiseSimulationRequest;
 import build.buf.gen.surimi.v1.InitialiseSimulationResponse;
 import build.buf.gen.surimi.v1.Market;
@@ -33,18 +40,6 @@ import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
-import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.SimulationStartOptions;
-import uk.ac.ox.poseidon.core.utils.Measurements;
-import uk.ac.ox.poseidon.io.ScenarioLoader;
-
-import javax.measure.Unit;
-import javax.measure.format.MeasurementParseException;
-import javax.measure.quantity.Mass;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.time.Period;
@@ -54,13 +49,17 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
-
-import static build.buf.gen.surimi.v1.RasterCellOrigin.RASTER_CELL_ORIGIN_CENTROID;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
-import static io.grpc.Status.*;
-import static java.lang.System.Logger.Level.INFO;
-import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
+import javax.measure.Unit;
+import javax.measure.format.MeasurementParseException;
+import javax.measure.quantity.Mass;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.beanutils.PropertyUtils;
+import uk.ac.ox.poseidon.core.Scenario;
+import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.SimulationStartOptions;
+import uk.ac.ox.poseidon.core.utils.Measurements;
+import uk.ac.ox.poseidon.io.ScenarioLoader;
 
 /**
  * Handles {@code InitialiseSimulation}: loads (and caches by name) the requested scenario from
@@ -74,202 +73,217 @@ import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
  */
 @RequiredArgsConstructor
 public class InitialiseRequestHandler
-    extends RequestHandler<InitialiseSimulationRequest, InitialiseSimulationResponse> {
+  extends RequestHandler<
+    InitialiseSimulationRequest,
+    InitialiseSimulationResponse
+  >
+{
 
-    private static final System.Logger logger =
-        System.getLogger(InitialiseRequestHandler.class.getName());
-    private static final Pattern SCENARIO_NAME_PATTERN = Pattern.compile("[A-Za-z0-9_-]+");
+  private static final System.Logger logger = System.getLogger(
+    InitialiseRequestHandler.class.getName()
+  );
+  private static final Pattern SCENARIO_NAME_PATTERN = Pattern.compile(
+    "[A-Za-z0-9_-]+"
+  );
 
-    @NonNull private final SimulationManager simulationManager;
-    @NonNull private final ScenarioLoader scenarioLoader;
-    @NonNull private final Path scenarioFolder;
-    /** Run before each initialisation, e.g. to warn that the inputs have changed. */
-    @NonNull private final Runnable inputsCheck;
+  @NonNull
+  private final SimulationManager simulationManager;
 
-    private final Map<String, Scenario> scenarios = new ConcurrentHashMap<>();
+  @NonNull
+  private final ScenarioLoader scenarioLoader;
 
-    @Override
-    protected InitialiseSimulationResponse getResponse(final InitialiseSimulationRequest request) {
-        inputsCheck.run();
-        final UUID simulationId = SimulationManager.parseId(request.getSimulationId());
+  @NonNull
+  private final Path scenarioFolder;
 
-        if (simulationManager.contains(simulationId)) {
-            throw ALREADY_EXISTS
-                .withDescription("Simulation already initialised: " + simulationId)
-                .asRuntimeException();
-        }
+  /** Run before each initialisation, e.g. to warn that the inputs have changed. */
+  @NonNull
+  private final Runnable inputsCheck;
 
-        final String scenarioName = validateScenarioName(request.getScenarioName());
-        final Scenario scenario =
-            scenarios.computeIfAbsent(
-                scenarioName,
-                s -> scenarioLoader.load(scenarioFolder.resolve(s + ".yaml"))
-            );
+  private final Map<String, Scenario> scenarios = new ConcurrentHashMap<>();
 
-        final Period stepSize = parsePeriod(request.getSimulation().getTimeStep());
-        final Unit<Mass> massUnit = getMassUnit(request);
-        final ImmutableSet<String> marketCodes =
-            request
-                .getSimulation()
-                .getItems()
-                .getMarketsList()
-                .stream()
-                .map(Market::getMarketCode)
-                .collect(toImmutableSet());
-        final ImmutableSet<String> priceCategoryCodes =
-            request
-                .getSimulation()
-                .getItems()
-                .getPriceCategoriesList()
-                .stream()
-                .map(PriceCategory::getCategoryCode)
-                .collect(toImmutableSet());
-        final ImmutableSet<SpeciesKey> speciesKeys =
-            request
-                .getSimulation()
-                .getItems()
-                .getSpeciesList()
-                .stream()
-                .map(SpeciesKey::from)
-                .collect(toImmutableSet());
+  @Override
+  protected InitialiseSimulationResponse getResponse(
+    final InitialiseSimulationRequest request
+  ) {
+    inputsCheck.run();
+    final UUID simulationId = SimulationManager.parseId(
+      request.getSimulationId()
+    );
 
-        final ImmutableSet<FleetSegment> fleetSegments =
-            request
-                .getSimulation()
-                .getItems()
-                .getFleetSegmentsList()
-                .stream()
-                .map(FleetSegmentProtoMapper::toPoseidonFleetSegment)
-                .filter(fleetSegment -> Server.MODEL_NAME.equals(fleetSegment.getModel()))
-                .collect(toImmutableSet());
-
-        validateContract(request, fleetSegments);
-
-        final Simulation simulation =
-            scenario.startNewSimulation(
-                SimulationStartOptions
-                    .builder()
-                    .simulationId(simulationId)
-                    .propertyOverride(
-                        "startingDateTime",
-                        dateTime(toLocalDateTime(request.getSimulation().getStartDateTime()))
-                    )
-                    .build()
-            );
-        log(INFO, simulation, "Simulation started");
-        logMemoryUsage(simulation);
-        simulationManager.put(
-            simulationId,
-            simulation,
-            new SimulationManager.SimulationProperties(
-                stepSize,
-                massUnit,
-                marketCodes,
-                priceCategoryCodes,
-                speciesKeys,
-                fleetSegments
-            )
-        );
-        return InitialiseSimulationResponse
-            .newBuilder()
-            .setSimulationId(simulationId.toString())
-            .build();
+    if (simulationManager.contains(simulationId)) {
+      throw ALREADY_EXISTS.withDescription(
+        "Simulation already initialised: " + simulationId
+      ).asRuntimeException();
     }
 
-    private static String validateScenarioName(final String scenarioName) {
-        if (!SCENARIO_NAME_PATTERN.matcher(scenarioName).matches()) {
-            throw INVALID_ARGUMENT
-                .withDescription("Invalid scenario name: " + scenarioName)
-                .asRuntimeException();
-        }
-        return scenarioName;
-    }
+    final String scenarioName = validateScenarioName(request.getScenarioName());
+    final Scenario scenario = scenarios.computeIfAbsent(scenarioName, s ->
+      scenarioLoader.load(scenarioFolder.resolve(s + ".yaml"))
+    );
 
-    private void validateContract(
-        final InitialiseSimulationRequest request,
-        final ImmutableSet<FleetSegment> fleetSegments
+    final Period stepSize = parsePeriod(request.getSimulation().getTimeStep());
+    final Unit<Mass> massUnit = getMassUnit(request);
+    final ImmutableSet<String> marketCodes = request
+      .getSimulation()
+      .getItems()
+      .getMarketsList()
+      .stream()
+      .map(Market::getMarketCode)
+      .collect(toImmutableSet());
+    final ImmutableSet<String> priceCategoryCodes = request
+      .getSimulation()
+      .getItems()
+      .getPriceCategoriesList()
+      .stream()
+      .map(PriceCategory::getCategoryCode)
+      .collect(toImmutableSet());
+    final ImmutableSet<SpeciesKey> speciesKeys = request
+      .getSimulation()
+      .getItems()
+      .getSpeciesList()
+      .stream()
+      .map(SpeciesKey::from)
+      .collect(toImmutableSet());
+
+    final ImmutableSet<FleetSegment> fleetSegments = request
+      .getSimulation()
+      .getItems()
+      .getFleetSegmentsList()
+      .stream()
+      .map(FleetSegmentProtoMapper::toPoseidonFleetSegment)
+      .filter(fleetSegment -> Server.MODEL_NAME.equals(fleetSegment.getModel()))
+      .collect(toImmutableSet());
+
+    validateContract(request, fleetSegments);
+
+    final Simulation simulation = scenario.startNewSimulation(
+      SimulationStartOptions.builder()
+        .simulationId(simulationId)
+        .propertyOverride(
+          "startingDateTime",
+          dateTime(toLocalDateTime(request.getSimulation().getStartDateTime()))
+        )
+        .build()
+    );
+    log(INFO, simulation, "Simulation started");
+    logMemoryUsage(simulation);
+    simulationManager.put(
+      simulationId,
+      simulation,
+      new SimulationManager.SimulationProperties(
+        stepSize,
+        massUnit,
+        marketCodes,
+        priceCategoryCodes,
+        speciesKeys,
+        fleetSegments
+      )
+    );
+    return InitialiseSimulationResponse.newBuilder()
+      .setSimulationId(simulationId.toString())
+      .build();
+  }
+
+  private static String validateScenarioName(final String scenarioName) {
+    if (!SCENARIO_NAME_PATTERN.matcher(scenarioName).matches()) {
+      throw INVALID_ARGUMENT.withDescription(
+        "Invalid scenario name: " + scenarioName
+      ).asRuntimeException();
+    }
+    return scenarioName;
+  }
+
+  private void validateContract(
+    final InitialiseSimulationRequest request,
+    final ImmutableSet<FleetSegment> fleetSegments
+  ) {
+    final boolean isRasterCellOriginCentroid = request
+      .getSimulation()
+      .getGeography()
+      .getRasterCellOrigin()
+      .equals(RASTER_CELL_ORIGIN_CENTROID);
+    if (!isRasterCellOriginCentroid) {
+      throw FAILED_PRECONDITION.withDescription(
+        "Only centroid raster cell origin is supported."
+      ).asRuntimeException();
+    }
+    if (fleetSegments.isEmpty()) {
+      throw INVALID_ARGUMENT.withDescription(
+        "Contract must list at least one fleet segment for " +
+          Server.MODEL_NAME +
+          "."
+      ).asRuntimeException();
+    }
+    final List<FleetSegment> segments = fleetSegments.asList();
+    for (int i = 0; i < segments.size(); i++) {
+      for (int j = i + 1; j < segments.size(); j++) {
+        if (segments.get(i).overlaps(segments.get(j))) {
+          throw INVALID_ARGUMENT.withDescription(
+            "Contract fleet segments overlap: " +
+              segments.get(i) +
+              " and " +
+              segments.get(j)
+          ).asRuntimeException();
+        }
+      }
+    }
+  }
+
+  private static Unit<Mass> getMassUnit(
+    final InitialiseSimulationRequest request
+  ) {
+    return request
+      .getSimulation()
+      .getStandards()
+      .getMeasurements()
+      .getUnitsList()
+      .stream()
+      .filter(unit -> unit.getQuantity().equals("mass"))
+      .findFirst()
+      .map(unit -> parseMassUnit(unit.getUnit()))
+      .orElseThrow(() ->
+        NOT_FOUND.withDescription(
+          "Standard unit for mass not found."
+        ).asRuntimeException()
+      );
+  }
+
+  private static Unit<Mass> parseMassUnit(final String massUnit) {
+    try {
+      return Measurements.parseMassUnit(massUnit);
+    } catch (final MeasurementParseException e) {
+      throw wrap(INVALID_ARGUMENT, e);
+    }
+  }
+
+  @SuppressWarnings("SameParameterValue")
+  private void setScenarioProperty(
+    final Scenario scenario,
+    final String propertyName,
+    final Object value
+  ) {
+    try {
+      PropertyUtils.setProperty(scenario, propertyName, value);
+    } catch (
+      final IllegalAccessException
+      | InvocationTargetException
+      | NoSuchMethodException e
     ) {
-        final boolean isRasterCellOriginCentroid = request
-            .getSimulation()
-            .getGeography()
-            .getRasterCellOrigin()
-            .equals(RASTER_CELL_ORIGIN_CENTROID);
-        if (!isRasterCellOriginCentroid) {
-            throw FAILED_PRECONDITION
-                .withDescription("Only centroid raster cell origin is supported.")
-                .asRuntimeException();
-        }
-        if (fleetSegments.isEmpty()) {
-            throw INVALID_ARGUMENT
-                .withDescription("Contract must list at least one fleet segment for " + Server.MODEL_NAME + ".")
-                .asRuntimeException();
-        }
-        final List<FleetSegment> segments = fleetSegments.asList();
-        for (int i = 0; i < segments.size(); i++) {
-            for (int j = i + 1; j < segments.size(); j++) {
-                if (segments.get(i).overlaps(segments.get(j))) {
-                    throw INVALID_ARGUMENT
-                        .withDescription(
-                            "Contract fleet segments overlap: " + segments.get(i) + " and " +
-                                segments.get(j)
-                        )
-                        .asRuntimeException();
-                }
-            }
-        }
+      throw FAILED_PRECONDITION.withDescription(
+        "Unable to set property " + propertyName + " to " + value
+      )
+        .withCause(e)
+        .asRuntimeException();
     }
+  }
 
-    private static Unit<Mass> getMassUnit(final InitialiseSimulationRequest request) {
-        return request.getSimulation()
-            .getStandards()
-            .getMeasurements()
-            .getUnitsList()
-            .stream()
-            .filter(unit -> unit.getQuantity().equals("mass"))
-            .findFirst()
-            .map(unit -> parseMassUnit(unit.getUnit()))
-            .orElseThrow(() ->
-                NOT_FOUND
-                    .withDescription("Standard unit for mass not found.")
-                    .asRuntimeException()
-            );
+  private Period parsePeriod(final String period) {
+    try {
+      return Period.parse(period);
+    } catch (final DateTimeParseException e) {
+      throw INVALID_ARGUMENT.withDescription("Invalid period: " + period)
+        .withCause(e)
+        .asRuntimeException();
     }
-
-    private static Unit<Mass> parseMassUnit(final String massUnit) {
-        try {
-            return Measurements.parseMassUnit(massUnit);
-        } catch (final MeasurementParseException e) {
-            throw wrap(INVALID_ARGUMENT, e);
-        }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private void setScenarioProperty(
-        final Scenario scenario,
-        final String propertyName,
-        final Object value
-    ) {
-        try {
-            PropertyUtils.setProperty(scenario, propertyName, value);
-        } catch (
-            final IllegalAccessException | InvocationTargetException | NoSuchMethodException e
-        ) {
-            throw FAILED_PRECONDITION
-                .withDescription("Unable to set property " + propertyName + " to " + value)
-                .withCause(e)
-                .asRuntimeException();
-        }
-    }
-
-    private Period parsePeriod(final String period) {
-        try {
-            return Period.parse(period);
-        } catch (final DateTimeParseException e) {
-            throw INVALID_ARGUMENT
-                .withDescription("Invalid period: " + period)
-                .withCause(e)
-                .asRuntimeException();
-        }
-    }
-
+  }
 }

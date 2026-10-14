@@ -22,42 +22,47 @@
 
 package eu.project.surimi.poseidon.server.mappers;
 
-import eu.project.surimi.poseidon.server.fleet.FleetSegment;
-import org.junit.jupiter.api.Test;
-
 import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toPoseidonFleetSegment;
 import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toProtoFleetSegment;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import eu.project.surimi.poseidon.server.fleet.FleetSegment;
+import org.junit.jupiter.api.Test;
+
 class FleetSegmentProtoMapperTest {
 
-    @Test
-    void mapsBlankProtoFieldsToNullWildcards() {
-        final build.buf.gen.surimi.v1.FleetSegment protoFleetSegment =
-            build.buf.gen.surimi.v1.FleetSegment.newBuilder()
-                .setGearCode("OTB")
-                .setVesselLengthClass(" ")
-                .setScale("Industrial")
-                .setCountryCode("")
-                .setModel("POSEIDON")
-                .build();
+  @Test
+  void mapsBlankProtoFieldsToNullWildcards() {
+    final build.buf.gen.surimi.v1.FleetSegment protoFleetSegment =
+      build.buf.gen.surimi.v1.FleetSegment.newBuilder()
+        .setGearCode("OTB")
+        .setVesselLengthClass(" ")
+        .setScale("Industrial")
+        .setCountryCode("")
+        .setModel("POSEIDON")
+        .build();
 
-        assertThat(toPoseidonFleetSegment(protoFleetSegment))
-            .isEqualTo(new FleetSegment("OTB", null, "Industrial", null, "POSEIDON"));
-    }
+    assertThat(toPoseidonFleetSegment(protoFleetSegment)).isEqualTo(
+      new FleetSegment("OTB", null, "Industrial", null, "POSEIDON")
+    );
+  }
 
-    @Test
-    void omitsNullPoseidonFieldsWhenMappingToProto() {
-        final FleetSegment fleetSegment =
-            new FleetSegment("OTB", null, "Industrial", null, "POSEIDON");
+  @Test
+  void omitsNullPoseidonFieldsWhenMappingToProto() {
+    final FleetSegment fleetSegment = new FleetSegment(
+      "OTB",
+      null,
+      "Industrial",
+      null,
+      "POSEIDON"
+    );
 
-        assertThat(toProtoFleetSegment(fleetSegment))
-            .isEqualTo(
-                build.buf.gen.surimi.v1.FleetSegment.newBuilder()
-                    .setGearCode("OTB")
-                    .setScale("Industrial")
-                    .setModel("POSEIDON")
-                    .build()
-            );
-    }
+    assertThat(toProtoFleetSegment(fleetSegment)).isEqualTo(
+      build.buf.gen.surimi.v1.FleetSegment.newBuilder()
+        .setGearCode("OTB")
+        .setScale("Industrial")
+        .setModel("POSEIDON")
+        .build()
+    );
+  }
 }

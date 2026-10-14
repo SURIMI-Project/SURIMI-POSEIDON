@@ -22,8 +22,22 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.time.ZoneOffset.UTC;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.reducing;
+
 import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -36,21 +50,6 @@ import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.regulations.Regulations;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.time.ZoneOffset.UTC;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.reducing;
 
 /**
  * Total Allowable Catch (TAC) regulation defined by interval, fleet segment, and species.
@@ -111,305 +110,349 @@ import static java.util.stream.Collectors.reducing;
  * </ul>
  */
 @RequiredArgsConstructor
-public class TotalAllowableCatchQuotas implements Regulations<TemporalFishingAction>, Steppable {
+public class TotalAllowableCatchQuotas
+  implements Regulations<TemporalFishingAction>, Steppable
+{
 
-    private final @NonNull FishingEventAccumulator fishingEventAccumulator;
-    private final @NonNull FleetSegmentMapper fleetSegmentMapper;
+  private final @NonNull FishingEventAccumulator fishingEventAccumulator;
+  private final @NonNull FleetSegmentMapper fleetSegmentMapper;
 
-    /**
-     * Configured TAC quotas in kilograms, keyed by fleet-quota interval and quota-species.
-     */
-    private final Map<QuotaKey, Map<Species, Double>> quotas = new HashMap<>();
+  /**
+   * Configured TAC quotas in kilograms, keyed by fleet-quota interval and quota-species.
+   */
+  private final Map<QuotaKey, Map<Species, Double>> quotas = new HashMap<>();
 
-    /**
-     * Accumulated gross catches in kilograms, keyed by fleet-quota interval and quota-species.
-     * <p>
-     * Keys in this map align with quota-species (not necessarily the raw caught species), because
-     * catches are recorded after applying {@link Species#covers(Species)} matching.
-     */
-    private final Map<QuotaKey, Map<Species, Double>> catches = new HashMap<>();
+  /**
+   * Accumulated gross catches in kilograms, keyed by fleet-quota interval and quota-species.
+   * <p>
+   * Keys in this map align with quota-species (not necessarily the raw caught species), because
+   * catches are recorded after applying {@link Species#covers(Species)} matching.
+   */
+  private final Map<QuotaKey, Map<Species, Double>> catches = new HashMap<>();
 
-    /**
-     * Closure start instants keyed by fleet-quota interval.
-     */
-    private final Map<QuotaKey, Instant> closureInstants = new LinkedHashMap<>();
+  /**
+   * Closure start instants keyed by fleet-quota interval.
+   */
+  private final Map<QuotaKey, Instant> closureInstants = new LinkedHashMap<>();
 
-    /**
-     * Returns whether a fishing action is permitted for the acting vessel's fleet segment.
-     * <p>
-     * The action is rejected if its interval overlaps any effective closure interval for a
-     * fleet-quota interval that covers the acting vessel's fleet segment.
-     *
-     * @param action fishing action to evaluate
-     * @return {@code true} when the action does not overlap any closed interval
-     */
-    @Override
-    public boolean isPermitted(final TemporalFishingAction action) {
-        checkNotNull(action);
-        final FleetSegment vesselFleetSegment =
-            fleetSegmentMapper.apply(checkNotNull(
-                action.getAgent(),
-                "Fishing action agent is required."
-            ));
-        return getEffectiveClosureIntervals(vesselFleetSegment)
-            .noneMatch(closureInterval -> closureInterval.overlaps(action.getInterval()));
-    }
+  /**
+   * Returns whether a fishing action is permitted for the acting vessel's fleet segment.
+   * <p>
+   * The action is rejected if its interval overlaps any effective closure interval for a
+   * fleet-quota interval that covers the acting vessel's fleet segment.
+   *
+   * @param action fishing action to evaluate
+   * @return {@code true} when the action does not overlap any closed interval
+   */
+  @Override
+  public boolean isPermitted(final TemporalFishingAction action) {
+    checkNotNull(action);
+    final FleetSegment vesselFleetSegment = fleetSegmentMapper.apply(
+      checkNotNull(action.getAgent(), "Fishing action agent is required.")
+    );
+    return getEffectiveClosureIntervals(vesselFleetSegment).noneMatch(
+      closureInterval -> closureInterval.overlaps(action.getInterval())
+    );
+  }
 
-    @Override
-    public void step(final SimState simState) {
-        checkArgument(simState instanceof Simulation);
-        final Simulation simulation = (Simulation) simState;
-        final Instant now = simulation.getTemporalSchedule().getDateTime().toInstant(UTC);
-        fishingEventAccumulator
-            .getEvents()
-            .collect(groupingBy(
-                fishingEvent -> fleetSegmentMapper.apply(fishingEvent.getAction().getAgent()),
-                reducing(
-                    Bucket.empty(),
-                    fishingEvent -> fishingEvent.getOutcome().getGrossCatch(),
-                    Bucket::add
-                )
-            ))
-            .forEach((fleetSegment, catches) ->
-                registerCatches(now, fleetSegment, catches)
-            );
-        fishingEventAccumulator.clear();
-    }
+  @Override
+  public void step(final SimState simState) {
+    checkArgument(simState instanceof Simulation);
+    final Simulation simulation = (Simulation) simState;
+    final Instant now = simulation
+      .getTemporalSchedule()
+      .getDateTime()
+      .toInstant(UTC);
+    fishingEventAccumulator
+      .getEvents()
+      .collect(
+        groupingBy(
+          fishingEvent ->
+            fleetSegmentMapper.apply(fishingEvent.getAction().getAgent()),
+          reducing(
+            Bucket.empty(),
+            fishingEvent -> fishingEvent.getOutcome().getGrossCatch(),
+            Bucket::add
+          )
+        )
+      )
+      .forEach((fleetSegment, catches) ->
+        registerCatches(now, fleetSegment, catches)
+      );
+    fishingEventAccumulator.clear();
+  }
 
-    /**
-     * Sets a quota for a given interval/fleet-segment/species combination.
-     * <p>
-     * Equivalent to {@link #setQuotas(Interval, Collection)} with a single definition.
-     *
-     * @param interval     interval to which the quota applies
-     * @param fleetSegment fleet segment to which the quota applies
-     * @param species      quota-species key
-     * @param quotaInKg    allowed biomass in kilograms (must be non-negative)
-     */
-    public void setQuota(
-        final Interval interval,
-        final FleetSegment fleetSegment,
-        final Species species,
-        final double quotaInKg
-    ) {
-        setQuotas(interval, List.of(new QuotaDefinition(fleetSegment, species, quotaInKg)));
-    }
+  /**
+   * Sets a quota for a given interval/fleet-segment/species combination.
+   * <p>
+   * Equivalent to {@link #setQuotas(Interval, Collection)} with a single definition.
+   *
+   * @param interval     interval to which the quota applies
+   * @param fleetSegment fleet segment to which the quota applies
+   * @param species      quota-species key
+   * @param quotaInKg    allowed biomass in kilograms (must be non-negative)
+   */
+  public void setQuota(
+    final Interval interval,
+    final FleetSegment fleetSegment,
+    final Species species,
+    final double quotaInKg
+  ) {
+    setQuotas(
+      interval,
+      List.of(new QuotaDefinition(fleetSegment, species, quotaInKg))
+    );
+  }
 
-    /**
-     * Sets several quotas for the same interval, all or nothing.
-     * <p>
-     * Quota definitions are immutable once set for a given fleet-quota interval and species.
-     * Overlapping TAC definitions are also rejected when interval and fleet-segment applicability
-     * overlap, regardless of species. Each definition is checked against both the existing quotas
-     * and the definitions before it in {@code definitions}; if any is rejected, none is set.
-     *
-     * @param interval    interval to which the quotas apply
-     * @param definitions fleet segment, species and quota (in kilograms) of each quota
-     */
-    public void setQuotas(
-        final Interval interval,
-        final Collection<QuotaDefinition> definitions
-    ) {
-        checkNotNull(interval, "TAC interval is required.");
-        checkNotNull(definitions, "TAC definitions are required.");
-        final Map<QuotaKey, Map<Species, Double>> staged = new HashMap<>();
-        quotas.forEach((quotaKey, quotaValues) -> staged.put(quotaKey, new HashMap<>(quotaValues)));
-        definitions.forEach(definition -> {
-            checkNotNull(definition, "TAC definition is required.");
-            checkArgument(definition.quotaInKg() >= 0.0, "TAC quota must be non-negative.");
-            checkNotNull(definition.fleetSegment(), "TAC fleet segment is required.");
-            checkNotNull(definition.species(), "TAC species is required.");
-            final QuotaKey quotaKey = new QuotaKey(definition.fleetSegment(), interval);
-            validateNewQuotaDefinition(staged, quotaKey, definition.species());
-            staged
-                .computeIfAbsent(quotaKey, __ -> new HashMap<>())
-                .put(definition.species(), definition.quotaInKg());
-        });
-        quotas.clear();
-        quotas.putAll(staged);
-    }
+  /**
+   * Sets several quotas for the same interval, all or nothing.
+   * <p>
+   * Quota definitions are immutable once set for a given fleet-quota interval and species.
+   * Overlapping TAC definitions are also rejected when interval and fleet-segment applicability
+   * overlap, regardless of species. Each definition is checked against both the existing quotas
+   * and the definitions before it in {@code definitions}; if any is rejected, none is set.
+   *
+   * @param interval    interval to which the quotas apply
+   * @param definitions fleet segment, species and quota (in kilograms) of each quota
+   */
+  public void setQuotas(
+    final Interval interval,
+    final Collection<QuotaDefinition> definitions
+  ) {
+    checkNotNull(interval, "TAC interval is required.");
+    checkNotNull(definitions, "TAC definitions are required.");
+    final Map<QuotaKey, Map<Species, Double>> staged = new HashMap<>();
+    quotas.forEach((quotaKey, quotaValues) ->
+      staged.put(quotaKey, new HashMap<>(quotaValues))
+    );
+    definitions.forEach(definition -> {
+      checkNotNull(definition, "TAC definition is required.");
+      checkArgument(
+        definition.quotaInKg() >= 0.0,
+        "TAC quota must be non-negative."
+      );
+      checkNotNull(definition.fleetSegment(), "TAC fleet segment is required.");
+      checkNotNull(definition.species(), "TAC species is required.");
+      final QuotaKey quotaKey = new QuotaKey(
+        definition.fleetSegment(),
+        interval
+      );
+      validateNewQuotaDefinition(staged, quotaKey, definition.species());
+      staged
+        .computeIfAbsent(quotaKey, __ -> new HashMap<>())
+        .put(definition.species(), definition.quotaInKg());
+    });
+    quotas.clear();
+    quotas.putAll(staged);
+  }
 
-    /**
-     * Returns effective closure intervals for a fleet segment.
-     * <p>
-     * The returned intervals are derived from recorded exhaustion timestamps for fleet-quota
-     * intervals whose fleet segment covers the requested fleet segment.
-     *
-     * @param fleetSegment fleet segment to query
-     * @return closed sub-intervals in insertion order
-     */
-    public Stream<Interval> getEffectiveClosureIntervals(final FleetSegment fleetSegment) {
-        checkNotNull(fleetSegment, "Fleet segment is required.");
-        return closureInstants
-            .entrySet()
-            .stream()
-            .filter(entry -> entry.getKey().getFleetSegment().covers(fleetSegment))
-            .map(entry -> Interval.of(entry.getValue(), entry.getKey().getInterval().getEnd()));
-    }
+  /**
+   * Returns effective closure intervals for a fleet segment.
+   * <p>
+   * The returned intervals are derived from recorded exhaustion timestamps for fleet-quota
+   * intervals whose fleet segment covers the requested fleet segment.
+   *
+   * @param fleetSegment fleet segment to query
+   * @return closed sub-intervals in insertion order
+   */
+  public Stream<Interval> getEffectiveClosureIntervals(
+    final FleetSegment fleetSegment
+  ) {
+    checkNotNull(fleetSegment, "Fleet segment is required.");
+    return closureInstants
+      .entrySet()
+      .stream()
+      .filter(entry -> entry.getKey().getFleetSegment().covers(fleetSegment))
+      .map(entry ->
+        Interval.of(entry.getValue(), entry.getKey().getInterval().getEnd())
+      );
+  }
 
-    /**
-     * Returns the proportion of a query interval during which fishing is permitted for each fleet
-     * segment with TAC definitions overlapping that interval.
-     *
-     * @param queryInterval interval to query
-     * @return permitted fishing ratio per fleet segment in sorted order
-     */
-    public Map<FleetSegment, Double> getFishingActivityRatios(final Interval queryInterval) {
-        checkNotNull(queryInterval, "Query interval is required.");
-        checkArgument(
-            Duration.between(queryInterval.getStart(), queryInterval.getEnd()).getSeconds() > 0L,
-            "Fishing activity query interval must be non-empty."
+  /**
+   * Returns the proportion of a query interval during which fishing is permitted for each fleet
+   * segment with TAC definitions overlapping that interval.
+   *
+   * @param queryInterval interval to query
+   * @return permitted fishing ratio per fleet segment in sorted order
+   */
+  public Map<FleetSegment, Double> getFishingActivityRatios(
+    final Interval queryInterval
+  ) {
+    checkNotNull(queryInterval, "Query interval is required.");
+    checkArgument(
+      Duration.between(
+        queryInterval.getStart(),
+        queryInterval.getEnd()
+      ).getSeconds() > 0L,
+      "Fishing activity query interval must be non-empty."
+    );
+    final Map<FleetSegment, Double> fishingActivityRatios =
+      new LinkedHashMap<>();
+    quotas
+      .keySet()
+      .stream()
+      .filter(quotaKey -> quotaKey.getInterval().overlaps(queryInterval))
+      .map(QuotaKey::getFleetSegment)
+      .distinct()
+      .sorted()
+      .forEach(fleetSegment ->
+        fishingActivityRatios.put(
+          fleetSegment,
+          permittedFishingRatio(queryInterval, fleetSegment)
+        )
+      );
+    return fishingActivityRatios;
+  }
+
+  private static void validateNewQuotaDefinition(
+    final Map<QuotaKey, Map<Species, Double>> quotas,
+    final QuotaKey quotaKey,
+    final Species quotaSpecies
+  ) {
+    for (final var quotaEntry : quotas.entrySet()) {
+      final QuotaKey existingQuotaKey = quotaEntry.getKey();
+      if (
+        !existingQuotaKey.getInterval().overlaps(quotaKey.getInterval())
+      ) continue;
+      if (
+        !existingQuotaKey.getFleetSegment().overlaps(quotaKey.getFleetSegment())
+      ) continue;
+      final Map<Species, Double> existingQuotas = quotaEntry.getValue();
+      if (!existingQuotaKey.equals(quotaKey)) {
+        throw new IllegalArgumentException(
+          (
+            "Overlapping TAC interval definition for interval %s, fleet segment '%s', " +
+            "and species '%s': species quotas are already configured for overlapping " +
+            "interval %s and fleet segment '%s'."
+          ).formatted(
+            quotaKey.getInterval(),
+            quotaKey.getFleetSegment(),
+            quotaSpecies,
+            existingQuotaKey.getInterval(),
+            existingQuotaKey.getFleetSegment()
+          )
         );
-        final Map<FleetSegment, Double> fishingActivityRatios = new LinkedHashMap<>();
-        quotas
-            .keySet()
-            .stream()
-            .filter(quotaKey -> quotaKey.getInterval().overlaps(queryInterval))
-            .map(QuotaKey::getFleetSegment)
-            .distinct()
-            .sorted()
-            .forEach(fleetSegment ->
-                fishingActivityRatios.put(
-                    fleetSegment,
-                    permittedFishingRatio(queryInterval, fleetSegment)
-                )
-            );
-        return fishingActivityRatios;
+      }
+      if (existingQuotas.containsKey(quotaSpecies)) {
+        throw new IllegalArgumentException(
+          (
+            "Overlapping TAC definition for interval %s, fleet segment '%s', and species" +
+            " " +
+            "'%s': the same species is already configured for this fleet segment and " +
+            "interval."
+          ).formatted(
+            quotaKey.getInterval(),
+            quotaKey.getFleetSegment(),
+            quotaSpecies
+          )
+        );
+      }
+      final Species conflictingSpecies = existingQuotas
+        .keySet()
+        .stream()
+        .filter(existingSpecies ->
+          quotaSpeciesOverlap(existingSpecies, quotaSpecies)
+        )
+        .findFirst()
+        .orElse(null);
+      if (conflictingSpecies != null) {
+        throw new IllegalArgumentException(
+          (
+            "Ambiguous TAC definition for interval %s, fleet segment '%s', and species " +
+            "'%s': overlapping quota species '%s' is already configured for the same " +
+            "fleet segment and interval."
+          ).formatted(
+            quotaKey.getInterval(),
+            quotaKey.getFleetSegment(),
+            quotaSpecies,
+            conflictingSpecies
+          )
+        );
+      }
     }
+  }
 
-    private static void validateNewQuotaDefinition(
-        final Map<QuotaKey, Map<Species, Double>> quotas,
-        final QuotaKey quotaKey,
-        final Species quotaSpecies
-    ) {
-        for (final var quotaEntry : quotas.entrySet()) {
-            final QuotaKey existingQuotaKey = quotaEntry.getKey();
-            if (!existingQuotaKey
-                .getInterval()
-                .overlaps(quotaKey.getInterval())) continue;
-            if (!existingQuotaKey
-                .getFleetSegment()
-                .overlaps(quotaKey.getFleetSegment())) continue;
-            final Map<Species, Double> existingQuotas = quotaEntry.getValue();
-            if (!existingQuotaKey.equals(quotaKey)) {
-                throw new IllegalArgumentException(
-                    ("Overlapping TAC interval definition for interval %s, fleet segment '%s', " +
-                        "and species '%s': species quotas are already configured for overlapping " +
-                        "interval %s and fleet segment '%s'.")
-                        .formatted(
-                            quotaKey.getInterval(),
-                            quotaKey.getFleetSegment(),
-                            quotaSpecies,
-                            existingQuotaKey.getInterval(),
-                            existingQuotaKey.getFleetSegment()
-                        )
-                );
+  private static boolean quotaSpeciesOverlap(
+    final Species firstSpecies,
+    final Species secondSpecies
+  ) {
+    return (
+      firstSpecies.covers(secondSpecies) || secondSpecies.covers(firstSpecies)
+    );
+  }
+
+  private void registerCatches(
+    final Instant instant,
+    final FleetSegment fleetSegment,
+    final Bucket catchesToRegister
+  ) {
+    checkNotNull(instant);
+    checkNotNull(fleetSegment);
+    checkNotNull(catchesToRegister);
+    quotas
+      .entrySet()
+      .stream()
+      .filter(entry -> entry.getKey().getInterval().contains(instant))
+      .filter(entry -> entry.getKey().getFleetSegment().covers(fleetSegment))
+      .forEach(entry -> {
+        final QuotaKey quotaKey = entry.getKey();
+        final Map<Species, Double> quotaValues = entry.getValue();
+        catchesToRegister.forEachBiomassValue((caughtSpecies, caughtBiomass) ->
+          quotaValues.forEach((quotaSpecies, quotaBiomass) -> {
+            if (quotaSpecies.covers(caughtSpecies)) {
+              final Double newCaughtBiomass = catches
+                .computeIfAbsent(quotaKey, __ -> new HashMap<>())
+                .merge(quotaSpecies, caughtBiomass, Double::sum);
+              if (newCaughtBiomass >= quotaBiomass) {
+                closureInstants.put(quotaKey, instant);
+              }
             }
-            if (existingQuotas.containsKey(quotaSpecies)) {
-                throw new IllegalArgumentException(
-                    ("Overlapping TAC definition for interval %s, fleet segment '%s', and species" +
-                        " " +
-                        "'%s': the same species is already configured for this fleet segment and " +
-                        "interval.")
-                        .formatted(
-                            quotaKey.getInterval(),
-                            quotaKey.getFleetSegment(),
-                            quotaSpecies
-                        )
-                );
-            }
-            final Species conflictingSpecies = existingQuotas
-                .keySet()
-                .stream()
-                .filter(existingSpecies -> quotaSpeciesOverlap(existingSpecies, quotaSpecies))
-                .findFirst()
-                .orElse(null);
-            if (conflictingSpecies != null) {
-                throw new IllegalArgumentException(
-                    ("Ambiguous TAC definition for interval %s, fleet segment '%s', and species " +
-                        "'%s': overlapping quota species '%s' is already configured for the same " +
-                        "fleet segment and interval.")
-                        .formatted(
-                            quotaKey.getInterval(),
-                            quotaKey.getFleetSegment(),
-                            quotaSpecies,
-                            conflictingSpecies
-                        )
-                );
-            }
-        }
-    }
+          })
+        );
+      });
+  }
 
-    private static boolean quotaSpeciesOverlap(
-        final Species firstSpecies,
-        final Species secondSpecies
-    ) {
-        return firstSpecies.covers(secondSpecies) || secondSpecies.covers(firstSpecies);
-    }
+  private double permittedFishingRatio(
+    final Interval queryInterval,
+    final FleetSegment fleetSegment
+  ) {
+    final long queryDurationSeconds = Duration.between(
+      queryInterval.getStart(),
+      queryInterval.getEnd()
+    ).getSeconds();
+    final List<Interval> intervals = getEffectiveClosureIntervals(fleetSegment)
+      .filter(closureInterval -> closureInterval.overlaps(queryInterval))
+      .map(closureInterval -> closureInterval.intersection(queryInterval))
+      .toList();
+    final long closedDurationSeconds = intervals
+      .stream()
+      .mapToLong(interval ->
+        Duration.between(interval.getStart(), interval.getEnd()).getSeconds()
+      )
+      .sum();
+    return (
+      (double) (queryDurationSeconds - closedDurationSeconds) /
+      queryDurationSeconds
+    );
+  }
 
-    private void registerCatches(
-        final Instant instant,
-        final FleetSegment fleetSegment,
-        final Bucket catchesToRegister
-    ) {
-        checkNotNull(instant);
-        checkNotNull(fleetSegment);
-        checkNotNull(catchesToRegister);
-        quotas
-            .entrySet()
-            .stream()
-            .filter(entry -> entry.getKey().getInterval().contains(instant))
-            .filter(entry -> entry.getKey().getFleetSegment().covers(fleetSegment))
-            .forEach(entry -> {
-                final QuotaKey quotaKey = entry.getKey();
-                final Map<Species, Double> quotaValues = entry.getValue();
-                catchesToRegister.forEachBiomassValue((caughtSpecies, caughtBiomass) ->
-                    quotaValues.forEach((quotaSpecies, quotaBiomass) -> {
-                        if (quotaSpecies.covers(caughtSpecies)) {
-                            final Double newCaughtBiomass = catches
-                                .computeIfAbsent(quotaKey, __ -> new HashMap<>())
-                                .merge(quotaSpecies, caughtBiomass, Double::sum);
-                            if (newCaughtBiomass >= quotaBiomass) {
-                                closureInstants.put(quotaKey, instant);
-                            }
-                        }
-                    })
-                );
-            });
-    }
+  /**
+   * One quota to set through {@link #setQuotas(Interval, Collection)}.
+   *
+   * @param fleetSegment fleet segment to which the quota applies
+   * @param species      quota-species key
+   * @param quotaInKg    allowed biomass in kilograms (must be non-negative)
+   */
+  public record QuotaDefinition(
+    FleetSegment fleetSegment,
+    Species species,
+    double quotaInKg
+  ) {}
 
-    private double permittedFishingRatio(
-        final Interval queryInterval,
-        final FleetSegment fleetSegment
-    ) {
-        final long queryDurationSeconds =
-            Duration.between(queryInterval.getStart(), queryInterval.getEnd()).getSeconds();
-        final List<Interval> intervals =
-            getEffectiveClosureIntervals(fleetSegment)
-                .filter(closureInterval -> closureInterval.overlaps(queryInterval))
-                .map(closureInterval -> closureInterval.intersection(queryInterval))
-                .toList();
-        final long closedDurationSeconds = intervals
-            .stream()
-            .mapToLong(interval -> Duration
-                .between(interval.getStart(), interval.getEnd())
-                .getSeconds())
-            .sum();
-        return (double) (queryDurationSeconds - closedDurationSeconds) / queryDurationSeconds;
-    }
+  @Value
+  private static class QuotaKey {
 
-    /**
-     * One quota to set through {@link #setQuotas(Interval, Collection)}.
-     *
-     * @param fleetSegment fleet segment to which the quota applies
-     * @param species      quota-species key
-     * @param quotaInKg    allowed biomass in kilograms (must be non-negative)
-     */
-    public record QuotaDefinition(FleetSegment fleetSegment, Species species, double quotaInKg) {}
-
-    @Value
-    private static class QuotaKey {
-        FleetSegment fleetSegment;
-        Interval interval;
-    }
+    FleetSegment fleetSegment;
+    Interval interval;
+  }
 }

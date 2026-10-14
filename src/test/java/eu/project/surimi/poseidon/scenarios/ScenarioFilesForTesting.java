@@ -24,46 +24,57 @@ package eu.project.surimi.poseidon.scenarios;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.io.ScenarioWriter;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Supplier;
+import uk.ac.ox.poseidon.core.Scenario;
+import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 public final class ScenarioFilesForTesting {
 
-    private static final LoadingCache<Class<? extends Supplier<Scenario>>, Path> paths =
-        Caffeine
-            .newBuilder()
-            .build(ScenarioFilesForTesting::writeScenarioFile);
+  private static final LoadingCache<
+    Class<? extends Supplier<Scenario>>,
+    Path
+  > paths = Caffeine.newBuilder().build(
+    ScenarioFilesForTesting::writeScenarioFile
+  );
 
-    private ScenarioFilesForTesting() {}
+  private ScenarioFilesForTesting() {}
 
-    private static Path writeScenarioFile(final Class<? extends Supplier<Scenario>> scenarioClass) {
-        final Path scenarioPath = Path.of(
-            "build", "tmp", "test", scenarioClass.getSimpleName() + ".yaml"
-        );
-        try {
-            final Path parent = scenarioPath.getParent();
-            if (parent != null) Files.createDirectories(parent);
-            final Supplier<Scenario> scenario =
-                scenarioClass.getDeclaredConstructor().newInstance();
-            new ScenarioWriter().write(scenario.get(), scenarioPath);
-        } catch (final IOException e) {
-            throw new RuntimeException("Failed to write minimal scenario", e);
-        } catch (
-            final InvocationTargetException | InstantiationException |
-                  IllegalAccessException | NoSuchMethodException e
-        ) {
-            throw new RuntimeException("Failed to instantiate scenario", e);
-        }
-        return scenarioPath;
+  private static Path writeScenarioFile(
+    final Class<? extends Supplier<Scenario>> scenarioClass
+  ) {
+    final Path scenarioPath = Path.of(
+      "build",
+      "tmp",
+      "test",
+      scenarioClass.getSimpleName() + ".yaml"
+    );
+    try {
+      final Path parent = scenarioPath.getParent();
+      if (parent != null) Files.createDirectories(parent);
+      final Supplier<Scenario> scenario = scenarioClass
+        .getDeclaredConstructor()
+        .newInstance();
+      new ScenarioWriter().write(scenario.get(), scenarioPath);
+    } catch (final IOException e) {
+      throw new RuntimeException("Failed to write minimal scenario", e);
+    } catch (
+      final InvocationTargetException
+      | InstantiationException
+      | IllegalAccessException
+      | NoSuchMethodException e
+    ) {
+      throw new RuntimeException("Failed to instantiate scenario", e);
     }
+    return scenarioPath;
+  }
 
-    public static Path getPath(final Class<? extends Supplier<Scenario>> scenarioClass) {
-        return paths.get(scenarioClass);
-    }
+  public static Path getPath(
+    final Class<? extends Supplier<Scenario>> scenarioClass
+  ) {
+    return paths.get(scenarioClass);
+  }
 }

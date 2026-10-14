@@ -1,9 +1,26 @@
-package eu.project.surimi.poseidon.server.fleet;
+/*
+ * POSEIDON: an agent-based model of fisheries
+ * Copyright (c) 2026, University of Oxford.
+ *
+ * University of Oxford means the Chancellor, Masters and Scholars of the
+ * University of Oxford, having an administrative office at Wellington
+ * Square, Oxford OX1 2JD, UK.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-import org.junit.jupiter.api.Test;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.core.scopes.Scope;
+package eu.project.surimi.poseidon.server.fleet;
 
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,53 +30,66 @@ import static uk.ac.ox.poseidon.core.functions.Factories.numericIntervalToString
 import static uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.core.scopes.Scope.GLOBAL_SCOPE;
 
+import org.junit.jupiter.api.Test;
+import uk.ac.ox.poseidon.agents.vessels.Vessel;
+import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
+import uk.ac.ox.poseidon.core.scopes.Scope;
+
 class FleetSegmentMapperFactoryTest {
 
-    @Test
-    void buildsMapperFromConfiguredValues() {
-        final FleetSegmentMapperFactory<Scope> factory =
-            fleetSegmentMapper(
-                "country_of_registration",
-                "loa",
-                numericIntervalToStringMapper(interval(0.0, 12.0, "VL0612")),
-                "Industrial"
-            );
+  @Test
+  void buildsMapperFromConfiguredValues() {
+    final FleetSegmentMapperFactory<Scope> factory = fleetSegmentMapper(
+      "country_of_registration",
+      "loa",
+      numericIntervalToStringMapper(interval(0.0, 12.0, "VL0612")),
+      "Industrial"
+    );
 
-        final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
+    final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
 
-        assertThat(mapper.apply(vessel("OTB", "country_of_registration", "ESP", "loa", 6.5)))
-            .isEqualTo(new FleetSegment("OTB", "VL0612", "Industrial", "ESP", "POSEIDON"));
-    }
+    assertThat(
+      mapper.apply(vessel("OTB", "country_of_registration", "ESP", "loa", 6.5))
+    ).isEqualTo(
+      new FleetSegment("OTB", "VL0612", "Industrial", "ESP", "POSEIDON")
+    );
+  }
 
-    @Test
-    void supportsAlternativeConfiguredValues() {
-        final FleetSegmentMapperFactory<Scope> factory =
-            fleetSegmentMapper(
-                "flag_state",
-                "lbp",
-                numericIntervalToStringMapper(interval(12.0, 18.0, "VL1218")),
-                "Artisanal"
-            );
+  @Test
+  void supportsAlternativeConfiguredValues() {
+    final FleetSegmentMapperFactory<Scope> factory = fleetSegmentMapper(
+      "flag_state",
+      "lbp",
+      numericIntervalToStringMapper(interval(12.0, 18.0, "VL1218")),
+      "Artisanal"
+    );
 
-        final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
+    final FleetSegmentMapper mapper = factory.get(GLOBAL_SCOPE);
 
-        assertThat(mapper.apply(vessel("PS", "flag_state", "FRA", "lbp", 13.0)))
-            .isEqualTo(new FleetSegment("PS", "VL1218", "Artisanal", "FRA", "POSEIDON"));
-    }
+    assertThat(
+      mapper.apply(vessel("PS", "flag_state", "FRA", "lbp", 13.0))
+    ).isEqualTo(
+      new FleetSegment("PS", "VL1218", "Artisanal", "FRA", "POSEIDON")
+    );
+  }
 
-    private static Vessel vessel(
-        final String gearCode,
-        final String countryTagName,
-        final String countryCode,
-        final String vesselLengthTagName,
-        final double vesselLength
-    ) {
-        final Vessel vessel = mock(Vessel.class);
-        final Gear gear = mock(Gear.class);
-        when(vessel.getGear()).thenReturn(gear);
-        when(gear.getCode()).thenReturn(gearCode);
-        when(vessel.getTag(countryTagName)).thenReturn(java.util.Optional.of(countryCode));
-        when(vessel.getTag(vesselLengthTagName)).thenReturn(java.util.Optional.of(vesselLength));
-        return vessel;
-    }
+  private static Vessel vessel(
+    final String gearCode,
+    final String countryTagName,
+    final String countryCode,
+    final String vesselLengthTagName,
+    final double vesselLength
+  ) {
+    final Vessel vessel = mock(Vessel.class);
+    final Gear gear = mock(Gear.class);
+    when(vessel.getGear()).thenReturn(gear);
+    when(gear.getCode()).thenReturn(gearCode);
+    when(vessel.getTag(countryTagName)).thenReturn(
+      java.util.Optional.of(countryCode)
+    );
+    when(vessel.getTag(vesselLengthTagName)).thenReturn(
+      java.util.Optional.of(vesselLength)
+    );
+    return vessel;
+  }
 }

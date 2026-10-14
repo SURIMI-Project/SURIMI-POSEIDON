@@ -22,6 +22,8 @@
 
 package eu.project.surimi.poseidon.server;
 
+import static java.lang.System.Logger.Level.INFO;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -32,10 +34,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
-
 import java.util.Optional;
-
-import static java.lang.System.Logger.Level.INFO;
 
 /**
  * Configures the process-wide OpenTelemetry SDK used to trace gRPC requests. Exports spans via
@@ -44,47 +43,53 @@ import static java.lang.System.Logger.Level.INFO;
  */
 public class OpenTelemetryConfiguration {
 
-    private static final System.Logger logger =
-        System.getLogger(OpenTelemetryConfiguration.class.getName());
+  private static final System.Logger logger = System.getLogger(
+    OpenTelemetryConfiguration.class.getName()
+  );
 
-    /**
-     * The process-wide {@link OpenTelemetry} instance, initialised once at class-load time.
-     */
-    public static final OpenTelemetry openTelemetry = initOpenTelemetry();
+  /**
+   * The process-wide {@link OpenTelemetry} instance, initialised once at class-load time.
+   */
+  public static final OpenTelemetry openTelemetry = initOpenTelemetry();
 
-    /**
-     * @return a new {@link OpenTelemetry} SDK instance, registered as the global instance.
-     */
-    public static OpenTelemetry initOpenTelemetry() {
+  /**
+   * @return a new {@link OpenTelemetry} SDK instance, registered as the global instance.
+   */
+  public static OpenTelemetry initOpenTelemetry() {
+    final SdkTracerProvider tracerProvider = Optional.ofNullable(
+      System.getenv().get("OTEL_EXPORTER_OTLP_ENDPOINT")
+    )
+      .map(OpenTelemetryConfiguration::createTracerProvider)
+      .orElseGet(() -> SdkTracerProvider.builder().build());
 
-        final SdkTracerProvider tracerProvider =
-            Optional.ofNullable(System.getenv().get("OTEL_EXPORTER_OTLP_ENDPOINT"))
-                .map(OpenTelemetryConfiguration::createTracerProvider)
-                .orElseGet(() -> SdkTracerProvider.builder().build());
+    final ContextPropagators contextPropagators = ContextPropagators.create(
+      W3CTraceContextPropagator.getInstance()
+    );
 
-        final ContextPropagators contextPropagators =
-            ContextPropagators.create(W3CTraceContextPropagator.getInstance());
+    return OpenTelemetrySdk.builder()
+      .setTracerProvider(tracerProvider)
+      .setPropagators(contextPropagators)
+      .buildAndRegisterGlobal();
+  }
 
-        return OpenTelemetrySdk.builder()
-            .setTracerProvider(tracerProvider)
-            .setPropagators(contextPropagators)
-            .buildAndRegisterGlobal();
-    }
-
-    private static SdkTracerProvider createTracerProvider(final String endpoint) {
-        logger.log(INFO, "Using OTLP endpoint: {0}", endpoint);
-        final OtlpGrpcSpanExporter spanExporter =
-            OtlpGrpcSpanExporter.builder()
-                .setEndpoint(endpoint)
-                .build();
-        final BatchSpanProcessor spanProcessor =
-            BatchSpanProcessor.builder(spanExporter).build();
-        return SdkTracerProvider
-            .builder()
-            .addSpanProcessor(spanProcessor)
-            .setResource(Resource.create(Attributes.of(
-                AttributeKey.stringKey("service.name"), "surimi-poseidon"
-            )))
-            .build();
-    }
+  private static SdkTracerProvider createTracerProvider(final String endpoint) {
+    logger.log(INFO, "Using OTLP endpoint: {0}", endpoint);
+    final OtlpGrpcSpanExporter spanExporter = OtlpGrpcSpanExporter.builder()
+      .setEndpoint(endpoint)
+      .build();
+    final BatchSpanProcessor spanProcessor = BatchSpanProcessor.builder(
+      spanExporter
+    ).build();
+    return SdkTracerProvider.builder()
+      .addSpanProcessor(spanProcessor)
+      .setResource(
+        Resource.create(
+          Attributes.of(
+            AttributeKey.stringKey("service.name"),
+            "surimi-poseidon"
+          )
+        )
+      )
+      .build();
+  }
 }

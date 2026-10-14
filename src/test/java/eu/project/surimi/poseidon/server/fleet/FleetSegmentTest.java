@@ -1,72 +1,94 @@
-package eu.project.surimi.poseidon.server.fleet;
+/*
+ * POSEIDON: an agent-based model of fisheries
+ * Copyright (c) 2026, University of Oxford.
+ *
+ * University of Oxford means the Chancellor, Masters and Scholars of the
+ * University of Oxford, having an administrative office at Wellington
+ * Square, Oxford OX1 2JD, UK.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-import org.junit.jupiter.api.Test;
+package eu.project.surimi.poseidon.server.fleet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Test;
+
 class FleetSegmentTest {
 
-    @Test
-    void allowsNullFieldsAndCoversMoreSpecificSegments() {
-        final FleetSegment generalSegment = new FleetSegment(
-            "OTB",
-            null,
-            "Industrial",
-            "ESP",
-            "POSEIDON"
-        );
-        final FleetSegment specificSegment = new FleetSegment(
-            "OTB",
-            "VL1824",
-            "Industrial",
-            "ESP",
-            "POSEIDON"
-        );
+  @Test
+  void allowsNullFieldsAndCoversMoreSpecificSegments() {
+    final FleetSegment generalSegment = new FleetSegment(
+      "OTB",
+      null,
+      "Industrial",
+      "ESP",
+      "POSEIDON"
+    );
+    final FleetSegment specificSegment = new FleetSegment(
+      "OTB",
+      "VL1824",
+      "Industrial",
+      "ESP",
+      "POSEIDON"
+    );
 
-        assertThat(generalSegment.getVesselLengthClass()).isNull();
-        assertThat(generalSegment.covers(specificSegment)).isTrue();
-        assertThat(specificSegment.covers(generalSegment)).isFalse();
-    }
+    assertThat(generalSegment.getVesselLengthClass()).isNull();
+    assertThat(generalSegment.covers(specificSegment)).isTrue();
+    assertThat(specificSegment.covers(generalSegment)).isFalse();
+  }
 
-    @Test
-    void doesNotCoverSegmentsThatDisagreeOnSpecifiedFields() {
-        final FleetSegment quotaSegment = new FleetSegment(
-            "OTB",
-            null,
-            "Industrial",
-            "ESP",
-            "POSEIDON"
-        );
-        final FleetSegment otherCountrySegment = new FleetSegment(
-            "OTB",
-            "VL1824",
-            "Industrial",
-            "FRA",
-            "POSEIDON"
-        );
+  @Test
+  void doesNotCoverSegmentsThatDisagreeOnSpecifiedFields() {
+    final FleetSegment quotaSegment = new FleetSegment(
+      "OTB",
+      null,
+      "Industrial",
+      "ESP",
+      "POSEIDON"
+    );
+    final FleetSegment otherCountrySegment = new FleetSegment(
+      "OTB",
+      "VL1824",
+      "Industrial",
+      "FRA",
+      "POSEIDON"
+    );
 
-        assertThat(quotaSegment.covers(otherCountrySegment)).isFalse();
-    }
+    assertThat(quotaSegment.covers(otherCountrySegment)).isFalse();
+  }
 
-    @Test
-    void overlapsAllowsIntersectingWildcardSegmentsWithoutCoverage() {
-        final FleetSegment countryScopedSegment = new FleetSegment(
-            "OTB",
-            null,
-            "Industrial",
-            "ESP",
-            "POSEIDON"
-        );
-        final FleetSegment lengthScopedSegment = new FleetSegment(
-            "OTB",
-            "VL1824",
-            "Industrial",
-            null,
-            "POSEIDON"
-        );
+  @Test
+  void overlapsAllowsIntersectingWildcardSegmentsWithoutCoverage() {
+    final FleetSegment countryScopedSegment = new FleetSegment(
+      "OTB",
+      null,
+      "Industrial",
+      "ESP",
+      "POSEIDON"
+    );
+    final FleetSegment lengthScopedSegment = new FleetSegment(
+      "OTB",
+      "VL1824",
+      "Industrial",
+      null,
+      "POSEIDON"
+    );
 
-        assertThat(countryScopedSegment.overlaps(lengthScopedSegment)).isTrue();
-        assertThat(countryScopedSegment.covers(lengthScopedSegment)).isFalse();
-        assertThat(lengthScopedSegment.covers(countryScopedSegment)).isFalse();
-    }
+    assertThat(countryScopedSegment.overlaps(lengthScopedSegment)).isTrue();
+    assertThat(countryScopedSegment.covers(lengthScopedSegment)).isFalse();
+    assertThat(lengthScopedSegment.covers(countryScopedSegment)).isFalse();
+  }
 }

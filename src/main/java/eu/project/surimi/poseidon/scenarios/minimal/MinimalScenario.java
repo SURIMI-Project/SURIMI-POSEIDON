@@ -22,24 +22,6 @@
 
 package eu.project.surimi.poseidon.scenarios.minimal;
 
-import com.google.common.collect.Streams;
-import uk.ac.ox.poseidon.agents.catches.Factories;
-import uk.ac.ox.poseidon.agents.market.PriceEntryFactory;
-import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
-import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
-import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
-import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.utils.Pair;
-
-import javax.measure.Quantity;
-import javax.measure.quantity.Mass;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.util.Collections.nCopies;
 import static java.util.stream.IntStream.range;
@@ -62,13 +44,13 @@ import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccum
 import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.roundTrip;
 import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.travelAlongPathTo;
-import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripDestinationCell;
-import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripEventManager;
 import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.fullTank;
 import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.fixedBiomassProportionGear;
 import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripDestinationCell;
+import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.currentTripEventManager;
 import static uk.ac.ox.poseidon.biology.allocators.Factories.fullCarryingCapacityAllocator;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.species;
@@ -90,6 +72,23 @@ import static uk.ac.ox.poseidon.geography.ports.Factories.port;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
+import com.google.common.collect.Streams;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+import javax.measure.Quantity;
+import javax.measure.quantity.Mass;
+import uk.ac.ox.poseidon.agents.catches.Factories;
+import uk.ac.ox.poseidon.agents.market.PriceEntryFactory;
+import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
+import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
+import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
+import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
+import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
+import uk.ac.ox.poseidon.core.Scenario;
+import uk.ac.ox.poseidon.core.utils.Pair;
+
 /**
  * A small, hand-built (not YAML-loaded) scenario used by tests: a 3x3 grid, two ports, three
  * species (one generic, two life-staged), two gears, two markets, and a four-vessel fleet loaded
@@ -99,296 +98,230 @@ import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 @SuppressWarnings("UnstableApiUsage")
 public class MinimalScenario implements Supplier<Scenario> {
 
-    public static final LocalDate START_DATE = LocalDate.of(2000, 1, 1);
-    public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
-    /**
-     * All species but the last are retained when caught; the last ({@code C}) is discarded.
-     */
-    public static final List<String> RETAINED_SPECIES_CODES =
-        SPECIES_CODES.subList(0, SPECIES_CODES.size() - 1);
-    public static final List<String> LIFE_STAGES = List.of("juvenile", "adult");
+  public static final LocalDate START_DATE = LocalDate.of(2000, 1, 1);
+  public static final List<String> SPECIES_CODES = List.of("A", "B", "C");
+  /**
+   * All species but the last are retained when caught; the last ({@code C}) is discarded.
+   */
+  public static final List<String> RETAINED_SPECIES_CODES =
+    SPECIES_CODES.subList(0, SPECIES_CODES.size() - 1);
+  public static final List<String> LIFE_STAGES = List.of("juvenile", "adult");
 
-    /**
-     * One (species code, life stage) pair per configured species: the first species is split
-     * into one pair per life stage, every other species gets a single generic ({@code null}
-     * life stage) pair.
-     */
-    public static final List<Pair<String, String>> LIFE_STAGE_PER_SPECIES_CODE = Streams.zip(
-        // this is a just very roundabout way to generate Stream.of("A", "A", "B", "C")...
-        Stream.concat(
-            Stream.generate(SPECIES_CODES::getFirst).limit(LIFE_STAGES.size()),
-            SPECIES_CODES.stream().skip(1)
-        ),
-        Stream.concat(
-            LIFE_STAGES.stream(),
-            Stream.generate(() -> null)
-        ),
-        Pair::of
+  /**
+   * One (species code, life stage) pair per configured species: the first species is split
+   * into one pair per life stage, every other species gets a single generic ({@code null}
+   * life stage) pair.
+   */
+  public static final List<Pair<String, String>> LIFE_STAGE_PER_SPECIES_CODE =
+    Streams.zip(
+      // this is a just very roundabout way to generate Stream.of("A", "A", "B", "C")...
+      Stream.concat(
+        Stream.generate(SPECIES_CODES::getFirst).limit(LIFE_STAGES.size()),
+        SPECIES_CODES.stream().skip(1)
+      ),
+      Stream.concat(LIFE_STAGES.stream(), Stream.generate(() -> null)),
+      Pair::of
     ).toList();
 
-    public static final List<String> GEAR_CODES = List.of("G1", "G2");
-    public static final List<String> MARKET_CODES = List.of("M1", "M2");
-    public static final int NUM_PRICES = GEAR_CODES.size() * SPECIES_CODES.size();
-    public static final Quantity<Mass> CARRYING_CAPACITY = getQuantity(1, TONNE);
+  public static final List<String> GEAR_CODES = List.of("G1", "G2");
+  public static final List<String> MARKET_CODES = List.of("M1", "M2");
+  public static final int NUM_PRICES = GEAR_CODES.size() * SPECIES_CODES.size();
+  public static final Quantity<Mass> CARRYING_CAPACITY = getQuantity(1, TONNE);
 
-    /**
-     * @return a freshly built minimal {@link Scenario}.
-     */
-    @Override
-    public Scenario get() {
+  /**
+   * @return a freshly built minimal {@link Scenario}.
+   */
+  @Override
+  public Scenario get() {
+    final var modelGrid = modelGrid(1, -1.5, 1.5, -1.5, 1.5);
+    final var bathymetricGrid = bathymetricGridFromElevationValues(
+      modelGrid,
+      List.of(-1, -1, 0, -1, -1, 0, -1, -1, 0)
+    );
 
-        final var modelGrid =
-            modelGrid(
-                1,
-                -1.5, 1.5, -1.5, 1.5
-            );
-        final var bathymetricGrid =
-            bathymetricGridFromElevationValues(
-                modelGrid,
-                List.of(
-                    -1, -1, 0,
-                    -1, -1, 0,
-                    -1, -1, 0
-                )
-            );
+    final var carryingCapacityGrid = uniformCarryingCapacityGrid(
+      modelGrid,
+      bathymetricGrid,
+      massOf(CARRYING_CAPACITY)
+    );
 
-        final var carryingCapacityGrid =
-            uniformCarryingCapacityGrid(
-                modelGrid,
-                bathymetricGrid,
-                massOf(CARRYING_CAPACITY)
-            );
+    final var biomassAllocator = fullCarryingCapacityAllocator(
+      carryingCapacityGrid
+    );
 
-        final var biomassAllocator =
-            fullCarryingCapacityAllocator(carryingCapacityGrid);
+    final var species = mappedFactory(
+      species(),
+      mappedProperty(
+        SpeciesFactory::setCode,
+        LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst).toList()
+      ),
+      mappedProperty(
+        SpeciesFactory::setLifeStage,
+        LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getSecond).toList()
+      )
+    );
 
-        final var species =
-            mappedFactory(
-                species(),
-                mappedProperty(
-                    SpeciesFactory::setCode,
-                    LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getFirst).toList()
-                ),
-                mappedProperty(
-                    SpeciesFactory::setLifeStage,
-                    LIFE_STAGE_PER_SPECIES_CODE.stream().map(Pair::getSecond).toList()
-                )
-            );
+    final var biomassGrids = mappedFactory(
+      biomassGrid(modelGrid, null, biomassAllocator),
+      mappedProperty(BiomassGridFactory::setSpecies, species.getFactories())
+    );
 
-        final var biomassGrids =
-            mappedFactory(
-                biomassGrid(modelGrid, null, biomassAllocator),
-                mappedProperty(BiomassGridFactory::setSpecies, species.getFactories())
-            );
+    final var distance = haversineDistanceCalculator(modelGrid);
 
-        final var distance =
-            haversineDistanceCalculator(modelGrid);
+    final var port1 = port("P1", "Port 1");
+    final var port2 = port("P2", "Port 2");
 
-        final var port1 = port("P1", "Port 1");
-        final var port2 = port("P2", "Port 2");
+    final var portGrid = portGrid(
+      listOf(pair(port1, coordinate(1, 1)), pair(port2, coordinate(1, -1))),
+      bathymetricGrid,
+      distance
+    );
 
-        final var portGrid =
-            portGrid(
-                listOf(
-                    pair(port1, coordinate(1, 1)),
-                    pair(port2, coordinate(1, -1))
-                ),
-                bathymetricGrid,
-                distance
-            );
+    @SuppressWarnings("Convert2MethodRef")
+    final var priceEntries = Stream.of(1, 2)
+      .map(portIndex ->
+        mappedFactory(
+          priceEntry(null, null, null),
+          mappedProperty(
+            PriceEntryFactory::setCatchCategory,
+            GEAR_CODES.stream()
+              .map(Factories::catchCategory)
+              .flatMap(cc -> nCopies(SPECIES_CODES.size(), cc).stream())
+              .toList()
+          ),
+          mappedProperty(
+            PriceEntryFactory::setSpecies,
+            GEAR_CODES.stream()
+              .flatMap(_ -> SPECIES_CODES.stream().map(code -> species(code)))
+              .toList()
+          ),
+          mappedProperty(
+            PriceEntryFactory::setPrice,
+            range(0, NUM_PRICES)
+              .boxed()
+              .map(i -> price(portIndex + i * 0.1, "GBP", "kg"))
+              .toList()
+          )
+        )
+      )
+      .toList();
 
-        @SuppressWarnings("Convert2MethodRef") final var priceEntries =
-            Stream.of(1, 2).map(portIndex ->
-                mappedFactory(
-                    priceEntry(null, null, null),
-                    mappedProperty(
-                        PriceEntryFactory::setCatchCategory,
-                        GEAR_CODES
-                            .stream()
-                            .map(Factories::catchCategory)
-                            .flatMap(cc -> nCopies(SPECIES_CODES.size(), cc).stream())
-                            .toList()
-                    ),
-                    mappedProperty(
-                        PriceEntryFactory::setSpecies,
-                        GEAR_CODES
-                            .stream()
-                            .flatMap(_ -> SPECIES_CODES.stream().map(code -> species(code)))
-                            .toList()
-                    ),
-                    mappedProperty(
-                        PriceEntryFactory::setPrice,
-                        range(0, NUM_PRICES)
-                            .boxed()
-                            .map(i -> price(
-                                portIndex + i * 0.1,
-                                "GBP",
-                                "kg"
-                            ))
-                            .toList()
-                    )
-                )
-            ).toList();
+    final var market1 = biomassMarket(port1, MARKET_CODES.get(0));
+    final var market2 = biomassMarket(port2, MARKET_CODES.get(1));
+    final var markets = listOf(market1, market2);
 
-        final var market1 = biomassMarket(port1, MARKET_CODES.get(0));
-        final var market2 = biomassMarket(port2, MARKET_CODES.get(1));
-        final var markets = listOf(market1, market2);
+    final var initialPrices = initialPrices(
+      marketPrices(market1, priceEntries.get(0)),
+      marketPrices(market2, priceEntries.get(1))
+    );
 
-        final var initialPrices =
-            initialPrices(
-                marketPrices(market1, priceEntries.get(0)),
-                marketPrices(market2, priceEntries.get(1))
-            );
+    final var marketGrid = marketGrid(portGrid, markets);
 
-        final var marketGrid = marketGrid(portGrid, markets);
+    final var vesselField = vesselField(modelGrid);
+    final var pathFinder = pathFinder(bathymetricGrid, portGrid, distance);
 
-        final var vesselField =
-            vesselField(modelGrid);
-        final var pathFinder =
-            pathFinder(
-                bathymetricGrid,
-                portGrid,
-                distance
-            );
+    final var gear1 = fixedBiomassProportionGear(
+      GEAR_CODES.get(0),
+      0.25,
+      massOf(1, KILOGRAM),
+      constant(hours(1)),
+      volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
+    );
 
-        final var gear1 =
-            fixedBiomassProportionGear(
-                GEAR_CODES.get(0),
-                0.25,
-                massOf(1, KILOGRAM),
-                constant(hours(1)),
-                volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
-            );
+    final var gear2 = fixedBiomassProportionGear(
+      GEAR_CODES.get(1),
+      0.5,
+      massOf(1, KILOGRAM),
+      constant(hours(1)),
+      volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
+    );
 
-        final var gear2 =
-            fixedBiomassProportionGear(
-                GEAR_CODES.get(1),
-                0.5,
-                massOf(1, KILOGRAM),
-                constant(hours(1)),
-                volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
-            );
+    final var behaviour = behaviour(
+      roundTrip(
+        startTrip(constantDestination(modelGrid, coordinate(0, 0))),
+        travelAlongPathTo(
+          pathFinder,
+          distance,
+          currentTripDestinationCell(),
+          currentTripEventManager()
+        ),
+        fishing(
+          currentCellFisheable(fisheableBiomassGrids(biomassGrids)),
+          compositeDispositionProcess(
+            selectedSpeciesRetention(
+              speciesByCode(object(RETAINED_SPECIES_CODES), species)
+            ),
+            discardMortality(constantDouble(0.1))
+          )
+        ),
+        landCatches(constant(hours(1)))
+      )
+    );
 
-        final var behaviour =
-            behaviour(
-                roundTrip(
-                    startTrip(
-                        constantDestination(
-                            modelGrid,
-                            coordinate(0, 0)
-                        )
-                    ),
-                    travelAlongPathTo(
-                        pathFinder,
-                        distance,
-                        currentTripDestinationCell(),
-                        currentTripEventManager()
-                    ),
-                    fishing(
-                        currentCellFisheable(
-                            fisheableBiomassGrids(
-                                biomassGrids
-                            )
-                        ),
-                        compositeDispositionProcess(
-                            selectedSpeciesRetention(
-                                speciesByCode(
-                                    object(RETAINED_SPECIES_CODES),
-                                    species
-                                )
-                            ),
-                            discardMortality(
-                                constantDouble(0.1)
-                            )
-                        )
-                    ),
-                    landCatches(constant(hours(1)))
-                )
-            );
+    final var COORDINATE_PROPERTY_ADDRESS =
+      "behaviour.rootTask.startTripTask" + ".destinationSupplier.coordinate";
 
-        final var COORDINATE_PROPERTY_ADDRESS =
-            "behaviour.rootTask.startTripTask" +
-                ".destinationSupplier.coordinate";
+    final var fleet = FleetFromVesselRegisterFactory.builder()
+      .fleet(fleet(vesselField, portGrid, marketGrid))
+      .data(
+        tableFromCsvString(
+          """
+          cfr,name_of_vessel,place_of_registration,event,event_start_date,gear,hold,fav_lon,fav_lat
+          V1,Vessel 1,P1,CEN,2000-01-01,G1,H1,-1,-1
+          V2,Vessel 2,P1,CEN,2000-01-01,G2,H1,0,0
+          V3,Vessel 3,P2,CEN,2000-01-01,G1,H2,0,0
+          V4,Vessel 4,P2,CEN,2000-01-01,G2,H2,-1,-1
+          """
+        )
+      )
+      .behaviour(behaviour)
+      .dataMapping(COORDINATE_PROPERTY_ADDRESS + ".longitude", "fav_lon")
+      .dataMapping(COORDINATE_PROPERTY_ADDRESS + ".latitude", "fav_lat")
+      .gear(
+        VesselScopeFactoriesByCode.<Gear>builder()
+          .factory("G1", gear1)
+          .factory("G2", gear2)
+          .build()
+      )
+      .dataMapping("gear.code", "gear")
+      .hold(infiniteBiomassHold(uniformCatchCategoriser(catchCategory(null))))
+      .dataMapping("hold.catchCategoriser.catchCategory.code", "gear")
+      .engine(
+        simpleEngine(
+          fullTank(volumeOf(100000, LITRE)),
+          speedOf(10, KNOT),
+          volumeOf(0, LITRE) // don't consume any fuel
+        )
+      )
+      .build();
 
-        final var fleet =
-            FleetFromVesselRegisterFactory
-                .builder()
-                .fleet(fleet(
-                    vesselField,
-                    portGrid,
-                    marketGrid
-                ))
-                .data(tableFromCsvString("""
-                    cfr,name_of_vessel,place_of_registration,event,event_start_date,gear,hold,fav_lon,fav_lat
-                    V1,Vessel 1,P1,CEN,2000-01-01,G1,H1,-1,-1
-                    V2,Vessel 2,P1,CEN,2000-01-01,G2,H1,0,0
-                    V3,Vessel 3,P2,CEN,2000-01-01,G1,H2,0,0
-                    V4,Vessel 4,P2,CEN,2000-01-01,G2,H2,-1,-1
-                    """
-                ))
-                .behaviour(behaviour)
-                .dataMapping(
-                    COORDINATE_PROPERTY_ADDRESS + ".longitude",
-                    "fav_lon"
-                )
-                .dataMapping(
-                    COORDINATE_PROPERTY_ADDRESS + ".latitude",
-                    "fav_lat"
-                )
-                .gear(
-                    VesselScopeFactoriesByCode.<Gear>builder()
-                        .factory("G1", gear1)
-                        .factory("G2", gear2)
-                        .build()
-                )
-                .dataMapping("gear.code", "gear")
-                .hold(
-                    infiniteBiomassHold(
-                        uniformCatchCategoriser(catchCategory(null))
-                    )
-                )
-                .dataMapping(
-                    "hold.catchCategoriser.catchCategory.code",
-                    "gear"
-                )
-                .engine(
-                    simpleEngine(
-                        fullTank(volumeOf(100000, LITRE)),
-                        speedOf(10, KNOT),
-                        volumeOf(0, LITRE) // don't consume any fuel
-                    )
-                )
-                .build();
+    final var fishingActionAccumulator = fishingEventAccumulator();
+    final var biomassSaleAccumulator = biomassSaleAccumulator();
 
-        final var fishingActionAccumulator =
-            fishingEventAccumulator();
-        final var biomassSaleAccumulator =
-            biomassSaleAccumulator();
-
-        return Scenario.builder()
-            .startingDateTime(startOf(START_DATE))
-            .component("modelGrid", modelGrid)
-            .component("species", species)
-            .component("biomassGrids", biomassGrids)
-            .component("bathymetricGrid", bathymetricGrid)
-            .component("carryingCapacityGrid", carryingCapacityGrid)
-            .component("fleet", fleet)
-            .component("vesselField", vesselField)
-            .component("portGrid", portGrid)
-            .component("markets", markets)
-            .component("marketGrid", marketGrid)
-            .component("initialPrices", initialPrices)
-            .component("fishingActionAccumulator", fishingActionAccumulator)
-            .component("biomassSaleAccumulator", biomassSaleAccumulator)
-            .component(
-                "fleetSegmentMapper",
-                fleetSegmentMapper(
-                    "country_of_registration",
-                    "loa",
-                    numericIntervalToStringMapper(),
-                    "Industrial"
-                )
-            )
-            .build();
-    }
+    return Scenario.builder()
+      .startingDateTime(startOf(START_DATE))
+      .component("modelGrid", modelGrid)
+      .component("species", species)
+      .component("biomassGrids", biomassGrids)
+      .component("bathymetricGrid", bathymetricGrid)
+      .component("carryingCapacityGrid", carryingCapacityGrid)
+      .component("fleet", fleet)
+      .component("vesselField", vesselField)
+      .component("portGrid", portGrid)
+      .component("markets", markets)
+      .component("marketGrid", marketGrid)
+      .component("initialPrices", initialPrices)
+      .component("fishingActionAccumulator", fishingActionAccumulator)
+      .component("biomassSaleAccumulator", biomassSaleAccumulator)
+      .component(
+        "fleetSegmentMapper",
+        fleetSegmentMapper(
+          "country_of_registration",
+          "loa",
+          numericIntervalToStringMapper(),
+          "Industrial"
+        )
+      )
+      .build();
+  }
 }

@@ -28,7 +28,6 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
-
 import java.util.Map;
 
 /**
@@ -37,37 +36,38 @@ import java.util.Map;
  */
 public class TrailerInterceptor implements ServerInterceptor {
 
-    private final Map<Metadata.Key<String>, String> metadata;
+  private final Map<Metadata.Key<String>, String> metadata;
 
-    /**
-     * @param metadata key/value pairs to attach to every response's trailers.
-     */
-    public TrailerInterceptor(final Map<String, String> metadata) {
-        final ImmutableMap.Builder<Metadata.Key<String>, String> builder = ImmutableMap.builder();
-        metadata.forEach((key, value) ->
-            builder.put(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER), value)
-        );
-        this.metadata = builder.build();
-    }
+  /**
+   * @param metadata key/value pairs to attach to every response's trailers.
+   */
+  public TrailerInterceptor(final Map<String, String> metadata) {
+    final ImmutableMap.Builder<Metadata.Key<String>, String> builder =
+      ImmutableMap.builder();
+    metadata.forEach((key, value) ->
+      builder.put(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER), value)
+    );
+    this.metadata = builder.build();
+  }
 
-    @Override
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-        final ServerCall<ReqT, RespT> call,
-        final Metadata headers,
-        final ServerCallHandler<ReqT, RespT> next
-    ) {
-        return next.startCall(
-            new SimpleForwardingServerCall<>(call) {
-                @Override
-                public void close(
-                    final io.grpc.Status status,
-                    final Metadata trailers
-                ) {
-                    metadata.forEach(trailers::put);
-                    super.close(status, trailers);
-                }
-            },
-            headers
-        );
-    }
+  @Override
+  public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
+    final ServerCall<ReqT, RespT> call,
+    final Metadata headers,
+    final ServerCallHandler<ReqT, RespT> next
+  ) {
+    return next.startCall(
+      new SimpleForwardingServerCall<>(call) {
+        @Override
+        public void close(
+          final io.grpc.Status status,
+          final Metadata trailers
+        ) {
+          metadata.forEach(trailers::put);
+          super.close(status, trailers);
+        }
+      },
+      headers
+    );
+  }
 }

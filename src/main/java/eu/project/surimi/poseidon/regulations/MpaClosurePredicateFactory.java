@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.regulations;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.time.Month;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,8 +36,6 @@ import uk.ac.ox.poseidon.core.scopes.Scope;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
-import java.time.Month;
-
 /**
  * Factory for {@link MpaClosurePredicate}, combining MPA grids, closed months, and fleet
  * restrictions, and extracting each vessel's country tag with a {@link StringTagExtractor}.
@@ -45,24 +44,31 @@ import java.time.Month;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class MpaClosurePredicateFactory<S extends Scope>
-    extends RelativeScopeFactory<S, MpaClosurePredicate> {
+public class MpaClosurePredicateFactory<S extends Scope> extends RelativeScopeFactory<
+  S,
+  MpaClosurePredicate
+> {
 
-    private Factory<? super S, ? extends ModelGrid> modelGrid;
-    private Factory<? super S, ImmutableMap<String, DoubleGridWrapper>> mpaGrids;
-    private Factory<? super S, ImmutableMap<String, ImmutableSet<Month>>> mpaClosedMonths;
-    private Factory<? super S, ImmutableMap<String, ImmutableSet<GearCountry>>> mpaFleetRestrictions;
-    private String countryTag;
+  private Factory<? super S, ? extends ModelGrid> modelGrid;
+  private Factory<? super S, ImmutableMap<String, DoubleGridWrapper>> mpaGrids;
+  private Factory<
+    ? super S,
+    ImmutableMap<String, ImmutableSet<Month>>
+  > mpaClosedMonths;
+  private Factory<
+    ? super S,
+    ImmutableMap<String, ImmutableSet<GearCountry>>
+  > mpaFleetRestrictions;
+  private String countryTag;
 
-    @Override
-    protected MpaClosurePredicate newInstance(final S scope) {
-        return new MpaClosurePredicate(
-            modelGrid.get(scope),
-            mpaGrids.get(scope),
-            mpaClosedMonths.get(scope),
-            mpaFleetRestrictions.get(scope),
-            new StringTagExtractor(countryTag)
-        );
-    }
-
+  @Override
+  protected MpaClosurePredicate newInstance(final S scope) {
+    return new MpaClosurePredicate(
+      modelGrid.get(scope),
+      mpaGrids.get(scope),
+      mpaClosedMonths.get(scope),
+      mpaFleetRestrictions.get(scope),
+      new StringTagExtractor(countryTag)
+    );
+  }
 }

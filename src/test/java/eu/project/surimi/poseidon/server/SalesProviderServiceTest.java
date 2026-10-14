@@ -22,17 +22,6 @@
 
 package eu.project.surimi.poseidon.server;
 
-import build.buf.gen.surimi.v1.FleetSegment;
-import build.buf.gen.surimi.v1.GetSalesRequest;
-import build.buf.gen.surimi.v1.Sale;
-import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
-import org.junit.jupiter.api.Test;
-import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
-
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.RETAINED_SPECIES_CODES;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.function.Function.identity;
@@ -41,97 +30,105 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import build.buf.gen.surimi.v1.FleetSegment;
+import build.buf.gen.surimi.v1.GetSalesRequest;
+import build.buf.gen.surimi.v1.Sale;
+import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
+
 public class SalesProviderServiceTest extends ServiceTest {
 
-    public SalesProviderServiceTest() {
-        super(MinimalScenario.class);
-    }
+  public SalesProviderServiceTest() {
+    super(MinimalScenario.class);
+  }
 
-    @Test
-    void getSales() {
-        final String simulationId = initialiseSimulation();
-        step(simulationId, START_DATE_TIME);
-        // Just check that we get sales for each contract fleet segment/species combination
-        assertEquals(
-            contractItems().getFleetSegmentsList().stream().collect(toMap(
-                identity(),
-                _ -> Set.copyOf(RETAINED_SPECIES_CODES)
-            )),
-            getSales(simulationId)
-                .stream()
-                .collect(
-                    groupingBy(
-                        Sale::getFleetSegment,
-                        mapping(
-                            sale -> sale.getSpecies().getSpeciesCode(),
-                            toSet()
-                        )
-                    )
-                )
-        );
-    }
+  @Test
+  void getSales() {
+    final String simulationId = initialiseSimulation();
+    step(simulationId, START_DATE_TIME);
+    // Just check that we get sales for each contract fleet segment/species combination
+    assertEquals(
+      contractItems()
+        .getFleetSegmentsList()
+        .stream()
+        .collect(toMap(identity(), _ -> Set.copyOf(RETAINED_SPECIES_CODES))),
+      getSales(simulationId)
+        .stream()
+        .collect(
+          groupingBy(
+            Sale::getFleetSegment,
+            mapping(sale -> sale.getSpecies().getSpeciesCode(), toSet())
+          )
+        )
+    );
+  }
 
-    @Test
-    void getSalesOnlyReportsFleetSegmentsInContract() {
-        final FleetSegment g1 =
-            FleetSegment.newBuilder().setGearCode("G1").setModel(Server.MODEL_NAME).build();
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(
-            simulationId,
-            MinimalScenario.class.getSimpleName(),
-            contractItems().clearFleetSegments().addFleetSegments(g1).build()
-        );
-        step(simulationId, START_DATE_TIME);
-        final Set<FleetSegment> reportedFleetSegments =
-            getSales(simulationId)
-                .stream()
-                .map(Sale::getFleetSegment)
-                .collect(toSet());
-        assertEquals(Set.of(g1), reportedFleetSegments);
-    }
+  @Test
+  void getSalesOnlyReportsFleetSegmentsInContract() {
+    final FleetSegment g1 = FleetSegment.newBuilder()
+      .setGearCode("G1")
+      .setModel(Server.MODEL_NAME)
+      .build();
+    final String simulationId = UUID.randomUUID().toString();
+    initialiseSimulation(
+      simulationId,
+      MinimalScenario.class.getSimpleName(),
+      contractItems().clearFleetSegments().addFleetSegments(g1).build()
+    );
+    step(simulationId, START_DATE_TIME);
+    final Set<FleetSegment> reportedFleetSegments = getSales(simulationId)
+      .stream()
+      .map(Sale::getFleetSegment)
+      .collect(toSet());
+    assertEquals(Set.of(g1), reportedFleetSegments);
+  }
 
-    @Test
-    void getSalesReportsQuantitiesInContractMassUnit() {
-        final String simulationId = UUID.randomUUID().toString();
-        initialiseSimulation(
-            simulationId,
-            MinimalScenario.class.getSimpleName(),
-            contractItems().build(),
-            "g"
-        );
-        step(simulationId, START_DATE_TIME);
-        final double soldKg =
-            simulationManager
-                .getSimulation(simulationId)
-                .getComponent(BiomassSaleAccumulator.class)
-                .getEvents()
-                .flatMap(sale -> sale.getItems().stream())
-                .mapToDouble(item -> item.getContent().asBiomass().asKg())
-                .sum();
-        final double reportedGrams =
-            getSales(simulationId).stream().mapToDouble(Sale::getQuantity).sum();
-        assertThat(soldKg).isPositive();
-        assertThat(reportedGrams).isCloseTo(soldKg * 1000, withinPercentage(1e-6));
-    }
+  @Test
+  void getSalesReportsQuantitiesInContractMassUnit() {
+    final String simulationId = UUID.randomUUID().toString();
+    initialiseSimulation(
+      simulationId,
+      MinimalScenario.class.getSimpleName(),
+      contractItems().build(),
+      "g"
+    );
+    step(simulationId, START_DATE_TIME);
+    final double soldKg = simulationManager
+      .getSimulation(simulationId)
+      .getComponent(BiomassSaleAccumulator.class)
+      .getEvents()
+      .flatMap(sale -> sale.getItems().stream())
+      .mapToDouble(item -> item.getContent().asBiomass().asKg())
+      .sum();
+    final double reportedGrams = getSales(simulationId)
+      .stream()
+      .mapToDouble(Sale::getQuantity)
+      .sum();
+    assertThat(soldKg).isPositive();
+    assertThat(reportedGrams).isCloseTo(soldKg * 1000, withinPercentage(1e-6));
+  }
 
-    private List<Sale> getSales(final String simulationId) {
-        return salesProviderStub
-            .getSales(
-                GetSalesRequest
-                    .newBuilder()
-                    .setSimulationId(simulationId)
-                    .setStartDateTime(
-                        toTimestamp(MinimalScenario.START_DATE.atStartOfDay())
-                    )
-                    .setEndDateTime(
-                        toTimestamp(MinimalScenario.START_DATE.plusMonths(1).atStartOfDay())
-                    )
-                    .build()
-            )
-            .getSalesSummary()
-            .getMarketSalesList()
-            .stream()
-            .flatMap(marketSales -> marketSales.getSalesList().stream())
-            .toList();
-    }
+  private List<Sale> getSales(final String simulationId) {
+    return salesProviderStub
+      .getSales(
+        GetSalesRequest.newBuilder()
+          .setSimulationId(simulationId)
+          .setStartDateTime(
+            toTimestamp(MinimalScenario.START_DATE.atStartOfDay())
+          )
+          .setEndDateTime(
+            toTimestamp(MinimalScenario.START_DATE.plusMonths(1).atStartOfDay())
+          )
+          .build()
+      )
+      .getSalesSummary()
+      .getMarketSalesList()
+      .stream()
+      .flatMap(marketSales -> marketSales.getSalesList().stream())
+      .toList();
+  }
 }

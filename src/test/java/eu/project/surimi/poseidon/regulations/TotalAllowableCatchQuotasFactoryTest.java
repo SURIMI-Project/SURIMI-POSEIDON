@@ -22,7 +22,18 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
+import static java.time.ZoneOffset.UTC;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
+import static uk.ac.ox.poseidon.core.utils.Factories.object;
+
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
@@ -38,93 +49,87 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
 import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
-import static java.time.ZoneOffset.UTC;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
-import static uk.ac.ox.poseidon.core.utils.Factories.object;
-
 class TotalAllowableCatchQuotasFactoryTest {
 
-    private static final FleetSegmentMapper FLEET_SEGMENT_MAPPER =
-        new FleetSegmentMapper(
-            "country_of_registration",
-            "loa",
-            new NumericIntervalMapper<>(List.of(
-                new NumericIntervalMapper.Interval<>(12.0, 18.0, "VL1218"),
-                new NumericIntervalMapper.Interval<>(18.0, 24.0, "VL1824")
-            )),
-            "Industrial"
-        );
+  private static final FleetSegmentMapper FLEET_SEGMENT_MAPPER =
+    new FleetSegmentMapper(
+      "country_of_registration",
+      "loa",
+      new NumericIntervalMapper<>(
+        List.of(
+          new NumericIntervalMapper.Interval<>(12.0, 18.0, "VL1218"),
+          new NumericIntervalMapper.Interval<>(18.0, 24.0, "VL1824")
+        )
+      ),
+      "Industrial"
+    );
 
-    @Test
-    void registersRegulationAsFishingEventListener() {
-        final Simulation simulation = Scenario.builder()
-            .startingDateTime(dateTime(LocalDateTime.of(2026, 1, 1, 0, 0)))
-            .build()
-            .startNewSimulation();
-        final TotalAllowableCatchQuotas tac =
-            totalAllowableCatchQuotasFactory().get(new SimulationScope(simulation));
-        final Species cod = new Species("COD", null, null);
-        final Vessel vessel = vessel();
-        final LocalDateTime start = LocalDateTime.of(2026, 1, 1, 0, 0);
-        final Interval interval = Interval.of(
-            start.toInstant(UTC),
-            start.plusDays(31).toInstant(UTC)
-        );
+  @Test
+  void registersRegulationAsFishingEventListener() {
+    final Simulation simulation = Scenario.builder()
+      .startingDateTime(dateTime(LocalDateTime.of(2026, 1, 1, 0, 0)))
+      .build()
+      .startNewSimulation();
+    final TotalAllowableCatchQuotas tac =
+      totalAllowableCatchQuotasFactory().get(new SimulationScope(simulation));
+    final Species cod = new Species("COD", null, null);
+    final Vessel vessel = vessel();
+    final LocalDateTime start = LocalDateTime.of(2026, 1, 1, 0, 0);
+    final Interval interval = Interval.of(
+      start.toInstant(UTC),
+      start.plusDays(31).toInstant(UTC)
+    );
 
-        tac.setQuota(interval, FLEET_SEGMENT_MAPPER.apply(vessel), cod, 100.0);
+    tac.setQuota(interval, FLEET_SEGMENT_MAPPER.apply(vessel), cod, 100.0);
 
-        final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
-        when(action.getAgent()).thenReturn(vessel);
-        when(action.getStartDateTime()).thenReturn(start.plusDays(1));
+    final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
+    when(action.getAgent()).thenReturn(vessel);
+    when(action.getStartDateTime()).thenReturn(start.plusDays(1));
 
-        simulation.getEventManager().broadcast(
-            new FishingEvent(
-                action,
-                new FishingOutcome(Bucket.of(cod, 100.0), null)
-            )
-        );
-        simulation.getTemporalSchedule().stepUntil(simulation, start.plusDays(2));
-        tac.step(simulation);
+    simulation
+      .getEventManager()
+      .broadcast(
+        new FishingEvent(
+          action,
+          new FishingOutcome(Bucket.of(cod, 100.0), null)
+        )
+      );
+    simulation.getTemporalSchedule().stepUntil(simulation, start.plusDays(2));
+    tac.step(simulation);
 
-        assertThat(tac.isPermitted(action(vessel, interval))).isFalse();
-    }
+    assertThat(tac.isPermitted(action(vessel, interval))).isFalse();
+  }
 
-    private static TemporalFishingAction action(
-        final Vessel vessel,
-        final Interval interval
-    ) {
-        return new TemporalFishingAction() {
-            @Override
-            public Interval getInterval() {
-                return interval;
-            }
+  private static TemporalFishingAction action(
+    final Vessel vessel,
+    final Interval interval
+  ) {
+    return new TemporalFishingAction() {
+      @Override
+      public Interval getInterval() {
+        return interval;
+      }
 
-            @Override
-            public Vessel getAgent() {
-                return vessel;
-            }
-        };
-    }
-
-    private static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotasFactory() {
-        return totalAllowableCatchQuotas(object(FLEET_SEGMENT_MAPPER));
-    }
-
-    private static Vessel vessel() {
-        final Vessel vessel = mock(Vessel.class);
-        final Gear gear = mock(Gear.class);
-        when(vessel.getGear()).thenReturn(gear);
-        when(gear.getCode()).thenReturn("OTB");
-        when(vessel.getTag("country_of_registration")).thenReturn(Optional.of("ESP"));
-        when(vessel.getTag("loa")).thenReturn(Optional.of(18.5));
+      @Override
+      public Vessel getAgent() {
         return vessel;
-    }
+      }
+    };
+  }
+
+  private static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotasFactory() {
+    return totalAllowableCatchQuotas(object(FLEET_SEGMENT_MAPPER));
+  }
+
+  private static Vessel vessel() {
+    final Vessel vessel = mock(Vessel.class);
+    final Gear gear = mock(Gear.class);
+    when(vessel.getGear()).thenReturn(gear);
+    when(gear.getCode()).thenReturn("OTB");
+    when(vessel.getTag("country_of_registration")).thenReturn(
+      Optional.of("ESP")
+    );
+    when(vessel.getTag("loa")).thenReturn(Optional.of(18.5));
+    return vessel;
+  }
 }

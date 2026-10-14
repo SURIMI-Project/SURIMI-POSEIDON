@@ -22,6 +22,11 @@
 
 package eu.project.surimi.poseidon.server.prices;
 
+import static eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler.getMarketsById;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static tech.units.indriya.unit.Units.KILOGRAM;
+
 import build.buf.gen.surimi.v1.SpeciesPrice;
 import build.buf.gen.surimi.v1.SpeciesPriceSummary;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
@@ -37,96 +42,92 @@ import uk.ac.ox.poseidon.agents.market.BiomassMarket;
 import uk.ac.ox.poseidon.agents.market.Price;
 import uk.ac.ox.poseidon.biology.species.Species;
 
-import static eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler.getMarketsById;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static tech.units.indriya.unit.Units.KILOGRAM;
-
 class SetPricesValidationTest extends ServiceTest {
 
-    private static final String MARKET_CODE = "M1";
-    private static final String GEAR_CODE = "G1";
-    private static final String SPECIES_CODE = "A";
-    // No price in the scenario, generic or staged.
-    private static final String UNPRICED_SPECIES_CODE = "Z";
+  private static final String MARKET_CODE = "M1";
+  private static final String GEAR_CODE = "G1";
+  private static final String SPECIES_CODE = "A";
+  // No price in the scenario, generic or staged.
+  private static final String UNPRICED_SPECIES_CODE = "Z";
 
-    SetPricesValidationTest() {
-        super(MinimalScenario.class);
+  SetPricesValidationTest() {
+    super(MinimalScenario.class);
+  }
+
+  private String simulationId;
+
+  @BeforeEach
+  void initSimulation() {
+    simulationId = initialiseSimulation();
+    step(simulationId, START_DATE_TIME);
+  }
+
+  @Test
+  void stagedUpdateRejectedWhenGenericPriceExists() {
+    final StatusRuntimeException error = assertThrows(
+      StatusRuntimeException.class,
+      () -> updatePrice(SPECIES_CODE, "juvenile", 2.0)
+    );
+    assertEquals(
+      Status.INVALID_ARGUMENT.getCode(),
+      error.getStatus().getCode()
+    );
+  }
+
+  @Test
+  void genericUpdateRejectedWhenStagedPricesExist() {
+    final BiomassMarket market = getMarketsById(
+      simulationManager.getSimulation(simulationId)
+    ).get(MARKET_CODE);
+    market.setPrice(
+      new CatchCategory(GEAR_CODE),
+      new Species(UNPRICED_SPECIES_CODE, "juvenile", null),
+      new Price(Money.parse("GBP 1.0"), KILOGRAM),
+      START_DATE_TIME
+    );
+
+    final StatusRuntimeException error = assertThrows(
+      StatusRuntimeException.class,
+      () -> updatePrice(UNPRICED_SPECIES_CODE, null, 2.0)
+    );
+    assertEquals(
+      Status.INVALID_ARGUMENT.getCode(),
+      error.getStatus().getCode()
+    );
+  }
+
+  private void updatePrice(
+    final String speciesCode,
+    final String lifeStage,
+    final double price
+  ) {
+    speciesPriceConsumerStub.updateSpeciesPrices(
+      UpdateSpeciesPricesRequest.newBuilder()
+        .setSimulationId(simulationId)
+        .setSpeciesPriceSummary(
+          SpeciesPriceSummary.newBuilder().addSpeciesPrices(
+            SpeciesPrice.newBuilder()
+              .setMarketCode(MARKET_CODE)
+              .setCurrency("GBP")
+              .setCategoryCode(GEAR_CODE)
+              .setSpecies(toProtoSpecies(speciesCode, lifeStage))
+              .setPrice(price)
+              .build()
+          )
+        )
+        .build()
+    );
+  }
+
+  private build.buf.gen.surimi.v1.Species toProtoSpecies(
+    final String speciesCode,
+    final String lifeStage
+  ) {
+    final build.buf.gen.surimi.v1.Species.Builder builder =
+      build.buf.gen.surimi.v1.Species.newBuilder().setSpeciesCode(speciesCode);
+    if (lifeStage != null) {
+      builder.setLifeStage(lifeStage);
     }
-
-    private String simulationId;
-
-    @BeforeEach
-    void initSimulation() {
-        simulationId = initialiseSimulation();
-        step(simulationId, START_DATE_TIME);
-    }
-
-    @Test
-    void stagedUpdateRejectedWhenGenericPriceExists() {
-        final StatusRuntimeException error = assertThrows(
-            StatusRuntimeException.class,
-            () -> updatePrice(SPECIES_CODE, "juvenile", 2.0)
-        );
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
-    }
-
-    @Test
-    void genericUpdateRejectedWhenStagedPricesExist() {
-        final BiomassMarket market = getMarketsById(simulationManager.getSimulation(simulationId))
-            .get(MARKET_CODE);
-        market.setPrice(
-            new CatchCategory(GEAR_CODE),
-            new Species(UNPRICED_SPECIES_CODE, "juvenile", null),
-            new Price(Money.parse("GBP 1.0"), KILOGRAM),
-            START_DATE_TIME
-        );
-
-        final StatusRuntimeException error = assertThrows(
-            StatusRuntimeException.class,
-            () -> updatePrice(UNPRICED_SPECIES_CODE, null, 2.0)
-        );
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
-    }
-
-    private void updatePrice(
-        final String speciesCode,
-        final String lifeStage,
-        final double price
-    ) {
-        speciesPriceConsumerStub.updateSpeciesPrices(
-            UpdateSpeciesPricesRequest
-                .newBuilder()
-                .setSimulationId(simulationId)
-                .setSpeciesPriceSummary(
-                    SpeciesPriceSummary
-                        .newBuilder()
-                        .addSpeciesPrices(
-                            SpeciesPrice
-                                .newBuilder()
-                                .setMarketCode(MARKET_CODE)
-                                .setCurrency("GBP")
-                                .setCategoryCode(GEAR_CODE)
-                                .setSpecies(toProtoSpecies(speciesCode, lifeStage))
-                                .setPrice(price)
-                                .build()
-                        )
-                )
-                .build()
-        );
-    }
-
-    private build.buf.gen.surimi.v1.Species toProtoSpecies(
-        final String speciesCode,
-        final String lifeStage
-    ) {
-        final build.buf.gen.surimi.v1.Species.Builder builder =
-            build.buf.gen.surimi.v1.Species
-                .newBuilder()
-                .setSpeciesCode(speciesCode);
-        if (lifeStage != null) {
-            builder.setLifeStage(lifeStage);
-        }
-        return builder.build();
-    }
+    return builder.build();
+  }
 }

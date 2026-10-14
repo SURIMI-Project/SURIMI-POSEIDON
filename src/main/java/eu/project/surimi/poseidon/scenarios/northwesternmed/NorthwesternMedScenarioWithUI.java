@@ -22,16 +22,6 @@
 
 package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
-import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
-import uk.ac.ox.poseidon.biology.biomass.Factories;
-import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.scopes.SimulationScope;
-import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
-import uk.ac.ox.poseidon.gui.ScenarioWithUI;
-import uk.ac.ox.poseidon.gui.portrayals.*;
-
-import java.util.List;
-
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.BOTTOM_TRAWLER_GEAR_CODE;
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.PURSE_SEINE_GEAR_CODE;
 import static java.awt.Color.WHITE;
@@ -41,6 +31,15 @@ import static uk.ac.ox.poseidon.core.predicates.Factories.equal;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 
+import java.util.List;
+import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
+import uk.ac.ox.poseidon.biology.biomass.Factories;
+import uk.ac.ox.poseidon.core.Scenario;
+import uk.ac.ox.poseidon.core.scopes.SimulationScope;
+import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
+import uk.ac.ox.poseidon.gui.ScenarioWithUI;
+import uk.ac.ox.poseidon.gui.portrayals.*;
+
 /**
  * GUI wrapper for {@link NorthwesternMedScenario}: displays bathymetry, species biomass, markets,
  * ports, vessels, per-fleet regulation coverage, and grid coordinates over the scenario's model
@@ -48,113 +47,110 @@ import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
  */
 public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
 
-    private static final int WIDTH = 1090;
-    private static final int HEIGHT = 820;
+  private static final int WIDTH = 1090;
+  private static final int HEIGHT = 820;
 
-    // purely a color-scale ceiling for the per-species biomass panel below;
-    // decoupled from the scenario's own (now zero-initialized) biomass state.
-    // 700 t comfortably covers the largest single-cell biomass value seen across every
-    // species and every yearly snapshot in inputs/northwestern_med/biomass_grids.nc
-    // (BOY tops out at ~673.9 t), so the scale doesn't clip the most abundant stocks.
-    private static final String DISPLAY_CARRYING_CAPACITY = "700000 kg";
+  // purely a color-scale ceiling for the per-species biomass panel below;
+  // decoupled from the scenario's own (now zero-initialized) biomass state.
+  // 700 t comfortably covers the largest single-cell biomass value seen across every
+  // species and every yearly snapshot in inputs/northwestern_med/biomass_grids.nc
+  // (BOY tops out at ~673.9 t), so the scale doesn't clip the most abundant stocks.
+  private static final String DISPLAY_CARRYING_CAPACITY = "700000 kg";
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public NorthwesternMedScenarioWithUI(final Scenario scenario) {
-        super(
-            scenario,
-            List.of(
-                new DisplayWrapper2D(
-                    "Catalan Mediterranean Sea",
-                    List.of(
-                        new BathymetryFieldPortrayalFactory(
-                            scenario.component("bathymetricGrid")
-                        ),
-                        new SpeciesBiomassFieldsPortrayalFactory(
-                            scenario.component("biomassGrids"),
-                            listOf(
-                                (CarryingCapacityGridFactory) Factories.<SimulationScope>uniformCarryingCapacityGrid(
-                                    scenario.component("modelGrid"),
-                                    scenario.component("bathymetricGrid"),
-                                    massOf(DISPLAY_CARRYING_CAPACITY)
-                                )
-                            ),
-                            false
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Markets",
-                            new MarketGridPortrayalFactory(
-                                scenario.component("marketGrid")
-                            ),
-                            true
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Ports",
-                            new PortGridPortrayalFactory(
-                                scenario.component("portGrid")
-                            ),
-                            true
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Vessels",
-                            new VesselFieldPortrayalFactory(
-                                scenario.component("vesselField")
-                            ),
-                            true
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Purse seiner regulations",
-                            new RegulationGridPortrayalFactory(
-                                scenario.component("purseSeinerRegulations"),
-                                scenario.component("vesselField"),
-                                condition(
-                                    stringTagExtractor("main_fishing_gear"),
-                                    equal(PURSE_SEINE_GEAR_CODE)
-                                ),
-                                scenario.component("bathymetricGrid"),
-                                WIDTH,
-                                HEIGHT
-                            ),
-                            true
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Bottom trawler regulations",
-                            new RegulationGridPortrayalFactory(
-                                scenario.component("bottomTrawlerRegulations"),
-                                scenario.component("vesselField"),
-                                condition(
-                                    stringTagExtractor("main_fishing_gear"),
-                                    equal(BOTTOM_TRAWLER_GEAR_CODE)
-                                ),
-                                scenario.component("bathymetricGrid"),
-                                WIDTH,
-                                HEIGHT
-                            ),
-                            true
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Coordinates",
-                            new CoordinatesPortrayalFactory(
-                                scenario.component("modelGrid"),
-                                3
-                            ),
-                            true
-                        )
-                    ),
-                    WIDTH,
-                    HEIGHT,
-                    WHITE
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  public NorthwesternMedScenarioWithUI(final Scenario scenario) {
+    super(
+      scenario,
+      List.of(
+        new DisplayWrapper2D(
+          "Catalan Mediterranean Sea",
+          List.of(
+            new BathymetryFieldPortrayalFactory(
+              scenario.component("bathymetricGrid")
+            ),
+            new SpeciesBiomassFieldsPortrayalFactory(
+              scenario.component("biomassGrids"),
+              listOf(
+                (CarryingCapacityGridFactory) Factories.<SimulationScope>uniformCarryingCapacityGrid(
+                  scenario.component("modelGrid"),
+                  scenario.component("bathymetricGrid"),
+                  massOf(DISPLAY_CARRYING_CAPACITY)
                 )
+              ),
+              false
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Markets",
+              new MarketGridPortrayalFactory(scenario.component("marketGrid")),
+              true
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Ports",
+              new PortGridPortrayalFactory(scenario.component("portGrid")),
+              true
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Vessels",
+              new VesselFieldPortrayalFactory(
+                scenario.component("vesselField")
+              ),
+              true
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Purse seiner regulations",
+              new RegulationGridPortrayalFactory(
+                scenario.component("purseSeinerRegulations"),
+                scenario.component("vesselField"),
+                condition(
+                  stringTagExtractor("main_fishing_gear"),
+                  equal(PURSE_SEINE_GEAR_CODE)
+                ),
+                scenario.component("bathymetricGrid"),
+                WIDTH,
+                HEIGHT
+              ),
+              true
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Bottom trawler regulations",
+              new RegulationGridPortrayalFactory(
+                scenario.component("bottomTrawlerRegulations"),
+                scenario.component("vesselField"),
+                condition(
+                  stringTagExtractor("main_fishing_gear"),
+                  equal(BOTTOM_TRAWLER_GEAR_CODE)
+                ),
+                scenario.component("bathymetricGrid"),
+                WIDTH,
+                HEIGHT
+              ),
+              true
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Coordinates",
+              new CoordinatesPortrayalFactory(
+                scenario.component("modelGrid"),
+                3
+              ),
+              true
             )
-        );
-    }
+          ),
+          WIDTH,
+          HEIGHT,
+          WHITE
+        )
+      )
+    );
+  }
 
-    /**
-     * Opens the GUI for a freshly built {@link LocalNorthwesternMedScenario}.
-     */
-    static void main(final String[] args) {
-        final NorthwesternMedScenarioWithUI northwesternMedScenarioWithUI =
-            new NorthwesternMedScenarioWithUI(new LocalNorthwesternMedScenario().get());
-        northwesternMedScenarioWithUI.createController();
-    }
-
+  /**
+   * Opens the GUI for a freshly built {@link LocalNorthwesternMedScenario}.
+   */
+  static void main(final String[] args) {
+    final NorthwesternMedScenarioWithUI northwesternMedScenarioWithUI =
+      new NorthwesternMedScenarioWithUI(
+        new LocalNorthwesternMedScenario().get()
+      );
+    northwesternMedScenarioWithUI.createController();
+  }
 }

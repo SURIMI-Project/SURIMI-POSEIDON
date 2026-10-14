@@ -38,105 +38,107 @@ import lombok.RequiredArgsConstructor;
  * {@code RequestHandler}.
  */
 @RequiredArgsConstructor
-public class FisheryService extends build.buf.gen.surimi.v1.FisheryServiceGrpc.FisheryServiceImplBase {
+public class FisheryService
+  extends build.buf.gen.surimi.v1.FisheryServiceGrpc.FisheryServiceImplBase
+{
 
-    private final InitialiseRequestHandler initialiseRequestHandler;
-    private final SimulateStepRequestHandler simulateStepRequestHandler;
-    private final FinaliseRequestHandler finaliseRequestHandler;
-    private final CancelRequestHandler cancelRequestHandler;
-    private final GetCatchDispositionSummaryRequestHandler catchDispositionSummaryRequestHandler;
-    private final UpdateBiomassRequestHandler updateBiomassRequestHandler;
-    private final GetFishingActivityRequestHandler fishingActivityRequestHandler;
-    private final UpdateRegulationsRequestHandler updateRegulationsRequestHandler;
-    private final GetSalesRequestHandler salesRequestHandler;
-    private final UpdateSpeciesPricesRequestHandler updateSpeciesPricesRequestHandler;
-    private final GetProtocolVersionRequestHandler getProtocolVersionRequestHandler;
+  private final InitialiseRequestHandler initialiseRequestHandler;
+  private final SimulateStepRequestHandler simulateStepRequestHandler;
+  private final FinaliseRequestHandler finaliseRequestHandler;
+  private final CancelRequestHandler cancelRequestHandler;
+  private final GetCatchDispositionSummaryRequestHandler catchDispositionSummaryRequestHandler;
+  private final UpdateBiomassRequestHandler updateBiomassRequestHandler;
+  private final GetFishingActivityRequestHandler fishingActivityRequestHandler;
+  private final UpdateRegulationsRequestHandler updateRegulationsRequestHandler;
+  private final GetSalesRequestHandler salesRequestHandler;
+  private final UpdateSpeciesPricesRequestHandler updateSpeciesPricesRequestHandler;
+  private final GetProtocolVersionRequestHandler getProtocolVersionRequestHandler;
 
-    @Override
-    public void initialiseSimulation(
-        final InitialiseSimulationRequest request,
-        final StreamObserver<InitialiseSimulationResponse> responseObserver
-    ) {
-        initialiseRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void initialiseSimulation(
+    final InitialiseSimulationRequest request,
+    final StreamObserver<InitialiseSimulationResponse> responseObserver
+  ) {
+    initialiseRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void simulateStep(
-        final build.buf.gen.surimi.v1.SimulateStepRequest request,
-        final StreamObserver<build.buf.gen.surimi.v1.SimulateStepResponse> responseObserver
-    ) {
-        simulateStepRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void simulateStep(
+    final build.buf.gen.surimi.v1.SimulateStepRequest request,
+    final StreamObserver<build.buf.gen.surimi.v1.SimulateStepResponse> responseObserver
+  ) {
+    simulateStepRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void finaliseSimulation(
-        final FinaliseSimulationRequest request,
-        final StreamObserver<FinaliseSimulationResponse> responseObserver
-    ) {
-        finaliseRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void finaliseSimulation(
+    final FinaliseSimulationRequest request,
+    final StreamObserver<FinaliseSimulationResponse> responseObserver
+  ) {
+    finaliseRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void cancelSimulation(
-        final CancelSimulationRequest request,
-        final StreamObserver<CancelSimulationResponse> responseObserver
-    ) {
-        cancelRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void cancelSimulation(
+    final CancelSimulationRequest request,
+    final StreamObserver<CancelSimulationResponse> responseObserver
+  ) {
+    cancelRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void updateBiomass(
-        final UpdateBiomassRequest request,
-        final StreamObserver<UpdateBiomassResponse> responseObserver
-    ) {
-        updateBiomassRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void updateBiomass(
+    final UpdateBiomassRequest request,
+    final StreamObserver<UpdateBiomassResponse> responseObserver
+  ) {
+    updateBiomassRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void getCatchDisposition(
-        final GetCatchDispositionRequest request,
-        final StreamObserver<GetCatchDispositionResponse> responseObserver
-    ) {
-        catchDispositionSummaryRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void getCatchDisposition(
+    final GetCatchDispositionRequest request,
+    final StreamObserver<GetCatchDispositionResponse> responseObserver
+  ) {
+    catchDispositionSummaryRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void updateSpeciesPrices(
-        final UpdateSpeciesPricesRequest request,
-        final StreamObserver<UpdateSpeciesPricesResponse> responseObserver
-    ) {
-        updateSpeciesPricesRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void updateSpeciesPrices(
+    final UpdateSpeciesPricesRequest request,
+    final StreamObserver<UpdateSpeciesPricesResponse> responseObserver
+  ) {
+    updateSpeciesPricesRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void getProtocolVersion(
-        final GetProtocolVersionRequest request,
-        final StreamObserver<GetProtocolVersionResponse> responseObserver
-    ) {
-        getProtocolVersionRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void getProtocolVersion(
+    final GetProtocolVersionRequest request,
+    final StreamObserver<GetProtocolVersionResponse> responseObserver
+  ) {
+    getProtocolVersionRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void updateRegulations(
-        final UpdateRegulationsRequest request,
-        final StreamObserver<UpdateRegulationsResponse> responseObserver
-    ) {
-        updateRegulationsRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void updateRegulations(
+    final UpdateRegulationsRequest request,
+    final StreamObserver<UpdateRegulationsResponse> responseObserver
+  ) {
+    updateRegulationsRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void getFishingActivity(
-        final GetFishingActivityRequest request,
-        final StreamObserver<GetFishingActivityResponse> responseObserver
-    ) {
-        fishingActivityRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void getFishingActivity(
+    final GetFishingActivityRequest request,
+    final StreamObserver<GetFishingActivityResponse> responseObserver
+  ) {
+    fishingActivityRequestHandler.handle(request, responseObserver);
+  }
 
-    @Override
-    public void getSales(
-        final GetSalesRequest request,
-        final StreamObserver<GetSalesResponse> responseObserver
-    ) {
-        salesRequestHandler.handle(request, responseObserver);
-    }
+  @Override
+  public void getSales(
+    final GetSalesRequest request,
+    final StreamObserver<GetSalesResponse> responseObserver
+  ) {
+    salesRequestHandler.handle(request, responseObserver);
+  }
 }

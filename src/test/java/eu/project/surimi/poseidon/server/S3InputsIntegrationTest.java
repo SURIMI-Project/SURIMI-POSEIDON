@@ -22,15 +22,14 @@
 
 package eu.project.surimi.poseidon.server;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.junit.jupiter.api.io.TempDir;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Downloads the inputs from the real SURIMI bucket on EDITO, to catch what a mock S3 server
@@ -42,21 +41,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EnabledIfEnvironmentVariable(named = "AWS_ACCESS_KEY_ID", matches = ".+")
 class S3InputsIntegrationTest {
 
-    @TempDir
-    Path tempDir;
+  @TempDir
+  Path tempDir;
 
-    @Test
-    void downloadsInputsFromSurimiBucket() {
-        final Map<String, String> env = new HashMap<>(Map.of(
-            "AWS_BUCKET_NAME", "project-surimi",
-            "AWS_S3_ENDPOINT", "minio.dive.edito.eu",
-            "AWS_DEFAULT_REGION", "waw3-1"
-        ));
-        env.putAll(System.getenv());
-        final Path inputs = tempDir.resolve("inputs");
+  @Test
+  void downloadsInputsFromSurimiBucket() {
+    final Map<String, String> env = new HashMap<>(
+      Map.of(
+        "AWS_BUCKET_NAME",
+        "project-surimi",
+        "AWS_S3_ENDPOINT",
+        "minio.dive.edito.eu",
+        "AWS_DEFAULT_REGION",
+        "waw3-1"
+      )
+    );
+    env.putAll(System.getenv());
+    final Path inputs = tempDir.resolve("inputs");
 
-        S3Inputs.fromEnvironment(env, inputs).orElseThrow().download();
+    S3Inputs.fromEnvironment(env, inputs).orElseThrow().download();
 
-        assertThat(inputs.resolve("northwestern_med/species.csv")).isNotEmptyFile();
-    }
+    assertThat(inputs.resolve("northwestern_med/species.csv")).isNotEmptyFile();
+  }
 }

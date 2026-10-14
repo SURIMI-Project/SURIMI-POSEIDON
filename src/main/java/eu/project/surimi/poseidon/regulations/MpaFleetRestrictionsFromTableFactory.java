@@ -22,8 +22,15 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,14 +39,6 @@ import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
-
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
 
 /**
  * Reads a table of {@code (mpa_id, gear_code, country_code)} rows, where each row's presence means
@@ -51,33 +50,39 @@ import static java.util.stream.Collectors.mapping;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class MpaFleetRestrictionsFromTableFactory<S extends Scope>
-    extends RelativeScopeFactory<S, ImmutableMap<String, ImmutableSet<GearCountry>>> {
+public class MpaFleetRestrictionsFromTableFactory<S extends Scope> extends RelativeScopeFactory<
+  S,
+  ImmutableMap<String, ImmutableSet<GearCountry>>
+> {
 
-    private Factory<? super S, Table> table;
-    private String mpaIdColumnName;
-    private String gearCodeColumnName;
-    private String countryCodeColumnName;
+  private Factory<? super S, Table> table;
+  private String mpaIdColumnName;
+  private String gearCodeColumnName;
+  private String countryCodeColumnName;
 
-    @Override
-    protected ImmutableMap<String, ImmutableSet<GearCountry>> newInstance(final S scope) {
-        return table
-            .get(scope)
-            .stream()
-            .collect(groupingBy(
-                row -> row.getString(mpaIdColumnName),
-                LinkedHashMap::new,
-                mapping(
-                    row -> new GearCountry(
-                        row.getString(gearCodeColumnName),
-                        row.getString(countryCodeColumnName)
-                    ),
-                    toImmutableSet()
-                )
-            ))
-            .entrySet()
-            .stream()
-            .collect(toImmutableMap(Entry::getKey, Entry::getValue));
-    }
-
+  @Override
+  protected ImmutableMap<String, ImmutableSet<GearCountry>> newInstance(
+    final S scope
+  ) {
+    return table
+      .get(scope)
+      .stream()
+      .collect(
+        groupingBy(
+          row -> row.getString(mpaIdColumnName),
+          LinkedHashMap::new,
+          mapping(
+            row ->
+              new GearCountry(
+                row.getString(gearCodeColumnName),
+                row.getString(countryCodeColumnName)
+              ),
+            toImmutableSet()
+          )
+        )
+      )
+      .entrySet()
+      .stream()
+      .collect(toImmutableMap(Entry::getKey, Entry::getValue));
+  }
 }

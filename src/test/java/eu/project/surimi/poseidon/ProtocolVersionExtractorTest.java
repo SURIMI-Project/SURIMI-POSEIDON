@@ -22,14 +22,15 @@
 
 package eu.project.surimi.poseidon;
 
-import org.junit.jupiter.api.Test;
-
 import static eu.project.surimi.poseidon.ProtocolVersionExtractor.getSurimiProtocolVersion;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Test;
+
 class ProtocolVersionExtractorTest {
-    @Test
-    void getProtocolVersion() {
-        assertThat(getSurimiProtocolVersion()).isNotBlank();
-    }
+
+  @Test
+  void getProtocolVersion() {
+    assertThat(getSurimiProtocolVersion()).isNotBlank();
+  }
 }

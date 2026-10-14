@@ -22,6 +22,10 @@
 
 package eu.project.surimi.poseidon.server.prices;
 
+import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.*;
+import static eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler.getMarketsById;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 import build.buf.gen.surimi.v1.Species;
 import build.buf.gen.surimi.v1.SpeciesPrice;
 import build.buf.gen.surimi.v1.SpeciesPriceSummary;
@@ -34,83 +38,86 @@ import net.jqwik.api.lifecycle.AfterProperty;
 import net.jqwik.api.lifecycle.BeforeProperty;
 import uk.ac.ox.poseidon.agents.catches.CatchCategory;
 
-import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.*;
-import static eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler.getMarketsById;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
 public class SetPricesTest extends ServiceTest {
-    public SetPricesTest() {
-        super(MinimalScenario.class);
-    }
 
-    private String simulationId;
+  public SetPricesTest() {
+    super(MinimalScenario.class);
+  }
 
-    @BeforeProperty
-    protected void setUp() {
-        super.setUp();
-        simulationId = initialiseSimulation();
-        step(simulationId, START_DATE_TIME);
-    }
+  private String simulationId;
 
-    @AfterProperty
-    protected void tearDown() {
-        super.tearDown();
-    }
+  @BeforeProperty
+  protected void setUp() {
+    super.setUp();
+    simulationId = initialiseSimulation();
+    step(simulationId, START_DATE_TIME);
+  }
 
-    @Property
-    void myProperty(
-        @ForAll @DoubleRange(max = 1E6) final double price,
-        @ForAll("marketCodes") final String marketCode,
-        @ForAll("currencyCodes") final String currencyCode,
-        @ForAll("gearCodes") final String gearCode,
-        @ForAll("speciesCodes") final String speciesCode
-    ) {
-        // noinspection ResultOfMethodCallIgnored
-        speciesPriceConsumerStub.updateSpeciesPrices(
-            UpdateSpeciesPricesRequest
-                .newBuilder()
-                .setSimulationId(simulationId)
-                .setSpeciesPriceSummary(
-                    SpeciesPriceSummary
-                        .newBuilder()
-                        .addSpeciesPrices(
-                            SpeciesPrice
-                                .newBuilder()
-                                .setMarketCode(marketCode)
-                                .setCurrency(currencyCode)
-                                .setCategoryCode(gearCode)
-                                .setSpecies(
-                                    Species.newBuilder().setSpeciesCode(speciesCode).build()
-                                )
-                                .setPrice(price)
-                                .build()
-                        )
-                )
-                .build()
-        );
-        // TODO: test currency code
-        final double priceInSimulation =
-            getMarketsById(simulationManager.getSimulation(simulationId))
-                .get(marketCode)
-                .getPrices()
-                .get(new CatchCategory(gearCode))
-                .get(new uk.ac.ox.poseidon.biology.species.Species(speciesCode, null, null))
-                .getAmount()
-                .getAmount()
-                .doubleValue();
-        assertThat(priceInSimulation).isEqualTo(price);
-    }
+  @AfterProperty
+  protected void tearDown() {
+    super.tearDown();
+  }
 
-    @Provide
-    Arbitrary<String> gearCodes() {return Arbitraries.of(GEAR_CODES);}
+  @Property
+  void myProperty(
+    @ForAll @DoubleRange(max = 1E6) final double price,
+    @ForAll("marketCodes") final String marketCode,
+    @ForAll("currencyCodes") final String currencyCode,
+    @ForAll("gearCodes") final String gearCode,
+    @ForAll("speciesCodes") final String speciesCode
+  ) {
+    // noinspection ResultOfMethodCallIgnored
+    speciesPriceConsumerStub.updateSpeciesPrices(
+      UpdateSpeciesPricesRequest.newBuilder()
+        .setSimulationId(simulationId)
+        .setSpeciesPriceSummary(
+          SpeciesPriceSummary.newBuilder().addSpeciesPrices(
+            SpeciesPrice.newBuilder()
+              .setMarketCode(marketCode)
+              .setCurrency(currencyCode)
+              .setCategoryCode(gearCode)
+              .setSpecies(
+                Species.newBuilder().setSpeciesCode(speciesCode).build()
+              )
+              .setPrice(price)
+              .build()
+          )
+        )
+        .build()
+    );
+    // TODO: test currency code
+    final double priceInSimulation = getMarketsById(
+      simulationManager.getSimulation(simulationId)
+    )
+      .get(marketCode)
+      .getPrices()
+      .get(new CatchCategory(gearCode))
+      .get(
+        new uk.ac.ox.poseidon.biology.species.Species(speciesCode, null, null)
+      )
+      .getAmount()
+      .getAmount()
+      .doubleValue();
+    assertThat(priceInSimulation).isEqualTo(price);
+  }
 
-    @Provide
-    Arbitrary<String> speciesCodes() {return Arbitraries.of(SPECIES_CODES);}
+  @Provide
+  Arbitrary<String> gearCodes() {
+    return Arbitraries.of(GEAR_CODES);
+  }
 
-    @Provide
-    Arbitrary<String> currencyCodes() {return Arbitraries.of("GBP", "EUR", "USD");}
+  @Provide
+  Arbitrary<String> speciesCodes() {
+    return Arbitraries.of(SPECIES_CODES);
+  }
 
-    @Provide
-    Arbitrary<String> marketCodes() {return Arbitraries.of(MARKET_CODES);}
+  @Provide
+  Arbitrary<String> currencyCodes() {
+    return Arbitraries.of("GBP", "EUR", "USD");
+  }
 
+  @Provide
+  Arbitrary<String> marketCodes() {
+    return Arbitraries.of(MARKET_CODES);
+  }
 }

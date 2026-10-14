@@ -22,26 +22,25 @@
 
 package eu.project.surimi.poseidon.server;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.common.collect.ImmutableSet;
-import eu.project.surimi.poseidon.server.fleet.FleetSegment;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.Getter;
-import uk.ac.ox.poseidon.core.Simulation;
-
-import javax.measure.Unit;
-import javax.measure.quantity.Mass;
-import java.time.Period;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.grpc.Status.*;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.KILOGRAM;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.collect.ImmutableSet;
+import eu.project.surimi.poseidon.server.fleet.FleetSegment;
+import java.time.Period;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import javax.measure.Unit;
+import javax.measure.quantity.Mass;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
+import uk.ac.ox.poseidon.core.Simulation;
 
 /**
  * Registry of live {@link Simulation}s, keyed by a {@link UUID} handed out at
@@ -51,155 +50,175 @@ import static tech.units.indriya.unit.Units.KILOGRAM;
  * with a weak key so they're reclaimable once the simulation itself is unreferenced.
  */
 public class SimulationManager {
-    private final Cache<UUID, Simulation> simulations = Caffeine.newBuilder().build();
-    private final Cache<Simulation, SimulationProperties> simulationProperties =
-        Caffeine.newBuilder().weakKeys().build();
 
-    /**
-     * @return {@code id} parsed as a {@link UUID}, or throws {@code INVALID_ARGUMENT}.
-     */
-    public static UUID parseId(final String id) {
-        try {
-            return UUID.fromString(checkNotNull(id));
-        } catch (final IllegalArgumentException e) {
-            throw INVALID_ARGUMENT
-                .withDescription("Invalid UUID: " + id)
-                .asRuntimeException();
-        }
+  private final Cache<UUID, Simulation> simulations =
+    Caffeine.newBuilder().build();
+  private final Cache<Simulation, SimulationProperties> simulationProperties =
+    Caffeine.newBuilder().weakKeys().build();
+
+  /**
+   * @return {@code id} parsed as a {@link UUID}, or throws {@code INVALID_ARGUMENT}.
+   */
+  public static UUID parseId(final String id) {
+    try {
+      return UUID.fromString(checkNotNull(id));
+    } catch (final IllegalArgumentException e) {
+      throw INVALID_ARGUMENT.withDescription(
+        "Invalid UUID: " + id
+      ).asRuntimeException();
     }
+  }
 
-    /**
-     * @return whether a simulation is registered under {@code simulationId}.
-     */
-    public boolean contains(final String simulationId) {
-        return contains(parseId(simulationId));
+  /**
+   * @return whether a simulation is registered under {@code simulationId}.
+   */
+  public boolean contains(final String simulationId) {
+    return contains(parseId(simulationId));
+  }
+
+  public boolean contains(final UUID simulationId) {
+    return simulations.asMap().containsKey(simulationId);
+  }
+
+  /**
+   * @return the registered simulation, or throws {@code NOT_FOUND}.
+   */
+  public Simulation getSimulation(final String simulationId) {
+    return getSimulation(parseId(simulationId));
+  }
+
+  public Simulation getSimulation(final UUID simulationId) {
+    final Simulation simulation = simulations.getIfPresent(simulationId);
+    if (simulation == null) {
+      throw NOT_FOUND.withDescription(
+        "Simulation not found: " + simulationId
+      ).asRuntimeException();
     }
+    return simulation;
+  }
 
-    public boolean contains(final UUID simulationId) {
-        return simulations.asMap().containsKey(simulationId);
-    }
+  /**
+   * @return the properties registered for {@code simulation} (via {@link #put}), or throws
+   * {@code INTERNAL} if none were registered.
+   */
+  public SimulationProperties getSimulationProperties(
+    final Simulation simulation
+  ) {
+    final SimulationProperties properties = simulationProperties.getIfPresent(
+      simulation
+    );
+    if (properties == null) throw INTERNAL.withDescription(
+      "Unable to get simulation properties."
+    ).asRuntimeException();
+    return properties;
+  }
 
-    /**
-     * @return the registered simulation, or throws {@code NOT_FOUND}.
-     */
-    public Simulation getSimulation(final String simulationId) {
-        return getSimulation(parseId(simulationId));
-    }
+  /**
+   * Registers a simulation and its properties under {@code simulationId}.
+   */
+  public void put(
+    final UUID simulationId,
+    final Simulation simulation,
+    final SimulationProperties properties
+  ) {
+    simulations.put(simulationId, simulation);
+    simulationProperties.put(simulation, properties);
+  }
 
-    public Simulation getSimulation(final UUID simulationId) {
-        final Simulation simulation = simulations.getIfPresent(simulationId);
-        if (simulation == null) {
-            throw NOT_FOUND
-                .withDescription("Simulation not found: " + simulationId)
-                .asRuntimeException();
-        }
-        return simulation;
-    }
+  /**
+   * A simulation's configuration facts needed to translate gRPC requests/responses, fixed for
+   * the simulation's lifetime: its step size, mass unit, and the set of market, price-category,
+   * species keys, and fleet segments it was configured with.
+   */
+  @Data
+  public static class SimulationProperties {
 
-    /**
-     * @return the properties registered for {@code simulation} (via {@link #put}), or throws
-     * {@code INTERNAL} if none were registered.
-     */
-    public SimulationProperties getSimulationProperties(final Simulation simulation) {
-        final SimulationProperties properties = simulationProperties.getIfPresent(simulation);
-        if (properties == null) throw INTERNAL
-            .withDescription("Unable to get simulation properties.")
-            .asRuntimeException();
-        return properties;
-    }
+    private final Period stepSize;
+    private final Unit<Mass> standardMassUnit;
 
-    /**
-     * Registers a simulation and its properties under {@code simulationId}.
-     */
-    public void put(
-        final UUID simulationId,
-        final Simulation simulation,
-        final SimulationProperties properties
+    @Getter(AccessLevel.NONE)
+    private final boolean massUnitIsKg;
+
+    private final ImmutableSet<String> marketCodes;
+    private final ImmutableSet<String> priceCategoryCodes;
+    private final ImmutableSet<SpeciesKey> speciesKeys;
+    private final ImmutableSet<FleetSegment> fleetSegments;
+
+    public SimulationProperties(
+      final Period stepSize,
+      final Unit<Mass> standardMassUnit,
+      final Set<String> marketCodes,
+      final Set<String> priceCategoryCodes,
+      final Set<SpeciesKey> speciesKeys,
+      final Set<FleetSegment> fleetSegments
     ) {
-        simulations.put(simulationId, simulation);
-        simulationProperties.put(simulation, properties);
+      this.stepSize = stepSize;
+      this.standardMassUnit = standardMassUnit;
+      this.massUnitIsKg = standardMassUnit.isEquivalentTo(KILOGRAM);
+      this.marketCodes = ImmutableSet.copyOf(marketCodes);
+      this.priceCategoryCodes = ImmutableSet.copyOf(priceCategoryCodes);
+      this.speciesKeys = ImmutableSet.copyOf(speciesKeys);
+      this.fleetSegments = ImmutableSet.copyOf(fleetSegments);
     }
 
     /**
-     * A simulation's configuration facts needed to translate gRPC requests/responses, fixed for
-     * the simulation's lifetime: its step size, mass unit, and the set of market, price-category,
-     * species keys, and fleet segments it was configured with.
+     * @return the contract fleet segment covering {@code fleetSegment}, if any. Contract
+     * segments are checked not to overlap on initialisation, so there is at most one.
      */
-    @Data
-    public static class SimulationProperties {
-
-        private final Period stepSize;
-        private final Unit<Mass> standardMassUnit;
-        @Getter(AccessLevel.NONE) private final boolean massUnitIsKg;
-        private final ImmutableSet<String> marketCodes;
-        private final ImmutableSet<String> priceCategoryCodes;
-        private final ImmutableSet<SpeciesKey> speciesKeys;
-        private final ImmutableSet<FleetSegment> fleetSegments;
-
-        public SimulationProperties(
-            final Period stepSize,
-            final Unit<Mass> standardMassUnit,
-            final Set<String> marketCodes,
-            final Set<String> priceCategoryCodes,
-            final Set<SpeciesKey> speciesKeys,
-            final Set<FleetSegment> fleetSegments
-        ) {
-            this.stepSize = stepSize;
-            this.standardMassUnit = standardMassUnit;
-            this.massUnitIsKg = standardMassUnit.isEquivalentTo(KILOGRAM);
-            this.marketCodes = ImmutableSet.copyOf(marketCodes);
-            this.priceCategoryCodes = ImmutableSet.copyOf(priceCategoryCodes);
-            this.speciesKeys = ImmutableSet.copyOf(speciesKeys);
-            this.fleetSegments = ImmutableSet.copyOf(fleetSegments);
-        }
-
-        /**
-         * @return the contract fleet segment covering {@code fleetSegment}, if any. Contract
-         * segments are checked not to overlap on initialisation, so there is at most one.
-         */
-        public Optional<FleetSegment> findContractFleetSegment(final FleetSegment fleetSegment) {
-            return fleetSegments
-                .stream()
-                .filter(contractSegment -> contractSegment.covers(fleetSegment))
-                .findFirst();
-        }
-
-        /**
-         * @return whether {@code fleetSegment} overlaps at least one contract fleet segment, i.e.,
-         * whether it can apply to any vessel POSEIDON reports on.
-         */
-        public boolean overlapsContractFleetSegment(final FleetSegment fleetSegment) {
-            return fleetSegments.stream().anyMatch(contractSegment -> contractSegment.overlaps(fleetSegment));
-        }
-
-        /**
-         * @return {@code valueInKg} converted to {@link #standardMassUnit}.
-         */
-        public double convertKgToStandardMassUnit(final double valueInKg) {
-            return massUnitIsKg
-                ? valueInKg
-                : getQuantity(valueInKg, KILOGRAM).to(standardMassUnit).getValue().doubleValue();
-        }
-
-        /**
-         * @return {@code mass}, expressed in {@link #standardMassUnit}, converted to kilograms.
-         */
-        public double convertMassInStandardUnitToKg(final double mass) {
-            return massUnitIsKg
-                ? mass
-                : getQuantity(mass, standardMassUnit).to(KILOGRAM).getValue().doubleValue();
-        }
+    public Optional<FleetSegment> findContractFleetSegment(
+      final FleetSegment fleetSegment
+    ) {
+      return fleetSegments
+        .stream()
+        .filter(contractSegment -> contractSegment.covers(fleetSegment))
+        .findFirst();
     }
 
     /**
-     * Unregisters a simulation; its properties are reclaimed once it becomes unreferenced.
+     * @return whether {@code fleetSegment} overlaps at least one contract fleet segment, i.e.,
+     * whether it can apply to any vessel POSEIDON reports on.
      */
-    public void remove(final String simulationId) {
-        remove(parseId(simulationId));
+    public boolean overlapsContractFleetSegment(
+      final FleetSegment fleetSegment
+    ) {
+      return fleetSegments
+        .stream()
+        .anyMatch(contractSegment -> contractSegment.overlaps(fleetSegment));
     }
 
-    public void remove(final UUID simulationId) {
-        simulations.invalidate(simulationId);
+    /**
+     * @return {@code valueInKg} converted to {@link #standardMassUnit}.
+     */
+    public double convertKgToStandardMassUnit(final double valueInKg) {
+      return massUnitIsKg
+        ? valueInKg
+        : getQuantity(valueInKg, KILOGRAM)
+            .to(standardMassUnit)
+            .getValue()
+            .doubleValue();
     }
 
+    /**
+     * @return {@code mass}, expressed in {@link #standardMassUnit}, converted to kilograms.
+     */
+    public double convertMassInStandardUnitToKg(final double mass) {
+      return massUnitIsKg
+        ? mass
+        : getQuantity(mass, standardMassUnit)
+            .to(KILOGRAM)
+            .getValue()
+            .doubleValue();
+    }
+  }
+
+  /**
+   * Unregisters a simulation; its properties are reclaimed once it becomes unreferenced.
+   */
+  public void remove(final String simulationId) {
+    remove(parseId(simulationId));
+  }
+
+  public void remove(final UUID simulationId) {
+    simulations.invalidate(simulationId);
+  }
 }

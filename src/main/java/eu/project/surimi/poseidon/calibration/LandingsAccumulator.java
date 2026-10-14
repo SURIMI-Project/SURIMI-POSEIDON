@@ -22,104 +22,105 @@
 
 package eu.project.surimi.poseidon.calibration;
 
-import com.google.common.collect.ComparisonChain;
-import tech.tablesaw.api.*;
-import uk.ac.ox.poseidon.agents.market.Sale;
-import uk.ac.ox.poseidon.core.events.AbstractListener;
+import static java.util.stream.Collectors.toMap;
+import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
 
+import com.google.common.collect.ComparisonChain;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-
-import static java.util.stream.Collectors.toMap;
-import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
+import tech.tablesaw.api.*;
+import uk.ac.ox.poseidon.agents.market.Sale;
+import uk.ac.ox.poseidon.core.events.AbstractListener;
 
 /**
  * Accumulates landed biomass from {@link Sale} events into a running total per year, gear, and
  * species/life-stage key, for comparison against real-world landings targets during calibration
  * (see {@code NorthwesternMedCalibration}).
  */
-public class LandingsAccumulator extends AbstractListener<Sale>
-    implements Supplier<Map<LandingsAccumulator.Key, Double>> {
+public class LandingsAccumulator
+  extends AbstractListener<Sale>
+  implements Supplier<Map<LandingsAccumulator.Key, Double>>
+{
 
-    private final Map<LandingsAccumulator.Key, Double> landings = new TreeMap<>();
+  private final Map<LandingsAccumulator.Key, Double> landings = new TreeMap<>();
 
-    public LandingsAccumulator() {
-        super(Sale.class);
-    }
+  public LandingsAccumulator() {
+    super(Sale.class);
+  }
 
-    /**
-     * Adds the sale's items to the running per-year/gear/species landings total.
-     */
+  /**
+   * Adds the sale's items to the running per-year/gear/species landings total.
+   */
+  @Override
+  public void receive(final Sale sale) {
+    final int year = sale.getDateTime().getYear();
+    final String gearCode = sale.getVessel().getGear().getCode();
+    sale
+      .getItems()
+      .stream()
+      .collect(
+        toMap(
+          item ->
+            new Key(
+              year,
+              gearCode,
+              multiStringKey(
+                item.getSpecies().getCode(),
+                item.getSpecies().getLifeStage()
+              )
+            ),
+          item -> item.getContent().asKg(),
+          Double::sum
+        )
+      )
+      .forEach((key, value) -> landings.merge(key, value, Double::sum));
+  }
+
+  /**
+   * @return an unmodifiable view of the accumulated landings, keyed by year/gear/species.
+   */
+  @Override
+  public Map<Key, Double> get() {
+    return Collections.unmodifiableMap(landings);
+  }
+
+  /**
+   * Year, gear code, and species/life-stage key ({@link #speciesKey} is built with
+   * {@link uk.ac.ox.poseidon.core.utils.Utils#multiStringKey}) identifying one accumulated
+   * landings total.
+   */
+  public record Key(
+    Integer year,
+    String gearCode,
+    String speciesKey
+  ) implements Comparable<Key> {
     @Override
-    public void receive(final Sale sale) {
-        final int year = sale.getDateTime().getYear();
-        final String gearCode = sale.getVessel().getGear().getCode();
-        sale
-            .getItems()
-            .stream()
-            .collect(toMap(
-                    item ->
-                        new Key(
-                            year,
-                            gearCode,
-                            multiStringKey(
-                                item.getSpecies().getCode(),
-                                item.getSpecies().getLifeStage()
-                            )
-                        ),
-                    item -> item.getContent().asKg(),
-                    Double::sum
-                )
-            )
-            .forEach((key, value) ->
-                landings.merge(key, value, Double::sum)
-            );
+    public int compareTo(final Key other) {
+      return ComparisonChain.start()
+        .compare(this.year, other.year)
+        .compare(this.gearCode, other.gearCode)
+        .compare(this.speciesKey, other.speciesKey)
+        .result();
     }
+  }
 
-    /**
-     * @return an unmodifiable view of the accumulated landings, keyed by year/gear/species.
-     */
-    @Override
-    public Map<Key, Double> get() {
-        return Collections.unmodifiableMap(landings);
-    }
-
-    /**
-     * Year, gear code, and species/life-stage key ({@link #speciesKey} is built with
-     * {@link uk.ac.ox.poseidon.core.utils.Utils#multiStringKey}) identifying one accumulated
-     * landings total.
-     */
-    public record Key(
-        Integer year, String gearCode, String speciesKey
-    ) implements Comparable<Key> {
-        @Override
-        public int compareTo(final Key other) {
-            return ComparisonChain.start()
-                .compare(this.year, other.year)
-                .compare(this.gearCode, other.gearCode)
-                .compare(this.speciesKey, other.speciesKey)
-                .result();
-        }
-    }
-
-    /**
-     * @return the accumulated landings as a table with columns {@code year}, {@code gear_code},
-     * {@code species_code}, {@code landings_kg}.
-     */
-    public Table asTable() {
-        final IntColumn year = ColumnType.INTEGER.create("year");
-        final StringColumn gearCode = ColumnType.STRING.create("gear_code");
-        final StringColumn speciesCode = ColumnType.STRING.create("species_code");
-        final DoubleColumn landingsKg = ColumnType.DOUBLE.create("landings_kg");
-        landings.forEach((key, value) -> {
-            year.append(key.year);
-            gearCode.append(key.gearCode);
-            speciesCode.append(key.speciesKey);
-            landingsKg.append(value);
-        });
-        return Table.create(year, gearCode, speciesCode, landingsKg);
-    }
-
+  /**
+   * @return the accumulated landings as a table with columns {@code year}, {@code gear_code},
+   * {@code species_code}, {@code landings_kg}.
+   */
+  public Table asTable() {
+    final IntColumn year = ColumnType.INTEGER.create("year");
+    final StringColumn gearCode = ColumnType.STRING.create("gear_code");
+    final StringColumn speciesCode = ColumnType.STRING.create("species_code");
+    final DoubleColumn landingsKg = ColumnType.DOUBLE.create("landings_kg");
+    landings.forEach((key, value) -> {
+      year.append(key.year);
+      gearCode.append(key.gearCode);
+      speciesCode.append(key.speciesKey);
+      landingsKg.append(value);
+    });
+    return Table.create(year, gearCode, speciesCode, landingsKg);
+  }
 }

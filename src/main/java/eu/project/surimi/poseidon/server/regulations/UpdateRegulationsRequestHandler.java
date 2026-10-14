@@ -22,21 +22,20 @@
 
 package eu.project.surimi.poseidon.server.regulations;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static eu.project.surimi.poseidon.server.Server.toInstant;
+import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toPoseidonFleetSegment;
+import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
+
 import build.buf.gen.surimi.v1.UpdateRegulationsRequest;
 import build.buf.gen.surimi.v1.UpdateRegulationsResponse;
 import eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas;
 import eu.project.surimi.poseidon.regulations.TotalAllowableCatchQuotas.QuotaDefinition;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
+import java.util.List;
 import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.core.Simulation;
-
-import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static eu.project.surimi.poseidon.server.Server.toInstant;
-import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toPoseidonFleetSegment;
-import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 
 /**
  * Handles {@code UpdateRegulations}: registers the TAC entries in the request as new quotas on
@@ -45,75 +44,81 @@ import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidon
  * to fleets simulated by other models (the fisheries authority sends every model the TACs of all
  * fleets). The remaining entries are registered all or nothing: if one is rejected, none is set.
  */
-public class UpdateRegulationsRequestHandler extends
-    WithSimulationRequestHandler<UpdateRegulationsRequest, UpdateRegulationsResponse> {
+public class UpdateRegulationsRequestHandler
+  extends WithSimulationRequestHandler<
+    UpdateRegulationsRequest,
+    UpdateRegulationsResponse
+  >
+{
 
-    public UpdateRegulationsRequestHandler(final SimulationManager simulationManager) {
-        super(simulationManager);
-    }
+  public UpdateRegulationsRequestHandler(
+    final SimulationManager simulationManager
+  ) {
+    super(simulationManager);
+  }
 
-    @Override
-    protected String getSimulationId(final UpdateRegulationsRequest request) {
-        return request.getSimulationId();
-    }
+  @Override
+  protected String getSimulationId(final UpdateRegulationsRequest request) {
+    return request.getSimulationId();
+  }
 
-    @Override
-    protected UpdateRegulationsResponse getResponseWithSimulation(
-        final UpdateRegulationsRequest request,
-        final Simulation simulation,
-        final SimulationManager.SimulationProperties simulationProperties
-    ) {
+  @Override
+  protected UpdateRegulationsResponse getResponseWithSimulation(
+    final UpdateRegulationsRequest request,
+    final Simulation simulation,
+    final SimulationManager.SimulationProperties simulationProperties
+  ) {
+    checkArgument(
+      request.hasStartDateTime(),
+      "Update regulations request is missing a start date time."
+    );
+    checkArgument(
+      request.hasEndDateTime(),
+      "Update regulations request is missing an end date time."
+    );
+    checkArgument(
+      request.hasRegulationsSummary(),
+      "Update regulations request is missing a regulations summary."
+    );
+    final var startInstant = toInstant(request.getStartDateTime());
+    final var endInstant = toInstant(request.getEndDateTime());
+    checkArgument(
+      !endInstant.isBefore(startInstant),
+      "End date time must be on or after start date time."
+    );
+    final Interval interval = Interval.of(startInstant, endInstant);
+    final List<QuotaDefinition> quotaDefinitions = request
+      .getRegulationsSummary()
+      .getTotalAllowableCatchesList()
+      .stream()
+      .map(totalAllowableCatch -> {
         checkArgument(
-            request.hasStartDateTime(),
-            "Update regulations request is missing a start date time."
+          totalAllowableCatch.hasSpecies(),
+          "TAC entry is missing a species."
         );
         checkArgument(
-            request.hasEndDateTime(),
-            "Update regulations request is missing an end date time."
+          totalAllowableCatch.hasFleetSegment(),
+          "TAC entry is missing a fleet segment."
         );
-        checkArgument(
-            request.hasRegulationsSummary(),
-            "Update regulations request is missing a regulations summary."
+        return new QuotaDefinition(
+          toPoseidonFleetSegment(totalAllowableCatch.getFleetSegment()),
+          toPoseidonSpecies(totalAllowableCatch.getSpecies()),
+          simulationProperties.convertMassInStandardUnitToKg(
+            totalAllowableCatch.getCatch()
+          )
         );
-        final var startInstant = toInstant(request.getStartDateTime());
-        final var endInstant = toInstant(request.getEndDateTime());
-        checkArgument(
-            !endInstant.isBefore(startInstant),
-            "End date time must be on or after start date time."
-        );
-        final Interval interval = Interval.of(startInstant, endInstant);
-        final List<QuotaDefinition> quotaDefinitions =
-            request
-                .getRegulationsSummary()
-                .getTotalAllowableCatchesList()
-                .stream()
-                .map(totalAllowableCatch -> {
-                    checkArgument(
-                        totalAllowableCatch.hasSpecies(),
-                        "TAC entry is missing a species."
-                    );
-                    checkArgument(
-                        totalAllowableCatch.hasFleetSegment(),
-                        "TAC entry is missing a fleet segment."
-                    );
-                    return new QuotaDefinition(
-                        toPoseidonFleetSegment(totalAllowableCatch.getFleetSegment()),
-                        toPoseidonSpecies(totalAllowableCatch.getSpecies()),
-                        simulationProperties.convertMassInStandardUnitToKg(
-                            totalAllowableCatch.getCatch()
-                        )
-                    );
-                })
-                .filter(quotaDefinition ->
-                    simulationProperties.overlapsContractFleetSegment(quotaDefinition.fleetSegment())
-                )
-                .toList();
-        simulation
-            .getComponent(TotalAllowableCatchQuotas.class)
-            .setQuotas(interval, quotaDefinitions);
-        return UpdateRegulationsResponse
-            .newBuilder()
-            .setSimulationId(request.getSimulationId())
-            .build();
-    }
+      })
+      .filter(quotaDefinition ->
+        simulationProperties.overlapsContractFleetSegment(
+          quotaDefinition.fleetSegment()
+        )
+      )
+      .toList();
+    simulation
+      .getComponent(TotalAllowableCatchQuotas.class)
+      .setQuotas(interval, quotaDefinitions);
+    return UpdateRegulationsResponse.newBuilder()
+      .setSimulationId(request.getSimulationId())
+      .build();
+  }
 }

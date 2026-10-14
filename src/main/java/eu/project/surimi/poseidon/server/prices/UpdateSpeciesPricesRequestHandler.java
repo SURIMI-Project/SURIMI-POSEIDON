@@ -22,10 +22,23 @@
 
 package eu.project.surimi.poseidon.server.prices;
 
+import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
+import static io.grpc.Status.FAILED_PRECONDITION;
+import static io.grpc.Status.INVALID_ARGUMENT;
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.INFO;
+import static java.util.function.UnaryOperator.identity;
+import static java.util.stream.Collectors.toMap;
+
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesRequest;
 import build.buf.gen.surimi.v1.UpdateSpeciesPricesResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
+import java.math.RoundingMode;
+import java.util.Map;
+import java.util.Set;
+import javax.measure.Unit;
+import javax.measure.quantity.Mass;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.IllegalCurrencyException;
 import org.joda.money.Money;
@@ -37,20 +50,6 @@ import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.grids.ObjectGrid;
 
-import javax.measure.Unit;
-import javax.measure.quantity.Mass;
-import java.math.RoundingMode;
-import java.util.Map;
-import java.util.Set;
-
-import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
-import static io.grpc.Status.FAILED_PRECONDITION;
-import static io.grpc.Status.INVALID_ARGUMENT;
-import static java.lang.System.Logger.Level.DEBUG;
-import static java.lang.System.Logger.Level.INFO;
-import static java.util.function.UnaryOperator.identity;
-import static java.util.stream.Collectors.toMap;
-
 /**
  * Handles {@code UpdateSpeciesPrices}: sets each requested species price on the matching market
  * (by {@code marketCode}), ignoring prices for unknown markets. Rejects a request that would mix
@@ -58,147 +57,170 @@ import static java.util.stream.Collectors.toMap;
  * species/category/market, since {@link BiomassMarket#getPrice} falls back to
  * {@link Species#covers} and such a mix would make that lookup ambiguous.
  */
-public class UpdateSpeciesPricesRequestHandler extends
-    WithSimulationRequestHandler<UpdateSpeciesPricesRequest, UpdateSpeciesPricesResponse> {
+public class UpdateSpeciesPricesRequestHandler
+  extends WithSimulationRequestHandler<
+    UpdateSpeciesPricesRequest,
+    UpdateSpeciesPricesResponse
+  >
+{
 
-    private static final System.Logger logger =
-        System.getLogger(UpdateSpeciesPricesRequestHandler.class.getName());
+  private static final System.Logger logger = System.getLogger(
+    UpdateSpeciesPricesRequestHandler.class.getName()
+  );
 
-    public UpdateSpeciesPricesRequestHandler(final SimulationManager simulationManager) {
-        super(simulationManager);
-    }
+  public UpdateSpeciesPricesRequestHandler(
+    final SimulationManager simulationManager
+  ) {
+    super(simulationManager);
+  }
 
-    @Override
-    protected String getSimulationId(final UpdateSpeciesPricesRequest request) {
-        return request.getSimulationId();
-    }
+  @Override
+  protected String getSimulationId(final UpdateSpeciesPricesRequest request) {
+    return request.getSimulationId();
+  }
 
-    @Override
-    protected UpdateSpeciesPricesResponse getResponseWithSimulation(
-        final UpdateSpeciesPricesRequest request,
-        final Simulation simulation,
-        final SimulationManager.SimulationProperties simulationProperties
-    ) {
-        logger.log(INFO, "Price update received for simulation {0}", request.getSimulationId());
+  @Override
+  protected UpdateSpeciesPricesResponse getResponseWithSimulation(
+    final UpdateSpeciesPricesRequest request,
+    final Simulation simulation,
+    final SimulationManager.SimulationProperties simulationProperties
+  ) {
+    logger.log(
+      INFO,
+      "Price update received for simulation {0}",
+      request.getSimulationId()
+    );
 
-        final Map<String, BiomassMarket> marketsById = getMarketsById(simulation);
-        request
-            .getSpeciesPriceSummary()
-            .getSpeciesPricesList()
-            .forEach(price -> {
-                final BiomassMarket market = marketsById.get(price.getMarketCode());
-                if (market != null) { // ignore prices for unknown markets
+    final Map<String, BiomassMarket> marketsById = getMarketsById(simulation);
+    request
+      .getSpeciesPriceSummary()
+      .getSpeciesPricesList()
+      .forEach(price -> {
+        final BiomassMarket market = marketsById.get(price.getMarketCode());
+        if (market != null) {
+          // ignore prices for unknown markets
 
-                    final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());
-                    final Unit<Mass> biomassUnit = simulationProperties.getStandardMassUnit();
-                    final Price marketPrice =
-                        new Price(
-                            Money.of(currencyUnit, price.getPrice(), RoundingMode.HALF_EVEN),
-                            biomassUnit
-                        );
-                    final CatchCategory catchCategory = new CatchCategory(price.getCategoryCode());
-                    final Species requestSpecies = toPoseidonSpecies(price.getSpecies());
-                    validateNoGenericStagedConflict(market, catchCategory, requestSpecies);
+          final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());
+          final Unit<Mass> biomassUnit =
+            simulationProperties.getStandardMassUnit();
+          final Price marketPrice = new Price(
+            Money.of(currencyUnit, price.getPrice(), RoundingMode.HALF_EVEN),
+            biomassUnit
+          );
+          final CatchCategory catchCategory = new CatchCategory(
+            price.getCategoryCode()
+          );
+          final Species requestSpecies = toPoseidonSpecies(price.getSpecies());
+          validateNoGenericStagedConflict(
+            market,
+            catchCategory,
+            requestSpecies
+          );
 
-                    market.setPrice(
-                        catchCategory,
-                        requestSpecies,
-                        marketPrice,
-                        simulation.getTemporalSchedule().getDateTime()
-                    );
-                    logger.log(
-                        DEBUG,
-                        "Updated price of species {0} at port market {1} to {2}/{3}.",
-                        requestSpecies,
-                        market.getCode(),
-                        marketPrice.getAmount(),
-                        marketPrice.getBiomassUnit()
-                    );
-                }
-            });
-        return UpdateSpeciesPricesResponse
-            .newBuilder()
-            .setSimulationId(request.getSimulationId())
-            .build();
-    }
-
-    private CurrencyUnit parseCurrency(final String currency) {
-        try {
-            return CurrencyUnit.of(currency);
-        } catch (final IllegalCurrencyException e) {
-            throw wrap(INVALID_ARGUMENT, e);
+          market.setPrice(
+            catchCategory,
+            requestSpecies,
+            marketPrice,
+            simulation.getTemporalSchedule().getDateTime()
+          );
+          logger.log(
+            DEBUG,
+            "Updated price of species {0} at port market {1} to {2}/{3}.",
+            requestSpecies,
+            market.getCode(),
+            marketPrice.getAmount(),
+            marketPrice.getBiomassUnit()
+          );
         }
-    }
+      });
+    return UpdateSpeciesPricesResponse.newBuilder()
+      .setSimulationId(request.getSimulationId())
+      .build();
+  }
 
-    private void validateNoGenericStagedConflict(
-        final BiomassMarket market,
-        final CatchCategory catchCategory,
-        final Species requestedSpecies
-    ) {
-        final Map<Species, Price> pricesBySpecies = market.getPrices().get(catchCategory);
-        if (pricesBySpecies == null || pricesBySpecies.isEmpty()) {
-            return;
-        }
-        final String speciesCode = requestedSpecies.getCode();
-        final boolean requestIsGeneric = requestedSpecies.getLifeStage() == null;
-        final boolean hasGenericPrice = pricesBySpecies
-            .keySet()
-            .stream()
-            .anyMatch(species ->
-                species.getCode().equals(speciesCode) && species.getLifeStage() == null
-            );
-        final boolean hasStagedPrice = pricesBySpecies
-            .keySet()
-            .stream()
-            .anyMatch(species ->
-                species.getCode().equals(speciesCode) && species.getLifeStage() != null
-            );
-        if (requestIsGeneric && hasStagedPrice) {
-            throw INVALID_ARGUMENT
-                .withDescription(
-                    ("Cannot update generic species '%s' in market '%s' and category '%s' because" +
-                        " life-staged prices exist.")
-                        .formatted(speciesCode, market.getCode(), catchCategory.getCode())
-                )
-                .asRuntimeException();
-        }
-        if (!requestIsGeneric && hasGenericPrice) {
-            throw INVALID_ARGUMENT
-                .withDescription(
-                    ("Cannot update life-staged species '%s' in market '%s' and category '%s' " +
-                        "because a generic price exists.")
-                        .formatted(requestedSpecies, market.getCode(), catchCategory.getCode())
-                )
-                .asRuntimeException();
-        }
+  private CurrencyUnit parseCurrency(final String currency) {
+    try {
+      return CurrencyUnit.of(currency);
+    } catch (final IllegalCurrencyException e) {
+      throw wrap(INVALID_ARGUMENT, e);
     }
+  }
 
-    /**
-     * @return the simulation's {@link MarketGrid} components, or throws {@code
-     * FAILED_PRECONDITION} if none are configured.
-     */
-    static Set<MarketGrid> getMarketGrids(final Simulation simulation) {
-        final Set<MarketGrid> marketGrids =
-            simulation.getComponents(MarketGrid.class);
-        if (marketGrids.isEmpty()) {
-            throw FAILED_PRECONDITION
-                .withDescription("No market grids defined in simulation.")
-                .asRuntimeException();
-        }
-        return marketGrids;
+  private void validateNoGenericStagedConflict(
+    final BiomassMarket market,
+    final CatchCategory catchCategory,
+    final Species requestedSpecies
+  ) {
+    final Map<Species, Price> pricesBySpecies = market
+      .getPrices()
+      .get(catchCategory);
+    if (pricesBySpecies == null || pricesBySpecies.isEmpty()) {
+      return;
     }
-
-    /**
-     * @return every {@link BiomassMarket} across all of the simulation's {@link MarketGrid}s,
-     * keyed by market code.
-     */
-    static Map<String, BiomassMarket> getMarketsById(final Simulation simulation) {
-        return getMarketGrids(simulation)
-            .stream()
-            .flatMap(ObjectGrid::stream)
-            .filter(BiomassMarket.class::isInstance)
-            .map(BiomassMarket.class::cast)
-            .collect(toMap(BiomassMarket::getCode, identity()));
+    final String speciesCode = requestedSpecies.getCode();
+    final boolean requestIsGeneric = requestedSpecies.getLifeStage() == null;
+    final boolean hasGenericPrice = pricesBySpecies
+      .keySet()
+      .stream()
+      .anyMatch(
+        species ->
+          species.getCode().equals(speciesCode) &&
+          species.getLifeStage() == null
+      );
+    final boolean hasStagedPrice = pricesBySpecies
+      .keySet()
+      .stream()
+      .anyMatch(
+        species ->
+          species.getCode().equals(speciesCode) &&
+          species.getLifeStage() != null
+      );
+    if (requestIsGeneric && hasStagedPrice) {
+      throw INVALID_ARGUMENT.withDescription(
+        (
+          "Cannot update generic species '%s' in market '%s' and category '%s' because" +
+          " life-staged prices exist."
+        ).formatted(speciesCode, market.getCode(), catchCategory.getCode())
+      ).asRuntimeException();
     }
+    if (!requestIsGeneric && hasGenericPrice) {
+      throw INVALID_ARGUMENT.withDescription(
+        (
+          "Cannot update life-staged species '%s' in market '%s' and category '%s' " +
+          "because a generic price exists."
+        ).formatted(requestedSpecies, market.getCode(), catchCategory.getCode())
+      ).asRuntimeException();
+    }
+  }
 
+  /**
+   * @return the simulation's {@link MarketGrid} components, or throws {@code
+   * FAILED_PRECONDITION} if none are configured.
+   */
+  static Set<MarketGrid> getMarketGrids(final Simulation simulation) {
+    final Set<MarketGrid> marketGrids = simulation.getComponents(
+      MarketGrid.class
+    );
+    if (marketGrids.isEmpty()) {
+      throw FAILED_PRECONDITION.withDescription(
+        "No market grids defined in simulation."
+      ).asRuntimeException();
+    }
+    return marketGrids;
+  }
+
+  /**
+   * @return every {@link BiomassMarket} across all of the simulation's {@link MarketGrid}s,
+   * keyed by market code.
+   */
+  static Map<String, BiomassMarket> getMarketsById(
+    final Simulation simulation
+  ) {
+    return getMarketGrids(simulation)
+      .stream()
+      .flatMap(ObjectGrid::stream)
+      .filter(BiomassMarket.class::isInstance)
+      .map(BiomassMarket.class::cast)
+      .collect(toMap(BiomassMarket::getCode, identity()));
+  }
 }

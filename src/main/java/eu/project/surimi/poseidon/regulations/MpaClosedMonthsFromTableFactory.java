@@ -22,9 +22,19 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.lang.Boolean.TRUE;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toCollection;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import java.time.Month;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,17 +43,6 @@ import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
-
-import java.time.Month;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
-
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
-import static java.lang.Boolean.TRUE;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toCollection;
 
 /**
  * Reads a table of {@code (mpa_id, month, closed)} rows and groups it into the set of months each
@@ -54,31 +53,38 @@ import static java.util.stream.Collectors.toCollection;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class MpaClosedMonthsFromTableFactory<S extends Scope>
-    extends RelativeScopeFactory<S, ImmutableMap<String, ImmutableSet<Month>>> {
+public class MpaClosedMonthsFromTableFactory<S extends Scope> extends RelativeScopeFactory<
+  S,
+  ImmutableMap<String, ImmutableSet<Month>>
+> {
 
-    private Factory<? super S, Table> table;
-    private String mpaIdColumnName;
-    private String monthColumnName;
-    private String closedColumnName;
+  private Factory<? super S, Table> table;
+  private String mpaIdColumnName;
+  private String monthColumnName;
+  private String closedColumnName;
 
-    @Override
-    protected ImmutableMap<String, ImmutableSet<Month>> newInstance(final S scope) {
-        return table
-            .get(scope)
-            .stream()
-            .filter(row -> TRUE.equals(row.getBoolean(closedColumnName)))
-            .collect(groupingBy(
-                row -> row.getString(mpaIdColumnName),
-                LinkedHashMap::new,
-                mapping(
-                    row -> Month.of(row.getInt(monthColumnName)),
-                    toCollection(() -> EnumSet.noneOf(Month.class))
-                )
-            ))
-            .entrySet()
-            .stream()
-            .collect(toImmutableMap(Entry::getKey, e -> Sets.immutableEnumSet(e.getValue())));
-    }
-
+  @Override
+  protected ImmutableMap<String, ImmutableSet<Month>> newInstance(
+    final S scope
+  ) {
+    return table
+      .get(scope)
+      .stream()
+      .filter(row -> TRUE.equals(row.getBoolean(closedColumnName)))
+      .collect(
+        groupingBy(
+          row -> row.getString(mpaIdColumnName),
+          LinkedHashMap::new,
+          mapping(
+            row -> Month.of(row.getInt(monthColumnName)),
+            toCollection(() -> EnumSet.noneOf(Month.class))
+          )
+        )
+      )
+      .entrySet()
+      .stream()
+      .collect(
+        toImmutableMap(Entry::getKey, e -> Sets.immutableEnumSet(e.getValue()))
+      );
+  }
 }

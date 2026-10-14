@@ -22,36 +22,36 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
-import uk.ac.ox.poseidon.core.Scenario;
-
-import java.time.LocalDateTime;
-import java.util.function.Supplier;
-
 import static eu.project.surimi.poseidon.regulations.Factories.totalAllowableCatchQuotas;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static uk.ac.ox.poseidon.core.functions.Factories.numericIntervalToStringMapper;
 import static uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory.interval;
 import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
 
+import java.time.LocalDateTime;
+import java.util.function.Supplier;
+import uk.ac.ox.poseidon.core.Scenario;
+
 public class TacOnlyScenario implements Supplier<Scenario> {
-    @Override
-    public Scenario get() {
-        return Scenario.builder()
-            .startingDateTime(dateTime(LocalDateTime.of(2000, 1, 1, 0, 0)))
-            .component(
-                "tac",
-                totalAllowableCatchQuotas(
-                    fleetSegmentMapper(
-                        "country_of_registration",
-                        "loa",
-                        numericIntervalToStringMapper(
-                            interval(12.0, 18.0, "VL1218"),
-                            interval(18.0, 24.0, "VL1824")
-                        ),
-                        "Industrial"
-                    )
-                )
-            )
-            .build();
-    }
+
+  @Override
+  public Scenario get() {
+    return Scenario.builder()
+      .startingDateTime(dateTime(LocalDateTime.of(2000, 1, 1, 0, 0)))
+      .component(
+        "tac",
+        totalAllowableCatchQuotas(
+          fleetSegmentMapper(
+            "country_of_registration",
+            "loa",
+            numericIntervalToStringMapper(
+              interval(12.0, 18.0, "VL1218"),
+              interval(18.0, 24.0, "VL1824")
+            ),
+            "Industrial"
+          )
+        )
+      )
+      .build();
+  }
 }

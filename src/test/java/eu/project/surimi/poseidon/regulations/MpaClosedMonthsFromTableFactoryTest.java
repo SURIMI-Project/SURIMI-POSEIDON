@@ -22,43 +22,45 @@
 
 package eu.project.surimi.poseidon.regulations;
 
-import org.junit.jupiter.api.Test;
-
-import java.time.Month;
-import java.util.Map;
-import java.util.Set;
-
 import static eu.project.surimi.poseidon.regulations.Factories.mpaClosedMonths;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.ac.ox.poseidon.core.scopes.Scope.GLOBAL_SCOPE;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
+import java.time.Month;
+import java.util.Map;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+
 class MpaClosedMonthsFromTableFactoryTest {
 
-    private static final String DATA = """
-        mpa_id,month,closed
-        mpa_4,1,TRUE
-        mpa_4,2,TRUE
-        mpa_4,3,
-        mpa_15,1,FALSE
-        mpa_15,5,TRUE
-        mpa_15,6,TRUE
-        mpa_99,1,FALSE
-        mpa_99,2,FALSE
-        """;
+  private static final String DATA = """
+  mpa_id,month,closed
+  mpa_4,1,TRUE
+  mpa_4,2,TRUE
+  mpa_4,3,
+  mpa_15,1,FALSE
+  mpa_15,5,TRUE
+  mpa_15,6,TRUE
+  mpa_99,1,FALSE
+  mpa_99,2,FALSE
+  """;
 
-    @Test
-    void groupsClosedMonthsByMpaAndOmitsMpasWithNoClosures() {
-        final Map<String, ?> closedMonths =
-            mpaClosedMonths(
-                tableFromCsvString(DATA),
-                "mpa_id",
-                "month",
-                "closed"
-            ).get(GLOBAL_SCOPE);
+  @Test
+  void groupsClosedMonthsByMpaAndOmitsMpasWithNoClosures() {
+    final Map<String, ?> closedMonths = mpaClosedMonths(
+      tableFromCsvString(DATA),
+      "mpa_id",
+      "month",
+      "closed"
+    ).get(GLOBAL_SCOPE);
 
-        assertThat(closedMonths).containsOnlyKeys("mpa_4", "mpa_15");
-        assertThat(closedMonths.get("mpa_4")).isEqualTo(Set.of(Month.JANUARY, Month.FEBRUARY));
-        assertThat(closedMonths.get("mpa_15")).isEqualTo(Set.of(Month.MAY, Month.JUNE));
-    }
+    assertThat(closedMonths).containsOnlyKeys("mpa_4", "mpa_15");
+    assertThat(closedMonths.get("mpa_4")).isEqualTo(
+      Set.of(Month.JANUARY, Month.FEBRUARY)
+    );
+    assertThat(closedMonths.get("mpa_15")).isEqualTo(
+      Set.of(Month.MAY, Month.JUNE)
+    );
+  }
 }

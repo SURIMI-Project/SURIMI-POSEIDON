@@ -22,14 +22,13 @@
 
 package eu.project.surimi.poseidon.server;
 
+import static java.util.function.Predicate.not;
+
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.Value;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.utils.Pair;
-
-import java.util.Optional;
-
-import static java.util.function.Predicate.not;
 
 /**
  * A species code plus an optional life stage, used as a lightweight, hashable key wherever a
@@ -40,70 +39,63 @@ import static java.util.function.Predicate.not;
 @Value
 public class SpeciesKey {
 
-    @NonNull String speciesCode;
-    String lifeStage;
+  @NonNull
+  String speciesCode;
 
-    public SpeciesKey(final @NonNull String speciesCode) {
-        this.speciesCode = speciesCode;
-        this.lifeStage = null;
-    }
+  String lifeStage;
 
-    /**
-     * @param lifeStage life stage, normalised to {@code null} when blank.
-     */
-    public SpeciesKey(
-        @NonNull final String speciesCode,
-        final String lifeStage
-    ) {
-        this.speciesCode = speciesCode;
-        this.lifeStage = Optional
-            .ofNullable(lifeStage)
-            .filter(not(String::isBlank))
-            .orElse(null);
-    }
+  public SpeciesKey(final @NonNull String speciesCode) {
+    this.speciesCode = speciesCode;
+    this.lifeStage = null;
+  }
 
-    /**
-     * @return the equivalent POSEIDON {@link Species}.
-     */
-    public Species toSpecies() {
-        return new Species(speciesCode, lifeStage, null);
-    }
+  /**
+   * @param lifeStage life stage, normalised to {@code null} when blank.
+   */
+  public SpeciesKey(@NonNull final String speciesCode, final String lifeStage) {
+    this.speciesCode = speciesCode;
+    this.lifeStage = Optional.ofNullable(lifeStage)
+      .filter(not(String::isBlank))
+      .orElse(null);
+  }
 
-    /**
-     * @return the equivalent proto species, with {@code lifeStage} left unset when {@code null}.
-     */
-    public build.buf.gen.surimi.v1.Species toProtobufSpecies() {
-        final build.buf.gen.surimi.v1.Species.Builder builder =
-            build.buf.gen.surimi.v1.Species
-                .newBuilder()
-                .setSpeciesCode(speciesCode);
-        if (lifeStage != null) {
-            builder.setLifeStage(lifeStage);
-        }
-        return builder.build();
-    }
+  /**
+   * @return the equivalent POSEIDON {@link Species}.
+   */
+  public Species toSpecies() {
+    return new Species(speciesCode, lifeStage, null);
+  }
 
-    /**
-     * @return {@code (speciesCode, lifeStage)}.
-     */
-    public Pair<String, String> toPair() {
-        return Pair.of(speciesCode, lifeStage);
+  /**
+   * @return the equivalent proto species, with {@code lifeStage} left unset when {@code null}.
+   */
+  public build.buf.gen.surimi.v1.Species toProtobufSpecies() {
+    final build.buf.gen.surimi.v1.Species.Builder builder =
+      build.buf.gen.surimi.v1.Species.newBuilder().setSpeciesCode(speciesCode);
+    if (lifeStage != null) {
+      builder.setLifeStage(lifeStage);
     }
+    return builder.build();
+  }
 
-    /**
-     * @return the key for a POSEIDON {@link Species}.
-     */
-    public static SpeciesKey from(final Species species) {
-        return new SpeciesKey(species.getCode(), species.getLifeStage());
-    }
+  /**
+   * @return {@code (speciesCode, lifeStage)}.
+   */
+  public Pair<String, String> toPair() {
+    return Pair.of(speciesCode, lifeStage);
+  }
 
-    /**
-     * @return the key for a proto species.
-     */
-    public static SpeciesKey from(final build.buf.gen.surimi.v1.Species species) {
-        return new SpeciesKey(
-            species.getSpeciesCode(),
-            species.getLifeStage()
-        );
-    }
+  /**
+   * @return the key for a POSEIDON {@link Species}.
+   */
+  public static SpeciesKey from(final Species species) {
+    return new SpeciesKey(species.getCode(), species.getLifeStage());
+  }
+
+  /**
+   * @return the key for a proto species.
+   */
+  public static SpeciesKey from(final build.buf.gen.surimi.v1.Species species) {
+    return new SpeciesKey(species.getSpeciesCode(), species.getLifeStage());
+  }
 }

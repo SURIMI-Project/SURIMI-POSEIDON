@@ -33,35 +33,42 @@ import uk.ac.ox.poseidon.core.Simulation;
  * so no two requests can step or mutate the same simulation concurrently.
  */
 @RequiredArgsConstructor
-public abstract class WithSimulationRequestHandler<ReqT, RespT>
-    extends RequestHandler<ReqT, RespT> {
+public abstract class WithSimulationRequestHandler<
+  ReqT,
+  RespT
+> extends RequestHandler<ReqT, RespT> {
 
-    protected final SimulationManager simulationManager;
+  protected final SimulationManager simulationManager;
 
-    @SuppressWarnings("SynchronizeOnNonFinalField")
-    @SuppressFBWarnings("USO")
-    @Override
-    protected RespT getResponse(final ReqT request) {
-        final Simulation simulation = simulationManager.getSimulation(getSimulationId(request));
-        final SimulationManager.SimulationProperties simulationProperties =
-            simulationManager.getSimulationProperties(simulation);
-        synchronized (simulation.schedule) {
-            return getResponseWithSimulation(request, simulation, simulationProperties);
-        }
-    }
-
-    /**
-     * @return the simulation ID the request refers to.
-     */
-    protected abstract String getSimulationId(final ReqT request);
-
-    /**
-     * @return the response for the given request, with the simulation's schedule lock held.
-     */
-    protected abstract RespT getResponseWithSimulation(
-        final ReqT request,
-        final Simulation simulation,
-        SimulationManager.SimulationProperties simulationProperties
+  @SuppressWarnings("SynchronizeOnNonFinalField")
+  @SuppressFBWarnings("USO")
+  @Override
+  protected RespT getResponse(final ReqT request) {
+    final Simulation simulation = simulationManager.getSimulation(
+      getSimulationId(request)
     );
+    final SimulationManager.SimulationProperties simulationProperties =
+      simulationManager.getSimulationProperties(simulation);
+    synchronized (simulation.schedule) {
+      return getResponseWithSimulation(
+        request,
+        simulation,
+        simulationProperties
+      );
+    }
+  }
 
+  /**
+   * @return the simulation ID the request refers to.
+   */
+  protected abstract String getSimulationId(final ReqT request);
+
+  /**
+   * @return the response for the given request, with the simulation's schedule lock held.
+   */
+  protected abstract RespT getResponseWithSimulation(
+    final ReqT request,
+    final Simulation simulation,
+    SimulationManager.SimulationProperties simulationProperties
+  );
 }

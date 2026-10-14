@@ -22,31 +22,6 @@
 
 package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
-import sim.util.Int2D;
-import tech.tablesaw.api.Table;
-import uk.ac.ox.poseidon.agents.choices.KeyedMemory;
-import uk.ac.ox.poseidon.agents.tasks.Behaviour;
-import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
-import uk.ac.ox.poseidon.agents.vessels.PerVesselFactory;
-import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
-import uk.ac.ox.poseidon.agents.vessels.engines.Engine;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.biology.buckets.Bucket;
-import uk.ac.ox.poseidon.core.Factory;
-import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
-import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.time.DurationFactory;
-import uk.ac.ox.poseidon.core.time.TimeFactory;
-import uk.ac.ox.poseidon.geography.ports.PortGrid;
-
-import java.nio.file.Path;
-import java.time.LocalDate;
-import java.time.Period;
-import java.util.LinkedHashMap;
-import java.util.function.Supplier;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 import static eu.project.surimi.poseidon.regulations.Factories.*;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
@@ -63,16 +38,16 @@ import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.*;
 import static uk.ac.ox.poseidon.agents.choices.Factories.*;
 import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
-import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
-import static uk.ac.ox.poseidon.agents.market.Factories.oneBiomassMarketPerPort;
 import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
 import static uk.ac.ox.poseidon.agents.market.Factories.homePortCatchValuation;
+import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
+import static uk.ac.ox.poseidon.agents.market.Factories.oneBiomassMarketPerPort;
 import static uk.ac.ox.poseidon.agents.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingLocationLegalityChecker;
+import static uk.ac.ox.poseidon.agents.social.Factories.*;
 import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
 import static uk.ac.ox.poseidon.agents.tasks.Factories.inactiveBehaviour;
-import static uk.ac.ox.poseidon.agents.social.Factories.*;
 import static uk.ac.ox.poseidon.agents.tasks.accounting.Factories.payTripCost;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.selectorTask;
 import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
@@ -150,952 +125,877 @@ import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
 import static uk.ac.ox.poseidon.regulations.predicates.Factories.isPermitted;
 import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionCellPredicate;
 
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.LinkedHashMap;
+import java.util.function.Supplier;
+import sim.util.Int2D;
+import tech.tablesaw.api.Table;
+import uk.ac.ox.poseidon.agents.choices.KeyedMemory;
+import uk.ac.ox.poseidon.agents.tasks.Behaviour;
+import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
+import uk.ac.ox.poseidon.agents.vessels.PerVesselFactory;
+import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
+import uk.ac.ox.poseidon.agents.vessels.engines.Engine;
+import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
+import uk.ac.ox.poseidon.biology.buckets.Bucket;
+import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.Scenario;
+import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
+import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.time.DurationFactory;
+import uk.ac.ox.poseidon.core.time.TimeFactory;
+import uk.ac.ox.poseidon.geography.ports.PortGrid;
+
 public class NorthwesternMedScenario implements Supplier<Scenario> {
 
-    public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
-    static final Path INPUT_PATH = Path.of("inputs", "northwestern_med");
-    private static final double OWN_LEARNING_ALPHA = 0.5;
-    private static final double SOCIAL_LEARNING_ALPHA = 0.2;
-    private static final int MAXIMUM_CLIQUE_SIZE = 5;
-    private static final double PURSE_SEINER_EXPLORATION_PROBABILITY = 0.2;
-    private static final double BOTTOM_TRAWLER_EXPLORATION_PROBABILITY = 0.2;
-    private static final int PURSE_SEINER_MEAN_EXPLORATION_RADIUS = 1;
-    private static final int BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS = 1;
-    // Beyond the initial radius. In January 2013 every search that found a legal cell only after
-    // widening found it within three cells; most that widen find nothing legal anywhere.
-    private static final int MAXIMUM_EXPLORATION_WIDENING = 3;
-    // Rough values, rescaled against target_landings.csv, until catchability is calibrated.
-    private static final Path PLACEHOLDER_CATCHABILITIES_PATH =
-        Path.of("scenarios", "northwestern_med_placeholder_catchabilities.csv");
-    private static final double PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD = -35.0;
-    private static final double BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD = -50.0;
-    private static final double BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD = -1000.0;
-    private static final double PURSE_SEINER_VESSEL_SPEED_IN_KNOTS = 9.5;
-    // as per email on 2025-03-18 08:20
-    private static final double BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS = 9;
-    // midpoint of 8-10 knots, per bottom trawler regulation doc
-    private static final double BOTTOM_TRAWLER_TRAWLING_SPEED_IN_KNOTS = 3;
-    // midpoint of 2-4 knots, per bottom trawler regulation doc
-    static final String PURSE_SEINE_GEAR_CODE = "PS";
-    static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
-    private static final String CATCH_CATEGORY = "Fresh - Whole";
-    private static final TimeFactory PURSE_SEINER_RETURN_TIME = time(6, 30, 0);
-    // A set's typical duration. Fishers can't know how long a given set will take, so the checks
-    // that a set fits (before the return time, within the trip's length) and is legal plan with
-    // this; the gear's sets last this long too, for now.
-    private static final DurationFactory PURSE_SEINE_SET_DURATION = hours(1);
-    private static final DurationFactory BOTTOM_TRAWLER_SET_DURATION = hours(3);
-    private static final DurationFactory BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION = hours(12);
+  public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
+  static final Path INPUT_PATH = Path.of("inputs", "northwestern_med");
+  private static final double OWN_LEARNING_ALPHA = 0.5;
+  private static final double SOCIAL_LEARNING_ALPHA = 0.2;
+  private static final int MAXIMUM_CLIQUE_SIZE = 5;
+  private static final double PURSE_SEINER_EXPLORATION_PROBABILITY = 0.2;
+  private static final double BOTTOM_TRAWLER_EXPLORATION_PROBABILITY = 0.2;
+  private static final int PURSE_SEINER_MEAN_EXPLORATION_RADIUS = 1;
+  private static final int BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS = 1;
+  // Beyond the initial radius. In January 2013 every search that found a legal cell only after
+  // widening found it within three cells; most that widen find nothing legal anywhere.
+  private static final int MAXIMUM_EXPLORATION_WIDENING = 3;
+  // Rough values, rescaled against target_landings.csv, until catchability is calibrated.
+  private static final Path PLACEHOLDER_CATCHABILITIES_PATH = Path.of(
+    "scenarios",
+    "northwestern_med_placeholder_catchabilities.csv"
+  );
+  private static final double PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD = -35.0;
+  private static final double BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD = -50.0;
+  private static final double BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD = -1000.0;
+  private static final double PURSE_SEINER_VESSEL_SPEED_IN_KNOTS = 9.5;
+  // as per email on 2025-03-18 08:20
+  private static final double BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS = 9;
+  // midpoint of 8-10 knots, per bottom trawler regulation doc
+  private static final double BOTTOM_TRAWLER_TRAWLING_SPEED_IN_KNOTS = 3;
+  // midpoint of 2-4 knots, per bottom trawler regulation doc
+  static final String PURSE_SEINE_GEAR_CODE = "PS";
+  static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
+  private static final String CATCH_CATEGORY = "Fresh - Whole";
+  private static final TimeFactory PURSE_SEINER_RETURN_TIME = time(6, 30, 0);
+  // A set's typical duration. Fishers can't know how long a given set will take, so the checks
+  // that a set fits (before the return time, within the trip's length) and is legal plan with
+  // this; the gear's sets last this long too, for now.
+  private static final DurationFactory PURSE_SEINE_SET_DURATION = hours(1);
+  private static final DurationFactory BOTTOM_TRAWLER_SET_DURATION = hours(3);
+  private static final DurationFactory BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION =
+    hours(12);
 
-    /**
-     * Runs a 10-year simulation of this scenario, printing the date-time reached at each step,
-     * as a sanity check. To regenerate {@code scenarios/northwestern_med.yaml}, use the
-     * {@code writeNorthwesternMedScenario} Gradle task instead.
-     */
-    static void main(final String[] args) {
-        final int numSteps = 12 * 10;
-        final Period stepSize = Period.ofMonths(1);
-        final Scenario scenario = new NorthwesternMedScenario().get();
-        final Simulation simulation = scenario.startNewSimulation();
-        final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
-        range(0, numSteps).forEach(_ -> {
-            temporalSchedule.stepFor(simulation, stepSize);
-            System.out.println(temporalSchedule.getDateTime());
-        });
-        simulation.finish();
-    }
+  /**
+   * Runs a 10-year simulation of this scenario, printing the date-time reached at each step,
+   * as a sanity check. To regenerate {@code scenarios/northwestern_med.yaml}, use the
+   * {@code writeNorthwesternMedScenario} Gradle task instead.
+   */
+  static void main(final String[] args) {
+    final int numSteps = 12 * 10;
+    final Period stepSize = Period.ofMonths(1);
+    final Scenario scenario = new NorthwesternMedScenario().get();
+    final Simulation simulation = scenario.startNewSimulation();
+    final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
+    range(0, numSteps).forEach(_ -> {
+      temporalSchedule.stepFor(simulation, stepSize);
+      System.out.println(temporalSchedule.getDateTime());
+    });
+    simulation.finish();
+  }
 
-    /**
-     * @return a freshly built Northwestern Mediterranean {@link Scenario}.
-     */
-    @Override
-    public Scenario get() {
-        final Scenario.ScenarioBuilder builder = Scenario.builder();
+  /**
+   * @return a freshly built Northwestern Mediterranean {@link Scenario}.
+   */
+  @Override
+  public Scenario get() {
+    final Scenario.ScenarioBuilder builder = Scenario.builder();
 
-        final var inputPath = path(INPUT_PATH);
-        final var outputPath = simulationFolder(path("outputs"));
-        final var bathymetricGridPath = inputPath.plus("bathymetry_grid.asc");
+    final var inputPath = path(INPUT_PATH);
+    final var outputPath = simulationFolder(path("outputs"));
+    final var bathymetricGridPath = inputPath.plus("bathymetry_grid.asc");
 
-        final var allCellsGrid = modelGridFromGridFile(bathymetricGridPath);
-        final var modelGrid =
-            modelGridWithActiveCells(
-                allCellsGrid,
-                cellSetFromGridFile(
-                    inputPath.plus("exclusion_grid.asc"),
-                    allCellsGrid,
-                    0
-                )
-            );
+    final var allCellsGrid = modelGridFromGridFile(bathymetricGridPath);
+    final var modelGrid = modelGridWithActiveCells(
+      allCellsGrid,
+      cellSetFromGridFile(inputPath.plus("exclusion_grid.asc"), allCellsGrid, 0)
+    );
 
-        final var bathymetricGrid =
-            bathymetricGridFromGridFile(
-                bathymetricGridPath,
-                modelGrid,
-                maxAggregator(),
-                false
-            );
+    final var bathymetricGrid = bathymetricGridFromGridFile(
+      bathymetricGridPath,
+      modelGrid,
+      maxAggregator(),
+      false
+    );
 
-        final var mpaGrids =
-            staticGridsFromNetCdf(
-                modelGrid,
-                staticNetCdfGridReader(
-                    inputPath.plus("mpa_grids.nc"),
-                    "latitude",
-                    "longitude"
-                )
-            );
+    final var mpaGrids = staticGridsFromNetCdf(
+      modelGrid,
+      staticNetCdfGridReader(
+        inputPath.plus("mpa_grids.nc"),
+        "latitude",
+        "longitude"
+      )
+    );
 
-        final var habitatGrids =
-            staticGridsFromNetCdf(
-                modelGrid,
-                staticNetCdfGridReader(
-                    inputPath.plus("habitat_grids.nc"),
-                    "latitude",
-                    "longitude"
-                )
-            );
+    final var habitatGrids = staticGridsFromNetCdf(
+      modelGrid,
+      staticNetCdfGridReader(
+        inputPath.plus("habitat_grids.nc"),
+        "latitude",
+        "longitude"
+      )
+    );
 
-        final var rockGrid = mapEntry(habitatGrids, "rock");
-        final var posidoniaGrid = mapEntry(habitatGrids, "posidonia");
-        final var cymodoceaGrid = mapEntry(habitatGrids, "cymodocea");
+    final var rockGrid = mapEntry(habitatGrids, "rock");
+    final var posidoniaGrid = mapEntry(habitatGrids, "posidonia");
+    final var cymodoceaGrid = mapEntry(habitatGrids, "cymodocea");
 
-        final var mpaClosedMonths =
-            mpaClosedMonths(
-                tableFromCsvFile(inputPath.plus("mpa_months.csv")),
-                "mpa_id",
-                "month",
-                "closed"
-            );
+    final var mpaClosedMonths = mpaClosedMonths(
+      tableFromCsvFile(inputPath.plus("mpa_months.csv")),
+      "mpa_id",
+      "month",
+      "closed"
+    );
 
-        final var mpaFleetRestrictions =
-            mpaFleetRestrictions(
-                tableFromCsvFile(inputPath.plus("mpa_fleet_restrictions.csv")),
-                "mpa_id",
-                "gear_code",
-                "country_code"
-            );
+    final var mpaFleetRestrictions = mpaFleetRestrictions(
+      tableFromCsvFile(inputPath.plus("mpa_fleet_restrictions.csv")),
+      "mpa_id",
+      "gear_code",
+      "country_code"
+    );
 
-        final var portClosures =
-            portClosures(
-                tableFromCsvFile(inputPath.plus("port_closures.csv")),
-                "port_code",
-                "gear_code",
-                "start_date",
-                "end_date"
-            );
+    final var portClosures = portClosures(
+      tableFromCsvFile(inputPath.plus("port_closures.csv")),
+      "port_code",
+      "gear_code",
+      "start_date",
+      "end_date"
+    );
 
-        final var commonActionPredicate =
-            anyOf(
-                actionCellPredicate(
-                    modelGrid,
-                    in(
-                        constant(
-                            cellSetFromGridFile(
-                                inputPath.plus("french_eez.asc"),
-                                modelGrid,
-                                1
-                            )
-                        )
-                    )
-                ),
-                mpaClosurePredicate(
-                    modelGrid,
-                    mpaGrids,
-                    mpaClosedMonths,
-                    mpaFleetRestrictions,
-                    "country_of_registration"
-                ),
-                portClosurePredicate(portClosures),
-                actionCellPredicate(
-                    modelGrid,
-                    condition(
-                        cellValue(rockGrid),
-                        greaterThan(0.0)
-                    )
-                ),
-                actionCellPredicate(
-                    modelGrid,
-                    condition(
-                        cellValue(posidoniaGrid),
-                        greaterThan(0.0)
-                    )
-                ),
-                actionCellPredicate(
-                    modelGrid,
-                    condition(
-                        cellValue(cymodoceaGrid),
-                        greaterThan(0.0)
-                    )
-                )
-            );
+    final var commonActionPredicate = anyOf(
+      actionCellPredicate(
+        modelGrid,
+        in(
+          constant(
+            cellSetFromGridFile(inputPath.plus("french_eez.asc"), modelGrid, 1)
+          )
+        )
+      ),
+      mpaClosurePredicate(
+        modelGrid,
+        mpaGrids,
+        mpaClosedMonths,
+        mpaFleetRestrictions,
+        "country_of_registration"
+      ),
+      portClosurePredicate(portClosures),
+      actionCellPredicate(
+        modelGrid,
+        condition(cellValue(rockGrid), greaterThan(0.0))
+      ),
+      actionCellPredicate(
+        modelGrid,
+        condition(cellValue(posidoniaGrid), greaterThan(0.0))
+      ),
+      actionCellPredicate(
+        modelGrid,
+        condition(cellValue(cymodoceaGrid), greaterThan(0.0))
+      )
+    );
 
-        final var purseSeinerRegulations =
-            forbiddenIf(
-                anyOf(
-                    actionCellPredicate(
-                        modelGrid,
-                        condition(
-                            cellValue(bathymetricGrid),
-                            greaterThan(PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD)
-                        )
-                    ),
-                    commonActionPredicate
-                )
-            );
+    final var purseSeinerRegulations = forbiddenIf(
+      anyOf(
+        actionCellPredicate(
+          modelGrid,
+          condition(
+            cellValue(bathymetricGrid),
+            greaterThan(PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD)
+          )
+        ),
+        commonActionPredicate
+      )
+    );
 
-        final var bottomTrawlerRegulations =
-            forbiddenIf(
-                anyOf(
-                    actionCellPredicate(
-                        modelGrid,
-                        condition(
-                            cellValue(bathymetricGrid),
-                            greaterThan(BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD)
-                        )
-                    ),
-                    actionCellPredicate(
-                        modelGrid,
-                        condition(
-                            cellValue(bathymetricGrid),
-                            lessThan(BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD)
-                        )
-                    ),
-                    commonActionPredicate
-                )
-            );
+    final var bottomTrawlerRegulations = forbiddenIf(
+      anyOf(
+        actionCellPredicate(
+          modelGrid,
+          condition(
+            cellValue(bathymetricGrid),
+            greaterThan(BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD)
+          )
+        ),
+        actionCellPredicate(
+          modelGrid,
+          condition(
+            cellValue(bathymetricGrid),
+            lessThan(BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD)
+          )
+        ),
+        commonActionPredicate
+      )
+    );
 
-        final var vesselField =
-            vesselField(modelGrid);
+    final var vesselField = vesselField(modelGrid);
 
-        final var distance =
-            haversineDistanceCalculator(modelGrid);
+    final var distance = haversineDistanceCalculator(modelGrid);
 
-        final Factory<Scope, ? extends PortGrid> portGrid =
-            portGrid(
-                portsFromTable(
-                    tableFromCsvFile(inputPath.plus("ports.csv")),
-                    "port_code", "port_name", "lon", "lat"
-                ),
-                bathymetricGrid,
-                distance
-            );
+    final Factory<Scope, ? extends PortGrid> portGrid = portGrid(
+      portsFromTable(
+        tableFromCsvFile(inputPath.plus("ports.csv")),
+        "port_code",
+        "port_name",
+        "lon",
+        "lat"
+      ),
+      bathymetricGrid,
+      distance
+    );
 
-        final var pathFinder =
-            pathFinder(
-                bathymetricGrid,
-                portGrid,
-                distance
-            );
+    final var pathFinder = pathFinder(bathymetricGrid, portGrid, distance);
 
-        // The route a vessel would sail to fish at a cell and come back: one definition of the
-        // journey for both the fishing-location checks and the travel cost.
-        final var routeFunction = routeViaDestination(pathFinder, distance);
+    // The route a vessel would sail to fish at a cell and come back: one definition of the
+    // journey for both the fishing-location checks and the travel cost.
+    final var routeFunction = routeViaDestination(pathFinder, distance);
 
-        final var species =
-            speciesFromData(
-                tableFromCsvFile(inputPath.plus("species.csv")),
-                "species_code",
-                "species_name",
-                "life_stage"
-            );
+    final var species = speciesFromData(
+      tableFromCsvFile(inputPath.plus("species.csv")),
+      "species_code",
+      "species_name",
+      "life_stage"
+    );
 
-        final var catchabilityMapsByGearCode =
-            Table
-                .read()
-                .csv(PLACEHOLDER_CATCHABILITIES_PATH.toFile())
-                .stream()
-                .collect(groupingBy(
-                    row -> row.getString("gear_code"),
-                    LinkedHashMap::new,
-                    toMap(
-                        row -> multiStringKey(
-                            row.getString("species_code"),
-                            row.getString("life_stage")
-                        ),
-                        row -> row.getDouble("catchability"),
-                        (a, _) -> a,
-                        LinkedHashMap::new
-                    )
-                ));
+    final var catchabilityMapsByGearCode = Table.read()
+      .csv(PLACEHOLDER_CATCHABILITIES_PATH.toFile())
+      .stream()
+      .collect(
+        groupingBy(
+          row -> row.getString("gear_code"),
+          LinkedHashMap::new,
+          toMap(
+            row ->
+              multiStringKey(
+                row.getString("species_code"),
+                row.getString("life_stage")
+              ),
+            row -> row.getDouble("catchability"),
+            (a, _) -> a,
+            LinkedHashMap::new
+          )
+        )
+      );
 
-        final var purseSeinerCatchabilities =
-            perSimulation(object(checkNotNull(
-                catchabilityMapsByGearCode.get(PURSE_SEINE_GEAR_CODE)
-            )));
+    final var purseSeinerCatchabilities = perSimulation(
+      object(
+        checkNotNull(catchabilityMapsByGearCode.get(PURSE_SEINE_GEAR_CODE))
+      )
+    );
 
-        final var bottomTrawlerCatchabilities =
-            perSimulation(object(checkNotNull(
-                catchabilityMapsByGearCode.get(BOTTOM_TRAWLER_GEAR_CODE)
-            )));
+    final var bottomTrawlerCatchabilities = perSimulation(
+      object(
+        checkNotNull(catchabilityMapsByGearCode.get(BOTTOM_TRAWLER_GEAR_CODE))
+      )
+    );
 
-        final var fishingGear =
-            VesselScopeFactoriesByCode.<Gear>builder()
-                .factory(
-                    PURSE_SEINE_GEAR_CODE,
-                    indexedBiomassCatchabilityGear(
-                        PURSE_SEINE_GEAR_CODE,
-                        constant(PURSE_SEINE_SET_DURATION),
-                        species,
-                        defaultIfNull(
-                            composedFunction(
-                                speciesProperty("key"),
-                                mapValueExtractor(purseSeinerCatchabilities)
-                            ),
-                            0.0
-                        ),
-                        massOf(1, KILOGRAM)
-                    )
-                )
-                .factory(
-                    BOTTOM_TRAWLER_GEAR_CODE,
-                    indexedBiomassCatchabilityGear(
-                        BOTTOM_TRAWLER_GEAR_CODE,
-                        constant(BOTTOM_TRAWLER_SET_DURATION),
-                        species,
-                        defaultIfNull(
-                            composedFunction(
-                                speciesProperty("key"),
-                                mapValueExtractor(bottomTrawlerCatchabilities)
-                            ),
-                            0.0
-                        ),
-                        massOf(1, KILOGRAM)
-                    )
-                )
-                .defaultFactory(inactiveGear(null))
-                .build();
-
-        final var zeroBiomassAllocator =
-            filteredAllocator(
-                supplierAllocator(constantDouble(0.0)),
-                isActiveWaterCell(bathymetricGrid)
-            );
-
-        final var biomassGrids =
-            biomassGrids(
-                modelGrid,
-                species,
-                listOf(zeroBiomassAllocator)
-            );
-
-        final var fisheableBiomassGrids =
-            fisheableBiomassGrids(biomassGrids);
-
-        final var biomassSaleAccumulator =
-            biomassSaleAccumulator();
-
-        final var fishingActionAccumulator =
-            fishingEventAccumulator();
-
-        final var monthlyProcesses =
-            scheduledRepeating(
-                dateTimeAfterStarting(ONE_MONTH),
-                MONTHLY,
-                steppableSequence(
-                    listOf(
-                        eventClearer(biomassSaleAccumulator),
-                        eventClearer(fishingActionAccumulator)
-                    )
-                ),
-                -2
-            );
-
-        final var costsKeyFromRow =
-            multiStringKeyFromRow("country_code", "year", "vessel_length", "gear_code");
-
-        final var hourlyCostsMap =
-            mapFromTable(
-                tableFromCsvFile(inputPath.plus("operating_costs.csv")),
-                costsKeyFromRow,
-                moneyFromRow("currency", "cost_per_hour_at_sea")
-            );
-
-        final var vesselLengthClassMapper =
-            numericIntervalToStringMapper(
-                interval(0.0, 6.0, "VL0006"),
-                interval(6.0, 12.0, "VL0612"),
-                interval(12.0, 18.0, "VL1218"),
-                interval(18.0, 24.0, "VL1824"),
-                interval(24.0, 40.0, "VL2440"),
-                interval(40.0, null, "VL40XX")
-            );
-
-        final var costsKeyFromVessel =
-            multiStringKeyFromFunctions(
-                stringTagExtractor("country_of_registration"),
-                minInt(maxInt(currentYear(), constantInt(2013)), constantInt(2023)),
-                composedFunction(
-                    doubleTagExtractor("loa"),
-                    vesselLengthClassMapper
-                ),
-                stringTagExtractor("main_fishing_gear")
-            );
-
-        final var hourlyCost =
+    final var fishingGear = VesselScopeFactoriesByCode.<Gear>builder()
+      .factory(
+        PURSE_SEINE_GEAR_CODE,
+        indexedBiomassCatchabilityGear(
+          PURSE_SEINE_GEAR_CODE,
+          constant(PURSE_SEINE_SET_DURATION),
+          species,
+          defaultIfNull(
             composedFunction(
-                costsKeyFromVessel,
-                mapValueExtractor(hourlyCostsMap)
-            );
-
-        // Markets start without prices: in SURIMI runs, prices arrive through
-        // UpdateSpeciesPrices; LocalNorthwesternMedScenario schedules them from prices.csv.
-        final var marketGrid =
-            marketGrid(
-                portGrid,
-                oneBiomassMarketPerPort(portGrid)
-            );
-
-        final var catchCategoriser = uniformCatchCategoriser(catchCategory(CATCH_CATEGORY));
-
-        // One memory per vessel, keyed by gear code: what the vessel learns from its fishing
-        // operations and what it decides from must be this same instance.
-        final PerVesselFactory<KeyedMemory<String, Int2D, Bucket>> vesselMemory =
-            perVessel(keyedMemory());
-
-        final var optionValues =
-            memoryBasedOptionValues(
-                keyedMemorySelector(vesselMemory, vesselProperty("gear.code")),
-                netValuation(
-                    homePortCatchValuation(catchCategoriser),
-                    travelCost(routeFunction, timeCost(hourlyCost))
-                )
-            );
-
-        final var fleetSegmentMapper =
-            fleetSegmentMapper(
-                "country_of_registration",
-                "loa",
-                vesselLengthClassMapper,
-                "Industrial"
-            );
-
-        final var totalAllowableCatchQuotas =
-            scheduledRepeatingFromStart(
-                DAILY,
-                totalAllowableCatchQuotas(fleetSegmentMapper)
-            );
-
-        final var purseSeinerFishingLocationLegalityChecker =
-            fishingLocationLegalityChecker(
-                allOf(purseSeinerRegulations, totalAllowableCatchQuotas),
-                pathFinder,
-                distance,
-                PURSE_SEINE_SET_DURATION
-            );
-
-        final var bottomTrawlerFishingLocationLegalityChecker =
-            fishingLocationLegalityChecker(
-                allOf(bottomTrawlerRegulations, totalAllowableCatchQuotas),
-                pathFinder,
-                distance,
-                BOTTOM_TRAWLER_SET_DURATION
-            );
-
-        // How long it would take to sail to a cell, fish there once, and sail back to port. The
-        // checkers below test it before the legality checker: it is cheaper than the regulations,
-        // and late in a trip it turns down most cells.
-        final var purseSeinerFishAndReturnDurationFunction =
-            combinedDuration(
-                composedFunction(routeFunction, routeProperty("duration")),
-                constant(PURSE_SEINE_SET_DURATION)
-            );
-        final var bottomTrawlerFishAndReturnDurationFunction =
-            combinedDuration(
-                composedFunction(routeFunction, routeProperty("duration")),
-                constant(BOTTOM_TRAWLER_SET_DURATION)
-            );
-
-        // Purse seiners must be back in port by the first PURSE_SEINER_RETURN_TIME after they
-        // depart: at departure, the trip would depart now.
-        final var purseSeinerFishingLocationAtDepartureChecker =
-            allOf(
-                condition(
-                    purseSeinerFishAndReturnDurationFunction,
-                    lessThan(durationUntil(nextOccurrenceOf(PURSE_SEINER_RETURN_TIME)))
-                ),
-                purseSeinerFishingLocationLegalityChecker
-            );
-
-        // Whether a vessel at sea could sail to a cell, fish there once, and be back in port by
-        // the first PURSE_SEINER_RETURN_TIME after its trip started.
-        final var purseSeinerFishAndReturnInTime =
-            condition(
-                purseSeinerFishAndReturnDurationFunction,
-                lessThan(
-                    durationUntil(
-                        nextOccurrenceAfter(
-                            currentTripStartDateTime(),
-                            PURSE_SEINER_RETURN_TIME
-                        )
-                    )
-                )
-            );
-
-        // At sea, a vessel does not fish the same cell twice in a trip. Tested first, before the
-        // checks that need a path.
-        final var purseSeinerFishingLocationAtSeaChecker =
-            allOf(
-                not(cellWasFishedThisTrip()),
-                purseSeinerFishAndReturnInTime,
-                purseSeinerFishingLocationLegalityChecker
-            );
-
-        // Bottom trawlers must be back in port within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of
-        // departing: at departure, that is the whole of it.
-        final var bottomTrawlerFishingLocationAtDepartureChecker =
-            allOf(
-                condition(
-                    bottomTrawlerFishAndReturnDurationFunction,
-                    lessThan(constant(BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION))
-                ),
-                bottomTrawlerFishingLocationLegalityChecker
-            );
-
-        // Whether a vessel at sea could sail to a cell, fish there once, and be back in port
-        // within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of its trip's start.
-        final var bottomTrawlerFishAndReturnInTime =
-            condition(
-                bottomTrawlerFishAndReturnDurationFunction,
-                lessThan(
-                    durationUntil(
-                        dateTimeAfter(
-                            currentTripStartDateTime(),
-                            BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION
-                        )
-                    )
-                )
-            );
-
-        final var bottomTrawlerFishingLocationAtSeaChecker =
-            allOf(
-                not(cellWasFishedThisTrip()),
-                bottomTrawlerFishAndReturnInTime,
-                bottomTrawlerFishingLocationLegalityChecker
-            );
-
-        final var purseSeinerReadyForDeparture =
-            checkThat(
-                allOf(
-                    isPermitted(
-                        departNow(),
-                        totalAllowableCatchQuotas
-                    ),
-                    condition(
-                        currentTime(),
-                        afterTime(constant(time(21, 59, 59)))
-                    ),
-                    condition(
-                        currentDayOfWeek(),
-                        in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
-                    ),
-                    not(vesselHasStartedTripToday())
-                )
-            );
-
-        final var purseSeinerWaitUntilNextCheckpoint =
-            waitFor(
-                durationUntil(
-                    nextOccurrenceOf(time(6, 0, 0), time(22, 0, 0))
-                )
-            );
-
-        // Bottom trawlers depart in the morning and return the same day (per Miquel Ortega:
-        // ~07:00 departure, ~16:30-18:00 return), unlike purse seiners' overnight schedule
-        // above - this used to share the purse seiner's 06:00/22:00 checkpoint pair, which
-        // made trawlers only eligible to depart after 22:00.
-        final var bottomTrawlerReadyForDeparture =
-            checkThat(
-                allOf(
-                    isPermitted(
-                        departNow(),
-                        totalAllowableCatchQuotas
-                    ),
-                    condition(
-                        currentTime(),
-                        afterTime(constant(time(6, 59, 59)))
-                    ),
-                    condition(
-                        currentDayOfWeek(),
-                        in(constant(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY)))
-                    ),
-                    not(vesselHasStartedTripToday())
-                )
-            );
-
-        final var bottomTrawlerWaitUntilNextCheckpoint =
-            waitFor(
-                durationUntil(
-                    nextOccurrenceOf(time(7, 0, 0))
-                )
-            );
-
-        final var startPurseSeinerTrip =
-            startTrip(
-                epsilonGreedyDestination(
-                    PURSE_SEINER_EXPLORATION_PROBABILITY,
-                    neighbourhoodGridExplorer(
-                        pathFinder,
-                        purseSeinerFishingLocationAtDepartureChecker,
-                        shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
-                        MAXIMUM_EXPLORATION_WIDENING,
-                        bestKnownOption(optionValues, currentCell())
-                    ),
-                    greedyPicker(
-                        optionValues,
-                        purseSeinerFishingLocationAtDepartureChecker
-                    )
-                )
-            );
-
-        final var chooseNextPurseSeinerDestination =
-            chooseNextDestination(
-                epsilonGreedyDestination(
-                    PURSE_SEINER_EXPLORATION_PROBABILITY,
-                    neighbourhoodGridExplorer(
-                        pathFinder,
-                        purseSeinerFishingLocationAtSeaChecker,
-                        shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
-                        MAXIMUM_EXPLORATION_WIDENING,
-                        currentCell()
-                    ),
-                    greedyPicker(
-                        optionValues,
-                        purseSeinerFishingLocationAtSeaChecker
-                    )
-                )
-            );
-
-        final var startBottomTrawlerTrip =
-            startTrip(
-                epsilonGreedyDestination(
-                    BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
-                    neighbourhoodGridExplorer(
-                        pathFinder,
-                        bottomTrawlerFishingLocationAtDepartureChecker,
-                        shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
-                        MAXIMUM_EXPLORATION_WIDENING,
-                        bestKnownOption(optionValues, currentCell())
-                    ),
-                    greedyPicker(
-                        optionValues,
-                        bottomTrawlerFishingLocationAtDepartureChecker
-                    )
-                )
-            );
-
-        final var chooseNextBottomTrawlerDestination =
-            chooseNextDestination(
-                epsilonGreedyDestination(
-                    BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
-                    neighbourhoodGridExplorer(
-                        pathFinder,
-                        bottomTrawlerFishingLocationAtSeaChecker,
-                        shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
-                        MAXIMUM_EXPLORATION_WIDENING,
-                        currentCell()
-                    ),
-                    greedyPicker(
-                        optionValues,
-                        bottomTrawlerFishingLocationAtSeaChecker
-                    )
-                )
-            );
-
-        final var discardRatiosTable =
-            tableFromCsvFile(inputPath.plus("discard_ratios.csv"));
-        final var discardRatiosKeyFromRow =
-            multiStringKeyFromRow("species_code", "life_stage", "gear_code");
-
-        final var purseSeineDiscardRates =
-            discardRates(
-                species,
-                defaultIfNull(
-                    tableLookup(
-                        multiStringKeyFromFunctions(
-                            speciesProperty("code"),
-                            speciesProperty("lifeStage"),
-                            constant(PURSE_SEINE_GEAR_CODE)
-                        ),
-                        discardRatiosTable,
-                        discardRatiosKeyFromRow,
-                        doubleFromRow("discard_ratio")
-                    ),
-                    0.0
-                )
-            );
-        final var bottomTrawlerDiscardRates =
-            discardRates(
-                species,
-                defaultIfNull(
-                    tableLookup(
-                        multiStringKeyFromFunctions(
-                            speciesProperty("code"),
-                            speciesProperty("lifeStage"),
-                            constant(BOTTOM_TRAWLER_GEAR_CODE)
-                        ),
-                        discardRatiosTable,
-                        discardRatiosKeyFromRow,
-                        doubleFromRow("discard_ratio")
-                    ),
-                    0.0
-                )
-            );
-
-        final var discardMortality = fullDiscardMortality();
-
-        final var purseSeinerFishingTask = fishing(
-            currentCellFisheable(
-                fisheableBiomassGrids
+              speciesProperty("key"),
+              mapValueExtractor(purseSeinerCatchabilities)
             ),
-            compositeDispositionProcess(
-                purseSeineDiscardRates,
-                proportionallyLimitingBiomassToHold(),
-                discardMortality
-            )
-        );
-        final var bottomTrawlerFishingTask = fishing(
-            currentCellFisheable(
-                fisheableBiomassGrids
+            0.0
+          ),
+          massOf(1, KILOGRAM)
+        )
+      )
+      .factory(
+        BOTTOM_TRAWLER_GEAR_CODE,
+        indexedBiomassCatchabilityGear(
+          BOTTOM_TRAWLER_GEAR_CODE,
+          constant(BOTTOM_TRAWLER_SET_DURATION),
+          species,
+          defaultIfNull(
+            composedFunction(
+              speciesProperty("key"),
+              mapValueExtractor(bottomTrawlerCatchabilities)
             ),
-            compositeDispositionProcess(
-                bottomTrawlerDiscardRates,
-                proportionallyLimitingBiomassToHold(),
-                discardMortality
-            )
-        );
+            0.0
+          ),
+          massOf(1, KILOGRAM)
+        )
+      )
+      .defaultFactory(inactiveGear(null))
+      .build();
 
-        final var purseSeinerBehaviour =
-            behaviour(
-                sequenceTask(
-                    selectorTask(
-                        checkThat(vesselIsAt(homePortCell())),
-                        travelAlongPathTo(
-                            pathFinder,
-                            distance,
-                            homePortCell(),
-                            vesselEventManager()
-                        )
-                    ),
-                    succeedOrWait(
-                        sequenceTask(
-                            purseSeinerReadyForDeparture,
-                            startPurseSeinerTrip
-                        ),
-                        purseSeinerWaitUntilNextCheckpoint
-                    ),
-                    untilFail(
-                        sequenceTask(
-                            travelAlongPathTo(
-                                pathFinder,
-                                distance,
-                                currentTripDestinationCell(),
-                                currentTripEventManager()
-                            ),
-                            purseSeinerFishingTask,
-                            // No time to fish once more here and sail home: going via any
-                            // other cell takes longer, so the trip ends without a search.
-                            checkThat(vesselProperty("cell"), purseSeinerFishAndReturnInTime),
-                            chooseNextPurseSeinerDestination
-                        )
-                    ),
-                    setDestinationToOrigin(),
-                    travelAlongPathTo(
-                        pathFinder,
-                        distance,
-                        currentTripDestinationCell(),
-                        currentTripEventManager()
-                    ),
-                    arriveInPort(),
-                    payTripCost(tripCostFromHourlyCosts(hourlyCost)),
-                    landCatches(constant(hours(1))),
-                    endTrip()
-                )
-            );
+    final var zeroBiomassAllocator = filteredAllocator(
+      supplierAllocator(constantDouble(0.0)),
+      isActiveWaterCell(bathymetricGrid)
+    );
 
-        final var bottomTrawlerBehaviour =
-            behaviour(
-                sequenceTask(
-                    selectorTask(
-                        checkThat(vesselIsAt(homePortCell())),
-                        travelAlongPathTo(
-                            pathFinder,
-                            distance,
-                            homePortCell(),
-                            vesselEventManager()
-                        )
-                    ),
-                    succeedOrWait(
-                        sequenceTask(
-                            bottomTrawlerReadyForDeparture,
-                            startBottomTrawlerTrip
-                        ),
-                        bottomTrawlerWaitUntilNextCheckpoint
-                    ),
-                    untilFail(
-                        sequenceTask(
-                            travelAlongPathTo(
-                                pathFinder,
-                                distance,
-                                currentTripDestinationCell(),
-                                currentTripEventManager()
-                            ),
-                            bottomTrawlerFishingTask,
-                            // No time to fish once more here and sail home: going via any
-                            // other cell takes longer, so the trip ends without a search.
-                            checkThat(vesselProperty("cell"), bottomTrawlerFishAndReturnInTime),
-                            chooseNextBottomTrawlerDestination
-                        )
-                    ),
-                    setDestinationToOrigin(),
-                    travelAlongPathTo(
-                        pathFinder,
-                        distance,
-                        currentTripDestinationCell(),
-                        currentTripEventManager()
-                    ),
-                    arriveInPort(),
-                    payTripCost(tripCostFromHourlyCosts(hourlyCost)),
-                    landCatches(constant(hours(1))),
-                    endTrip()
-                )
-            );
+    final var biomassGrids = biomassGrids(
+      modelGrid,
+      species,
+      listOf(zeroBiomassAllocator)
+    );
 
-        final var behaviour =
-            VesselScopeFactoriesByCode
-                .<Behaviour>builder()
-                .factory(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour)
-                .factory(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
-                .defaultFactory(inactiveBehaviour())
-                .build();
+    final var fisheableBiomassGrids = fisheableBiomassGrids(biomassGrids);
 
-        final var engine =
-            VesselScopeFactoriesByCode
-                .<Engine>builder()
-                .factory(
-                    PURSE_SEINE_GEAR_CODE,
-                    simpleEngine(
-                        infiniteTank(),
-                        speedOf(PURSE_SEINER_VESSEL_SPEED_IN_KNOTS, KNOT),
-                        volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
-                    )
-                )
-                .factory(
-                    BOTTOM_TRAWLER_GEAR_CODE,
-                    simpleEngine(
-                        infiniteTank(),
-                        speedOf(BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS, KNOT),
-                        volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
-                    )
-                )
-                .defaultFactory(
-                    simpleEngine(
-                        infiniteTank(),
-                        speedOf(0, KNOT), // inactive vessels never travel, so this is never read
-                        volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
-                    )
-                )
-                .build();
+    final var biomassSaleAccumulator = biomassSaleAccumulator();
 
-        // The fleet before any vessel is loaded: the social network takes it, not the loader,
-        // whose shared fishing event listeners depend on the network (a factory cycle otherwise).
-        final var fleet = fleet(vesselField, portGrid, marketGrid);
-        final var socialNetwork = socialNetwork(fleet);
-        final var cliqueDynamics =
-            cliqueDynamics(
-                socialNetwork,
-                multiStringKeyFromFunctions(
-                    vesselProperty("homePort.code"),
-                    vesselProperty("gear.code")
-                ),
-                MAXIMUM_CLIQUE_SIZE
-            );
-        final var fishingEventSharer = fishingEventSharer(socialNetwork);
+    final var fishingActionAccumulator = fishingEventAccumulator();
 
-        final var fleetLoader =
-            FleetFromVesselRegisterFactory
-                .builder()
-                .fleet(fleet)
-                .data(tableFromCsvFile(inputPath.plus("fleet_register.csv")))
-                .behaviour(behaviour)
-                .dataMapping("behaviour.code", "main_fishing_gear")
-                .hold(infiniteBiomassHold(catchCategoriser))
-                .gear(fishingGear)
-                .dataMapping("gear.code", "main_fishing_gear")
-                .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
-                .engine(engine)
-                .dataMapping("engine.code", "main_fishing_gear")
-                .extraFactory(
-                    vesselEventListener(
-                        fishingEventRecorder(
-                            modelGrid,
-                            keyedMemorySelector(
-                                vesselMemory,
-                                fishingEventProperty("action.gear.code")
-                            ),
-                            exponentialMovingAverageOfBuckets(OWN_LEARNING_ALPHA)
-                        )
-                    )
-                )
-                .extraFactory(
-                    sharedFishingEventListener(
-                        fishingEventRecorder(
-                            modelGrid,
-                            keyedMemorySelector(
-                                vesselMemory,
-                                fishingEventProperty("action.gear.code")
-                            ),
-                            exponentialMovingAverageOfBuckets(SOCIAL_LEARNING_ALPHA)
-                        ),
-                        fishingEventSharer
-                    )
-                )
-                .build();
+    final var monthlyProcesses = scheduledRepeating(
+      dateTimeAfterStarting(ONE_MONTH),
+      MONTHLY,
+      steppableSequence(
+        listOf(
+          eventClearer(biomassSaleAccumulator),
+          eventClearer(fishingActionAccumulator)
+        )
+      ),
+      -2
+    );
 
-        final var fixedCostCollector =
-            scheduledRepeatingFromStart(
-                DAILY,
-                fixedCostCollector(
-                    fleetLoader,
-                    tableLookup(
-                        costsKeyFromVessel,
-                        tableFromCsvFile(inputPath.plus("operating_costs.csv")),
-                        costsKeyFromRow,
-                        moneyFromRow("currency", "fixed_cost_per_day")
-                    )
-                )
-            );
+    final var costsKeyFromRow = multiStringKeyFromRow(
+      "country_code",
+      "year",
+      "vessel_length",
+      "gear_code"
+    );
 
-        final var directoryRemover =
-            finalProcess(
-                directoryRemover(outputPath, false)
-            );
+    final var hourlyCostsMap = mapFromTable(
+      tableFromCsvFile(inputPath.plus("operating_costs.csv")),
+      costsKeyFromRow,
+      moneyFromRow("currency", "cost_per_hour_at_sea")
+    );
 
-        builder
-            .startingDateTime(startOf(START_DATE))
-            .component("purseSeinerCatchabilities", purseSeinerCatchabilities)
-            .component("bottomTrawlerCatchabilities", bottomTrawlerCatchabilities)
-            .component("species", species)
-            .component("bathymetricGrid", bathymetricGrid)
-            .component("biomassGrids", biomassGrids)
-            .component("fisheableBiomassGrids", fisheableBiomassGrids)
-            .component("marketGrid", marketGrid)
-            .component("portGrid", portGrid)
-            .component("purseSeinerRegulations", purseSeinerRegulations)
-            .component("bottomTrawlerRegulations", bottomTrawlerRegulations)
-            .component("totalAllowableCatchQuotas", totalAllowableCatchQuotas)
-            .component("fleetSegmentMapper", fleetSegmentMapper)
-            .component("vesselField", vesselField)
-            .component("modelGrid", modelGrid)
-            .component("monthlyProcesses", monthlyProcesses)
-            .component("fleet", fleetLoader)
-            .component("socialNetwork", socialNetwork)
-            .component("cliqueDynamics", cliqueDynamics)
-            .component("fishingEventSharer", fishingEventSharer)
-            .component("fixedCostCollector", fixedCostCollector)
-            .component("fishingActionAccumulator", fishingActionAccumulator)
-            .component("biomassSaleAccumulator", biomassSaleAccumulator)
-            .component("directoryRemover", directoryRemover);
+    final var vesselLengthClassMapper = numericIntervalToStringMapper(
+      interval(0.0, 6.0, "VL0006"),
+      interval(6.0, 12.0, "VL0612"),
+      interval(12.0, 18.0, "VL1218"),
+      interval(18.0, 24.0, "VL1824"),
+      interval(24.0, 40.0, "VL2440"),
+      interval(40.0, null, "VL40XX")
+    );
 
-        return builder.build();
-    }
+    final var costsKeyFromVessel = multiStringKeyFromFunctions(
+      stringTagExtractor("country_of_registration"),
+      minInt(maxInt(currentYear(), constantInt(2013)), constantInt(2023)),
+      composedFunction(doubleTagExtractor("loa"), vesselLengthClassMapper),
+      stringTagExtractor("main_fishing_gear")
+    );
+
+    final var hourlyCost = composedFunction(
+      costsKeyFromVessel,
+      mapValueExtractor(hourlyCostsMap)
+    );
+
+    // Markets start without prices: in SURIMI runs, prices arrive through
+    // UpdateSpeciesPrices; LocalNorthwesternMedScenario schedules them from prices.csv.
+    final var marketGrid = marketGrid(
+      portGrid,
+      oneBiomassMarketPerPort(portGrid)
+    );
+
+    final var catchCategoriser = uniformCatchCategoriser(
+      catchCategory(CATCH_CATEGORY)
+    );
+
+    // One memory per vessel, keyed by gear code: what the vessel learns from its fishing
+    // operations and what it decides from must be this same instance.
+    final PerVesselFactory<KeyedMemory<String, Int2D, Bucket>> vesselMemory =
+      perVessel(keyedMemory());
+
+    final var optionValues = memoryBasedOptionValues(
+      keyedMemorySelector(vesselMemory, vesselProperty("gear.code")),
+      netValuation(
+        homePortCatchValuation(catchCategoriser),
+        travelCost(routeFunction, timeCost(hourlyCost))
+      )
+    );
+
+    final var fleetSegmentMapper = fleetSegmentMapper(
+      "country_of_registration",
+      "loa",
+      vesselLengthClassMapper,
+      "Industrial"
+    );
+
+    final var totalAllowableCatchQuotas = scheduledRepeatingFromStart(
+      DAILY,
+      totalAllowableCatchQuotas(fleetSegmentMapper)
+    );
+
+    final var purseSeinerFishingLocationLegalityChecker =
+      fishingLocationLegalityChecker(
+        allOf(purseSeinerRegulations, totalAllowableCatchQuotas),
+        pathFinder,
+        distance,
+        PURSE_SEINE_SET_DURATION
+      );
+
+    final var bottomTrawlerFishingLocationLegalityChecker =
+      fishingLocationLegalityChecker(
+        allOf(bottomTrawlerRegulations, totalAllowableCatchQuotas),
+        pathFinder,
+        distance,
+        BOTTOM_TRAWLER_SET_DURATION
+      );
+
+    // How long it would take to sail to a cell, fish there once, and sail back to port. The
+    // checkers below test it before the legality checker: it is cheaper than the regulations,
+    // and late in a trip it turns down most cells.
+    final var purseSeinerFishAndReturnDurationFunction = combinedDuration(
+      composedFunction(routeFunction, routeProperty("duration")),
+      constant(PURSE_SEINE_SET_DURATION)
+    );
+    final var bottomTrawlerFishAndReturnDurationFunction = combinedDuration(
+      composedFunction(routeFunction, routeProperty("duration")),
+      constant(BOTTOM_TRAWLER_SET_DURATION)
+    );
+
+    // Purse seiners must be back in port by the first PURSE_SEINER_RETURN_TIME after they
+    // depart: at departure, the trip would depart now.
+    final var purseSeinerFishingLocationAtDepartureChecker = allOf(
+      condition(
+        purseSeinerFishAndReturnDurationFunction,
+        lessThan(durationUntil(nextOccurrenceOf(PURSE_SEINER_RETURN_TIME)))
+      ),
+      purseSeinerFishingLocationLegalityChecker
+    );
+
+    // Whether a vessel at sea could sail to a cell, fish there once, and be back in port by
+    // the first PURSE_SEINER_RETURN_TIME after its trip started.
+    final var purseSeinerFishAndReturnInTime = condition(
+      purseSeinerFishAndReturnDurationFunction,
+      lessThan(
+        durationUntil(
+          nextOccurrenceAfter(
+            currentTripStartDateTime(),
+            PURSE_SEINER_RETURN_TIME
+          )
+        )
+      )
+    );
+
+    // At sea, a vessel does not fish the same cell twice in a trip. Tested first, before the
+    // checks that need a path.
+    final var purseSeinerFishingLocationAtSeaChecker = allOf(
+      not(cellWasFishedThisTrip()),
+      purseSeinerFishAndReturnInTime,
+      purseSeinerFishingLocationLegalityChecker
+    );
+
+    // Bottom trawlers must be back in port within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of
+    // departing: at departure, that is the whole of it.
+    final var bottomTrawlerFishingLocationAtDepartureChecker = allOf(
+      condition(
+        bottomTrawlerFishAndReturnDurationFunction,
+        lessThan(constant(BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION))
+      ),
+      bottomTrawlerFishingLocationLegalityChecker
+    );
+
+    // Whether a vessel at sea could sail to a cell, fish there once, and be back in port
+    // within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of its trip's start.
+    final var bottomTrawlerFishAndReturnInTime = condition(
+      bottomTrawlerFishAndReturnDurationFunction,
+      lessThan(
+        durationUntil(
+          dateTimeAfter(
+            currentTripStartDateTime(),
+            BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION
+          )
+        )
+      )
+    );
+
+    final var bottomTrawlerFishingLocationAtSeaChecker = allOf(
+      not(cellWasFishedThisTrip()),
+      bottomTrawlerFishAndReturnInTime,
+      bottomTrawlerFishingLocationLegalityChecker
+    );
+
+    final var purseSeinerReadyForDeparture = checkThat(
+      allOf(
+        isPermitted(departNow(), totalAllowableCatchQuotas),
+        condition(currentTime(), afterTime(constant(time(21, 59, 59)))),
+        condition(
+          currentDayOfWeek(),
+          in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
+        ),
+        not(vesselHasStartedTripToday())
+      )
+    );
+
+    final var purseSeinerWaitUntilNextCheckpoint = waitFor(
+      durationUntil(nextOccurrenceOf(time(6, 0, 0), time(22, 0, 0)))
+    );
+
+    // Bottom trawlers depart in the morning and return the same day (per Miquel Ortega:
+    // ~07:00 departure, ~16:30-18:00 return), unlike purse seiners' overnight schedule
+    // above - this used to share the purse seiner's 06:00/22:00 checkpoint pair, which
+    // made trawlers only eligible to depart after 22:00.
+    final var bottomTrawlerReadyForDeparture = checkThat(
+      allOf(
+        isPermitted(departNow(), totalAllowableCatchQuotas),
+        condition(currentTime(), afterTime(constant(time(6, 59, 59)))),
+        condition(
+          currentDayOfWeek(),
+          in(constant(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY)))
+        ),
+        not(vesselHasStartedTripToday())
+      )
+    );
+
+    final var bottomTrawlerWaitUntilNextCheckpoint = waitFor(
+      durationUntil(nextOccurrenceOf(time(7, 0, 0)))
+    );
+
+    final var startPurseSeinerTrip = startTrip(
+      epsilonGreedyDestination(
+        PURSE_SEINER_EXPLORATION_PROBABILITY,
+        neighbourhoodGridExplorer(
+          pathFinder,
+          purseSeinerFishingLocationAtDepartureChecker,
+          shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
+          MAXIMUM_EXPLORATION_WIDENING,
+          bestKnownOption(optionValues, currentCell())
+        ),
+        greedyPicker(optionValues, purseSeinerFishingLocationAtDepartureChecker)
+      )
+    );
+
+    final var chooseNextPurseSeinerDestination = chooseNextDestination(
+      epsilonGreedyDestination(
+        PURSE_SEINER_EXPLORATION_PROBABILITY,
+        neighbourhoodGridExplorer(
+          pathFinder,
+          purseSeinerFishingLocationAtSeaChecker,
+          shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
+          MAXIMUM_EXPLORATION_WIDENING,
+          currentCell()
+        ),
+        greedyPicker(optionValues, purseSeinerFishingLocationAtSeaChecker)
+      )
+    );
+
+    final var startBottomTrawlerTrip = startTrip(
+      epsilonGreedyDestination(
+        BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
+        neighbourhoodGridExplorer(
+          pathFinder,
+          bottomTrawlerFishingLocationAtDepartureChecker,
+          shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
+          MAXIMUM_EXPLORATION_WIDENING,
+          bestKnownOption(optionValues, currentCell())
+        ),
+        greedyPicker(
+          optionValues,
+          bottomTrawlerFishingLocationAtDepartureChecker
+        )
+      )
+    );
+
+    final var chooseNextBottomTrawlerDestination = chooseNextDestination(
+      epsilonGreedyDestination(
+        BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
+        neighbourhoodGridExplorer(
+          pathFinder,
+          bottomTrawlerFishingLocationAtSeaChecker,
+          shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
+          MAXIMUM_EXPLORATION_WIDENING,
+          currentCell()
+        ),
+        greedyPicker(optionValues, bottomTrawlerFishingLocationAtSeaChecker)
+      )
+    );
+
+    final var discardRatiosTable = tableFromCsvFile(
+      inputPath.plus("discard_ratios.csv")
+    );
+    final var discardRatiosKeyFromRow = multiStringKeyFromRow(
+      "species_code",
+      "life_stage",
+      "gear_code"
+    );
+
+    final var purseSeineDiscardRates = discardRates(
+      species,
+      defaultIfNull(
+        tableLookup(
+          multiStringKeyFromFunctions(
+            speciesProperty("code"),
+            speciesProperty("lifeStage"),
+            constant(PURSE_SEINE_GEAR_CODE)
+          ),
+          discardRatiosTable,
+          discardRatiosKeyFromRow,
+          doubleFromRow("discard_ratio")
+        ),
+        0.0
+      )
+    );
+    final var bottomTrawlerDiscardRates = discardRates(
+      species,
+      defaultIfNull(
+        tableLookup(
+          multiStringKeyFromFunctions(
+            speciesProperty("code"),
+            speciesProperty("lifeStage"),
+            constant(BOTTOM_TRAWLER_GEAR_CODE)
+          ),
+          discardRatiosTable,
+          discardRatiosKeyFromRow,
+          doubleFromRow("discard_ratio")
+        ),
+        0.0
+      )
+    );
+
+    final var discardMortality = fullDiscardMortality();
+
+    final var purseSeinerFishingTask = fishing(
+      currentCellFisheable(fisheableBiomassGrids),
+      compositeDispositionProcess(
+        purseSeineDiscardRates,
+        proportionallyLimitingBiomassToHold(),
+        discardMortality
+      )
+    );
+    final var bottomTrawlerFishingTask = fishing(
+      currentCellFisheable(fisheableBiomassGrids),
+      compositeDispositionProcess(
+        bottomTrawlerDiscardRates,
+        proportionallyLimitingBiomassToHold(),
+        discardMortality
+      )
+    );
+
+    final var purseSeinerBehaviour = behaviour(
+      sequenceTask(
+        selectorTask(
+          checkThat(vesselIsAt(homePortCell())),
+          travelAlongPathTo(
+            pathFinder,
+            distance,
+            homePortCell(),
+            vesselEventManager()
+          )
+        ),
+        succeedOrWait(
+          sequenceTask(purseSeinerReadyForDeparture, startPurseSeinerTrip),
+          purseSeinerWaitUntilNextCheckpoint
+        ),
+        untilFail(
+          sequenceTask(
+            travelAlongPathTo(
+              pathFinder,
+              distance,
+              currentTripDestinationCell(),
+              currentTripEventManager()
+            ),
+            purseSeinerFishingTask,
+            // No time to fish once more here and sail home: going via any
+            // other cell takes longer, so the trip ends without a search.
+            checkThat(vesselProperty("cell"), purseSeinerFishAndReturnInTime),
+            chooseNextPurseSeinerDestination
+          )
+        ),
+        setDestinationToOrigin(),
+        travelAlongPathTo(
+          pathFinder,
+          distance,
+          currentTripDestinationCell(),
+          currentTripEventManager()
+        ),
+        arriveInPort(),
+        payTripCost(tripCostFromHourlyCosts(hourlyCost)),
+        landCatches(constant(hours(1))),
+        endTrip()
+      )
+    );
+
+    final var bottomTrawlerBehaviour = behaviour(
+      sequenceTask(
+        selectorTask(
+          checkThat(vesselIsAt(homePortCell())),
+          travelAlongPathTo(
+            pathFinder,
+            distance,
+            homePortCell(),
+            vesselEventManager()
+          )
+        ),
+        succeedOrWait(
+          sequenceTask(bottomTrawlerReadyForDeparture, startBottomTrawlerTrip),
+          bottomTrawlerWaitUntilNextCheckpoint
+        ),
+        untilFail(
+          sequenceTask(
+            travelAlongPathTo(
+              pathFinder,
+              distance,
+              currentTripDestinationCell(),
+              currentTripEventManager()
+            ),
+            bottomTrawlerFishingTask,
+            // No time to fish once more here and sail home: going via any
+            // other cell takes longer, so the trip ends without a search.
+            checkThat(vesselProperty("cell"), bottomTrawlerFishAndReturnInTime),
+            chooseNextBottomTrawlerDestination
+          )
+        ),
+        setDestinationToOrigin(),
+        travelAlongPathTo(
+          pathFinder,
+          distance,
+          currentTripDestinationCell(),
+          currentTripEventManager()
+        ),
+        arriveInPort(),
+        payTripCost(tripCostFromHourlyCosts(hourlyCost)),
+        landCatches(constant(hours(1))),
+        endTrip()
+      )
+    );
+
+    final var behaviour = VesselScopeFactoriesByCode.<Behaviour>builder()
+      .factory(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour)
+      .factory(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
+      .defaultFactory(inactiveBehaviour())
+      .build();
+
+    final var engine = VesselScopeFactoriesByCode.<Engine>builder()
+      .factory(
+        PURSE_SEINE_GEAR_CODE,
+        simpleEngine(
+          infiniteTank(),
+          speedOf(PURSE_SEINER_VESSEL_SPEED_IN_KNOTS, KNOT),
+          volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
+        )
+      )
+      .factory(
+        BOTTOM_TRAWLER_GEAR_CODE,
+        simpleEngine(
+          infiniteTank(),
+          speedOf(BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS, KNOT),
+          volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
+        )
+      )
+      .defaultFactory(
+        simpleEngine(
+          infiniteTank(),
+          speedOf(0, KNOT), // inactive vessels never travel, so this is never read
+          volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
+        )
+      )
+      .build();
+
+    // The fleet before any vessel is loaded: the social network takes it, not the loader,
+    // whose shared fishing event listeners depend on the network (a factory cycle otherwise).
+    final var fleet = fleet(vesselField, portGrid, marketGrid);
+    final var socialNetwork = socialNetwork(fleet);
+    final var cliqueDynamics = cliqueDynamics(
+      socialNetwork,
+      multiStringKeyFromFunctions(
+        vesselProperty("homePort.code"),
+        vesselProperty("gear.code")
+      ),
+      MAXIMUM_CLIQUE_SIZE
+    );
+    final var fishingEventSharer = fishingEventSharer(socialNetwork);
+
+    final var fleetLoader = FleetFromVesselRegisterFactory.builder()
+      .fleet(fleet)
+      .data(tableFromCsvFile(inputPath.plus("fleet_register.csv")))
+      .behaviour(behaviour)
+      .dataMapping("behaviour.code", "main_fishing_gear")
+      .hold(infiniteBiomassHold(catchCategoriser))
+      .gear(fishingGear)
+      .dataMapping("gear.code", "main_fishing_gear")
+      .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
+      .engine(engine)
+      .dataMapping("engine.code", "main_fishing_gear")
+      .extraFactory(
+        vesselEventListener(
+          fishingEventRecorder(
+            modelGrid,
+            keyedMemorySelector(
+              vesselMemory,
+              fishingEventProperty("action.gear.code")
+            ),
+            exponentialMovingAverageOfBuckets(OWN_LEARNING_ALPHA)
+          )
+        )
+      )
+      .extraFactory(
+        sharedFishingEventListener(
+          fishingEventRecorder(
+            modelGrid,
+            keyedMemorySelector(
+              vesselMemory,
+              fishingEventProperty("action.gear.code")
+            ),
+            exponentialMovingAverageOfBuckets(SOCIAL_LEARNING_ALPHA)
+          ),
+          fishingEventSharer
+        )
+      )
+      .build();
+
+    final var fixedCostCollector = scheduledRepeatingFromStart(
+      DAILY,
+      fixedCostCollector(
+        fleetLoader,
+        tableLookup(
+          costsKeyFromVessel,
+          tableFromCsvFile(inputPath.plus("operating_costs.csv")),
+          costsKeyFromRow,
+          moneyFromRow("currency", "fixed_cost_per_day")
+        )
+      )
+    );
+
+    final var directoryRemover = finalProcess(
+      directoryRemover(outputPath, false)
+    );
+
+    builder
+      .startingDateTime(startOf(START_DATE))
+      .component("purseSeinerCatchabilities", purseSeinerCatchabilities)
+      .component("bottomTrawlerCatchabilities", bottomTrawlerCatchabilities)
+      .component("species", species)
+      .component("bathymetricGrid", bathymetricGrid)
+      .component("biomassGrids", biomassGrids)
+      .component("fisheableBiomassGrids", fisheableBiomassGrids)
+      .component("marketGrid", marketGrid)
+      .component("portGrid", portGrid)
+      .component("purseSeinerRegulations", purseSeinerRegulations)
+      .component("bottomTrawlerRegulations", bottomTrawlerRegulations)
+      .component("totalAllowableCatchQuotas", totalAllowableCatchQuotas)
+      .component("fleetSegmentMapper", fleetSegmentMapper)
+      .component("vesselField", vesselField)
+      .component("modelGrid", modelGrid)
+      .component("monthlyProcesses", monthlyProcesses)
+      .component("fleet", fleetLoader)
+      .component("socialNetwork", socialNetwork)
+      .component("cliqueDynamics", cliqueDynamics)
+      .component("fishingEventSharer", fishingEventSharer)
+      .component("fixedCostCollector", fixedCostCollector)
+      .component("fishingActionAccumulator", fishingActionAccumulator)
+      .component("biomassSaleAccumulator", biomassSaleAccumulator)
+      .component("directoryRemover", directoryRemover);
+
+    return builder.build();
+  }
 }

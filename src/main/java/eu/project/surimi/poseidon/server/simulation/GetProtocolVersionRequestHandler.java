@@ -22,11 +22,11 @@
 
 package eu.project.surimi.poseidon.server.simulation;
 
+import static eu.project.surimi.poseidon.server.Server.PROTOCOL_VERSION;
+
 import build.buf.gen.surimi.v1.GetProtocolVersionRequest;
 import build.buf.gen.surimi.v1.GetProtocolVersionResponse;
 import eu.project.surimi.poseidon.server.RequestHandler;
-
-import static eu.project.surimi.poseidon.server.Server.PROTOCOL_VERSION;
 
 /**
  * Handles {@code GetProtocolVersion}: returns the running server's
@@ -34,14 +34,15 @@ import static eu.project.surimi.poseidon.server.Server.PROTOCOL_VERSION;
  * this one needs no live simulation.
  */
 public class GetProtocolVersionRequestHandler
-    extends RequestHandler<GetProtocolVersionRequest, GetProtocolVersionResponse> {
+  extends RequestHandler<GetProtocolVersionRequest, GetProtocolVersionResponse>
+{
 
-    @Override
-    protected GetProtocolVersionResponse getResponse(final GetProtocolVersionRequest request) {
-        return GetProtocolVersionResponse
-            .newBuilder()
-            .setProtocolVersion(PROTOCOL_VERSION)
-            .build();
-    }
-
+  @Override
+  protected GetProtocolVersionResponse getResponse(
+    final GetProtocolVersionRequest request
+  ) {
+    return GetProtocolVersionResponse.newBuilder()
+      .setProtocolVersion(PROTOCOL_VERSION)
+      .build();
+  }
 }

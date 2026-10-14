@@ -33,39 +33,43 @@ import uk.ac.ox.poseidon.core.Simulation;
  * without calling {@link Simulation#finish()}, so it is not finalised, only unregistered.
  */
 public class CancelRequestHandler
-    extends WithSimulationRequestHandler<CancelSimulationRequest, CancelSimulationResponse> {
+  extends WithSimulationRequestHandler<
+    CancelSimulationRequest,
+    CancelSimulationResponse
+  >
+{
 
-    private static final System.Logger logger =
-        System.getLogger(CancelRequestHandler.class.getName());
+  private static final System.Logger logger = System.getLogger(
+    CancelRequestHandler.class.getName()
+  );
 
-    public CancelRequestHandler(final SimulationManager simulationManager) {
-        super(simulationManager);
-    }
+  public CancelRequestHandler(final SimulationManager simulationManager) {
+    super(simulationManager);
+  }
 
-    @Override
-    protected String getSimulationId(final CancelSimulationRequest request) {
-        return request.getSimulationId();
-    }
+  @Override
+  protected String getSimulationId(final CancelSimulationRequest request) {
+    return request.getSimulationId();
+  }
 
-    @Override
-    protected CancelSimulationResponse getResponseWithSimulation(
-        final CancelSimulationRequest request,
-        final Simulation simulation,
-        final SimulationManager.SimulationProperties simulationProperties
-    ) {
-        logger.log(
-            System.Logger.Level.INFO,
-            "Cancelling simulation {0}",
-            request.getSimulationId()
-        );
-        // Here, we only remove the simulation from the manager
-        // without calling its finish method. If no one else is
-        // holding on to a reference, it should be garbage collected.
-        final String simulationId = request.getSimulationId();
-        simulationManager.remove(simulationId);
-        return CancelSimulationResponse
-            .newBuilder()
-            .setSimulationId(simulationId)
-            .build();
-    }
+  @Override
+  protected CancelSimulationResponse getResponseWithSimulation(
+    final CancelSimulationRequest request,
+    final Simulation simulation,
+    final SimulationManager.SimulationProperties simulationProperties
+  ) {
+    logger.log(
+      System.Logger.Level.INFO,
+      "Cancelling simulation {0}",
+      request.getSimulationId()
+    );
+    // Here, we only remove the simulation from the manager
+    // without calling its finish method. If no one else is
+    // holding on to a reference, it should be garbage collected.
+    final String simulationId = request.getSimulationId();
+    simulationManager.remove(simulationId);
+    return CancelSimulationResponse.newBuilder()
+      .setSimulationId(simulationId)
+      .build();
+  }
 }

@@ -22,6 +22,13 @@
 
 package eu.project.surimi.poseidon.server.sales;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
+import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toProtoFleetSegment;
+import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpecies;
+import static java.lang.System.Logger.Level.INFO;
+import static java.util.stream.Collectors.*;
+
 import build.buf.gen.surimi.v1.*;
 import com.google.common.collect.Range;
 import eu.project.surimi.poseidon.server.SimulationManager;
@@ -29,6 +36,9 @@ import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import uk.ac.ox.poseidon.agents.catches.CatchCategory;
@@ -38,17 +48,6 @@ import uk.ac.ox.poseidon.biology.biomass.Biomass;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
-import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toProtoFleetSegment;
-import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpecies;
-import static java.lang.System.Logger.Level.INFO;
-import static java.util.stream.Collectors.*;
-
 /**
  * Handles {@code GetSales}: summarizes recorded sales in the requested date-time range into
  * per-market, per-catch-category, per-contract-fleet-segment, per-species totals, restricted to
@@ -56,156 +55,169 @@ import static java.util.stream.Collectors.*;
  * {@link SimulationManager.SimulationProperties}). Each vessel's sales are reported under the
  * contract fleet segment covering it.
  */
-public class GetSalesRequestHandler extends
-    WithSimulationRequestHandler<GetSalesRequest, GetSalesResponse> {
+public class GetSalesRequestHandler
+  extends WithSimulationRequestHandler<GetSalesRequest, GetSalesResponse>
+{
 
-    private static final System.Logger logger =
-        System.getLogger(GetSalesRequestHandler.class.getName());
+  private static final System.Logger logger = System.getLogger(
+    GetSalesRequestHandler.class.getName()
+  );
 
-    public GetSalesRequestHandler(final SimulationManager simulationManager) {
-        super(simulationManager);
-    }
+  public GetSalesRequestHandler(final SimulationManager simulationManager) {
+    super(simulationManager);
+  }
 
-    /**
-     * @return one summarised {@link Sale} for a list of sale entries sharing the same market,
-     * catch category, fleet segment, and species: quantity (in the contract's mass unit) and value
-     * are the sums across all entries.
-     */
-    private static Sale summariseSale(
-        final List<SaleEntry> saleEntries,
-        final SimulationManager.SimulationProperties simulationProperties
-    ) {
-        final SaleEntry firstEntry = saleEntries.getFirst();
-        final String catchCategoryCode = firstEntry.catchCategory.getCode();
-        final double totalKg = saleEntries.stream()
-            .mapToDouble(saleEntry -> saleEntry.biomass.asKg())
-            .sum();
-        final double totalValue = saleEntries.stream()
-            .map(SaleEntry::value)
-            .reduce(Money::plus)
-            .map(money -> money.getAmount().doubleValue())
-            .orElse(0.0);
-        return Sale.newBuilder()
-            .setSpecies(toProtoSpecies(firstEntry.species))
-            .setFleetSegment(toProtoFleetSegment(firstEntry.fleetSegment))
-            .setCategoryCode(catchCategoryCode)
-            .setQuantity(simulationProperties.convertKgToStandardMassUnit(totalKg))
-            .setValue(totalValue)
-            .build();
-    }
+  /**
+   * @return one summarised {@link Sale} for a list of sale entries sharing the same market,
+   * catch category, fleet segment, and species: quantity (in the contract's mass unit) and value
+   * are the sums across all entries.
+   */
+  private static Sale summariseSale(
+    final List<SaleEntry> saleEntries,
+    final SimulationManager.SimulationProperties simulationProperties
+  ) {
+    final SaleEntry firstEntry = saleEntries.getFirst();
+    final String catchCategoryCode = firstEntry.catchCategory.getCode();
+    final double totalKg = saleEntries
+      .stream()
+      .mapToDouble(saleEntry -> saleEntry.biomass.asKg())
+      .sum();
+    final double totalValue = saleEntries
+      .stream()
+      .map(SaleEntry::value)
+      .reduce(Money::plus)
+      .map(money -> money.getAmount().doubleValue())
+      .orElse(0.0);
+    return Sale.newBuilder()
+      .setSpecies(toProtoSpecies(firstEntry.species))
+      .setFleetSegment(toProtoFleetSegment(firstEntry.fleetSegment))
+      .setCategoryCode(catchCategoryCode)
+      .setQuantity(simulationProperties.convertKgToStandardMassUnit(totalKg))
+      .setValue(totalValue)
+      .build();
+  }
 
-    @Override
-    protected String getSimulationId(final GetSalesRequest request) {
-        return request.getSimulationId();
-    }
+  @Override
+  protected String getSimulationId(final GetSalesRequest request) {
+    return request.getSimulationId();
+  }
 
-    @Override
-    protected GetSalesResponse getResponseWithSimulation(
-        final GetSalesRequest request,
-        final Simulation simulation,
-        final SimulationManager.SimulationProperties simulationProperties
-    ) {
-        log(INFO, simulation, "Sales requested");
-        checkArgument(request.hasStartDateTime(), "Start date time is required.");
-        checkArgument(request.hasEndDateTime(), "End date time is required.");
-        final Range<LocalDateTime> dateTimeRange = Range.closed(
-            toLocalDateTime(request.getStartDateTime()),
-            toLocalDateTime(request.getEndDateTime())
-        );
-        record Key(Market market, CatchCategory catchCategory, CurrencyUnit currencyUnit) {}
-        record FleetSegmentAndSpecies(FleetSegment fleetSegment, Species species) {}
-        final FleetSegmentMapper fleetSegmentMapper =
-            simulation.getComponent(FleetSegmentMapper.class);
-        final List<MarketSales> marketSales =
-            simulation
-                .getComponent(BiomassSaleAccumulator.class)
-                .getEvents()
-                .filter(sale ->
-                    dateTimeRange.contains(sale.getDateTime()) &&
-                        simulationProperties.getMarketCodes().contains(sale.getMarket().getCode())
-                )
-                .flatMap(sale ->
-                    // only report vessels covered by a contract fleet segment
-                    simulationProperties
-                        .findContractFleetSegment(fleetSegmentMapper.apply(sale.getVessel()))
-                        .stream()
-                        .flatMap(fleetSegment ->
-                            sale
-                                .getItems()
-                                .stream()
-                                .filter(item ->
-                                    // only report sales for species in contract
-                                    simulationProperties
-                                        .getSpeciesKeys()
-                                        .contains(SpeciesKey.from(item.getSpecies())) &&
-                                        // ...and price categories in contract
-                                        simulationProperties
-                                            .getPriceCategoryCodes()
-                                            .contains(item.getCategory().getCode()))
-                                .map(item -> new SaleEntry(
-                                    sale.getMarket(),
-                                    fleetSegment,
-                                    item.getCategory(),
-                                    item.getSpecies(),
-                                    item.getContent().asBiomass(),
-                                    item.getSaleValue()
-                                ))
-                        )
-                ).collect(
-                    groupingBy(
-                        saleEntry -> new Key(
-                            saleEntry.market,
-                            saleEntry.catchCategory,
-                            saleEntry.value.getCurrencyUnit()
-                        ),
-                        collectingAndThen(
-                            groupingBy(
-                                saleEntry -> new FleetSegmentAndSpecies(
-                                    saleEntry.fleetSegment,
-                                    saleEntry.species
-                                ),
-                                collectingAndThen(
-                                    toList(),
-                                    saleEntries ->
-                                        summariseSale(saleEntries, simulationProperties)
-                                )
-                            ),
-                            Map::values
-                        )
-                    )
-                )
-                .entrySet()
-                .stream()
-                .map(entry ->
-                    MarketSales
-                        .newBuilder()
-                        .setMarketCode(entry.getKey().market().getCode())
-                        .setCurrency(entry.getKey().currencyUnit().getCode())
-                        .addAllSales(entry.getValue())
-                        .build()
-                )
-                .toList();
-
-        return GetSalesResponse
-            .newBuilder()
-            .setSimulationId(request.getSimulationId())
-            .setStartDateTime(request.getStartDateTime())
-            .setEndDateTime(request.getEndDateTime())
-            .setSalesSummary(SalesSummary.newBuilder().addAllMarketSales(marketSales))
-            .build();
-    }
-
-    /**
-     * One sold item, flattened out of a {@code Sale} event for grouping by market/catch
-     * category/fleet segment/species.
-     */
-    private record SaleEntry(
-        Market market,
-        FleetSegment fleetSegment,
-        CatchCategory catchCategory,
-        Species species,
-        Biomass biomass,
-        Money value
+  @Override
+  protected GetSalesResponse getResponseWithSimulation(
+    final GetSalesRequest request,
+    final Simulation simulation,
+    final SimulationManager.SimulationProperties simulationProperties
+  ) {
+    log(INFO, simulation, "Sales requested");
+    checkArgument(request.hasStartDateTime(), "Start date time is required.");
+    checkArgument(request.hasEndDateTime(), "End date time is required.");
+    final Range<LocalDateTime> dateTimeRange = Range.closed(
+      toLocalDateTime(request.getStartDateTime()),
+      toLocalDateTime(request.getEndDateTime())
+    );
+    record Key(
+      Market market,
+      CatchCategory catchCategory,
+      CurrencyUnit currencyUnit
     ) {}
+    record FleetSegmentAndSpecies(FleetSegment fleetSegment, Species species) {}
+    final FleetSegmentMapper fleetSegmentMapper = simulation.getComponent(
+      FleetSegmentMapper.class
+    );
+    final List<MarketSales> marketSales = simulation
+      .getComponent(BiomassSaleAccumulator.class)
+      .getEvents()
+      .filter(
+        sale ->
+          dateTimeRange.contains(sale.getDateTime()) &&
+          simulationProperties
+            .getMarketCodes()
+            .contains(sale.getMarket().getCode())
+      )
+      // only report vessels covered by a contract fleet segment
+      .flatMap(sale ->
+        simulationProperties
+          .findContractFleetSegment(fleetSegmentMapper.apply(sale.getVessel()))
+          .stream()
+          .flatMap(fleetSegment ->
+            sale
+              .getItems()
+              .stream()
+              .filter(
+                item ->
+                  // only report sales for species in contract
+                  simulationProperties
+                    .getSpeciesKeys()
+                    .contains(SpeciesKey.from(item.getSpecies())) &&
+                  // ...and price categories in contract
+                  simulationProperties
+                    .getPriceCategoryCodes()
+                    .contains(item.getCategory().getCode())
+              )
+              .map(item ->
+                new SaleEntry(
+                  sale.getMarket(),
+                  fleetSegment,
+                  item.getCategory(),
+                  item.getSpecies(),
+                  item.getContent().asBiomass(),
+                  item.getSaleValue()
+                )
+              )
+          )
+      )
+      .collect(
+        groupingBy(
+          saleEntry ->
+            new Key(
+              saleEntry.market,
+              saleEntry.catchCategory,
+              saleEntry.value.getCurrencyUnit()
+            ),
+          collectingAndThen(
+            groupingBy(
+              saleEntry ->
+                new FleetSegmentAndSpecies(
+                  saleEntry.fleetSegment,
+                  saleEntry.species
+                ),
+              collectingAndThen(toList(), saleEntries ->
+                summariseSale(saleEntries, simulationProperties)
+              )
+            ),
+            Map::values
+          )
+        )
+      )
+      .entrySet()
+      .stream()
+      .map(entry ->
+        MarketSales.newBuilder()
+          .setMarketCode(entry.getKey().market().getCode())
+          .setCurrency(entry.getKey().currencyUnit().getCode())
+          .addAllSales(entry.getValue())
+          .build()
+      )
+      .toList();
 
+    return GetSalesResponse.newBuilder()
+      .setSimulationId(request.getSimulationId())
+      .setStartDateTime(request.getStartDateTime())
+      .setEndDateTime(request.getEndDateTime())
+      .setSalesSummary(SalesSummary.newBuilder().addAllMarketSales(marketSales))
+      .build();
+  }
+
+  /**
+   * One sold item, flattened out of a {@code Sale} event for grouping by market/catch
+   * category/fleet segment/species.
+   */
+  private record SaleEntry(
+    Market market,
+    FleetSegment fleetSegment,
+    CatchCategory catchCategory,
+    Species species,
+    Biomass biomass,
+    Money value
+  ) {}
 }

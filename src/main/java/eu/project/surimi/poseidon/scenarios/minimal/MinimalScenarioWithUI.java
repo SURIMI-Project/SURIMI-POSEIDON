@@ -22,83 +22,77 @@
 
 package eu.project.surimi.poseidon.scenarios.minimal;
 
+import static java.awt.Color.WHITE;
+
+import java.util.List;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.utils.ListFactory;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
 import uk.ac.ox.poseidon.gui.portrayals.*;
 
-import java.util.List;
-
-import static java.awt.Color.WHITE;
-
 /**
  * GUI wrapper for {@link MinimalScenario}: displays bathymetry, species biomass, markets, ports,
  * vessels, and grid coordinates over the scenario's model grid.
  */
 public class MinimalScenarioWithUI extends ScenarioWithUI {
-    public MinimalScenarioWithUI(
-        final Scenario scenario
-    ) {
-        // noinspection unchecked
-        super(
-            scenario,
-            List.of(
-                new DisplayWrapper2D(
-                    "Ocean",
-                    List.of(
-                        new BathymetryFieldPortrayalFactory(
-                            scenario.component("bathymetricGrid")
-                        ),
-                        new SpeciesBiomassFieldsPortrayalFactory(
-                            scenario.component("biomassGrids", ListFactory.class),
-                            scenario.component("carryingCapacityGrid", ListFactory.class),
-                            false
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Markets",
-                            new MarketGridPortrayalFactory(
-                                scenario.component("marketGrid")
-                            ),
-                            true
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Ports",
-                            new PortGridPortrayalFactory(
-                                scenario.component("portGrid")
-                            ),
-                            true
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Vessels",
-                            new VesselFieldPortrayalFactory(
-                                scenario.component("vesselField")
-                            ),
-                            true
-                        ),
-                        new SimpleFieldPortrayalFactory<>(
-                            "Coordinates",
-                            new CoordinatesPortrayalFactory(
-                                scenario.component("modelGrid"),
-                                3
-                            ),
-                            true
-                        )
-                    ),
-                    600,
-                    600,
-                    WHITE
-                )
-            )
-        );
-    }
 
-    /**
-     * Opens the GUI for a freshly built {@link MinimalScenario}.
-     */
-    static void main(final String[] args) {
-        final MinimalScenarioWithUI minimalScenarioWithUI =
-            new MinimalScenarioWithUI(new MinimalScenario().get());
-        minimalScenarioWithUI.createController();
-    }
+  public MinimalScenarioWithUI(final Scenario scenario) {
+    // noinspection unchecked
+    super(
+      scenario,
+      List.of(
+        new DisplayWrapper2D(
+          "Ocean",
+          List.of(
+            new BathymetryFieldPortrayalFactory(
+              scenario.component("bathymetricGrid")
+            ),
+            new SpeciesBiomassFieldsPortrayalFactory(
+              scenario.component("biomassGrids", ListFactory.class),
+              scenario.component("carryingCapacityGrid", ListFactory.class),
+              false
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Markets",
+              new MarketGridPortrayalFactory(scenario.component("marketGrid")),
+              true
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Ports",
+              new PortGridPortrayalFactory(scenario.component("portGrid")),
+              true
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Vessels",
+              new VesselFieldPortrayalFactory(
+                scenario.component("vesselField")
+              ),
+              true
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Coordinates",
+              new CoordinatesPortrayalFactory(
+                scenario.component("modelGrid"),
+                3
+              ),
+              true
+            )
+          ),
+          600,
+          600,
+          WHITE
+        )
+      )
+    );
+  }
+
+  /**
+   * Opens the GUI for a freshly built {@link MinimalScenario}.
+   */
+  static void main(final String[] args) {
+    final MinimalScenarioWithUI minimalScenarioWithUI =
+      new MinimalScenarioWithUI(new MinimalScenario().get());
+    minimalScenarioWithUI.createController();
+  }
 }

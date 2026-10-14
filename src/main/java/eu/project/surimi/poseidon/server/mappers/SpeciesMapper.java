@@ -22,53 +22,54 @@
 
 package eu.project.surimi.poseidon.server.mappers;
 
-import uk.ac.ox.poseidon.biology.species.Species;
-
-import java.util.Optional;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.function.Predicate.not;
+
+import java.util.Optional;
+import uk.ac.ox.poseidon.biology.species.Species;
 
 /**
  * Converts between POSEIDON's {@link Species} and the {@code surimi.v1.Species} proto.
  */
 public final class SpeciesMapper {
 
-    private SpeciesMapper() {
-    }
+  private SpeciesMapper() {}
 
-    /**
-     * @return the POSEIDON {@link Species} for a proto species; {@code lifeStage} is left
-     * {@code null} when the proto omits it.
-     */
-    public static Species toPoseidonSpecies(final build.buf.gen.surimi.v1.Species species) {
-        final build.buf.gen.surimi.v1.Species protoSpecies = checkNotNull(species);
-        checkArgument(
-            !protoSpecies.getSpeciesCode().isBlank(),
-            "Species code is required."
-        );
-        return new Species(
-            protoSpecies.getSpeciesCode(),
-            protoSpecies.getLifeStage(),
-            null
-        );
-    }
+  /**
+   * @return the POSEIDON {@link Species} for a proto species; {@code lifeStage} is left
+   * {@code null} when the proto omits it.
+   */
+  public static Species toPoseidonSpecies(
+    final build.buf.gen.surimi.v1.Species species
+  ) {
+    final build.buf.gen.surimi.v1.Species protoSpecies = checkNotNull(species);
+    checkArgument(
+      !protoSpecies.getSpeciesCode().isBlank(),
+      "Species code is required."
+    );
+    return new Species(
+      protoSpecies.getSpeciesCode(),
+      protoSpecies.getLifeStage(),
+      null
+    );
+  }
 
-    /**
-     * @return the proto species for a POSEIDON {@link Species}; {@code lifeStage} is left unset
-     * when blank or {@code null}.
-     */
-    public static build.buf.gen.surimi.v1.Species toProtoSpecies(final Species species) {
-        final Species poseidonSpecies = checkNotNull(species);
-        final build.buf.gen.surimi.v1.Species.Builder builder =
-            build.buf.gen.surimi.v1.Species
-                .newBuilder()
-                .setSpeciesCode(poseidonSpecies.getCode());
-        Optional
-            .ofNullable(poseidonSpecies.getLifeStage())
-            .filter(not(String::isBlank))
-            .ifPresent(builder::setLifeStage);
-        return builder.build();
-    }
+  /**
+   * @return the proto species for a POSEIDON {@link Species}; {@code lifeStage} is left unset
+   * when blank or {@code null}.
+   */
+  public static build.buf.gen.surimi.v1.Species toProtoSpecies(
+    final Species species
+  ) {
+    final Species poseidonSpecies = checkNotNull(species);
+    final build.buf.gen.surimi.v1.Species.Builder builder =
+      build.buf.gen.surimi.v1.Species.newBuilder().setSpeciesCode(
+        poseidonSpecies.getCode()
+      );
+    Optional.ofNullable(poseidonSpecies.getLifeStage())
+      .filter(not(String::isBlank))
+      .ifPresent(builder::setLifeStage);
+    return builder.build();
+  }
 }

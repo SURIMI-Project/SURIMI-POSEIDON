@@ -24,16 +24,15 @@ package eu.project.surimi.poseidon.regulations;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.time.Month;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
-
-import java.time.Month;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Forbids a fishing action inside any MPA whose fleet restrictions cover the acting vessel's
@@ -47,32 +46,41 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public class MpaClosurePredicate implements Predicate<ExtendedFishingAction> {
 
-    private final @NonNull ModelGrid modelGrid;
-    private final @NonNull ImmutableMap<String, DoubleGridWrapper> mpaGrids;
-    private final @NonNull ImmutableMap<String, ImmutableSet<Month>> mpaClosedMonths;
-    private final @NonNull ImmutableMap<String, ImmutableSet<GearCountry>> mpaFleetRestrictions;
-    private final @NonNull Function<Vessel, String> countryTagExtractor;
+  private final @NonNull ModelGrid modelGrid;
+  private final @NonNull ImmutableMap<String, DoubleGridWrapper> mpaGrids;
+  private final @NonNull ImmutableMap<
+    String,
+    ImmutableSet<Month>
+  > mpaClosedMonths;
+  private final @NonNull ImmutableMap<
+    String,
+    ImmutableSet<GearCountry>
+  > mpaFleetRestrictions;
+  private final @NonNull Function<Vessel, String> countryTagExtractor;
 
-    @Override
-    public boolean test(final ExtendedFishingAction action) {
-        final var cell = modelGrid.toCell(action.getStartCoordinate());
-        final var gearCountry = new GearCountry(
-            action.getGear().getCode(),
-            countryTagExtractor.apply(action.getAgent())
+  @Override
+  public boolean test(final ExtendedFishingAction action) {
+    final var cell = modelGrid.toCell(action.getStartCoordinate());
+    final var gearCountry = new GearCountry(
+      action.getGear().getCode(),
+      countryTagExtractor.apply(action.getAgent())
+    );
+    final var month = action.getStartDateTime().getMonth();
+
+    return mpaGrids
+      .entrySet()
+      .stream()
+      .filter(entry -> entry.getValue().getValue(cell) > 0)
+      .anyMatch(entry -> {
+        final String mpaId = entry.getKey();
+        final var restrictedFleets = mpaFleetRestrictions.get(mpaId);
+        final var closedMonths = mpaClosedMonths.get(mpaId);
+        return (
+          restrictedFleets != null &&
+          restrictedFleets.contains(gearCountry) &&
+          closedMonths != null &&
+          closedMonths.contains(month)
         );
-        final var month = action.getStartDateTime().getMonth();
-
-        return mpaGrids
-            .entrySet()
-            .stream()
-            .filter(entry -> entry.getValue().getValue(cell) > 0)
-            .anyMatch(entry -> {
-                final String mpaId = entry.getKey();
-                final var restrictedFleets = mpaFleetRestrictions.get(mpaId);
-                final var closedMonths = mpaClosedMonths.get(mpaId);
-                return restrictedFleets != null && restrictedFleets.contains(gearCountry) &&
-                    closedMonths != null && closedMonths.contains(month);
-            });
-    }
-
+      });
+  }
 }

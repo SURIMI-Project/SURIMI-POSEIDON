@@ -22,18 +22,17 @@
 
 package eu.project.surimi.poseidon.server;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import io.grpc.stub.StreamObserver;
-import lombok.RequiredArgsConstructor;
-import sim.engine.SimState;
-import uk.ac.ox.poseidon.core.Simulation;
-
-import java.util.Map;
-
 import static io.grpc.Status.NOT_FOUND;
 import static java.lang.System.Logger.Level.*;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
+
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import sim.engine.SimState;
+import uk.ac.ox.poseidon.core.Simulation;
 
 /**
  * Base class for one gRPC method handler: logs the request, delegates to {@link #getResponse},
@@ -45,113 +44,118 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 @RequiredArgsConstructor
 public abstract class RequestHandler<ReqT, RespT> {
 
-    private static final System.Logger logger = System.getLogger(RequestHandler.class.getName());
+  private static final System.Logger logger = System.getLogger(
+    RequestHandler.class.getName()
+  );
 
-    /**
-     * @return {@code map.get(key)}, or throws {@code NOT_FOUND} naming the missing key and the
-     * map's known keys.
-     */
-    protected static <K, V> V getOrThrow(
-        final Map<K, V> map,
-        final K key,
-        final String name
-    ) {
-        final V v = map.get(key);
-        if (v == null) {
-            throw NOT_FOUND
-                .withDescription(
-                    "%s not found: %s.%nKnown keys are:%n%s".formatted(name, key, map.keySet())
-                )
-                .asRuntimeException();
+  /**
+   * @return {@code map.get(key)}, or throws {@code NOT_FOUND} naming the missing key and the
+   * map's known keys.
+   */
+  protected static <K, V> V getOrThrow(
+    final Map<K, V> map,
+    final K key,
+    final String name
+  ) {
+    final V v = map.get(key);
+    if (v == null) {
+      throw NOT_FOUND.withDescription(
+        "%s not found: %s.%nKnown keys are:%n%s".formatted(
+          name,
+          key,
+          map.keySet()
+        )
+      ).asRuntimeException();
+    }
+    return v;
+  }
+
+  /**
+   * @return the response for the given request; may throw, which {@link #handle} translates
+   * into an appropriate {@link StatusRuntimeException}.
+   */
+  protected abstract RespT getResponse(final ReqT request);
+
+  /**
+   * Logs the request, computes and sends the response via {@link #getResponse}, and translates
+   * any thrown exception into an error on {@code responseObserver}.
+   */
+  public void handle(
+    final ReqT request,
+    final StreamObserver<RespT> responseObserver
+  ) {
+    try {
+      logger.log(DEBUG, "Received request:\n{0}", request);
+      responseObserver.onNext(getResponse(request));
+      responseObserver.onCompleted();
+    } catch (final Exception e) {
+      responseObserver.onError(
+        switch (e) {
+          case final StatusRuntimeException sre -> {
+            logger.log(WARNING, "", sre);
+            yield sre;
+          }
+          case final IllegalArgumentException iae -> {
+            logger.log(WARNING, "", iae);
+            yield Status.INVALID_ARGUMENT.withDescription(iae.getMessage())
+              .withCause(iae)
+              .asRuntimeException();
+          }
+          default -> {
+            logger.log(ERROR, "", e);
+            yield Status.INTERNAL.withDescription(
+              "Unexpected server error: " + e.getMessage()
+            )
+              .withCause(e)
+              .asRuntimeException();
+          }
         }
-        return v;
+      );
     }
+  }
 
-    /**
-     * @return the response for the given request; may throw, which {@link #handle} translates
-     * into an appropriate {@link StatusRuntimeException}.
-     */
-    protected abstract RespT getResponse(final ReqT request);
+  /**
+   * @return a {@link StatusRuntimeException} with the given status and {@code e}'s message and
+   * cause.
+   */
+  @SuppressWarnings("SameParameterValue")
+  protected static StatusRuntimeException wrap(
+    final Status status,
+    final Exception e
+  ) {
+    return status
+      .withDescription(e.getMessage())
+      .withCause(e)
+      .asRuntimeException();
+  }
 
-    /**
-     * Logs the request, computes and sends the response via {@link #getResponse}, and translates
-     * any thrown exception into an error on {@code responseObserver}.
-     */
-    public void handle(
-        final ReqT request,
-        final StreamObserver<RespT> responseObserver
-    ) {
-        try {
-            logger.log(DEBUG, "Received request:\n{0}", request);
-            responseObserver.onNext(getResponse(request));
-            responseObserver.onCompleted();
-        } catch (final Exception e) {
-            responseObserver.onError(
-                switch (e) {
-                    case final StatusRuntimeException sre -> {
-                        logger.log(WARNING, "", sre);
-                        yield sre;
-                    }
-                    case final IllegalArgumentException iae -> {
-                        logger.log(WARNING, "", iae);
-                        yield Status.INVALID_ARGUMENT
-                            .withDescription(iae.getMessage())
-                            .withCause(iae)
-                            .asRuntimeException();
-                    }
-                    default -> {
-                        logger.log(ERROR, "", e);
-                        yield Status.INTERNAL
-                            .withDescription("Unexpected server error: " + e.getMessage())
-                            .withCause(e)
-                            .asRuntimeException();
-                    }
-                }
-            );
-        }
-    }
+  /**
+   * Logs a message tagged with the simulation's current step and date-time (see
+   * {@link Simulation#log}).
+   */
+  protected void log(
+    final System.Logger.Level level,
+    final SimState simState,
+    final String format,
+    final Object... args
+  ) {
+    Simulation.log(logger, level, simState, format, args);
+  }
 
-    /**
-     * @return a {@link StatusRuntimeException} with the given status and {@code e}'s message and
-     * cause.
-     */
-    @SuppressWarnings("SameParameterValue")
-    protected static StatusRuntimeException wrap(
-        final Status status,
-        final Exception e
-    ) {
-        return status
-            .withDescription(e.getMessage())
-            .withCause(e)
-            .asRuntimeException();
-    }
+  /**
+   * Logs current JVM heap usage at {@code INFO}, tagged with the simulation's current step and
+   * date-time.
+   */
+  protected void logMemoryUsage(final SimState simState) {
+    log(INFO, simState, "Memory usage: {0}", memoryUsage());
+  }
 
-    /**
-     * Logs a message tagged with the simulation's current step and date-time (see
-     * {@link Simulation#log}).
-     */
-    protected void log(
-        final System.Logger.Level level,
-        final SimState simState,
-        final String format,
-        final Object... args
-    ) {
-        Simulation.log(logger, level, simState, format, args);
-    }
-
-    /**
-     * Logs current JVM heap usage at {@code INFO}, tagged with the simulation's current step and
-     * date-time.
-     */
-    protected void logMemoryUsage(
-        final SimState simState
-    ) {
-        log(INFO, simState, "Memory usage: {0}", memoryUsage());
-    }
-
-    private static String memoryUsage() {
-        final Runtime rt = Runtime.getRuntime();
-        return byteCountToDisplaySize(rt.totalMemory() - rt.freeMemory()) +
-            " / " + byteCountToDisplaySize(rt.maxMemory());
-    }
+  private static String memoryUsage() {
+    final Runtime rt = Runtime.getRuntime();
+    return (
+      byteCountToDisplaySize(rt.totalMemory() - rt.freeMemory()) +
+      " / " +
+      byteCountToDisplaySize(rt.maxMemory())
+    );
+  }
 }

@@ -39,14 +39,18 @@ import uk.ac.ox.poseidon.core.scopes.Scope;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class PortClosurePredicateFactory<S extends Scope>
-    extends RelativeScopeFactory<S, PortClosurePredicate> {
+public class PortClosurePredicateFactory<S extends Scope> extends RelativeScopeFactory<
+  S,
+  PortClosurePredicate
+> {
 
-    private Factory<? super S, ImmutableMap<String, ImmutableMap<String, ImmutableSet<PortClosureWindow>>>> portClosures;
+  private Factory<
+    ? super S,
+    ImmutableMap<String, ImmutableMap<String, ImmutableSet<PortClosureWindow>>>
+  > portClosures;
 
-    @Override
-    protected PortClosurePredicate newInstance(final S scope) {
-        return new PortClosurePredicate(portClosures.get(scope));
-    }
-
+  @Override
+  protected PortClosurePredicate newInstance(final S scope) {
+    return new PortClosurePredicate(portClosures.get(scope));
+  }
 }

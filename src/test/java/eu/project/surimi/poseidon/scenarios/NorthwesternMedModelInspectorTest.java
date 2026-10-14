@@ -22,19 +22,18 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.gui.ComponentView;
 import uk.ac.ox.poseidon.gui.SimulationWithUI;
-
-import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Checks that the GUI's model inspector stays cheap to refresh: MASON rebuilds the text of every
@@ -43,29 +42,36 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class NorthwesternMedModelInspectorTest {
 
-    private static final int MAX_ROW_LENGTH = 200;
+  private static final int MAX_ROW_LENGTH = 200;
 
-    static Stream<Supplier<Scenario>> scenarios() {
-        return Stream.of(new NorthwesternMedScenario(), new LocalNorthwesternMedScenario());
-    }
+  static Stream<Supplier<Scenario>> scenarios() {
+    return Stream.of(
+      new NorthwesternMedScenario(),
+      new LocalNorthwesternMedScenario()
+    );
+  }
 
-    @ParameterizedTest
-    @MethodSource("scenarios")
-    void componentRowsStayShort(final Supplier<Scenario> scenario) {
-        final Scenario built = scenario.get();
-        final SimulationWithUI simulationWithUI =
-            new SimulationWithUI(built::startNewSimulation, List.of());
-        simulationWithUI.start();
+  @ParameterizedTest
+  @MethodSource("scenarios")
+  void componentRowsStayShort(final Supplier<Scenario> scenario) {
+    final Scenario built = scenario.get();
+    final SimulationWithUI simulationWithUI = new SimulationWithUI(
+      built::startNewSimulation,
+      List.of()
+    );
+    simulationWithUI.start();
 
-        final List<ComponentView> rows =
-            ((SimulationWithUI.SimulationProxy) simulationWithUI.getSimulationInspectedObject())
-                .getComponents();
+    final List<ComponentView> rows = (
+      (SimulationWithUI.SimulationProxy) simulationWithUI.getSimulationInspectedObject()
+    ).getComponents();
 
-        assertThat(rows).isNotEmpty();
-        assertThat(rows).allSatisfy(row ->
-            assertThat(row.toString()).hasSizeLessThan(MAX_ROW_LENGTH)
-        );
-        assertThat(String.valueOf(rows)).hasSizeLessThan(MAX_ROW_LENGTH * rows.size());
-        simulationWithUI.state.finish();
-    }
+    assertThat(rows).isNotEmpty();
+    assertThat(rows).allSatisfy(row ->
+      assertThat(row.toString()).hasSizeLessThan(MAX_ROW_LENGTH)
+    );
+    assertThat(String.valueOf(rows)).hasSizeLessThan(
+      MAX_ROW_LENGTH * rows.size()
+    );
+    simulationWithUI.state.finish();
+  }
 }

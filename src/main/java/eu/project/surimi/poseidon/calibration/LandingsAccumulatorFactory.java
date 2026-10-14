@@ -29,9 +29,11 @@ import uk.ac.ox.poseidon.core.scopes.SimulationScope;
  * Factory for {@link LandingsAccumulator}.
  */
 public class LandingsAccumulatorFactory
-    extends SimulationEventListenerFactory<LandingsAccumulator> {
-    @Override
-    protected LandingsAccumulator newListener(final SimulationScope scope) {
-        return new LandingsAccumulator();
-    }
+  extends SimulationEventListenerFactory<LandingsAccumulator>
+{
+
+  @Override
+  protected LandingsAccumulator newListener(final SimulationScope scope) {
+    return new LandingsAccumulator();
+  }
 }

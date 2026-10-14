@@ -22,22 +22,6 @@
 
 package eu.project.surimi.poseidon.server.ecology;
 
-import build.buf.gen.surimi.v1.BiomassSummary;
-import build.buf.gen.surimi.v1.UpdateBiomassRequest;
-import build.buf.gen.surimi.v1.UpdateBiomassResponse;
-import eu.project.surimi.poseidon.server.SimulationManager;
-import eu.project.surimi.poseidon.server.SpeciesKey;
-import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
-import sim.util.Int2D;
-import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
-import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.geography.Coordinate;
-import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
-import uk.ac.ox.poseidon.geography.grids.ModelGrid;
-
-import java.util.Map;
-import java.util.NoSuchElementException;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.Utils.checkRequestDateTimeAlignment;
 import static io.grpc.Status.FAILED_PRECONDITION;
@@ -46,88 +30,115 @@ import static java.lang.System.Logger.Level.INFO;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
 
+import build.buf.gen.surimi.v1.BiomassSummary;
+import build.buf.gen.surimi.v1.UpdateBiomassRequest;
+import build.buf.gen.surimi.v1.UpdateBiomassResponse;
+import eu.project.surimi.poseidon.server.SimulationManager;
+import eu.project.surimi.poseidon.server.SpeciesKey;
+import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import sim.util.Int2D;
+import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
+import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.geography.Coordinate;
+import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
+import uk.ac.ox.poseidon.geography.grids.ModelGrid;
+
 /**
  * Handles {@code UpdateBiomass}: overwrites each cell of the simulation's per-species
  * {@link BiomassGrid}s with the biomass values in the request (converted from the simulation's
  * standard mass unit to kilograms). A species in the request with no matching
  * {@link BiomassGrid} in the simulation is silently skipped.
  */
-public class UpdateBiomassRequestHandler extends
-    WithSimulationRequestHandler<UpdateBiomassRequest, UpdateBiomassResponse> {
+public class UpdateBiomassRequestHandler
+  extends WithSimulationRequestHandler<
+    UpdateBiomassRequest,
+    UpdateBiomassResponse
+  >
+{
 
-    private static final System.Logger logger =
-        System.getLogger(UpdateBiomassRequestHandler.class.getName());
+  private static final System.Logger logger = System.getLogger(
+    UpdateBiomassRequestHandler.class.getName()
+  );
 
-    public UpdateBiomassRequestHandler(final SimulationManager simulationManager) {
-        super(simulationManager);
-    }
+  public UpdateBiomassRequestHandler(
+    final SimulationManager simulationManager
+  ) {
+    super(simulationManager);
+  }
 
-    private static Int2D getSimulationCell(
-        final build.buf.gen.surimi.v1.BiomassCell biomassCell,
-        final BathymetricGrid bathymetricGrid
-    ) {
-        final Coordinate coordinate = new Coordinate(
-            biomassCell.getLongitude(),
-            biomassCell.getLatitude()
-        );
-        final ModelGrid modelGrid = bathymetricGrid.getModelGrid();
-        modelGrid.checkIsInGrid(coordinate);
-        final Int2D cell = modelGrid.toCell(coordinate);
-        checkArgument(
-            bathymetricGrid.isActiveWater(cell),
-            "Coordinates %s do not point to an active water cell.",
-            coordinate
-        );
-        return cell;
-    }
+  private static Int2D getSimulationCell(
+    final build.buf.gen.surimi.v1.BiomassCell biomassCell,
+    final BathymetricGrid bathymetricGrid
+  ) {
+    final Coordinate coordinate = new Coordinate(
+      biomassCell.getLongitude(),
+      biomassCell.getLatitude()
+    );
+    final ModelGrid modelGrid = bathymetricGrid.getModelGrid();
+    modelGrid.checkIsInGrid(coordinate);
+    final Int2D cell = modelGrid.toCell(coordinate);
+    checkArgument(
+      bathymetricGrid.isActiveWater(cell),
+      "Coordinates %s do not point to an active water cell.",
+      coordinate
+    );
+    return cell;
+  }
 
-    @Override
-    protected String getSimulationId(final UpdateBiomassRequest request) {
-        return request.getSimulationId();
-    }
+  @Override
+  protected String getSimulationId(final UpdateBiomassRequest request) {
+    return request.getSimulationId();
+  }
 
-    @Override
-    protected UpdateBiomassResponse getResponseWithSimulation(
-        final UpdateBiomassRequest request,
-        final Simulation simulation,
-        final SimulationManager.SimulationProperties simulationProperties
-    ) {
-        logger.log(INFO, "Biomass update received for simulation {0}", request.getSimulationId());
-        checkRequestDateTimeAlignment(request.getDateTime(), simulation);
+  @Override
+  protected UpdateBiomassResponse getResponseWithSimulation(
+    final UpdateBiomassRequest request,
+    final Simulation simulation,
+    final SimulationManager.SimulationProperties simulationProperties
+  ) {
+    logger.log(
+      INFO,
+      "Biomass update received for simulation {0}",
+      request.getSimulationId()
+    );
+    checkRequestDateTimeAlignment(request.getDateTime(), simulation);
 
-        final BiomassSummary biomassSummary = request.getBiomassSummary();
-        final Map<SpeciesKey, BiomassGrid> simulationGrids =
-            simulation.getComponents(BiomassGrid.class).stream().collect(toMap(
-                grid -> SpeciesKey.from(grid.getSpecies()),
-                identity()
-            ));
-        final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
-        biomassSummary.getBiomassGridsList().forEach(biomassGrid -> {
-            final BiomassGrid simulationGrid =
-                simulationGrids.get(SpeciesKey.from(biomassGrid.getSpecies()));
-            if (simulationGrid != null) {
-                biomassGrid.getBiomassCellsList().forEach(biomassCell -> {
-                    final Int2D cell = getSimulationCell(biomassCell, bathymetricGrid);
-                    simulationGrid.setBiomass(
-                        cell,
-                        simulationProperties.convertMassInStandardUnitToKg(biomassCell.getBiomass())
-                    );
-                });
-            }
+    final BiomassSummary biomassSummary = request.getBiomassSummary();
+    final Map<SpeciesKey, BiomassGrid> simulationGrids = simulation
+      .getComponents(BiomassGrid.class)
+      .stream()
+      .collect(toMap(grid -> SpeciesKey.from(grid.getSpecies()), identity()));
+    final BathymetricGrid bathymetricGrid = getBathymetricGrid(simulation);
+    biomassSummary.getBiomassGridsList().forEach(biomassGrid -> {
+      final BiomassGrid simulationGrid = simulationGrids.get(
+        SpeciesKey.from(biomassGrid.getSpecies())
+      );
+      if (simulationGrid != null) {
+        biomassGrid.getBiomassCellsList().forEach(biomassCell -> {
+          final Int2D cell = getSimulationCell(biomassCell, bathymetricGrid);
+          simulationGrid.setBiomass(
+            cell,
+            simulationProperties.convertMassInStandardUnitToKg(
+              biomassCell.getBiomass()
+            )
+          );
         });
-        return UpdateBiomassResponse
-            .newBuilder()
-            .setSimulationId(request.getSimulationId())
-            .build();
-    }
+      }
+    });
+    return UpdateBiomassResponse.newBuilder()
+      .setSimulationId(request.getSimulationId())
+      .build();
+  }
 
-    private BathymetricGrid getBathymetricGrid(final Simulation simulation) {
-        try {
-            return simulation.getComponent(BathymetricGrid.class);
-        } catch (final NoSuchElementException e) {
-            throw wrap(NOT_FOUND, e);
-        } catch (final IllegalStateException e) {
-            throw wrap(FAILED_PRECONDITION, e);
-        }
+  private BathymetricGrid getBathymetricGrid(final Simulation simulation) {
+    try {
+      return simulation.getComponent(BathymetricGrid.class);
+    } catch (final NoSuchElementException e) {
+      throw wrap(NOT_FOUND, e);
+    } catch (final IllegalStateException e) {
+      throw wrap(FAILED_PRECONDITION, e);
     }
+  }
 }

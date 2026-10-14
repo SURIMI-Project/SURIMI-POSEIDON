@@ -22,194 +22,236 @@
 
 package eu.project.surimi.poseidon.server;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import org.junit.jupiter.api.Test;
-
 import java.time.Period;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
 
 class SimulationServiceTest extends ServiceTest {
 
-    public SimulationServiceTest() {
-        super(MinimalScenario.class);
-    }
+  public SimulationServiceTest() {
+    super(MinimalScenario.class);
+  }
 
-    @Test
-    void simulationCanBeStarted() {
-        final String simulationId = UUID.randomUUID().toString();
-        final InitialiseSimulationResponse response = initialiseSimulation(simulationId);
-        assertEquals(simulationId, response.getSimulationId());
-    }
+  @Test
+  void simulationCanBeStarted() {
+    final String simulationId = UUID.randomUUID().toString();
+    final InitialiseSimulationResponse response = initialiseSimulation(
+      simulationId
+    );
+    assertEquals(simulationId, response.getSimulationId());
+  }
 
-    @Test
-    void exposesFleetSegmentMapperComponent() {
-        final String simulationId = initialiseSimulation();
-        assertDoesNotThrow(() ->
-            simulationManager.getSimulation(simulationId).getComponent(FleetSegmentMapper.class)
-        );
-    }
+  @Test
+  void exposesFleetSegmentMapperComponent() {
+    final String simulationId = initialiseSimulation();
+    assertDoesNotThrow(() ->
+      simulationManager
+        .getSimulation(simulationId)
+        .getComponent(FleetSegmentMapper.class)
+    );
+  }
 
-    @Test
-    void cantUseSameIdTwice() {
-        final String simulationId = initialiseSimulation();
-        assertThrows(StatusRuntimeException.class, () -> initialiseSimulation(simulationId));
-    }
+  @Test
+  void cantUseSameIdTwice() {
+    final String simulationId = initialiseSimulation();
+    assertThrows(StatusRuntimeException.class, () ->
+      initialiseSimulation(simulationId)
+    );
+  }
 
-    @Test
-    void rejectsScenarioNameWithParentDirectoryTraversal() {
-        final StatusRuntimeException error = assertThrows(
-            StatusRuntimeException.class,
-            () -> initialiseSimulation(UUID.randomUUID().toString(), "../MinimalScenario")
-        );
+  @Test
+  void rejectsScenarioNameWithParentDirectoryTraversal() {
+    final StatusRuntimeException error = assertThrows(
+      StatusRuntimeException.class,
+      () ->
+        initialiseSimulation(UUID.randomUUID().toString(), "../MinimalScenario")
+    );
 
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
-    }
+    assertEquals(
+      Status.INVALID_ARGUMENT.getCode(),
+      error.getStatus().getCode()
+    );
+  }
 
-    @Test
-    void rejectsScenarioNameWithPathSeparator() {
-        final StatusRuntimeException error = assertThrows(
-            StatusRuntimeException.class,
-            () -> initialiseSimulation(UUID.randomUUID().toString(), "minimal/MinimalScenario")
-        );
+  @Test
+  void rejectsScenarioNameWithPathSeparator() {
+    final StatusRuntimeException error = assertThrows(
+      StatusRuntimeException.class,
+      () ->
+        initialiseSimulation(
+          UUID.randomUUID().toString(),
+          "minimal/MinimalScenario"
+        )
+    );
 
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
-    }
+    assertEquals(
+      Status.INVALID_ARGUMENT.getCode(),
+      error.getStatus().getCode()
+    );
+  }
 
-    @Test
-    void acceptsContractWithSingleFleetSegment() {
-        final String simulationId = UUID.randomUUID().toString();
-        final InitialiseSimulationResponse response = initialiseSimulation(
-            simulationId,
-            MinimalScenario.class.getSimpleName(),
-            contractItems()
-                .clearFleetSegments()
-                .addFleetSegments(
-                    FleetSegment.newBuilder().setGearCode("G1").setModel(Server.MODEL_NAME)
-                )
-                .build()
-        );
-        assertEquals(simulationId, response.getSimulationId());
-    }
+  @Test
+  void acceptsContractWithSingleFleetSegment() {
+    final String simulationId = UUID.randomUUID().toString();
+    final InitialiseSimulationResponse response = initialiseSimulation(
+      simulationId,
+      MinimalScenario.class.getSimpleName(),
+      contractItems()
+        .clearFleetSegments()
+        .addFleetSegments(
+          FleetSegment.newBuilder()
+            .setGearCode("G1")
+            .setModel(Server.MODEL_NAME)
+        )
+        .build()
+    );
+    assertEquals(simulationId, response.getSimulationId());
+  }
 
-    @Test
-    void rejectsContractWithoutFleetSegments() {
-        final StatusRuntimeException error = assertThrows(
-            StatusRuntimeException.class,
-            () -> initialiseSimulation(
-                UUID.randomUUID().toString(),
-                MinimalScenario.class.getSimpleName(),
-                contractItems().clearFleetSegments().build()
+  @Test
+  void rejectsContractWithoutFleetSegments() {
+    final StatusRuntimeException error = assertThrows(
+      StatusRuntimeException.class,
+      () ->
+        initialiseSimulation(
+          UUID.randomUUID().toString(),
+          MinimalScenario.class.getSimpleName(),
+          contractItems().clearFleetSegments().build()
+        )
+    );
+
+    assertEquals(
+      Status.INVALID_ARGUMENT.getCode(),
+      error.getStatus().getCode()
+    );
+  }
+
+  @Test
+  void rejectsContractWithoutPoseidonFleetSegments() {
+    final StatusRuntimeException error = assertThrows(
+      StatusRuntimeException.class,
+      () ->
+        initialiseSimulation(
+          UUID.randomUUID().toString(),
+          MinimalScenario.class.getSimpleName(),
+          contractItems()
+            .clearFleetSegments()
+            .addFleetSegments(
+              FleetSegment.newBuilder().setGearCode("G1").setModel("EwE")
             )
-        );
+            .addFleetSegments(FleetSegment.newBuilder().setGearCode("G2"))
+            .build()
+        )
+    );
 
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
-    }
+    assertEquals(
+      Status.INVALID_ARGUMENT.getCode(),
+      error.getStatus().getCode()
+    );
+  }
 
-    @Test
-    void rejectsContractWithoutPoseidonFleetSegments() {
-        final StatusRuntimeException error = assertThrows(
-            StatusRuntimeException.class,
-            () -> initialiseSimulation(
-                UUID.randomUUID().toString(),
-                MinimalScenario.class.getSimpleName(),
-                contractItems()
-                    .clearFleetSegments()
-                    .addFleetSegments(FleetSegment.newBuilder().setGearCode("G1").setModel("EwE"))
-                    .addFleetSegments(FleetSegment.newBuilder().setGearCode("G2"))
-                    .build()
+  @Test
+  void rejectsContractWithOverlappingFleetSegments() {
+    final StatusRuntimeException error = assertThrows(
+      StatusRuntimeException.class,
+      () ->
+        initialiseSimulation(
+          UUID.randomUUID().toString(),
+          MinimalScenario.class.getSimpleName(),
+          contractItems()
+            .clearFleetSegments()
+            .addFleetSegments(
+              FleetSegment.newBuilder()
+                .setGearCode("G1")
+                .setModel(Server.MODEL_NAME)
             )
-        );
-
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
-    }
-
-    @Test
-    void rejectsContractWithOverlappingFleetSegments() {
-        final StatusRuntimeException error = assertThrows(
-            StatusRuntimeException.class,
-            () -> initialiseSimulation(
-                UUID.randomUUID().toString(),
-                MinimalScenario.class.getSimpleName(),
-                contractItems()
-                    .clearFleetSegments()
-                    .addFleetSegments(
-                        FleetSegment.newBuilder().setGearCode("G1").setModel(Server.MODEL_NAME)
-                    )
-                    .addFleetSegments(
-                        FleetSegment
-                            .newBuilder()
-                            .setGearCode("G1")
-                            .setCountryCode("ESP")
-                            .setModel(Server.MODEL_NAME)
-                    )
-                    .build()
+            .addFleetSegments(
+              FleetSegment.newBuilder()
+                .setGearCode("G1")
+                .setCountryCode("ESP")
+                .setModel(Server.MODEL_NAME)
             )
-        );
+            .build()
+        )
+    );
 
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), error.getStatus().getCode());
-    }
+    assertEquals(
+      Status.INVALID_ARGUMENT.getCode(),
+      error.getStatus().getCode()
+    );
+  }
 
-    @Test
-    void canStartTwoSimulationsWithDifferentIds() {
-        final String simulationId1 = UUID.randomUUID().toString();
-        final String simulationId2 = UUID.randomUUID().toString();
-        final InitialiseSimulationResponse response1 = initialiseSimulation(simulationId1);
-        assertEquals(simulationId1, response1.getSimulationId());
-        final InitialiseSimulationResponse response2 = initialiseSimulation(simulationId2);
-        assertEquals(simulationId2, response2.getSimulationId());
-    }
+  @Test
+  void canStartTwoSimulationsWithDifferentIds() {
+    final String simulationId1 = UUID.randomUUID().toString();
+    final String simulationId2 = UUID.randomUUID().toString();
+    final InitialiseSimulationResponse response1 = initialiseSimulation(
+      simulationId1
+    );
+    assertEquals(simulationId1, response1.getSimulationId());
+    final InitialiseSimulationResponse response2 = initialiseSimulation(
+      simulationId2
+    );
+    assertEquals(simulationId2, response2.getSimulationId());
+  }
 
-    @Test
-    void canStartAndStepManySimulations() {
-        for (int i = 0; i < 25; i++) {
-            step(initialiseSimulation(), START_DATE_TIME);
-        }
+  @Test
+  void canStartAndStepManySimulations() {
+    for (int i = 0; i < 25; i++) {
+      step(initialiseSimulation(), START_DATE_TIME);
     }
+  }
 
-    @Test
-    void idBecomesAvailableAfterCancelling() {
-        final String simulationId = initialiseSimulation();
-        final CancelSimulationResponse cancelResponse = simulationStub.cancelSimulation(
-            CancelSimulationRequest
-                .newBuilder()
-                .setSimulationId(simulationId)
-                .build()
-        );
-        assertEquals(simulationId, cancelResponse.getSimulationId());
-        final InitialiseSimulationResponse initResponse = initialiseSimulation(simulationId);
-        assertEquals(simulationId, initResponse.getSimulationId());
-    }
+  @Test
+  void idBecomesAvailableAfterCancelling() {
+    final String simulationId = initialiseSimulation();
+    final CancelSimulationResponse cancelResponse =
+      simulationStub.cancelSimulation(
+        CancelSimulationRequest.newBuilder()
+          .setSimulationId(simulationId)
+          .build()
+      );
+    assertEquals(simulationId, cancelResponse.getSimulationId());
+    final InitialiseSimulationResponse initResponse = initialiseSimulation(
+      simulationId
+    );
+    assertEquals(simulationId, initResponse.getSimulationId());
+  }
 
-    @Test
-    void idBecomesAvailableAfterFinalising() {
-        final String simulationId = initialiseSimulation();
-        final FinaliseSimulationResponse cancelResponse = simulationStub.finaliseSimulation(
-            FinaliseSimulationRequest
-                .newBuilder()
-                .setSimulationId(simulationId)
-                .build()
-        );
-        assertEquals(simulationId, cancelResponse.getSimulationId());
-        final InitialiseSimulationResponse initResponse = initialiseSimulation(simulationId);
-        assertEquals(simulationId, initResponse.getSimulationId());
-    }
+  @Test
+  void idBecomesAvailableAfterFinalising() {
+    final String simulationId = initialiseSimulation();
+    final FinaliseSimulationResponse cancelResponse =
+      simulationStub.finaliseSimulation(
+        FinaliseSimulationRequest.newBuilder()
+          .setSimulationId(simulationId)
+          .build()
+      );
+    assertEquals(simulationId, cancelResponse.getSimulationId());
+    final InitialiseSimulationResponse initResponse = initialiseSimulation(
+      simulationId
+    );
+    assertEquals(simulationId, initResponse.getSimulationId());
+  }
 
-    @Test
-    void canStep() {
-        final String simulationId = initialiseSimulation();
-        final SimulateStepResponse response1 =
-            step(simulationId, START_DATE_TIME);
-        assertEquals(simulationId, response1.getSimulationId());
-        final SimulateStepResponse response2 =
-            step(simulationId, START_DATE_TIME.plus(Period.parse(STEP_SIZE)));
-        assertEquals(simulationId, response2.getSimulationId());
-    }
+  @Test
+  void canStep() {
+    final String simulationId = initialiseSimulation();
+    final SimulateStepResponse response1 = step(simulationId, START_DATE_TIME);
+    assertEquals(simulationId, response1.getSimulationId());
+    final SimulateStepResponse response2 = step(
+      simulationId,
+      START_DATE_TIME.plus(Period.parse(STEP_SIZE))
+    );
+    assertEquals(simulationId, response2.getSimulationId());
+  }
 }

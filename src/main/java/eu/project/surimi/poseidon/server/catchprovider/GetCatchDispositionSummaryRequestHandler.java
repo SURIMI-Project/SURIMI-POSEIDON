@@ -22,6 +22,13 @@
 
 package eu.project.surimi.poseidon.server.catchprovider;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
+import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toProtoFleetSegment;
+import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpecies;
+import static java.lang.System.Logger.Level.INFO;
+import static java.util.stream.Collectors.*;
+
 import build.buf.gen.surimi.v1.*;
 import com.google.common.collect.Range;
 import com.google.protobuf.Timestamp;
@@ -30,21 +37,13 @@ import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.Coordinate;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
-import static eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper.toProtoFleetSegment;
-import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpecies;
-import static java.lang.System.Logger.Level.INFO;
-import static java.util.stream.Collectors.*;
 
 /**
  * Handles {@code GetCatchDisposition}: summarizes fishing events whose end date-time falls in the
@@ -54,175 +53,194 @@ import static java.util.stream.Collectors.*;
  * reported under the contract fleet segment covering it.
  */
 public class GetCatchDispositionSummaryRequestHandler
-    extends WithSimulationRequestHandler<GetCatchDispositionRequest, GetCatchDispositionResponse> {
+  extends WithSimulationRequestHandler<
+    GetCatchDispositionRequest,
+    GetCatchDispositionResponse
+  >
+{
 
-    private static final System.Logger logger =
-        System.getLogger(GetCatchDispositionSummaryRequestHandler.class.getName());
+  private static final System.Logger logger = System.getLogger(
+    GetCatchDispositionSummaryRequestHandler.class.getName()
+  );
 
-    public GetCatchDispositionSummaryRequestHandler(final SimulationManager simulationManager) {
-        super(simulationManager);
-    }
+  public GetCatchDispositionSummaryRequestHandler(
+    final SimulationManager simulationManager
+  ) {
+    super(simulationManager);
+  }
 
-    private static Map<FleetSegment, Map<Species, Map<Coordinate, Disposition>>> extractFishingActionData(
-        final Simulation simulation,
-        final SimulationManager.SimulationProperties simulationProperties,
-        final Timestamp startDateTime,
-        final Timestamp endDateTime
-    ) {
-        final Range<LocalDateTime> dateTimeRange = Range.closed(
-            toLocalDateTime(startDateTime),
-            toLocalDateTime(endDateTime)
-        );
-        final FleetSegmentMapper fleetSegmentMapper =
-            simulation.getComponent(FleetSegmentMapper.class);
-        record Row(
-            FleetSegment fleetSegment,
-            Species species,
-            Coordinate coordinate,
-            Disposition disposition
-        ) {}
-        return simulation
-            .getComponent(FishingEventAccumulator.class)
-            .getEvents()
-            .filter(fishingEvent -> dateTimeRange.contains(fishingEvent.getEndDateTime()))
-            .flatMap(fishingEvent ->
-                // only report vessels covered by a contract fleet segment
-                simulationProperties
-                    .findContractFleetSegment(
-                        fleetSegmentMapper.apply(fishingEvent.getAction().getAgent())
-                    )
-                    .stream()
-                    .flatMap(fleetSegment ->
-                        fishingEvent
-                            .getOutcome()
-                            .getGrossCatch()
-                            .getMap()
-                            .entrySet()
-                            .stream()
-                            // only report species in contract
-                            .filter(entry ->
-                                simulationProperties
-                                    .getSpeciesKeys()
-                                    .contains(SpeciesKey.from(entry.getKey()))
-                            )
-                            .map(entry -> new Row(
-                                fleetSegment,
-                                entry.getKey(),
-                                fishingEvent.getAction().getEndCoordinate(),
-                                new Disposition(
-                                    entry.getValue().asBiomass().asKg(),
-                                    fishingEvent
-                                        .getOutcome()
-                                        .getDisposition()
-                                        .getDiscardedAlive()
-                                        .getContent(entry.getKey())
-                                        .map(c -> c.asBiomass().asKg())
-                                        .orElse(0.0),
-                                    fishingEvent
-                                        .getOutcome()
-                                        .getDisposition()
-                                        .getDiscardedDead()
-                                        .getContent(entry.getKey())
-                                        .map(c -> c.asBiomass().asKg())
-                                        .orElse(0.0)
-                                )
-                            ))
-                    )
-            )
-            .collect(
-                groupingBy(
-                    Row::fleetSegment,
-                    groupingBy(
-                        Row::species,
-                        groupingBy(
-                            Row::coordinate,
-                            collectingAndThen(
-                                toList(), rows -> {
-                                    final List<Disposition> dispositions = rows
-                                        .stream()
-                                        .map(Row::disposition)
-                                        .toList();
-                                    return new Disposition(
-                                        dispositions.stream()
-                                            .mapToDouble(Disposition::grossCatchInKg)
-                                            .sum(),
-                                        dispositions.stream()
-                                            .mapToDouble(Disposition::liveDiscardsInKg)
-                                            .sum(),
-                                        dispositions.stream()
-                                            .mapToDouble(Disposition::deadDiscardsInKg)
-                                            .sum()
-                                    );
-                                }
-                            )
-                        )
-                    )
-                )
-            );
-    }
-
-    @Override
-    protected String getSimulationId(final GetCatchDispositionRequest request) {
-        return request.getSimulationId();
-    }
-
-    @Override
-    protected GetCatchDispositionResponse getResponseWithSimulation(
-        final GetCatchDispositionRequest request,
-        final Simulation simulation,
-        final SimulationManager.SimulationProperties simulationProperties
-    ) {
-        log(INFO, simulation, "Catch disposition requested");
-        checkArgument(request.hasStartDateTime(), "Start date time is required.");
-        checkArgument(request.hasEndDateTime(), "End date time is required.");
-        final CatchDispositionSummary.Builder catchDispositionSummaryBuilder =
-            CatchDispositionSummary.newBuilder();
-        extractFishingActionData(
-            simulation,
-            simulationProperties,
-            request.getStartDateTime(),
-            request.getEndDateTime()
-        ).forEach((fleetSegment, speciesData) -> {
-            speciesData.forEach((species, coordinateData) -> {
-                final DispositionGrid.Builder
-                    dispositionGridsBuilder =
-                    catchDispositionSummaryBuilder
-                        .addDispositionGridsBuilder()
-                        .setFleetSegment(toProtoFleetSegment(fleetSegment))
-                        .setSpecies(toProtoSpecies(species));
-                coordinateData.forEach((coordinate, disposition) ->
-                    dispositionGridsBuilder
-                        .addDispositionCellsBuilder()
-                        .setLongitude(coordinate.lon)
-                        .setLatitude(coordinate.lat)
-                        .setGrossCatch(
-                            simulationProperties.convertKgToStandardMassUnit(disposition.grossCatchInKg)
-                        )
-                        .setLiveDiscards(
-                            simulationProperties.convertKgToStandardMassUnit(disposition.liveDiscardsInKg)
-                        )
-                        .setDeadDiscards(
-                            simulationProperties.convertKgToStandardMassUnit(disposition.deadDiscardsInKg)
-                        )
-                );
-            });
-        });
-        return GetCatchDispositionResponse
-            .newBuilder()
-            .setSimulationId(request.getSimulationId())
-            .setStartDateTime(request.getStartDateTime())
-            .setEndDateTime(request.getEndDateTime())
-            .setCatchDispositionSummary(catchDispositionSummaryBuilder)
-            .build();
-    }
-
-    /**
-     * Summed gross catch, live discards, and dead discards for one gear/species/coordinate.
-     */
-    record Disposition(
-        double grossCatchInKg,
-        double liveDiscardsInKg,
-        double deadDiscardsInKg
+  private static Map<
+    FleetSegment,
+    Map<Species, Map<Coordinate, Disposition>>
+  > extractFishingActionData(
+    final Simulation simulation,
+    final SimulationManager.SimulationProperties simulationProperties,
+    final Timestamp startDateTime,
+    final Timestamp endDateTime
+  ) {
+    final Range<LocalDateTime> dateTimeRange = Range.closed(
+      toLocalDateTime(startDateTime),
+      toLocalDateTime(endDateTime)
+    );
+    final FleetSegmentMapper fleetSegmentMapper = simulation.getComponent(
+      FleetSegmentMapper.class
+    );
+    record Row(
+      FleetSegment fleetSegment,
+      Species species,
+      Coordinate coordinate,
+      Disposition disposition
     ) {}
+    return simulation
+      .getComponent(FishingEventAccumulator.class)
+      .getEvents()
+      .filter(fishingEvent ->
+        dateTimeRange.contains(fishingEvent.getEndDateTime())
+      )
+      // only report vessels covered by a contract fleet segment
+      .flatMap(fishingEvent ->
+        simulationProperties
+          .findContractFleetSegment(
+            fleetSegmentMapper.apply(fishingEvent.getAction().getAgent())
+          )
+          .stream()
+          .flatMap(fleetSegment ->
+            fishingEvent
+              .getOutcome()
+              .getGrossCatch()
+              .getMap()
+              .entrySet()
+              .stream()
+              // only report species in contract
+              .filter(entry ->
+                simulationProperties
+                  .getSpeciesKeys()
+                  .contains(SpeciesKey.from(entry.getKey()))
+              )
+              .map(entry ->
+                new Row(
+                  fleetSegment,
+                  entry.getKey(),
+                  fishingEvent.getAction().getEndCoordinate(),
+                  new Disposition(
+                    entry.getValue().asBiomass().asKg(),
+                    fishingEvent
+                      .getOutcome()
+                      .getDisposition()
+                      .getDiscardedAlive()
+                      .getContent(entry.getKey())
+                      .map(c -> c.asBiomass().asKg())
+                      .orElse(0.0),
+                    fishingEvent
+                      .getOutcome()
+                      .getDisposition()
+                      .getDiscardedDead()
+                      .getContent(entry.getKey())
+                      .map(c -> c.asBiomass().asKg())
+                      .orElse(0.0)
+                  )
+                )
+              )
+          )
+      )
+      .collect(
+        groupingBy(
+          Row::fleetSegment,
+          groupingBy(
+            Row::species,
+            groupingBy(
+              Row::coordinate,
+              collectingAndThen(toList(), rows -> {
+                final List<Disposition> dispositions = rows
+                  .stream()
+                  .map(Row::disposition)
+                  .toList();
+                return new Disposition(
+                  dispositions
+                    .stream()
+                    .mapToDouble(Disposition::grossCatchInKg)
+                    .sum(),
+                  dispositions
+                    .stream()
+                    .mapToDouble(Disposition::liveDiscardsInKg)
+                    .sum(),
+                  dispositions
+                    .stream()
+                    .mapToDouble(Disposition::deadDiscardsInKg)
+                    .sum()
+                );
+              })
+            )
+          )
+        )
+      );
+  }
 
+  @Override
+  protected String getSimulationId(final GetCatchDispositionRequest request) {
+    return request.getSimulationId();
+  }
+
+  @Override
+  protected GetCatchDispositionResponse getResponseWithSimulation(
+    final GetCatchDispositionRequest request,
+    final Simulation simulation,
+    final SimulationManager.SimulationProperties simulationProperties
+  ) {
+    log(INFO, simulation, "Catch disposition requested");
+    checkArgument(request.hasStartDateTime(), "Start date time is required.");
+    checkArgument(request.hasEndDateTime(), "End date time is required.");
+    final CatchDispositionSummary.Builder catchDispositionSummaryBuilder =
+      CatchDispositionSummary.newBuilder();
+    extractFishingActionData(
+      simulation,
+      simulationProperties,
+      request.getStartDateTime(),
+      request.getEndDateTime()
+    ).forEach((fleetSegment, speciesData) -> {
+      speciesData.forEach((species, coordinateData) -> {
+        final DispositionGrid.Builder dispositionGridsBuilder =
+          catchDispositionSummaryBuilder
+            .addDispositionGridsBuilder()
+            .setFleetSegment(toProtoFleetSegment(fleetSegment))
+            .setSpecies(toProtoSpecies(species));
+        coordinateData.forEach((coordinate, disposition) ->
+          dispositionGridsBuilder
+            .addDispositionCellsBuilder()
+            .setLongitude(coordinate.lon)
+            .setLatitude(coordinate.lat)
+            .setGrossCatch(
+              simulationProperties.convertKgToStandardMassUnit(
+                disposition.grossCatchInKg
+              )
+            )
+            .setLiveDiscards(
+              simulationProperties.convertKgToStandardMassUnit(
+                disposition.liveDiscardsInKg
+              )
+            )
+            .setDeadDiscards(
+              simulationProperties.convertKgToStandardMassUnit(
+                disposition.deadDiscardsInKg
+              )
+            )
+        );
+      });
+    });
+    return GetCatchDispositionResponse.newBuilder()
+      .setSimulationId(request.getSimulationId())
+      .setStartDateTime(request.getStartDateTime())
+      .setEndDateTime(request.getEndDateTime())
+      .setCatchDispositionSummary(catchDispositionSummaryBuilder)
+      .build();
+  }
+
+  /**
+   * Summed gross catch, live discards, and dead discards for one gear/species/coordinate.
+   */
+  record Disposition(
+    double grossCatchInKg,
+    double liveDiscardsInKg,
+    double deadDiscardsInKg
+  ) {}
 }

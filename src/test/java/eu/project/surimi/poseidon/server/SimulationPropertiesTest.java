@@ -22,36 +22,39 @@
 
 package eu.project.surimi.poseidon.server;
 
-import org.junit.jupiter.api.Test;
-
-import java.time.Period;
-import java.util.Set;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static uk.ac.ox.poseidon.core.utils.Measurements.parseMassUnit;
 
+import java.time.Period;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+
 class SimulationPropertiesTest {
 
-    private static final SimulationManager.SimulationProperties GRAM_PROPERTIES =
-        new SimulationManager.SimulationProperties(
-            Period.ofMonths(1),
-            parseMassUnit("g"),
-            Set.of(),
-            Set.of(),
-            Set.of(),
-            Set.of()
-        );
+  private static final SimulationManager.SimulationProperties GRAM_PROPERTIES =
+    new SimulationManager.SimulationProperties(
+      Period.ofMonths(1),
+      parseMassUnit("g"),
+      Set.of(),
+      Set.of(),
+      Set.of(),
+      Set.of()
+    );
 
-    @Test
-    void convertsKgToStandardMassUnit() {
-        assertThat(GRAM_PROPERTIES.convertKgToStandardMassUnit(2.5))
-            .isCloseTo(2500.0, within(1e-9));
-    }
+  @Test
+  void convertsKgToStandardMassUnit() {
+    assertThat(GRAM_PROPERTIES.convertKgToStandardMassUnit(2.5)).isCloseTo(
+      2500.0,
+      within(1e-9)
+    );
+  }
 
-    @Test
-    void convertsMassInStandardUnitToKg() {
-        assertThat(GRAM_PROPERTIES.convertMassInStandardUnitToKg(2500.0))
-            .isCloseTo(2.5, within(1e-9));
-    }
+  @Test
+  void convertsMassInStandardUnitToKg() {
+    assertThat(GRAM_PROPERTIES.convertMassInStandardUnitToKg(2500.0)).isCloseTo(
+      2.5,
+      within(1e-9)
+    );
+  }
 }

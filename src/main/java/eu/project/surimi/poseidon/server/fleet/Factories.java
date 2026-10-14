@@ -32,23 +32,25 @@ import uk.ac.ox.poseidon.core.scopes.Scope;
  */
 public class Factories {
 
-    private Factories() {
-    }
+  private Factories() {}
 
-    /**
-     * @return a {@link FleetSegmentMapperFactory} using the given tags and length classifier.
-     */
-    public static <S extends Scope> FleetSegmentMapperFactory<S> fleetSegmentMapper(
-        final String countryCodeTag,
-        final String vesselLengthTag,
-        final Factory<? super S, ? extends NumericIntervalMapper<String>> vesselLengthClassMapper,
-        final String scale
-    ) {
-        return new FleetSegmentMapperFactory<>(
-            countryCodeTag,
-            vesselLengthTag,
-            vesselLengthClassMapper,
-            scale
-        );
-    }
+  /**
+   * @return a {@link FleetSegmentMapperFactory} using the given tags and length classifier.
+   */
+  public static <S extends Scope> FleetSegmentMapperFactory<S> fleetSegmentMapper(
+    final String countryCodeTag,
+    final String vesselLengthTag,
+    final Factory<
+      ? super S,
+      ? extends NumericIntervalMapper<String>
+    > vesselLengthClassMapper,
+    final String scale
+  ) {
+    return new FleetSegmentMapperFactory<>(
+      countryCodeTag,
+      vesselLengthTag,
+      vesselLengthClassMapper,
+      scale
+    );
+  }
 }

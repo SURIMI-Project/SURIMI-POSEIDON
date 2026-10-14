@@ -25,13 +25,12 @@ package eu.project.surimi.poseidon.regulations;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Comparator;
+import java.util.function.Predicate;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.regulations.predicates.temporal.BetweenDates;
-
-import java.util.Comparator;
-import java.util.function.Predicate;
 
 /**
  * Forbids a fishing action at a port/gear whose closure windows cover the action's date. A
@@ -48,47 +47,55 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public class PortClosurePredicate implements Predicate<ExtendedFishingAction> {
 
-    private final @NonNull ImmutableMap<String, ImmutableMap<String, ImmutableSet<PortClosureWindow>>> portClosures;
+  private final @NonNull ImmutableMap<
+    String,
+    ImmutableMap<String, ImmutableSet<PortClosureWindow>>
+  > portClosures;
 
-    @Override
-    @SuppressFBWarnings(
-        value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
-        justification = "SpotBugs flags action.getGear().getCode() and the getOrDefault result " +
-            "as possibly null, but ExtendedFishingAction.gear is @NonNull and always set, and " +
-            "Guava's getOrDefault never returns null when given a non-null default."
-    )
-    public boolean test(final ExtendedFishingAction action) {
-        final var homePort = action.getAgent().getHomePort();
-        if (homePort == null) {
-            return false;
-        }
-
-        final ImmutableMap<String, ImmutableSet<PortClosureWindow>> portWindows =
-            portClosures.getOrDefault(homePort.getCode(), ImmutableMap.of());
-        final ImmutableSet<PortClosureWindow> windows =
-            portWindows.getOrDefault(action.getGear().getCode(), ImmutableSet.of());
-
-        if (windows.stream().anyMatch(window -> betweenDates(window).test(action))) {
-            return true;
-        }
-
-        final var actionYear = action.getStartDateTime().getYear();
-        return windows
-            .stream()
-            .filter(window -> actionYear > window.endDate().getYear())
-            .max(Comparator.comparing(PortClosureWindow::endDate))
-            .map(latest -> {
-                final var yearsAhead = actionYear - latest.endDate().getYear();
-                return betweenDates(new PortClosureWindow(
-                    latest.startDate().plusYears(yearsAhead),
-                    latest.endDate().plusYears(yearsAhead)
-                )).test(action);
-            })
-            .orElse(false);
+  @Override
+  @SuppressFBWarnings(
+    value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+    justification = "SpotBugs flags action.getGear().getCode() and the getOrDefault result " +
+      "as possibly null, but ExtendedFishingAction.gear is @NonNull and always set, and " +
+      "Guava's getOrDefault never returns null when given a non-null default."
+  )
+  public boolean test(final ExtendedFishingAction action) {
+    final var homePort = action.getAgent().getHomePort();
+    if (homePort == null) {
+      return false;
     }
 
-    private static BetweenDates betweenDates(final PortClosureWindow window) {
-        return new BetweenDates(window.startDate(), window.endDate());
+    final ImmutableMap<String, ImmutableSet<PortClosureWindow>> portWindows =
+      portClosures.getOrDefault(homePort.getCode(), ImmutableMap.of());
+    final ImmutableSet<PortClosureWindow> windows = portWindows.getOrDefault(
+      action.getGear().getCode(),
+      ImmutableSet.of()
+    );
+
+    if (
+      windows.stream().anyMatch(window -> betweenDates(window).test(action))
+    ) {
+      return true;
     }
 
+    final var actionYear = action.getStartDateTime().getYear();
+    return windows
+      .stream()
+      .filter(window -> actionYear > window.endDate().getYear())
+      .max(Comparator.comparing(PortClosureWindow::endDate))
+      .map(latest -> {
+        final var yearsAhead = actionYear - latest.endDate().getYear();
+        return betweenDates(
+          new PortClosureWindow(
+            latest.startDate().plusYears(yearsAhead),
+            latest.endDate().plusYears(yearsAhead)
+          )
+        ).test(action);
+      })
+      .orElse(false);
+  }
+
+  private static BetweenDates betweenDates(final PortClosureWindow window) {
+    return new BetweenDates(window.startDate(), window.endDate());
+  }
 }

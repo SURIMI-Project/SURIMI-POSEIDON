@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.regulations;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
+import java.time.Month;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.scopes.Scope;
@@ -32,99 +33,125 @@ import uk.ac.ox.poseidon.core.scopes.SimulationScope;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
-import java.time.Month;
-
 /**
  * Static entry points for building this package's regulation factories, mirroring the YAML
  * factory-method convention used throughout POSEIDON scenarios.
  */
 public class Factories {
 
-    private Factories() {
-    }
+  private Factories() {}
 
-    /**
-     * @return a {@link TotalAllowableCatchQuotasFactory} with a default fleet segment mapper.
-     */
-    public static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotas() {
-        return new TotalAllowableCatchQuotasFactory();
-    }
+  /**
+   * @return a {@link TotalAllowableCatchQuotasFactory} with a default fleet segment mapper.
+   */
+  public static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotas() {
+    return new TotalAllowableCatchQuotasFactory();
+  }
 
-    /**
-     * @return a {@link TotalAllowableCatchQuotasFactory} using the given fleet segment mapper.
-     */
-    public static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotas(
-        final Factory<? super SimulationScope, ? extends FleetSegmentMapper> fleetSegmentMapper
-    ) {
-        return new TotalAllowableCatchQuotasFactory(fleetSegmentMapper);
-    }
+  /**
+   * @return a {@link TotalAllowableCatchQuotasFactory} using the given fleet segment mapper.
+   */
+  public static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotas(
+    final Factory<
+      ? super SimulationScope,
+      ? extends FleetSegmentMapper
+    > fleetSegmentMapper
+  ) {
+    return new TotalAllowableCatchQuotasFactory(fleetSegmentMapper);
+  }
 
-    /**
-     * @return a {@link MpaClosedMonthsFromTableFactory} reading the given table columns.
-     */
-    public static <S extends Scope> MpaClosedMonthsFromTableFactory<S> mpaClosedMonths(
-        final Factory<? super S, Table> table,
-        final String mpaIdColumnName,
-        final String monthColumnName,
-        final String closedColumnName
-    ) {
-        return new MpaClosedMonthsFromTableFactory<>(
-            table, mpaIdColumnName, monthColumnName, closedColumnName
-        );
-    }
+  /**
+   * @return a {@link MpaClosedMonthsFromTableFactory} reading the given table columns.
+   */
+  public static <S extends Scope> MpaClosedMonthsFromTableFactory<S> mpaClosedMonths(
+    final Factory<? super S, Table> table,
+    final String mpaIdColumnName,
+    final String monthColumnName,
+    final String closedColumnName
+  ) {
+    return new MpaClosedMonthsFromTableFactory<>(
+      table,
+      mpaIdColumnName,
+      monthColumnName,
+      closedColumnName
+    );
+  }
 
-    /**
-     * @return a {@link MpaFleetRestrictionsFromTableFactory} reading the given table columns.
-     */
-    public static <S extends Scope> MpaFleetRestrictionsFromTableFactory<S> mpaFleetRestrictions(
-        final Factory<? super S, Table> table,
-        final String mpaIdColumnName,
-        final String gearCodeColumnName,
-        final String countryCodeColumnName
-    ) {
-        return new MpaFleetRestrictionsFromTableFactory<>(
-            table, mpaIdColumnName, gearCodeColumnName, countryCodeColumnName
-        );
-    }
+  /**
+   * @return a {@link MpaFleetRestrictionsFromTableFactory} reading the given table columns.
+   */
+  public static <S extends Scope> MpaFleetRestrictionsFromTableFactory<S> mpaFleetRestrictions(
+    final Factory<? super S, Table> table,
+    final String mpaIdColumnName,
+    final String gearCodeColumnName,
+    final String countryCodeColumnName
+  ) {
+    return new MpaFleetRestrictionsFromTableFactory<>(
+      table,
+      mpaIdColumnName,
+      gearCodeColumnName,
+      countryCodeColumnName
+    );
+  }
 
-    /**
-     * @return a {@link MpaClosurePredicateFactory} combining MPA grids, closed months, and fleet
-     * restrictions into a single fishing-action predicate.
-     */
-    public static <S extends Scope> MpaClosurePredicateFactory<S> mpaClosurePredicate(
-        final Factory<? super S, ? extends ModelGrid> modelGrid,
-        final Factory<? super S, ImmutableMap<String, DoubleGridWrapper>> mpaGrids,
-        final Factory<? super S, ImmutableMap<String, ImmutableSet<Month>>> mpaClosedMonths,
-        final Factory<? super S, ImmutableMap<String, ImmutableSet<GearCountry>>> mpaFleetRestrictions,
-        final String countryTag
-    ) {
-        return new MpaClosurePredicateFactory<>(
-            modelGrid, mpaGrids, mpaClosedMonths, mpaFleetRestrictions, countryTag
-        );
-    }
+  /**
+   * @return a {@link MpaClosurePredicateFactory} combining MPA grids, closed months, and fleet
+   * restrictions into a single fishing-action predicate.
+   */
+  public static <S extends Scope> MpaClosurePredicateFactory<S> mpaClosurePredicate(
+    final Factory<? super S, ? extends ModelGrid> modelGrid,
+    final Factory<? super S, ImmutableMap<String, DoubleGridWrapper>> mpaGrids,
+    final Factory<
+      ? super S,
+      ImmutableMap<String, ImmutableSet<Month>>
+    > mpaClosedMonths,
+    final Factory<
+      ? super S,
+      ImmutableMap<String, ImmutableSet<GearCountry>>
+    > mpaFleetRestrictions,
+    final String countryTag
+  ) {
+    return new MpaClosurePredicateFactory<>(
+      modelGrid,
+      mpaGrids,
+      mpaClosedMonths,
+      mpaFleetRestrictions,
+      countryTag
+    );
+  }
 
-    /**
-     * @return a {@link PortClosuresFromTableFactory} reading the given table columns.
-     */
-    public static <S extends Scope> PortClosuresFromTableFactory<S> portClosures(
-        final Factory<? super S, Table> table,
-        final String portCodeColumnName,
-        final String gearCodeColumnName,
-        final String startDateColumnName,
-        final String endDateColumnName
-    ) {
-        return new PortClosuresFromTableFactory<>(
-            table, portCodeColumnName, gearCodeColumnName, startDateColumnName, endDateColumnName
-        );
-    }
+  /**
+   * @return a {@link PortClosuresFromTableFactory} reading the given table columns.
+   */
+  public static <S extends Scope> PortClosuresFromTableFactory<S> portClosures(
+    final Factory<? super S, Table> table,
+    final String portCodeColumnName,
+    final String gearCodeColumnName,
+    final String startDateColumnName,
+    final String endDateColumnName
+  ) {
+    return new PortClosuresFromTableFactory<>(
+      table,
+      portCodeColumnName,
+      gearCodeColumnName,
+      startDateColumnName,
+      endDateColumnName
+    );
+  }
 
-    /**
-     * @return a {@link PortClosurePredicateFactory} turning port closure windows into a
-     * fishing-action predicate.
-     */
-    public static <S extends Scope> PortClosurePredicateFactory<S> portClosurePredicate(
-        final Factory<? super S, ImmutableMap<String, ImmutableMap<String, ImmutableSet<PortClosureWindow>>>> portClosures
-    ) {
-        return new PortClosurePredicateFactory<>(portClosures);
-    }
+  /**
+   * @return a {@link PortClosurePredicateFactory} turning port closure windows into a
+   * fishing-action predicate.
+   */
+  public static <S extends Scope> PortClosurePredicateFactory<S> portClosurePredicate(
+    final Factory<
+      ? super S,
+      ImmutableMap<
+        String,
+        ImmutableMap<String, ImmutableSet<PortClosureWindow>>
+      >
+    > portClosures
+  ) {
+    return new PortClosurePredicateFactory<>(portClosures);
+  }
 }

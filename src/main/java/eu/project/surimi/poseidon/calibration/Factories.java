@@ -27,12 +27,13 @@ package eu.project.surimi.poseidon.calibration;
  * YAML factory-method convention used throughout POSEIDON scenarios.
  */
 public class Factories {
-    private Factories() {}
 
-    /**
-     * @return a {@link LandingsAccumulatorFactory}.
-     */
-    public static LandingsAccumulatorFactory landingsAccumulator() {
-        return new LandingsAccumulatorFactory();
-    }
+  private Factories() {}
+
+  /**
+   * @return a {@link LandingsAccumulatorFactory}.
+   */
+  public static LandingsAccumulatorFactory landingsAccumulator() {
+    return new LandingsAccumulatorFactory();
+  }
 }

@@ -26,5 +26,4 @@ package eu.project.surimi.poseidon.regulations;
  * A gear/country pair, used as the key identifying which fleets are restricted from fishing in an
  * MPA.
  */
-public record GearCountry(String gearCode, String countryCode) {
-}
+public record GearCountry(String gearCode, String countryCode) {}

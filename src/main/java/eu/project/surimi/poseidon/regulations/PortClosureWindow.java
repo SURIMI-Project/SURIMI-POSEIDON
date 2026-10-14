@@ -27,5 +27,4 @@ import java.time.LocalDate;
 /**
  * A date range, inclusive of both ends, during which a port/gear pair is closed to fishing.
  */
-public record PortClosureWindow(LocalDate startDate, LocalDate endDate) {
-}
+public record PortClosureWindow(LocalDate startDate, LocalDate endDate) {}

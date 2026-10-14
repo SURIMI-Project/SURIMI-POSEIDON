@@ -22,39 +22,39 @@
 
 package eu.project.surimi.poseidon.regulations;
 
-import org.junit.jupiter.api.Test;
-
-import java.util.Map;
-import java.util.Set;
-
 import static eu.project.surimi.poseidon.regulations.Factories.mpaFleetRestrictions;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.ac.ox.poseidon.core.scopes.Scope.GLOBAL_SCOPE;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
+import java.util.Map;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+
 class MpaFleetRestrictionsFromTableFactoryTest {
 
-    private static final String DATA = """
-        mpa_id,gear_code,country_code
-        mpa_4,OTB,ESP
-        mpa_4,PS,ESP
-        mpa_15,PS,ESP
-        """;
+  private static final String DATA = """
+  mpa_id,gear_code,country_code
+  mpa_4,OTB,ESP
+  mpa_4,PS,ESP
+  mpa_15,PS,ESP
+  """;
 
-    @Test
-    void groupsRestrictedFleetsByMpaAndOmitsMpasWithNoRestrictions() {
-        final Map<String, ?> restrictions =
-            mpaFleetRestrictions(
-                tableFromCsvString(DATA),
-                "mpa_id",
-                "gear_code",
-                "country_code"
-            ).get(GLOBAL_SCOPE);
+  @Test
+  void groupsRestrictedFleetsByMpaAndOmitsMpasWithNoRestrictions() {
+    final Map<String, ?> restrictions = mpaFleetRestrictions(
+      tableFromCsvString(DATA),
+      "mpa_id",
+      "gear_code",
+      "country_code"
+    ).get(GLOBAL_SCOPE);
 
-        assertThat(restrictions).containsOnlyKeys("mpa_4", "mpa_15");
-        assertThat(restrictions.get("mpa_4")).isEqualTo(
-            Set.of(new GearCountry("OTB", "ESP"), new GearCountry("PS", "ESP"))
-        );
-        assertThat(restrictions.get("mpa_15")).isEqualTo(Set.of(new GearCountry("PS", "ESP")));
-    }
+    assertThat(restrictions).containsOnlyKeys("mpa_4", "mpa_15");
+    assertThat(restrictions.get("mpa_4")).isEqualTo(
+      Set.of(new GearCountry("OTB", "ESP"), new GearCountry("PS", "ESP"))
+    );
+    assertThat(restrictions.get("mpa_15")).isEqualTo(
+      Set.of(new GearCountry("PS", "ESP"))
+    );
+  }
 }

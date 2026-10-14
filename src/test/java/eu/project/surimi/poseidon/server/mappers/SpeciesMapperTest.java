@@ -22,49 +22,50 @@
 
 package eu.project.surimi.poseidon.server.mappers;
 
-import org.junit.jupiter.api.Test;
-import uk.ac.ox.poseidon.biology.species.Species;
-
 import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toPoseidonSpecies;
 import static eu.project.surimi.poseidon.server.mappers.SpeciesMapper.toProtoSpecies;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Test;
+import uk.ac.ox.poseidon.biology.species.Species;
+
 class SpeciesMapperTest {
 
-    @Test
-    void toPoseidonSpeciesMapsCodeAndLifeStage() {
-        final build.buf.gen.surimi.v1.Species protoSpecies =
-            build.buf.gen.surimi.v1.Species
-                .newBuilder()
-                .setSpeciesCode("HKE")
-                .setLifeStage("juvenile")
-                .build();
+  @Test
+  void toPoseidonSpeciesMapsCodeAndLifeStage() {
+    final build.buf.gen.surimi.v1.Species protoSpecies =
+      build.buf.gen.surimi.v1.Species.newBuilder()
+        .setSpeciesCode("HKE")
+        .setLifeStage("juvenile")
+        .build();
 
-        final Species poseidonSpecies = toPoseidonSpecies(protoSpecies);
+    final Species poseidonSpecies = toPoseidonSpecies(protoSpecies);
 
-        assertThat(poseidonSpecies.getCode()).isEqualTo("HKE");
-        assertThat(poseidonSpecies.getLifeStage()).isEqualTo("juvenile");
-    }
+    assertThat(poseidonSpecies.getCode()).isEqualTo("HKE");
+    assertThat(poseidonSpecies.getLifeStage()).isEqualTo("juvenile");
+  }
 
-    @Test
-    void toProtoSpeciesMapsCodeAndLifeStage() {
-        final Species poseidonSpecies = new Species("HKE", "juvenile", null);
+  @Test
+  void toProtoSpeciesMapsCodeAndLifeStage() {
+    final Species poseidonSpecies = new Species("HKE", "juvenile", null);
 
-        final build.buf.gen.surimi.v1.Species protoSpecies =
-            toProtoSpecies(poseidonSpecies);
+    final build.buf.gen.surimi.v1.Species protoSpecies = toProtoSpecies(
+      poseidonSpecies
+    );
 
-        assertThat(protoSpecies.getSpeciesCode()).isEqualTo("HKE");
-        assertThat(protoSpecies.getLifeStage()).isEqualTo("juvenile");
-    }
+    assertThat(protoSpecies.getSpeciesCode()).isEqualTo("HKE");
+    assertThat(protoSpecies.getLifeStage()).isEqualTo("juvenile");
+  }
 
-    @Test
-    void toProtoSpeciesOmitsBlankLifeStage() {
-        final Species poseidonSpecies = new Species("HKE", "", null);
+  @Test
+  void toProtoSpeciesOmitsBlankLifeStage() {
+    final Species poseidonSpecies = new Species("HKE", "", null);
 
-        final build.buf.gen.surimi.v1.Species protoSpecies =
-            toProtoSpecies(poseidonSpecies);
+    final build.buf.gen.surimi.v1.Species protoSpecies = toProtoSpecies(
+      poseidonSpecies
+    );
 
-        assertThat(protoSpecies.getSpeciesCode()).isEqualTo("HKE");
-        assertThat(protoSpecies.getLifeStage()).isEmpty();
-    }
+    assertThat(protoSpecies.getSpeciesCode()).isEqualTo("HKE");
+    assertThat(protoSpecies.getLifeStage()).isEmpty();
+  }
 }

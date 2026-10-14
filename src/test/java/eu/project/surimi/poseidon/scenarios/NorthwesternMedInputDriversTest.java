@@ -22,21 +22,20 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
+
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario;
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import uk.ac.ox.poseidon.agents.market.BiomassMarket;
 import uk.ac.ox.poseidon.agents.market.MarketGrid;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-
-import java.time.LocalDate;
-import java.time.Period;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
 
 /**
  * Checks where the Northwestern Mediterranean scenario gets its biomass and prices from: the
@@ -46,46 +45,54 @@ import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
  */
 class NorthwesternMedInputDriversTest {
 
-    private static final LocalDate START_DATE = LocalDate.of(2015, 1, 1);
+  private static final LocalDate START_DATE = LocalDate.of(2015, 1, 1);
 
-    @Test
-    void servedScenarioReadsNoLocalBiomassOrPrices() {
-        final Simulation simulation = runOneMonth(new NorthwesternMedScenario().get());
-        assertThat(totalBiomass(simulation)).isZero();
-        assertThat(markets(simulation)).allMatch(market -> market.getPrices().isEmpty());
-    }
+  @Test
+  void servedScenarioReadsNoLocalBiomassOrPrices() {
+    final Simulation simulation = runOneMonth(
+      new NorthwesternMedScenario().get()
+    );
+    assertThat(totalBiomass(simulation)).isZero();
+    assertThat(markets(simulation)).allMatch(market ->
+      market.getPrices().isEmpty()
+    );
+  }
 
-    @Test
-    void localScenarioReadsBiomassAndPrices() {
-        final Simulation simulation = runOneMonth(new LocalNorthwesternMedScenario().get());
-        assertThat(totalBiomass(simulation)).isPositive();
-        assertThat(markets(simulation)).anyMatch(market -> !market.getPrices().isEmpty());
-    }
+  @Test
+  void localScenarioReadsBiomassAndPrices() {
+    final Simulation simulation = runOneMonth(
+      new LocalNorthwesternMedScenario().get()
+    );
+    assertThat(totalBiomass(simulation)).isPositive();
+    assertThat(markets(simulation)).anyMatch(
+      market -> !market.getPrices().isEmpty()
+    );
+  }
 
-    private static Simulation runOneMonth(final Scenario scenario) {
-        scenario.setStartingDateTime(dateTime(START_DATE.atStartOfDay()));
-        final Simulation simulation = scenario.startNewSimulation();
-        simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
-        simulation.finish();
-        return simulation;
-    }
+  private static Simulation runOneMonth(final Scenario scenario) {
+    scenario.setStartingDateTime(dateTime(START_DATE.atStartOfDay()));
+    final Simulation simulation = scenario.startNewSimulation();
+    simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
+    simulation.finish();
+    return simulation;
+  }
 
-    private static double totalBiomass(final Simulation simulation) {
-        return simulation
-            .getComponents(BiomassGrid.class)
-            .stream()
-            .mapToDouble(BiomassGrid::getSum)
-            .sum();
-    }
+  private static double totalBiomass(final Simulation simulation) {
+    return simulation
+      .getComponents(BiomassGrid.class)
+      .stream()
+      .mapToDouble(BiomassGrid::getSum)
+      .sum();
+  }
 
-    private static List<BiomassMarket> markets(final Simulation simulation) {
-        final List<BiomassMarket> markets = simulation
-            .getComponent(MarketGrid.class)
-            .stream()
-            .filter(BiomassMarket.class::isInstance)
-            .map(BiomassMarket.class::cast)
-            .toList();
-        assertThat(markets).isNotEmpty();
-        return markets;
-    }
+  private static List<BiomassMarket> markets(final Simulation simulation) {
+    final List<BiomassMarket> markets = simulation
+      .getComponent(MarketGrid.class)
+      .stream()
+      .filter(BiomassMarket.class::isInstance)
+      .map(BiomassMarket.class::cast)
+      .toList();
+    assertThat(markets).isNotEmpty();
+    return markets;
+  }
 }

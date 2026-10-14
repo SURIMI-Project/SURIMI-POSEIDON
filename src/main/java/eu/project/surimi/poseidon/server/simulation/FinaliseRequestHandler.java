@@ -22,46 +22,50 @@
 
 package eu.project.surimi.poseidon.server.simulation;
 
+import static java.lang.System.Logger.Level.INFO;
+
 import build.buf.gen.surimi.v1.FinaliseSimulationRequest;
 import build.buf.gen.surimi.v1.FinaliseSimulationResponse;
 import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import uk.ac.ox.poseidon.core.Simulation;
 
-import static java.lang.System.Logger.Level.INFO;
-
 /**
  * Handles {@code FinaliseSimulation}: calls {@link Simulation#finish()} then drops the
  * simulation from the {@link SimulationManager}.
  */
 public class FinaliseRequestHandler
-    extends WithSimulationRequestHandler<FinaliseSimulationRequest, FinaliseSimulationResponse> {
+  extends WithSimulationRequestHandler<
+    FinaliseSimulationRequest,
+    FinaliseSimulationResponse
+  >
+{
 
-    private static final System.Logger logger =
-        System.getLogger(FinaliseRequestHandler.class.getName());
+  private static final System.Logger logger = System.getLogger(
+    FinaliseRequestHandler.class.getName()
+  );
 
-    public FinaliseRequestHandler(final SimulationManager simulationManager) {
-        super(simulationManager);
-    }
+  public FinaliseRequestHandler(final SimulationManager simulationManager) {
+    super(simulationManager);
+  }
 
-    @Override
-    protected String getSimulationId(final FinaliseSimulationRequest request) {
-        return request.getSimulationId();
-    }
+  @Override
+  protected String getSimulationId(final FinaliseSimulationRequest request) {
+    return request.getSimulationId();
+  }
 
-    @Override
-    protected FinaliseSimulationResponse getResponseWithSimulation(
-        final FinaliseSimulationRequest request,
-        final Simulation simulation,
-        final SimulationManager.SimulationProperties simulationProperties
-    ) {
-        logger.log(INFO, "Finalising simulation {0}", request.getSimulationId());
-        simulation.finish();
-        final String simulationId = request.getSimulationId();
-        simulationManager.remove(simulationId);
-        return FinaliseSimulationResponse
-            .newBuilder()
-            .setSimulationId(simulationId)
-            .build();
-    }
+  @Override
+  protected FinaliseSimulationResponse getResponseWithSimulation(
+    final FinaliseSimulationRequest request,
+    final Simulation simulation,
+    final SimulationManager.SimulationProperties simulationProperties
+  ) {
+    logger.log(INFO, "Finalising simulation {0}", request.getSimulationId());
+    simulation.finish();
+    final String simulationId = request.getSimulationId();
+    simulationManager.remove(simulationId);
+    return FinaliseSimulationResponse.newBuilder()
+      .setSimulationId(simulationId)
+      .build();
+  }
 }

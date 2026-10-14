@@ -22,6 +22,12 @@
 
 package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
+import static eu.project.surimi.poseidon.calibration.Factories.landingsAccumulator;
+import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.INPUT_PATH;
+import static java.util.stream.Collectors.summarizingInt;
+import static java.util.stream.Collectors.toMap;
+import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -29,20 +35,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.ImmutableLongArray;
 import eu.project.surimi.poseidon.calibration.LandingsAccumulator;
 import io.jenetics.util.DoubleRange;
+import java.nio.file.Path;
+import java.time.Period;
+import java.util.Map;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.calibration.CalibrationProblem;
 import uk.ac.ox.poseidon.calibration.CalibrationRunner;
 import uk.ac.ox.poseidon.calibration.errors.SumSquaredErrors;
-
-import java.nio.file.Path;
-import java.time.Period;
-import java.util.Map;
-
-import static eu.project.surimi.poseidon.calibration.Factories.landingsAccumulator;
-import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.INPUT_PATH;
-import static java.util.stream.Collectors.summarizingInt;
-import static java.util.stream.Collectors.toMap;
-import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
 
 /**
  * Calibration entry point for {@link LocalNorthwesternMedScenario}: fits each
@@ -57,128 +56,150 @@ import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
  */
 public class NorthwesternMedCalibration {
 
-    private static final double MIN_CATCHABILITY = 0.0;
-    private static final double MAX_CATCHABILITY = 1.0;
+  private static final double MIN_CATCHABILITY = 0.0;
+  private static final double MAX_CATCHABILITY = 1.0;
 
-    private static final long GENERATIONS = 5;
-    private static final int STEADY_GENERATIONS = 5;
-    private static final double MUTATION_PROBABILITY = 0.20;
-    private static final double RECOMBINATION_PROBABILITY = 0.35;
-    private static final ImmutableLongArray SEEDS = ImmutableLongArray.of(1, 2, 3);
+  private static final long GENERATIONS = 5;
+  private static final int STEADY_GENERATIONS = 5;
+  private static final double MUTATION_PROBABILITY = 0.20;
+  private static final double RECOMBINATION_PROBABILITY = 0.35;
+  private static final ImmutableLongArray SEEDS = ImmutableLongArray.of(
+    1,
+    2,
+    3
+  );
 
-    @Parameter(
-        names = "--population",
-        description = "Individuals per generation, at least 2."
-    )
-    private int populationSize = 10;
+  @Parameter(
+    names = "--population",
+    description = "Individuals per generation, at least 2."
+  )
+  private int populationSize = 10;
 
-    /**
-     * Parses {@code args}, runs the calibration and prints the best parameters, fitness, and
-     * generation count found.
-     */
-    static void main(final String[] args) {
-        final NorthwesternMedCalibration calibration = new NorthwesternMedCalibration();
-        final JCommander jCommander = JCommander.newBuilder().addObject(calibration).build();
-        try {
-            jCommander.parse(args);
-            if (calibration.populationSize < 2) {
-                throw new ParameterException(
-                    "--population must be at least 2 but was " + calibration.populationSize
+  /**
+   * Parses {@code args}, runs the calibration and prints the best parameters, fitness, and
+   * generation count found.
+   */
+  static void main(final String[] args) {
+    final NorthwesternMedCalibration calibration =
+      new NorthwesternMedCalibration();
+    final JCommander jCommander = JCommander.newBuilder()
+      .addObject(calibration)
+      .build();
+    try {
+      jCommander.parse(args);
+      if (calibration.populationSize < 2) {
+        throw new ParameterException(
+          "--population must be at least 2 but was " +
+            calibration.populationSize
+        );
+      }
+    } catch (final ParameterException e) {
+      System.err.println(e.getMessage());
+      jCommander.usage();
+      return;
+    }
+    calibration.run();
+  }
+
+  private void run() {
+    final var targetLandings = readTargetLandings(
+      INPUT_PATH.resolve("target_landings.csv")
+    );
+
+    final var yearsSummary = targetLandings
+      .keySet()
+      .stream()
+      .collect(summarizingInt(LandingsAccumulator.Key::year));
+
+    final DoubleRange catchabilityRange = new DoubleRange(
+      MIN_CATCHABILITY,
+      MAX_CATCHABILITY
+    );
+    final ImmutableMap<String, DoubleRange> catchabilityParameterRanges =
+      ImmutableMap.copyOf(
+        Table.read()
+          .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
+          .stream()
+          .collect(
+            toMap(
+              row -> {
+                final String component = switch (row.getString("gear_code")) {
+                  case "PS" -> "purseSeinerCatchabilities";
+                  case "OTB" -> "bottomTrawlerCatchabilities";
+                  default -> throw new IllegalArgumentException(
+                    "Unsupported gear: " + row.getString("gear")
+                  );
+                };
+                return (
+                  "components(" +
+                  component +
+                  ").delegate.value(" +
+                  multiStringKey(
+                    row.getString("species_code"),
+                    row.getString("life_stage")
+                  ) +
+                  ")"
                 );
-            }
-        } catch (final ParameterException e) {
-            System.err.println(e.getMessage());
-            jCommander.usage();
-            return;
-        }
-        calibration.run();
-    }
+              },
+              _ -> catchabilityRange,
+              (a, _) -> a
+            )
+          )
+      );
 
-    private void run() {
+    final CalibrationProblem problem = new CalibrationProblem(
+      new LocalNorthwesternMedScenario().get(),
+      Period.ofYears(yearsSummary.getMax() - yearsSummary.getMin() + 1),
+      ImmutableMap.of("landingsAccumulator", landingsAccumulator()),
+      catchabilityParameterRanges,
+      new SumSquaredErrors<>(targetLandings, sim ->
+        sim.getComponent(LandingsAccumulator.class).get()
+      ),
+      SEEDS
+    );
 
-        final var targetLandings =
-            readTargetLandings(INPUT_PATH.resolve("target_landings.csv"));
+    final CalibrationRunner.Result result = CalibrationRunner.minimize(
+      problem,
+      new CalibrationRunner.Options(
+        populationSize,
+        GENERATIONS,
+        MUTATION_PROBABILITY,
+        RECOMBINATION_PROBABILITY,
+        STEADY_GENERATIONS,
+        1,
+        -1.0,
+        2.0
+      )
+    );
 
-        final var yearsSummary = targetLandings
-            .keySet()
-            .stream()
-            .collect(summarizingInt(LandingsAccumulator.Key::year));
+    System.out.println("Best parameters: " + result.parameters());
+    System.out.println("Best fitness: " + result.fitness());
+    System.out.println("Generations: " + result.generations());
+  }
 
-        final DoubleRange catchabilityRange = new DoubleRange(MIN_CATCHABILITY, MAX_CATCHABILITY);
-        final ImmutableMap<String, DoubleRange> catchabilityParameterRanges =
-            ImmutableMap.copyOf(Table
-                .read()
-                .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
-                .stream()
-                .collect(toMap(
-                    row -> {
-                        final String component = switch (row.getString("gear_code")) {
-                            case "PS" -> "purseSeinerCatchabilities";
-                            case "OTB" -> "bottomTrawlerCatchabilities";
-                            default -> throw new IllegalArgumentException("Unsupported gear: " +
-                                row.getString("gear"));
-                        };
-                        return "components(" + component + ").delegate.value(" + multiStringKey(
-                            row.getString("species_code"),
-                            row.getString("life_stage")
-                        ) + ")";
-                    },
-                    _ -> catchabilityRange,
-                    (a, _) -> a
-                )));
-
-        final CalibrationProblem problem =
-            new CalibrationProblem(
-                new LocalNorthwesternMedScenario().get(),
-                Period.ofYears(yearsSummary.getMax() - yearsSummary.getMin() + 1),
-                ImmutableMap.of("landingsAccumulator", landingsAccumulator()),
-                catchabilityParameterRanges,
-                new SumSquaredErrors<>(
-                    targetLandings,
-                    sim -> sim.getComponent(LandingsAccumulator.class).get()
-                ),
-                SEEDS
-            );
-
-        final CalibrationRunner.Result result =
-            CalibrationRunner.minimize(
-                problem,
-                new CalibrationRunner.Options(
-                    populationSize,
-                    GENERATIONS,
-                    MUTATION_PROBABILITY,
-                    RECOMBINATION_PROBABILITY,
-                    STEADY_GENERATIONS,
-                    1,
-                    -1.0,
-                    2.0
-                )
-            );
-
-        System.out.println("Best parameters: " + result.parameters());
-        System.out.println("Best fitness: " + result.fitness());
-        System.out.println("Generations: " + result.generations());
-
-    }
-
-    /**
-     * @return real-world landings targets read from a CSV with columns {@code year},
-     * {@code gear_code}, {@code species_code}, {@code life_stage}, {@code landings_kg}.
-     */
-    private static Map<LandingsAccumulator.Key, Double> readTargetLandings(final Path path) {
-        return Table.read().csv(path.toFile())
-            .stream()
-            .collect(toMap(
-                row -> new LandingsAccumulator.Key(
-                    row.getInt("year"),
-                    row.getString("gear_code"),
-                    multiStringKey(
-                        row.getString("species_code"),
-                        row.getString("life_stage")
-                    )
-                ),
-                row -> row.getDouble("landings_kg")
-            ));
-    }
-
+  /**
+   * @return real-world landings targets read from a CSV with columns {@code year},
+   * {@code gear_code}, {@code species_code}, {@code life_stage}, {@code landings_kg}.
+   */
+  private static Map<LandingsAccumulator.Key, Double> readTargetLandings(
+    final Path path
+  ) {
+    return Table.read()
+      .csv(path.toFile())
+      .stream()
+      .collect(
+        toMap(
+          row ->
+            new LandingsAccumulator.Key(
+              row.getInt("year"),
+              row.getString("gear_code"),
+              multiStringKey(
+                row.getString("species_code"),
+                row.getString("life_stage")
+              )
+            ),
+          row -> row.getDouble("landings_kg")
+        )
+      );
+  }
 }

@@ -22,68 +22,73 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import build.buf.gen.surimi.v1.FinaliseSimulationRequest;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario;
 import eu.project.surimi.poseidon.server.ServiceTest;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
-import org.junit.jupiter.api.Test;
-
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.stream.IntStream;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import org.junit.jupiter.api.Test;
 
 class NorthwesternMedScenarioTest extends ServiceTest {
 
-    public NorthwesternMedScenarioTest() {
-        super(NorthwesternMedScenario.class);
-    }
+  public NorthwesternMedScenarioTest() {
+    super(NorthwesternMedScenario.class);
+  }
 
-    @Test
-    void exposesFleetSegmentMapperComponent() {
-        final String simulationId = initialiseSimulation();
-        assertDoesNotThrow(() ->
-            simulationManager.getSimulation(simulationId).getComponent(FleetSegmentMapper.class)
-        );
-    }
+  @Test
+  void exposesFleetSegmentMapperComponent() {
+    final String simulationId = initialiseSimulation();
+    assertDoesNotThrow(() ->
+      simulationManager
+        .getSimulation(simulationId)
+        .getComponent(FleetSegmentMapper.class)
+    );
+  }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Test
-    void canRunForAYear() {
-        final int numYears = 1;
-        final String simulationId = initialiseSimulation();
-        LocalDateTime currentDateTime = START_DATE_TIME;
-        final Period stepSize = Period.parse(STEP_SIZE);
-        for (int i = 0; i < numYears * 12; i++) {
+  @SuppressWarnings("ResultOfMethodCallIgnored")
+  @Test
+  void canRunForAYear() {
+    final int numYears = 1;
+    final String simulationId = initialiseSimulation();
+    LocalDateTime currentDateTime = START_DATE_TIME;
+    final Period stepSize = Period.parse(STEP_SIZE);
+    for (int i = 0; i < numYears * 12; i++) {
+      step(simulationId, currentDateTime);
+      currentDateTime = currentDateTime.plus(stepSize);
+    }
+    simulationStub.finaliseSimulation(
+      FinaliseSimulationRequest.newBuilder()
+        .setSimulationId(simulationId)
+        .build()
+    );
+  }
+
+  @Test
+  void canRunSimulationsInParallel() {
+    final Period stepSize = Period.parse(STEP_SIZE);
+    final int numSteps = 12;
+    final int numSimulations = 5;
+    IntStream.range(0, numSimulations)
+      .parallel()
+      .mapToObj(i -> initialiseSimulation())
+      .forEach(simulationId -> {
+        try {
+          LocalDateTime currentDateTime = START_DATE_TIME;
+          for (int j = 0; j < numSteps; j++) {
             step(simulationId, currentDateTime);
             currentDateTime = currentDateTime.plus(stepSize);
+          }
+        } finally {
+          simulationStub.finaliseSimulation(
+            FinaliseSimulationRequest.newBuilder()
+              .setSimulationId(simulationId)
+              .build()
+          );
         }
-        simulationStub.finaliseSimulation(
-            FinaliseSimulationRequest.newBuilder().setSimulationId(simulationId).build()
-        );
-    }
-
-    @Test
-    void canRunSimulationsInParallel() {
-        final Period stepSize = Period.parse(STEP_SIZE);
-        final int numSteps = 12;
-        final int numSimulations = 5;
-        IntStream.range(0, numSimulations)
-            .parallel()
-            .mapToObj(i -> initialiseSimulation())
-            .forEach(simulationId -> {
-                try {
-                    LocalDateTime currentDateTime = START_DATE_TIME;
-                    for (int j = 0; j < numSteps; j++) {
-                        step(simulationId, currentDateTime);
-                        currentDateTime = currentDateTime.plus(stepSize);
-                    }
-                } finally {
-                    simulationStub.finaliseSimulation(
-                        FinaliseSimulationRequest.newBuilder().setSimulationId(simulationId).build()
-                    );
-                }
-            });
-    }
+      });
+  }
 }

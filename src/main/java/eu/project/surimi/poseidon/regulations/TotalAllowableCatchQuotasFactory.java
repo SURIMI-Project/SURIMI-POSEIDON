@@ -22,6 +22,8 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,8 +33,6 @@ import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.SimulationScopeFactory;
 import uk.ac.ox.poseidon.core.scopes.SimulationScope;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Factory for {@link TotalAllowableCatchQuotas} in simulation scope.
@@ -45,17 +45,25 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class TotalAllowableCatchQuotasFactory
-    extends SimulationScopeFactory<TotalAllowableCatchQuotas> {
+  extends SimulationScopeFactory<TotalAllowableCatchQuotas>
+{
 
-    private Factory<? super SimulationScope, ? extends FleetSegmentMapper> fleetSegmentMapper;
+  private Factory<
+    ? super SimulationScope,
+    ? extends FleetSegmentMapper
+  > fleetSegmentMapper;
 
-    @Override
-    protected TotalAllowableCatchQuotas newInstance(final SimulationScope scope) {
-        final FishingEventAccumulator fishingEventAccumulator = new FishingEventAccumulator();
-        scope.getSimulation().getEventManager().addListener(fishingEventAccumulator);
-        return new TotalAllowableCatchQuotas(
-            fishingEventAccumulator,
-            checkNotNull(fleetSegmentMapper).get(scope)
-        );
-    }
+  @Override
+  protected TotalAllowableCatchQuotas newInstance(final SimulationScope scope) {
+    final FishingEventAccumulator fishingEventAccumulator =
+      new FishingEventAccumulator();
+    scope
+      .getSimulation()
+      .getEventManager()
+      .addListener(fishingEventAccumulator);
+    return new TotalAllowableCatchQuotas(
+      fishingEventAccumulator,
+      checkNotNull(fleetSegmentMapper).get(scope)
+    );
+  }
 }

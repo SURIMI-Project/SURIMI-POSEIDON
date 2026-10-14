@@ -22,10 +22,6 @@
 
 package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
-import uk.ac.ox.poseidon.core.Scenario;
-
-import java.util.function.Supplier;
-
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.INPUT_PATH;
 import static uk.ac.ox.poseidon.agents.market.Factories.priceUpdatesFromTable;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.timeIndexedBiomassGridUpdates;
@@ -33,6 +29,9 @@ import static uk.ac.ox.poseidon.biology.biomass.Factories.timeIndexedBiomassGrid
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledByDateTime;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvFile;
+
+import java.util.function.Supplier;
+import uk.ac.ox.poseidon.core.Scenario;
 
 /**
  * The Northwestern Mediterranean scenario run on its own, outside SURIMI: the
@@ -46,46 +45,45 @@ import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvFile;
  */
 public class LocalNorthwesternMedScenario implements Supplier<Scenario> {
 
-    /**
-     * @return a freshly built {@link NorthwesternMedScenario} with the local drivers added.
-     */
-    @Override
-    public Scenario get() {
-        final Scenario base = new NorthwesternMedScenario().get();
-        final var inputPath = path(INPUT_PATH);
-        return base
-            .toBuilder()
-            .component(
-                "biomassUpdates",
-                scheduledByDateTime(
-                    timeIndexedBiomassGridUpdates(
-                        base.component("fisheableBiomassGrids"),
-                        timeIndexedBiomassGridsFromNetCdf(
-                            base.component("modelGrid"),
-                            base.component("species"),
-                            inputPath.plus("biomass_grids.nc")
-                        )
-                    )
-                )
+  /**
+   * @return a freshly built {@link NorthwesternMedScenario} with the local drivers added.
+   */
+  @Override
+  public Scenario get() {
+    final Scenario base = new NorthwesternMedScenario().get();
+    final var inputPath = path(INPUT_PATH);
+    return base
+      .toBuilder()
+      .component(
+        "biomassUpdates",
+        scheduledByDateTime(
+          timeIndexedBiomassGridUpdates(
+            base.component("fisheableBiomassGrids"),
+            timeIndexedBiomassGridsFromNetCdf(
+              base.component("modelGrid"),
+              base.component("species"),
+              inputPath.plus("biomass_grids.nc")
             )
-            .component(
-                "priceUpdates",
-                scheduledByDateTime(
-                    priceUpdatesFromTable(
-                        tableFromCsvFile(inputPath.plus("prices.csv")),
-                        "date",
-                        "market_code",
-                        "species_code",
-                        "category_code",
-                        "price",
-                        "currency",
-                        "measurement_unit",
-                        base.component("marketGrid"),
-                        base.component("species")
-                    )
-                )
-            )
-            .build();
-    }
-
+          )
+        )
+      )
+      .component(
+        "priceUpdates",
+        scheduledByDateTime(
+          priceUpdatesFromTable(
+            tableFromCsvFile(inputPath.plus("prices.csv")),
+            "date",
+            "market_code",
+            "species_code",
+            "category_code",
+            "price",
+            "currency",
+            "measurement_unit",
+            base.component("marketGrid"),
+            base.component("species")
+          )
+        )
+      )
+      .build();
+  }
 }
