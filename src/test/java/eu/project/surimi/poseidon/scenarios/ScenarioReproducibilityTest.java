@@ -29,16 +29,20 @@ import eu.project.surimi.poseidon.calibration.LandingsAccumulator;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
 import java.time.Period;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.SimulationStartOptions;
+import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 /**
  * Runs with the same seed must give the same results, whatever ran before
- * them in the JVM. Each run hands out identity hash codes, so a result that
+ * them in the JVM or alongside them, and must leave the scenario as they found
+ * it. Each run hands out identity hash codes, so a result that
  * depended on them (iterating a HashMap keyed by vessels, say) would differ
  * between the runs below.
  */
@@ -55,6 +59,53 @@ class ScenarioReproducibilityTest {
   @Test
   void minimalGivesSameLandingsWithSameSeed() {
     assertSameLandingsWithSameSeed(new MinimalScenario(), Period.ofYears(1));
+  }
+
+  // Simulations of one scenario share its factories, and the fleet loader
+  // sets per-vessel values on them while a vessel is built: runs built and
+  // stepped at the same time must still give what each gives alone.
+  @Test
+  void localNorthwesternMedRunsInParallelGiveTheirSequentialLandings() {
+    final Scenario scenario = new LocalNorthwesternMedScenario().get();
+    final Period period = Period.ofMonths(2);
+    final Map<LandingsAccumulator.Key, Double> sequentialLandings = landings(
+      scenario,
+      period
+    );
+    final List<Map<LandingsAccumulator.Key, Double>> parallelLandings =
+      IntStream.range(0, 3)
+        .parallel()
+        .mapToObj(_ -> landings(scenario, period))
+        .toList();
+    assertThat(parallelLandings).containsOnly(sequentialLandings);
+  }
+
+  // Building and stepping a simulation must not change the scenario's
+  // factories, which every simulation of the scenario shares.
+  @Test
+  void runningLocalNorthwesternMedLeavesTheScenarioUnchanged() {
+    assertRunLeavesScenarioUnchanged(
+      new LocalNorthwesternMedScenario().get(),
+      Period.ofMonths(2)
+    );
+  }
+
+  @Test
+  void runningMinimalLeavesTheScenarioUnchanged() {
+    assertRunLeavesScenarioUnchanged(
+      new MinimalScenario().get(),
+      Period.ofYears(1)
+    );
+  }
+
+  private static void assertRunLeavesScenarioUnchanged(
+    final Scenario scenario,
+    final Period period
+  ) {
+    // A new writer each time: one writer keeps numbering its anchors
+    final String before = new ScenarioWriter().write(scenario);
+    landings(scenario, period);
+    assertThat(new ScenarioWriter().write(scenario)).isEqualTo(before);
   }
 
   private static void assertSameLandingsWithSameSeed(
