@@ -47,7 +47,8 @@ public class ProtocolVersionExtractor {
     return a[a.length - 1];
   }
 
-  // Source - https://stackoverflow.com/a/49889511
+  // extractVersion, readPomProperties and unthrow, below, are adapted from
+  // https://stackoverflow.com/a/49889511
   // Posted by Sean Patrick Floyd, modified by community. See post 'Timeline'
   // for change history
   // Retrieved 2026-03-18, License - CC BY-SA 3.0
