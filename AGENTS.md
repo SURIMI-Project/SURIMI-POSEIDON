@@ -147,8 +147,9 @@ nets belong in tests, not in call-site syntax.
 `build` runs `spotlessCheck`, which fails on any Java file `spotlessApply` would change: run
 `./gradlew spotlessApply` after editing Java. The formatting setup is duplicated in `POSEIDON/`
 (`.prettierrc`, `package.json`, the Spotless block and license header in `build.gradle.kts`, the
-`nodejs`/`node-gradle`/`spotless` versions, the Node.js repository in `settings.gradle.kts`):
-change both repos together.
+`nodejs`/`node-gradle`/`spotless` versions, the Node.js repository in `settings.gradle.kts`, the
+`buildscript` block in `build.gradle.kts` that pins node-gradle's Jackson 2 with the `jackson2`
+version): change both repos together.
 
 ## Submodules
 
