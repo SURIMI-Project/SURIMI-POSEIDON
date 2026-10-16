@@ -113,8 +113,9 @@ so the Docker image always embeds a fresh copy. It lives in this repo, not in th
 submodule, because it changes with the Java code. The data files in `inputs/northwestern_med/` are
 produced upstream by the SURIMI-data_preprocessing pipelines, not by this repo.
 
-Users may edit the YAML by hand to try things out locally; `./gradlew run` reads it as is. The rule
-below is for agents only.
+The YAML is not meant to be edited by hand, by anyone: the framework does not guard against the
+mistakes a hand edit can introduce (a cycle of anchors, say). `./gradlew run` still reads it as is.
+For agents, the rule is strict:
 
 To change the scenario, edit `NorthwesternMedScenario.java` (or the factories it composes) and
 regenerate, committing the YAML with the Java change. The committed YAML must come from actually
