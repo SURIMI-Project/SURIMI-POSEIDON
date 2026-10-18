@@ -38,6 +38,7 @@ import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.events.AbstractListener;
 import uk.ac.ox.poseidon.fishing.trips.TripStartEvent;
+import uk.ac.ox.poseidon.fishing.vessels.Fleet;
 import uk.ac.ox.poseidon.fishing.vessels.Vessel;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 
@@ -58,6 +59,8 @@ class NorthwesternMedVoyageHomeTest {
     0,
     0
   );
+  private static final LocalDateTime SECOND_CHANGE_DATE =
+    FIRST_CHANGE_DATE.plusDays(1);
 
   @Test
   void aHomePortChangedDuringAVoyageHomeTakesEffectOnArrival() {
@@ -96,8 +99,19 @@ class NorthwesternMedVoyageHomeTest {
       }
     );
     try {
-      simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
       final PortGrid portGrid = simulation.getComponent(PortGrid.class);
+      // The second change must find the vessel at sea, on its way to Alicante
+      simulation
+        .getTemporalSchedule()
+        .stepUntil(simulation, SECOND_CHANGE_DATE);
+      final Vessel vessel = simulation
+        .getComponent(Fleet.class)
+        .getVessel(VESSEL_ID)
+        .orElseThrow();
+      assertThat(portGrid.getPorts().map(portGrid::getLocation)).doesNotContain(
+        vessel.getCell()
+      );
+      simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
       final Int2D castellon = portGrid.getLocation(
         portGrid.getObject("ESCAS").orElseThrow()
       );

@@ -35,7 +35,7 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 
 ```
 ./gradlew build                                          # root + POSEIDON: compile, tests, spotbugs
-./gradlew test                                           # root tests (~75 s)
+./gradlew test                                           # root tests (~3 min, mostly NW Med runs)
 ./gradlew test --tests "eu.project.surimi.poseidon.server.SimulationServiceTest"            # one class
 ./gradlew test --tests "eu.project.surimi.poseidon.server.SimulationServiceTest.methodName"  # one method
 ./gradlew :POSEIDON:<module>:test                        # a submodule's tests (core, io, agents, …)
