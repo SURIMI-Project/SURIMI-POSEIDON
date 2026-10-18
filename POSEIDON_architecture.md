@@ -250,8 +250,10 @@ significant heap.
 `InitialiseRequestHandler` keys a `ConcurrentHashMap<String, Scenario>` by the request's
 `scenario_name` field, loading `<scenario-folder>/<scenario_name>.yaml` via `ScenarioLoader` on
 first use (`computeIfAbsent`) and reusing the parsed `Scenario` for every later `Initialise` call
-that names the same scenario. Multiple distinct scenarios can therefore be live in one server
-process simultaneously, each parsed from YAML at most once.
+that names the same scenario. Each call derives a scenario with the request's start date
+(`withStartingDateTime`) and starts it with the request's simulation id, so the global products
+of the parsed scenario are shared by every simulation started from it. Multiple distinct scenarios
+can therefore be live in one server process simultaneously, each parsed from YAML at most once.
 
 **Biomass updates are externally driven**  
 POSEIDON does not perform its own biomass growth calculations. It relies on the controller to

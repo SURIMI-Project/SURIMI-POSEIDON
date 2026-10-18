@@ -68,7 +68,7 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 - `S3InputsIntegrationTest` downloads the inputs from the real SURIMI bucket and runs only when
   `AWS_ACCESS_KEY_ID` is set (CI sets it from repository secrets); it is skipped otherwise.
 - Two simulations of the same scenario are not reproducible against each other unless they share
-  a seed (`SimulationStartOptions.seed`, which defaults to the current time in milliseconds). With
+  a seed (`startNewSimulation(seed)`; with no seed, the current time in milliseconds). With
   the same seed, they are, in one JVM or across JVMs, as long as model code never iterates a
   collection in identity-hash order (POSEIDON `docs/agents/architecture.md`, "Determinism");
   `ScenarioReproducibilityTest` checks it. Otherwise, compare values within one simulation, not
@@ -102,8 +102,15 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
     first.
 - `Simulation.getComponent(Class)` only finds top-level scenario components (and members of
   collections among them), not objects nested inside other components. To reach something from a
-  handler, register it as its own component. Factories cache their product per scope, so one
-  factory referenced both as a component and inside another component yields a single instance.
+  handler, register it as its own component. A factory builds its product once per owner of its
+  level (the simulation, a vessel, a vessel component, or itself for a global product), so one
+  factory object referenced both as a component and inside another component yields a single
+  instance; two equal factory objects yield two.
+- A vessel's attributes are the columns of its register row (`fleet_register.csv` for NW Med), and
+  every action, catch and sale keeps the attributes the vessel had when it happened. Code that
+  reports or judges something after the fact (the handlers, the TAC quotas, the closures, the
+  landings accumulator) reads those recorded attributes, through the attribute readers
+  (`stringAttribute("main_fishing_gear")`), not the vessel as it is now.
 
 ## Scenario generation
 
