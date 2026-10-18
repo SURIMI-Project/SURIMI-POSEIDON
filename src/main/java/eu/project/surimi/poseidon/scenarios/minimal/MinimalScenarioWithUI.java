@@ -23,9 +23,13 @@
 package eu.project.surimi.poseidon.scenarios.minimal;
 
 import static java.awt.Color.WHITE;
+import static java.util.Collections.nCopies;
+import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 
 import java.util.List;
+import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
+import uk.ac.ox.poseidon.core.SimulationScope;
 import uk.ac.ox.poseidon.core.utils.ListFactory;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
@@ -51,7 +55,7 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
             ),
             new SpeciesBiomassFieldsPortrayalFactory(
               scenario.component("biomassGrids", ListFactory.class),
-              scenario.component("carryingCapacityGrid", ListFactory.class),
+              carryingCapacityGridPerSpecies(scenario),
               false
             ),
             new SimpleFieldPortrayalFactory<>(
@@ -85,6 +89,23 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
           WHITE
         )
       )
+    );
+  }
+
+  // Every species shares the one carrying capacity grid, which the portrayal
+  // pairs with each species' biomass grid in turn
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private static ListFactory carryingCapacityGridPerSpecies(
+    final Scenario scenario
+  ) {
+    final Factory<SimulationScope, ?> carryingCapacityGrid = scenario.component(
+      "carryingCapacityGrid"
+    );
+    return listOf(
+      nCopies(
+        MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE.size(),
+        carryingCapacityGrid
+      ).toArray(Factory[]::new)
     );
   }
 
