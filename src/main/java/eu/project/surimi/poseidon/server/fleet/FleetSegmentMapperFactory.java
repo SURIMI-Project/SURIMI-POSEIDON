@@ -22,43 +22,48 @@
 
 package eu.project.surimi.poseidon.server.fleet;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import uk.ac.ox.poseidon.core.Factory;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
-import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
-import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.Scope;
+import uk.ac.ox.poseidon.core.ValueFactory;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 
 /**
  * Factory for {@link FleetSegmentMapper}.
  */
-@Data
-@NoArgsConstructor
+@Getter
+@ToString
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 public class FleetSegmentMapperFactory<S extends Scope> extends RelativeScopeFactory<
   S,
   FleetSegmentMapper
 > {
 
-  private String countryCodeTag;
-  private String vesselLengthTag;
-  private Factory<
+  private final ValueFactory<? super S, ? super HasAttributes, String> gearCode;
+  private final ValueFactory<
     ? super S,
-    ? extends NumericIntervalMapper<String>
-  > vesselLengthClassMapper;
-  private String scale;
+    ? super HasAttributes,
+    String
+  > countryCode;
+  private final ValueFactory<
+    ? super S,
+    ? super HasAttributes,
+    String
+  > vesselLengthClass;
+  private final String scale;
 
   @Override
   protected FleetSegmentMapper newInstance(final S scope) {
     return new FleetSegmentMapper(
-      checkNotNull(countryCodeTag),
-      checkNotNull(vesselLengthTag),
-      checkNotNull(vesselLengthClassMapper).get(scope),
+      gearCode.get(scope),
+      countryCode.get(scope),
+      vesselLengthClass.get(scope),
       scale
     );
   }

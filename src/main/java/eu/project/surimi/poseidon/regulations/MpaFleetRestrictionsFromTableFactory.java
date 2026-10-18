@@ -32,13 +32,14 @@ import com.google.common.collect.ImmutableSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
-import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.Scope;
 
 /**
  * Reads a table of {@code (mpa_id, gear_code, country_code)} rows, where each
@@ -46,19 +47,20 @@ import uk.ac.ox.poseidon.core.scopes.Scope;
  * that MPA, and groups it by MPA. An MPA with no rows is simply absent from the
  * result; consumers should use {@code getOrDefault(mpaId, ImmutableSet.of())}.
  */
-@Data
-@NoArgsConstructor
+@Getter
+@ToString
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 public class MpaFleetRestrictionsFromTableFactory<S extends Scope> extends RelativeScopeFactory<
   S,
   ImmutableMap<String, ImmutableSet<GearCountry>>
 > {
 
-  private Factory<? super S, Table> table;
-  private String mpaIdColumnName;
-  private String gearCodeColumnName;
-  private String countryCodeColumnName;
+  private final Factory<? super S, Table> table;
+  private final String mpaIdColumnName;
+  private final String gearCodeColumnName;
+  private final String countryCodeColumnName;
 
   @Override
   protected ImmutableMap<String, ImmutableSet<GearCountry>> newInstance(

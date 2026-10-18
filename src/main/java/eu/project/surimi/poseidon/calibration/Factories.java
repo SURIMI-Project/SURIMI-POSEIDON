@@ -22,6 +22,10 @@
 
 package eu.project.surimi.poseidon.calibration;
 
+import uk.ac.ox.poseidon.core.SimulationScope;
+import uk.ac.ox.poseidon.core.ValueFactory;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
+
 /**
  * Static entry points for building this package's calibration-support
  * factories, mirroring the YAML factory-method convention used throughout
@@ -32,9 +36,16 @@ public class Factories {
   private Factories() {}
 
   /**
+   * @param gearCode the gear code, read from the attributes a sale recorded
    * @return a {@link LandingsAccumulatorFactory}.
    */
-  public static LandingsAccumulatorFactory landingsAccumulator() {
-    return new LandingsAccumulatorFactory();
+  public static LandingsAccumulatorFactory landingsAccumulator(
+    final ValueFactory<
+      ? super SimulationScope,
+      ? super HasAttributes,
+      String
+    > gearCode
+  ) {
+    return new LandingsAccumulatorFactory(gearCode);
   }
 }

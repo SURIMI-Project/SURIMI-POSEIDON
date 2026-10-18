@@ -44,13 +44,13 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import sim.engine.Steppable;
-import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
-import uk.ac.ox.poseidon.agents.market.Sale;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.events.EventAccumulator;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
+import uk.ac.ox.poseidon.fishing.market.BiomassSaleAccumulator;
+import uk.ac.ox.poseidon.fishing.market.Sale;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
 /**

@@ -116,7 +116,7 @@ dependencies {
     implementation("POSEIDON:gui")
     implementation("POSEIDON:regulations")
     implementation("POSEIDON:examples")
-    implementation("POSEIDON:agents")
+    implementation("POSEIDON:fishing")
     implementation("POSEIDON:biology")
     implementation("POSEIDON:io")
     implementation("POSEIDON:calibration")

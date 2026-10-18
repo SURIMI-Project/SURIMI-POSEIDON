@@ -26,18 +26,20 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Comparator;
-import java.util.function.Predicate;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 import uk.ac.ox.poseidon.regulations.predicates.temporal.BetweenDates;
 
 /**
  * Forbids a fishing action at a port/gear whose closure windows cover the
- * action's date. A port/gear pair missing from {@code portClosures} is treated
- * as never closed, matching {@link PortClosuresFromTableFactory}'s absence
- * semantics. A vessel with no home port yet (possible before it's first
- * assigned one) is permitted, for the same reason.
+ * action's date. The home port and gear codes are those the acting vessel had
+ * when it took the action, read from the attributes the action recorded. A
+ * port/gear pair missing from {@code portClosures} is treated as never closed,
+ * matching {@link PortClosuresFromTableFactory}'s absence semantics.
  * <p>
  * {@code portClosures} only covers the years the source data was built for. For
  * an action whose year falls after the latest year recorded for its port/gear,
@@ -47,35 +49,37 @@ import uk.ac.ox.poseidon.regulations.predicates.temporal.BetweenDates;
  * action before the earliest recorded year is simply permitted.
  */
 @RequiredArgsConstructor
-public class PortClosurePredicate implements Predicate<ExtendedFishingAction> {
+public class PortClosurePredicate
+  implements BiFunction<Object, ExtendedFishingAction, Boolean>
+{
 
   private final @NonNull ImmutableMap<
     String,
     ImmutableMap<String, ImmutableSet<PortClosureWindow>>
   > portClosures;
+  private final @NonNull Function<? super HasAttributes, String> homePortCode;
+  private final @NonNull Function<? super HasAttributes, String> gearCode;
 
   @Override
   @SuppressFBWarnings(
     value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
-    justification = "SpotBugs flags action.getGear().getCode() and the getOrDefault result " +
-      "as possibly null, but ExtendedFishingAction.gear is @NonNull and always set, and " +
+    justification = "SpotBugs flags the getOrDefault results as possibly null, but " +
       "Guava's getOrDefault never returns null when given a non-null default."
   )
-  public boolean test(final ExtendedFishingAction action) {
-    final var homePort = action.getAgent().getHomePort();
-    if (homePort == null) {
-      return false;
-    }
-
+  public Boolean apply(
+    final Object context,
+    final ExtendedFishingAction action
+  ) {
     final ImmutableMap<String, ImmutableSet<PortClosureWindow>> portWindows =
-      portClosures.getOrDefault(homePort.getCode(), ImmutableMap.of());
+      portClosures.getOrDefault(homePortCode.apply(action), ImmutableMap.of());
     final ImmutableSet<PortClosureWindow> windows = portWindows.getOrDefault(
-      action.getGear().getCode(),
+      gearCode.apply(action),
       ImmutableSet.of()
     );
-
     if (
-      windows.stream().anyMatch(window -> betweenDates(window).test(action))
+      windows
+        .stream()
+        .anyMatch(window -> betweenDates(window).apply(null, action))
     ) {
       return true;
     }
@@ -92,7 +96,7 @@ public class PortClosurePredicate implements Predicate<ExtendedFishingAction> {
             latest.startDate().plusYears(yearsAhead),
             latest.endDate().plusYears(yearsAhead)
           )
-        ).test(action);
+        ).apply(null, action);
       })
       .orElse(false);
   }

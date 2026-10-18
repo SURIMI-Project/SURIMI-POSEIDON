@@ -25,51 +25,71 @@ package eu.project.surimi.poseidon.regulations;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.time.Month;
+import java.util.function.BiFunction;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import uk.ac.ox.poseidon.agents.vessels.extractors.tags.StringTagExtractor;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.MappingFactory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
-import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.Scope;
+import uk.ac.ox.poseidon.core.ValueFactory;
+import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 /**
  * Factory for {@link MpaClosurePredicate}, combining MPA grids, closed months,
- * and fleet restrictions, and extracting each vessel's country tag with a
- * {@link StringTagExtractor}.
+ * and fleet restrictions, with the gear and country codes read from the
+ * attributes an action recorded.
  */
-@Data
-@NoArgsConstructor
+@Getter
+@ToString
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class MpaClosurePredicateFactory<S extends Scope> extends RelativeScopeFactory<
-  S,
-  MpaClosurePredicate
-> {
+@SuperBuilder(toBuilder = true)
+public class MpaClosurePredicateFactory<S extends Scope>
+  extends RelativeScopeFactory<
+    S,
+    BiFunction<Object, ExtendedFishingAction, Boolean>
+  >
+  implements MappingFactory<S, Object, ExtendedFishingAction, Boolean>
+{
 
-  private Factory<? super S, ? extends ModelGrid> modelGrid;
-  private Factory<? super S, ImmutableMap<String, DoubleGridWrapper>> mpaGrids;
-  private Factory<
+  private final Factory<? super S, ? extends ModelGrid> modelGrid;
+  private final Factory<
+    ? super S,
+    ImmutableMap<String, DoubleGridWrapper>
+  > mpaGrids;
+  private final Factory<
     ? super S,
     ImmutableMap<String, ImmutableSet<Month>>
   > mpaClosedMonths;
-  private Factory<
+  private final Factory<
     ? super S,
     ImmutableMap<String, ImmutableSet<GearCountry>>
   > mpaFleetRestrictions;
-  private String countryTag;
+  private final ValueFactory<? super S, ? super HasAttributes, String> gearCode;
+  private final ValueFactory<
+    ? super S,
+    ? super HasAttributes,
+    String
+  > countryCode;
 
   @Override
-  protected MpaClosurePredicate newInstance(final S scope) {
+  protected BiFunction<Object, ExtendedFishingAction, Boolean> newInstance(
+    final S scope
+  ) {
     return new MpaClosurePredicate(
       modelGrid.get(scope),
       mpaGrids.get(scope),
       mpaClosedMonths.get(scope),
       mpaFleetRestrictions.get(scope),
-      new StringTagExtractor(countryTag)
+      gearCode.get(scope),
+      countryCode.get(scope)
     );
   }
 }

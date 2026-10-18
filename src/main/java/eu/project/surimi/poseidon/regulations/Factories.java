@@ -28,8 +28,10 @@ import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import java.time.Month;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
-import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.scopes.SimulationScope;
+import uk.ac.ox.poseidon.core.Scope;
+import uk.ac.ox.poseidon.core.SimulationScope;
+import uk.ac.ox.poseidon.core.ValueFactory;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
@@ -41,14 +43,6 @@ import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 public class Factories {
 
   private Factories() {}
-
-  /**
-   * @return a {@link TotalAllowableCatchQuotasFactory} with a default fleet
-   *         segment mapper.
-   */
-  public static TotalAllowableCatchQuotasFactory totalAllowableCatchQuotas() {
-    return new TotalAllowableCatchQuotasFactory();
-  }
 
   /**
    * @return a {@link TotalAllowableCatchQuotasFactory} using the given fleet
@@ -100,6 +94,10 @@ public class Factories {
   }
 
   /**
+   * @param gearCode    the gear code, read from the attributes an action
+   *                    recorded
+   * @param countryCode the country code, read from the attributes an action
+   *                    recorded
    * @return a {@link MpaClosurePredicateFactory} combining MPA grids, closed
    *         months, and fleet restrictions into a single fishing-action
    *         predicate.
@@ -115,14 +113,16 @@ public class Factories {
       ? super S,
       ImmutableMap<String, ImmutableSet<GearCountry>>
     > mpaFleetRestrictions,
-    final String countryTag
+    final ValueFactory<? super S, ? super HasAttributes, String> gearCode,
+    final ValueFactory<? super S, ? super HasAttributes, String> countryCode
   ) {
     return new MpaClosurePredicateFactory<>(
       modelGrid,
       mpaGrids,
       mpaClosedMonths,
       mpaFleetRestrictions,
-      countryTag
+      gearCode,
+      countryCode
     );
   }
 
@@ -147,6 +147,10 @@ public class Factories {
   }
 
   /**
+   * @param homePortCode the home port code, read from the attributes an
+   *                     action recorded
+   * @param gearCode     the gear code, read from the attributes an action
+   *                     recorded
    * @return a {@link PortClosurePredicateFactory} turning port closure windows
    *         into a fishing-action predicate.
    */
@@ -157,8 +161,14 @@ public class Factories {
         String,
         ImmutableMap<String, ImmutableSet<PortClosureWindow>>
       >
-    > portClosures
+    > portClosures,
+    final ValueFactory<? super S, ? super HasAttributes, String> homePortCode,
+    final ValueFactory<? super S, ? super HasAttributes, String> gearCode
   ) {
-    return new PortClosurePredicateFactory<>(portClosures);
+    return new PortClosurePredicateFactory<>(
+      portClosures,
+      homePortCode,
+      gearCode
+    );
   }
 }

@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -23,7 +23,6 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
 
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario;
@@ -31,11 +30,11 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import uk.ac.ox.poseidon.agents.market.BiomassMarket;
-import uk.ac.ox.poseidon.agents.market.MarketGrid;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.fishing.market.BiomassMarket;
+import uk.ac.ox.poseidon.fishing.market.MarketGrid;
 
 /**
  * Checks where the Northwestern Mediterranean scenario gets its biomass and
@@ -70,8 +69,9 @@ class NorthwesternMedInputDriversTest {
   }
 
   private static Simulation runOneMonth(final Scenario scenario) {
-    scenario.setStartingDateTime(dateTime(START_DATE.atStartOfDay()));
-    final Simulation simulation = scenario.startNewSimulation();
+    final Simulation simulation = scenario
+      .withStartingDateTime(START_DATE.atStartOfDay())
+      .startNewSimulation(0);
     simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
     simulation.finish();
     return simulation;

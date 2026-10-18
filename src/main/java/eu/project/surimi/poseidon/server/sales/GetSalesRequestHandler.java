@@ -41,12 +41,12 @@ import java.util.List;
 import java.util.Map;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
-import uk.ac.ox.poseidon.agents.catches.CatchCategory;
-import uk.ac.ox.poseidon.agents.market.BiomassSaleAccumulator;
-import uk.ac.ox.poseidon.agents.market.Market;
 import uk.ac.ox.poseidon.biology.biomass.Biomass;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.fishing.catches.CatchCategory;
+import uk.ac.ox.poseidon.fishing.market.BiomassSaleAccumulator;
+import uk.ac.ox.poseidon.fishing.market.Market;
 
 /**
  * Handles {@code GetSales}: summarizes recorded sales in the requested
@@ -139,7 +139,7 @@ public class GetSalesRequestHandler
       // only report vessels covered by a contract fleet segment
       .flatMap(sale ->
         simulationProperties
-          .findContractFleetSegment(fleetSegmentMapper.apply(sale.getVessel()))
+          .findContractFleetSegment(fleetSegmentMapper.apply(sale))
           .stream()
           .flatMap(fleetSegment ->
             sale

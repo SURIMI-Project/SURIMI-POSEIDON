@@ -42,12 +42,12 @@ import javax.measure.quantity.Mass;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.IllegalCurrencyException;
 import org.joda.money.Money;
-import uk.ac.ox.poseidon.agents.catches.CatchCategory;
-import uk.ac.ox.poseidon.agents.market.BiomassMarket;
-import uk.ac.ox.poseidon.agents.market.MarketGrid;
-import uk.ac.ox.poseidon.agents.market.Price;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.fishing.catches.CatchCategory;
+import uk.ac.ox.poseidon.fishing.market.BiomassMarket;
+import uk.ac.ox.poseidon.fishing.market.MarketGrid;
+import uk.ac.ox.poseidon.fishing.market.Price;
 import uk.ac.ox.poseidon.geography.grids.ObjectGrid;
 
 /**

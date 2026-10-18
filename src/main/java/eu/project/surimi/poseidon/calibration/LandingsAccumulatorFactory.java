@@ -22,18 +22,36 @@
 
 package eu.project.surimi.poseidon.calibration;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
+import uk.ac.ox.poseidon.core.SimulationScope;
+import uk.ac.ox.poseidon.core.ValueFactory;
 import uk.ac.ox.poseidon.core.events.SimulationEventListenerFactory;
-import uk.ac.ox.poseidon.core.scopes.SimulationScope;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 
 /**
  * Factory for {@link LandingsAccumulator}.
  */
+@Getter
+@ToString
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 public class LandingsAccumulatorFactory
   extends SimulationEventListenerFactory<LandingsAccumulator>
 {
 
+  private final ValueFactory<
+    ? super SimulationScope,
+    ? super HasAttributes,
+    String
+  > gearCode;
+
   @Override
   protected LandingsAccumulator newListener(final SimulationScope scope) {
-    return new LandingsAccumulator();
+    return new LandingsAccumulator(gearCode.get(scope));
   }
 }

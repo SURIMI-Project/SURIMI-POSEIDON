@@ -44,11 +44,11 @@ import lombok.Value;
 import org.threeten.extra.Interval;
 import sim.engine.SimState;
 import sim.engine.Steppable;
-import uk.ac.ox.poseidon.agents.regulations.actions.TemporalFishingAction;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.fishing.regulations.actions.TemporalFishingAction;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.regulations.Regulations;
 
 /**
@@ -56,7 +56,7 @@ import uk.ac.ox.poseidon.regulations.Regulations;
  * and species.
  * <p>
  * This regulation consumes
- * {@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent}s and accumulates
+ * {@link uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent}s and accumulates
  * caught biomass per fleet-quota interval, where a fleet-quota interval is a
  * fleet segment plus an interval. Fishing is permitted unless a requested
  * fishing action overlaps a closed portion of at least one fleet-quota interval
@@ -70,13 +70,13 @@ import uk.ac.ox.poseidon.regulations.Regulations;
  * <ul>
  * <li>TAC accounting is limited to fleet segment, species, and time. Area and
  * stock dimensions are intentionally not modelled here.</li>
- * <li>{@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent} is the
+ * <li>{@link uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent} is the
  * accounting trigger. Accumulated catches from the
  * {@link FishingEventAccumulator} are processed during the
  * {@link #step(SimState)} call.</li>
  * <li>Everything caught counts against TAC, discards included: catches are
  * taken from the gross catch of the
- * {@link uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome}.</li>
+ * {@link uk.ac.ox.poseidon.fishing.tasks.fishing.FishingOutcome}.</li>
  * <li>Closure is per fleet-quota interval: once any configured quota-species in
  * an interval/fleet-segment combination reaches or exceeds its limit at time
  * {@code t}, fishing is closed for that fleet-quota interval from {@code t}
@@ -148,8 +148,8 @@ public class TotalAllowableCatchQuotas
   private final Map<QuotaKey, Instant> closureInstants = new LinkedHashMap<>();
 
   /**
-   * Returns whether a fishing action is permitted for the acting vessel's fleet
-   * segment.
+   * Returns whether a fishing action is permitted for the fleet segment the
+   * acting vessel was in when it took the action.
    * <p>
    * The action is rejected if its interval overlaps any effective closure
    * interval for a fleet-quota interval that covers the acting vessel's fleet
@@ -161,9 +161,7 @@ public class TotalAllowableCatchQuotas
   @Override
   public boolean isPermitted(final TemporalFishingAction action) {
     checkNotNull(action);
-    final FleetSegment vesselFleetSegment = fleetSegmentMapper.apply(
-      checkNotNull(action.getAgent(), "Fishing action agent is required.")
-    );
+    final FleetSegment vesselFleetSegment = fleetSegmentMapper.apply(action);
     return getEffectiveClosureIntervals(vesselFleetSegment).noneMatch(
       closureInterval -> closureInterval.overlaps(action.getInterval())
     );
@@ -181,8 +179,7 @@ public class TotalAllowableCatchQuotas
       .getEvents()
       .collect(
         groupingBy(
-          fishingEvent ->
-            fleetSegmentMapper.apply(fishingEvent.getAction().getAgent()),
+          fishingEvent -> fleetSegmentMapper.apply(fishingEvent.getAction()),
           reducing(
             Bucket.empty(),
             fishingEvent -> fishingEvent.getOutcome().getGrossCatch(),

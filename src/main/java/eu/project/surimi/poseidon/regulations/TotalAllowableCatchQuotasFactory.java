@@ -22,17 +22,16 @@
 
 package eu.project.surimi.poseidon.regulations;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.SimulationScope;
 import uk.ac.ox.poseidon.core.SimulationScopeFactory;
-import uk.ac.ox.poseidon.core.scopes.SimulationScope;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulator;
 
 /**
  * Factory for {@link TotalAllowableCatchQuotas} in simulation scope.
@@ -41,15 +40,16 @@ import uk.ac.ox.poseidon.core.scopes.SimulationScope;
  * remains pinned to the simulation regardless of the mapper factory's own
  * scope.
  */
-@Data
-@NoArgsConstructor
+@Getter
+@ToString
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 public class TotalAllowableCatchQuotasFactory
   extends SimulationScopeFactory<TotalAllowableCatchQuotas>
 {
 
-  private Factory<
+  private final Factory<
     ? super SimulationScope,
     ? extends FleetSegmentMapper
   > fleetSegmentMapper;
@@ -58,13 +58,10 @@ public class TotalAllowableCatchQuotasFactory
   protected TotalAllowableCatchQuotas newInstance(final SimulationScope scope) {
     final FishingEventAccumulator fishingEventAccumulator =
       new FishingEventAccumulator();
-    scope
-      .getSimulation()
-      .getEventManager()
-      .addListener(fishingEventAccumulator);
+    scope.addListener(fishingEventAccumulator);
     return new TotalAllowableCatchQuotas(
       fishingEventAccumulator,
-      checkNotNull(fleetSegmentMapper).get(scope)
+      fleetSegmentMapper.get(scope)
     );
   }
 }

@@ -36,13 +36,14 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
-import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.Scope;
 
 /**
  * Reads a table of {@code (mpa_id, month, closed)} rows and groups it into the
@@ -50,19 +51,20 @@ import uk.ac.ox.poseidon.core.scopes.Scope;
  * rows is simply absent from the result; consumers should use
  * {@code getOrDefault(mpaId, ImmutableSet.of())}.
  */
-@Data
-@NoArgsConstructor
+@Getter
+@ToString
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 public class MpaClosedMonthsFromTableFactory<S extends Scope> extends RelativeScopeFactory<
   S,
   ImmutableMap<String, ImmutableSet<Month>>
 > {
 
-  private Factory<? super S, Table> table;
-  private String mpaIdColumnName;
-  private String monthColumnName;
-  private String closedColumnName;
+  private final Factory<? super S, Table> table;
+  private final String mpaIdColumnName;
+  private final String monthColumnName;
+  private final String closedColumnName;
 
   @Override
   protected ImmutableMap<String, ImmutableSet<Month>> newInstance(

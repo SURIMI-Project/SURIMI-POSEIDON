@@ -39,17 +39,15 @@ import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
-import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingOutcome;
 
 class GetFishingActivityTest extends ServiceTest {
 
@@ -322,13 +320,13 @@ class GetFishingActivityTest extends ServiceTest {
 
   private void broadcastEvent(
     final Simulation simulation,
-    final Vessel vessel,
+    final Map<String, Object> vessel,
     final LocalDateTime dateTime,
     final Species species,
     final double biomassInKg
   ) {
     final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
-    when(action.getAgent()).thenReturn(vessel);
+    when(action.getAttributes()).thenReturn(vessel);
     when(action.getStartDateTime()).thenReturn(dateTime);
     final FishingOutcome outcome = new FishingOutcome(
       Bucket.of(species, biomassInKg),
@@ -340,19 +338,19 @@ class GetFishingActivityTest extends ServiceTest {
       .stepUntil(simulation, dateTime.plusDays(1));
   }
 
-  private static Vessel vessel(
+  // The attributes a vessel had when it fished
+  private static Map<String, Object> vessel(
     final String gearCode,
     final String countryCode,
     final double vesselLength
   ) {
-    final Vessel vessel = mock(Vessel.class);
-    final Gear gear = mock(Gear.class);
-    when(vessel.getGear()).thenReturn(gear);
-    when(gear.getCode()).thenReturn(gearCode);
-    when(vessel.getTag("country_of_registration")).thenReturn(
-      Optional.of(countryCode)
+    return Map.of(
+      "main_fishing_gear",
+      gearCode,
+      "country_of_registration",
+      countryCode,
+      "loa",
+      vesselLength
     );
-    when(vessel.getTag("loa")).thenReturn(Optional.of(vesselLength));
-    return vessel;
   }
 }

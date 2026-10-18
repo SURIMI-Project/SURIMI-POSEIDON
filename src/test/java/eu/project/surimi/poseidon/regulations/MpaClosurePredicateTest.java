@@ -30,20 +30,17 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.Optional;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import sim.util.Int2D;
-import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.extractors.tags.StringTagExtractor;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
+import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttribute;
 import uk.ac.ox.poseidon.geography.Coordinate;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 class MpaClosurePredicateTest {
 
-  private static final String COUNTRY_TAG = "country_of_registration";
   private static final Coordinate COORDINATE = new Coordinate(1.0, 2.0);
   private static final Int2D CELL = new Int2D(3, 4);
 
@@ -55,7 +52,9 @@ class MpaClosurePredicateTest {
       mpaFleetRestrictions("mpa_1", new GearCountry("OTB", "ESP"))
     );
 
-    assertThat(predicate.test(action("OTB", "ESP", Month.JANUARY))).isTrue();
+    assertThat(
+      predicate.apply(null, action("OTB", "ESP", Month.JANUARY))
+    ).isTrue();
   }
 
   @Test
@@ -66,7 +65,9 @@ class MpaClosurePredicateTest {
       mpaFleetRestrictions("mpa_1", new GearCountry("OTB", "ESP"))
     );
 
-    assertThat(predicate.test(action("PS", "ESP", Month.JANUARY))).isFalse();
+    assertThat(
+      predicate.apply(null, action("PS", "ESP", Month.JANUARY))
+    ).isFalse();
   }
 
   @Test
@@ -77,7 +78,9 @@ class MpaClosurePredicateTest {
       mpaFleetRestrictions("mpa_1", new GearCountry("OTB", "ESP"))
     );
 
-    assertThat(predicate.test(action("OTB", "ESP", Month.FEBRUARY))).isFalse();
+    assertThat(
+      predicate.apply(null, action("OTB", "ESP", Month.FEBRUARY))
+    ).isFalse();
   }
 
   @Test
@@ -88,7 +91,9 @@ class MpaClosurePredicateTest {
       mpaFleetRestrictions("mpa_1", new GearCountry("OTB", "ESP"))
     );
 
-    assertThat(predicate.test(action("OTB", "ESP", Month.JANUARY))).isFalse();
+    assertThat(
+      predicate.apply(null, action("OTB", "ESP", Month.JANUARY))
+    ).isFalse();
   }
 
   @Test
@@ -99,7 +104,9 @@ class MpaClosurePredicateTest {
       ImmutableMap.of()
     );
 
-    assertThat(predicate.test(action("OTB", "ESP", Month.JANUARY))).isFalse();
+    assertThat(
+      predicate.apply(null, action("OTB", "ESP", Month.JANUARY))
+    ).isFalse();
   }
 
   @Test
@@ -120,7 +127,9 @@ class MpaClosurePredicateTest {
       )
     );
 
-    assertThat(predicate.test(action("OTB", "ESP", Month.JANUARY))).isTrue();
+    assertThat(
+      predicate.apply(null, action("OTB", "ESP", Month.JANUARY))
+    ).isTrue();
   }
 
   private static MpaClosurePredicate predicate(
@@ -135,7 +144,8 @@ class MpaClosurePredicateTest {
       mpaGrids,
       mpaClosedMonths,
       mpaFleetRestrictions,
-      new StringTagExtractor(COUNTRY_TAG)
+      new StringAttribute("main_fishing_gear"),
+      new StringAttribute("country_of_registration")
     );
   }
 
@@ -174,16 +184,16 @@ class MpaClosurePredicateTest {
     final String countryCode,
     final Month month
   ) {
-    final Vessel vessel = mock(Vessel.class);
-    when(vessel.getTag(COUNTRY_TAG)).thenReturn(Optional.of(countryCode));
-
-    final Gear gear = mock(Gear.class);
-    when(gear.getCode()).thenReturn(gearCode);
-
     final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
     when(action.getStartCoordinate()).thenReturn(COORDINATE);
-    when(action.getGear()).thenReturn(gear);
-    when(action.getAgent()).thenReturn(vessel);
+    when(action.getAttributes()).thenReturn(
+      Map.of(
+        "main_fishing_gear",
+        gearCode,
+        "country_of_registration",
+        countryCode
+      )
+    );
     when(action.getStartDateTime()).thenReturn(
       LocalDateTime.of(2024, month, 1, 0, 0)
     );

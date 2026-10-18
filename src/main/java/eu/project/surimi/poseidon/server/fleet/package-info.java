@@ -25,6 +25,6 @@
  * {@link eu.project.surimi.poseidon.server.fleet.FleetSegment} is the
  * wildcard-aware descriptor,
  * {@link eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper} derives
- * one from a POSEIDON {@code Vessel}.
+ * one from a vessel's attributes, current or recorded.
  */
 package eu.project.surimi.poseidon.server.fleet;

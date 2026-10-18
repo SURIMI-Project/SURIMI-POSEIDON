@@ -37,10 +37,10 @@ import io.grpc.StatusRuntimeException;
 import org.joda.money.Money;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.ac.ox.poseidon.agents.catches.CatchCategory;
-import uk.ac.ox.poseidon.agents.market.BiomassMarket;
-import uk.ac.ox.poseidon.agents.market.Price;
 import uk.ac.ox.poseidon.biology.species.Species;
+import uk.ac.ox.poseidon.fishing.catches.CatchCategory;
+import uk.ac.ox.poseidon.fishing.market.BiomassMarket;
+import uk.ac.ox.poseidon.fishing.market.Price;
 
 class SetPricesValidationTest extends ServiceTest {
 

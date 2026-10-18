@@ -25,18 +25,19 @@ package eu.project.surimi.poseidon.regulations;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.time.Month;
+import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
+import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 /**
  * Forbids a fishing action inside any MPA whose fleet restrictions cover the
- * acting vessel's (gear, country) pair AND whose closed months cover the
+ * (gear, country) pair the acting vessel had when it took the action, read from
+ * the attributes the action recorded, AND whose closed months cover the
  * action's month. An MPA is "inside" for a cell whenever its mask in
  * {@code mpaGrids} has a positive value there. An MPA missing from
  * {@code mpaClosedMonths} or {@code mpaFleetRestrictions} is treated as never
@@ -45,7 +46,9 @@ import uk.ac.ox.poseidon.geography.grids.ModelGrid;
  * covered by more than one MPA is forbidden if any one of them applies.
  */
 @RequiredArgsConstructor
-public class MpaClosurePredicate implements Predicate<ExtendedFishingAction> {
+public class MpaClosurePredicate
+  implements BiFunction<Object, ExtendedFishingAction, Boolean>
+{
 
   private final @NonNull ModelGrid modelGrid;
   private final @NonNull ImmutableMap<String, DoubleGridWrapper> mpaGrids;
@@ -57,14 +60,18 @@ public class MpaClosurePredicate implements Predicate<ExtendedFishingAction> {
     String,
     ImmutableSet<GearCountry>
   > mpaFleetRestrictions;
-  private final @NonNull Function<Vessel, String> countryTagExtractor;
+  private final @NonNull Function<? super HasAttributes, String> gearCode;
+  private final @NonNull Function<? super HasAttributes, String> countryCode;
 
   @Override
-  public boolean test(final ExtendedFishingAction action) {
+  public Boolean apply(
+    final Object context,
+    final ExtendedFishingAction action
+  ) {
     final var cell = modelGrid.toCell(action.getStartCoordinate());
     final var gearCountry = new GearCountry(
-      action.getGear().getCode(),
-      countryTagExtractor.apply(action.getAgent())
+      gearCode.apply(action),
+      countryCode.apply(action)
     );
     final var month = action.getStartDateTime().getMonth();
 

@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -27,7 +27,6 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static eu.project.surimi.poseidon.server.Server.toLocalDateTime;
 import static io.grpc.Status.*;
 import static java.lang.System.Logger.Level.INFO;
-import static uk.ac.ox.poseidon.core.time.Factories.dateTime;
 
 import build.buf.gen.surimi.v1.InitialiseSimulationRequest;
 import build.buf.gen.surimi.v1.InitialiseSimulationResponse;
@@ -40,7 +39,6 @@ import eu.project.surimi.poseidon.server.SimulationManager;
 import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import eu.project.surimi.poseidon.server.mappers.FleetSegmentProtoMapper;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
@@ -54,10 +52,8 @@ import javax.measure.format.MeasurementParseException;
 import javax.measure.quantity.Mass;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.SimulationStartOptions;
 import uk.ac.ox.poseidon.core.utils.Measurements;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 
@@ -161,15 +157,11 @@ public class InitialiseRequestHandler
 
     validateContract(request, fleetSegments);
 
-    final Simulation simulation = scenario.startNewSimulation(
-      SimulationStartOptions.builder()
-        .simulationId(simulationId)
-        .propertyOverride(
-          "startingDateTime",
-          dateTime(toLocalDateTime(request.getSimulation().getStartDateTime()))
-        )
-        .build()
-    );
+    final Simulation simulation = scenario
+      .withStartingDateTime(
+        toLocalDateTime(request.getSimulation().getStartDateTime())
+      )
+      .startNewSimulation(System.currentTimeMillis(), simulationId);
     log(INFO, simulation, "Simulation started");
     logMemoryUsage(simulation);
     simulationManager.put(
@@ -258,27 +250,6 @@ public class InitialiseRequestHandler
       return Measurements.parseMassUnit(massUnit);
     } catch (final MeasurementParseException e) {
       throw wrap(INVALID_ARGUMENT, e);
-    }
-  }
-
-  @SuppressWarnings("SameParameterValue")
-  private void setScenarioProperty(
-    final Scenario scenario,
-    final String propertyName,
-    final Object value
-  ) {
-    try {
-      PropertyUtils.setProperty(scenario, propertyName, value);
-    } catch (
-      final IllegalAccessException
-      | InvocationTargetException
-      | NoSuchMethodException e
-    ) {
-      throw FAILED_PRECONDITION.withDescription(
-        "Unable to set property " + propertyName + " to " + value
-      )
-        .withCause(e)
-        .asRuntimeException();
     }
   }
 

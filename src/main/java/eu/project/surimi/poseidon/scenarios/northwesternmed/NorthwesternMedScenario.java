@@ -26,67 +26,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static eu.project.surimi.poseidon.regulations.Factories.*;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static java.time.DayOfWeek.*;
+import static java.time.Period.ofDays;
+import static java.time.Period.ofMonths;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.KNOT;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 import static tech.units.indriya.unit.Units.LITRE;
-import static uk.ac.ox.poseidon.agents.catches.Factories.catchCategory;
-import static uk.ac.ox.poseidon.agents.catches.Factories.uniformCatchCategoriser;
-import static uk.ac.ox.poseidon.agents.catches.disposition.Factories.*;
-import static uk.ac.ox.poseidon.agents.choices.Factories.*;
-import static uk.ac.ox.poseidon.agents.fields.Factories.vesselField;
-import static uk.ac.ox.poseidon.agents.fisheables.Factories.currentCellFisheable;
-import static uk.ac.ox.poseidon.agents.market.Factories.biomassSaleAccumulator;
-import static uk.ac.ox.poseidon.agents.market.Factories.homePortCatchValuation;
-import static uk.ac.ox.poseidon.agents.market.Factories.marketGrid;
-import static uk.ac.ox.poseidon.agents.market.Factories.oneBiomassMarketPerPort;
-import static uk.ac.ox.poseidon.agents.money.Factories.moneyFromRow;
-import static uk.ac.ox.poseidon.agents.regulations.actions.Factories.departNow;
-import static uk.ac.ox.poseidon.agents.regulations.predicates.Factories.fishingLocationLegalityChecker;
-import static uk.ac.ox.poseidon.agents.social.Factories.*;
-import static uk.ac.ox.poseidon.agents.tasks.Factories.behaviour;
-import static uk.ac.ox.poseidon.agents.tasks.Factories.inactiveBehaviour;
-import static uk.ac.ox.poseidon.agents.tasks.accounting.Factories.payTripCost;
-import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.selectorTask;
-import static uk.ac.ox.poseidon.agents.tasks.branches.Factories.sequenceTask;
-import static uk.ac.ox.poseidon.agents.tasks.decorators.Factories.untilFail;
-import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.chooseNextDestination;
-import static uk.ac.ox.poseidon.agents.tasks.destinations.Factories.startTrip;
-import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishing;
-import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventAccumulator;
-import static uk.ac.ox.poseidon.agents.tasks.fishing.Factories.fishingEventProperty;
-import static uk.ac.ox.poseidon.agents.tasks.general.Factories.*;
-import static uk.ac.ox.poseidon.agents.tasks.landings.Factories.landCatches;
-import static uk.ac.ox.poseidon.agents.tasks.travel.Factories.*;
-import static uk.ac.ox.poseidon.agents.travel.Factories.routeProperty;
-import static uk.ac.ox.poseidon.agents.travel.Factories.routeViaDestination;
-import static uk.ac.ox.poseidon.agents.travel.Factories.timeCost;
-import static uk.ac.ox.poseidon.agents.travel.Factories.travelCost;
-import static uk.ac.ox.poseidon.agents.trips.Factories.cellWasFishedThisTrip;
-import static uk.ac.ox.poseidon.agents.vessels.Factories.fleet;
-import static uk.ac.ox.poseidon.agents.vessels.Factories.perVessel;
-import static uk.ac.ox.poseidon.agents.vessels.Factories.vesselEventListener;
-import static uk.ac.ox.poseidon.agents.vessels.accounts.Factories.fixedCostCollector;
-import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.infiniteTank;
-import static uk.ac.ox.poseidon.agents.vessels.engines.Factories.simpleEngine;
-import static uk.ac.ox.poseidon.agents.vessels.extractors.Factories.tripCostFromHourlyCosts;
-import static uk.ac.ox.poseidon.agents.vessels.extractors.Factories.vesselProperty;
-import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.doubleTagExtractor;
-import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
-import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.inactiveGear;
-import static uk.ac.ox.poseidon.agents.vessels.gears.Factories.indexedBiomassCatchabilityGear;
-import static uk.ac.ox.poseidon.agents.vessels.holds.Factories.infiniteBiomassHold;
-import static uk.ac.ox.poseidon.agents.vessels.predicates.Factories.*;
-import static uk.ac.ox.poseidon.agents.vessels.providers.Factories.*;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
-import static uk.ac.ox.poseidon.biology.species.extractors.Factories.*;
+import static uk.ac.ox.poseidon.biology.species.extractors.Factories.speciesProperty;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
 import static uk.ac.ox.poseidon.core.functions.Factories.*;
-import static uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory.interval;
+import static uk.ac.ox.poseidon.core.functions.IntervalLabelFactory.interval;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.greaterThan;
@@ -96,7 +50,8 @@ import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.not;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.*;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.always;
+import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.minInt;
 import static uk.ac.ox.poseidon.core.providers.random.Factories.randomPoisson;
@@ -106,6 +61,44 @@ import static uk.ac.ox.poseidon.core.schedule.Factories.*;
 import static uk.ac.ox.poseidon.core.time.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Factories.*;
 import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
+import static uk.ac.ox.poseidon.fishing.catches.Factories.catchCategory;
+import static uk.ac.ox.poseidon.fishing.catches.Factories.uniformCatchCategoriser;
+import static uk.ac.ox.poseidon.fishing.catches.disposition.Factories.*;
+import static uk.ac.ox.poseidon.fishing.choices.Factories.*;
+import static uk.ac.ox.poseidon.fishing.fields.Factories.vesselField;
+import static uk.ac.ox.poseidon.fishing.fisheables.Factories.currentCellFisheable;
+import static uk.ac.ox.poseidon.fishing.market.Factories.biomassSaleAccumulator;
+import static uk.ac.ox.poseidon.fishing.market.Factories.homePortCatchValuation;
+import static uk.ac.ox.poseidon.fishing.market.Factories.marketGrid;
+import static uk.ac.ox.poseidon.fishing.market.Factories.oneBiomassMarketPerPort;
+import static uk.ac.ox.poseidon.fishing.money.Factories.moneyFromRow;
+import static uk.ac.ox.poseidon.fishing.regulations.actions.Factories.departNow;
+import static uk.ac.ox.poseidon.fishing.regulations.predicates.Factories.fishingLocationLegalityChecker;
+import static uk.ac.ox.poseidon.fishing.social.Factories.*;
+import static uk.ac.ox.poseidon.fishing.tasks.accounting.Factories.payTripCost;
+import static uk.ac.ox.poseidon.fishing.tasks.branches.Factories.selectorTask;
+import static uk.ac.ox.poseidon.fishing.tasks.branches.Factories.sequenceTask;
+import static uk.ac.ox.poseidon.fishing.tasks.decorators.Factories.untilFail;
+import static uk.ac.ox.poseidon.fishing.tasks.destinations.Factories.chooseNextDestination;
+import static uk.ac.ox.poseidon.fishing.tasks.fishing.Factories.fishing;
+import static uk.ac.ox.poseidon.fishing.tasks.fishing.Factories.fishingEventAccumulator;
+import static uk.ac.ox.poseidon.fishing.tasks.general.Factories.*;
+import static uk.ac.ox.poseidon.fishing.tasks.landings.Factories.landCatches;
+import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.*;
+import static uk.ac.ox.poseidon.fishing.travel.Factories.routeProperty;
+import static uk.ac.ox.poseidon.fishing.travel.Factories.routeViaDestination;
+import static uk.ac.ox.poseidon.fishing.travel.Factories.timeCost;
+import static uk.ac.ox.poseidon.fishing.travel.Factories.travelCost;
+import static uk.ac.ox.poseidon.fishing.trips.Factories.cellWasFishedThisTrip;
+import static uk.ac.ox.poseidon.fishing.vessels.Factories.*;
+import static uk.ac.ox.poseidon.fishing.vessels.accounts.Factories.fixedCostCollector;
+import static uk.ac.ox.poseidon.fishing.vessels.engines.Factories.simpleEngine;
+import static uk.ac.ox.poseidon.fishing.vessels.gears.Factories.indexedBiomassCatchabilityGear;
+import static uk.ac.ox.poseidon.fishing.vessels.holds.Factories.infiniteBiomassHold;
+import static uk.ac.ox.poseidon.fishing.vessels.tanks.Factories.infiniteTank;
+import static uk.ac.ox.poseidon.fishing.vessels.values.Factories.*;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.doubleAttribute;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 import static uk.ac.ox.poseidon.geography.allocators.Factories.filteredAllocator;
 import static uk.ac.ox.poseidon.geography.allocators.Factories.supplierAllocator;
 import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
@@ -125,6 +118,7 @@ import static uk.ac.ox.poseidon.regulations.Factories.forbiddenIf;
 import static uk.ac.ox.poseidon.regulations.predicates.Factories.isPermitted;
 import static uk.ac.ox.poseidon.regulations.predicates.spatial.Factories.actionCellPredicate;
 
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
@@ -132,22 +126,11 @@ import java.util.LinkedHashMap;
 import java.util.function.Supplier;
 import sim.util.Int2D;
 import tech.tablesaw.api.Table;
-import uk.ac.ox.poseidon.agents.choices.KeyedMemory;
-import uk.ac.ox.poseidon.agents.tasks.Behaviour;
-import uk.ac.ox.poseidon.agents.vessels.FleetFromVesselRegisterFactory;
-import uk.ac.ox.poseidon.agents.vessels.PerVesselFactory;
-import uk.ac.ox.poseidon.agents.vessels.VesselScopeFactoriesByCode;
-import uk.ac.ox.poseidon.agents.vessels.engines.Engine;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.buckets.Bucket;
-import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
-import uk.ac.ox.poseidon.core.scopes.Scope;
-import uk.ac.ox.poseidon.core.time.DurationFactory;
-import uk.ac.ox.poseidon.core.time.TimeFactory;
-import uk.ac.ox.poseidon.geography.ports.PortGrid;
+import uk.ac.ox.poseidon.fishing.choices.KeyedMemoryFactory;
 
 public class NorthwesternMedScenario implements Supplier<Scenario> {
 
@@ -182,15 +165,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
   static final String PURSE_SEINE_GEAR_CODE = "PS";
   static final String BOTTOM_TRAWLER_GEAR_CODE = "OTB";
   private static final String CATCH_CATEGORY = "Fresh - Whole";
-  private static final TimeFactory PURSE_SEINER_RETURN_TIME = time(6, 30, 0);
-  // A set's typical duration. Fishers can't know how long a given set will
-  // take, so the checks that a set fits (before the return time, within the
-  // trip's length) and is legal plan with this; the gear's sets last this long
-  // too, for now.
-  private static final DurationFactory PURSE_SEINE_SET_DURATION = hours(1);
-  private static final DurationFactory BOTTOM_TRAWLER_SET_DURATION = hours(3);
-  private static final DurationFactory BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION =
-    hours(12);
 
   /**
    * Runs a 10-year simulation of this scenario, printing the date-time reached
@@ -217,6 +191,15 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
   @Override
   public Scenario get() {
     final Scenario.ScenarioBuilder builder = Scenario.builder();
+
+    final var purseSeinerReturnTime = time(6, 30, 0);
+    // A set's typical duration. Fishers can't know how long a given set will
+    // take, so the checks that a set fits (before the return time, within the
+    // trip's length) and is legal plan with this; the gear's sets last this
+    // long too, for now.
+    final var purseSeineSetDuration = hours(1);
+    final var bottomTrawlerSetDuration = hours(3);
+    final var bottomTrawlerMaximumTripDuration = hours(12);
 
     final var inputPath = path(INPUT_PATH);
     final var outputPath = simulationFolder(path("outputs"));
@@ -293,9 +276,14 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         mpaGrids,
         mpaClosedMonths,
         mpaFleetRestrictions,
-        "country_of_registration"
+        stringAttribute("main_fishing_gear"),
+        stringAttribute("country_of_registration")
       ),
-      portClosurePredicate(portClosures),
+      portClosurePredicate(
+        portClosures,
+        stringAttribute("place_of_registration"),
+        stringAttribute("main_fishing_gear")
+      ),
       actionCellPredicate(
         modelGrid,
         condition(cellValue(rockGrid), greaterThan(0.0))
@@ -347,7 +335,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var distance = haversineDistanceCalculator(modelGrid);
 
-    final Factory<Scope, ? extends PortGrid> portGrid = portGrid(
+    final var portGrid = portGrid(
       portsFromTable(
         tableFromCsvFile(inputPath.plus("ports.csv")),
         "port_code",
@@ -360,11 +348,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     );
 
     final var pathFinder = pathFinder(bathymetricGrid, portGrid, distance);
-
-    // The route a vessel would sail to fish at a cell and come back: one
-    // definition of the journey for both the fishing-location checks and the
-    // travel cost.
-    final var routeFunction = routeViaDestination(pathFinder, distance);
 
     final var species = speciesFromData(
       tableFromCsvFile(inputPath.plus("species.csv")),
@@ -393,56 +376,74 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         )
       );
 
-    final var purseSeinerCatchabilities = perSimulation(
-      object(
+    // Scenario components of their own, so that calibration can vary them
+    final var purseSeinerCatchabilities = object(
+      ImmutableMap.copyOf(
         checkNotNull(catchabilityMapsByGearCode.get(PURSE_SEINE_GEAR_CODE))
       )
     );
 
-    final var bottomTrawlerCatchabilities = perSimulation(
-      object(
+    final var bottomTrawlerCatchabilities = object(
+      ImmutableMap.copyOf(
         checkNotNull(catchabilityMapsByGearCode.get(BOTTOM_TRAWLER_GEAR_CODE))
       )
     );
 
-    final var fishingGear = VesselScopeFactoriesByCode.<Gear>builder()
-      .factory(
-        PURSE_SEINE_GEAR_CODE,
+    // Vessels with a gear other than these two have no gear, no engine and no
+    // behaviour: they stay in port
+    final var gear = choice(
+      by("main_fishing_gear"),
+      when(PURSE_SEINE_GEAR_CODE).then(
         indexedBiomassCatchabilityGear(
-          PURSE_SEINE_GEAR_CODE,
-          constant(PURSE_SEINE_SET_DURATION),
+          constant(purseSeineSetDuration),
           species,
           defaultIfNull(
-            composedFunction(
-              speciesProperty("key"),
-              mapValueExtractor(purseSeinerCatchabilities)
-            ),
+            mapLookup(speciesProperty("key"), purseSeinerCatchabilities),
             0.0
           ),
           massOf(1, KILOGRAM)
         )
-      )
-      .factory(
-        BOTTOM_TRAWLER_GEAR_CODE,
+      ),
+      when(BOTTOM_TRAWLER_GEAR_CODE).then(
         indexedBiomassCatchabilityGear(
-          BOTTOM_TRAWLER_GEAR_CODE,
-          constant(BOTTOM_TRAWLER_SET_DURATION),
+          constant(bottomTrawlerSetDuration),
           species,
           defaultIfNull(
-            composedFunction(
-              speciesProperty("key"),
-              mapValueExtractor(bottomTrawlerCatchabilities)
-            ),
+            mapLookup(speciesProperty("key"), bottomTrawlerCatchabilities),
             0.0
           ),
           massOf(1, KILOGRAM)
         )
-      )
-      .defaultFactory(inactiveGear(null))
-      .build();
+      ),
+      otherwise(none())
+    );
+
+    final var engine = choice(
+      by("main_fishing_gear"),
+      when(PURSE_SEINE_GEAR_CODE).then(
+        simpleEngine(
+          speedOf(PURSE_SEINER_VESSEL_SPEED_IN_KNOTS, KNOT),
+          volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
+        )
+      ),
+      when(BOTTOM_TRAWLER_GEAR_CODE).then(
+        simpleEngine(
+          speedOf(BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS, KNOT),
+          volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
+        )
+      ),
+      otherwise(none())
+    );
+
+    final var fuelTank = vesselComponent(infiniteTank());
+
+    // The route a vessel would sail to fish at a cell and come back: one
+    // definition of the journey for both the fishing-location checks and the
+    // travel cost.
+    final var routeFunction = routeViaDestination(engine, pathFinder, distance);
 
     final var zeroBiomassAllocator = filteredAllocator(
-      supplierAllocator(constantDouble(0.0)),
+      supplierAllocator(constant(0.0)),
       isActiveWaterCell(bathymetricGrid)
     );
 
@@ -459,13 +460,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var fishingActionAccumulator = fishingEventAccumulator();
 
     final var monthlyProcesses = scheduledRepeating(
-      dateTimeAfterStarting(ONE_MONTH),
-      MONTHLY,
+      dateTimeAfterStarting(period(ofMonths(1))),
+      period(ofMonths(1)),
       steppableSequence(
-        listOf(
-          eventClearer(biomassSaleAccumulator),
-          eventClearer(fishingActionAccumulator)
-        )
+        eventClearer(biomassSaleAccumulator),
+        eventClearer(fishingActionAccumulator)
       ),
       -2
     );
@@ -483,7 +482,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       moneyFromRow("currency", "cost_per_hour_at_sea")
     );
 
-    final var vesselLengthClassMapper = numericIntervalToStringMapper(
+    final var vesselLengthClass = intervalLabel(
+      doubleAttribute("loa"),
       interval(0.0, 6.0, "VL0006"),
       interval(6.0, 12.0, "VL0612"),
       interval(12.0, 18.0, "VL1218"),
@@ -493,16 +493,13 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     );
 
     final var costsKeyFromVessel = multiStringKeyFromFunctions(
-      stringTagExtractor("country_of_registration"),
-      minInt(maxInt(currentYear(), constantInt(2013)), constantInt(2023)),
-      composedFunction(doubleTagExtractor("loa"), vesselLengthClassMapper),
-      stringTagExtractor("main_fishing_gear")
+      stringAttribute("country_of_registration"),
+      minInt(maxInt(currentYear(), constant(2013)), constant(2023)),
+      vesselLengthClass,
+      stringAttribute("main_fishing_gear")
     );
 
-    final var hourlyCost = composedFunction(
-      costsKeyFromVessel,
-      mapValueExtractor(hourlyCostsMap)
-    );
+    final var hourlyCost = mapLookup(costsKeyFromVessel, hourlyCostsMap);
 
     // Markets start without prices: in SURIMI runs, prices arrive through
     // UpdateSpeciesPrices; LocalNorthwesternMedScenario schedules them from
@@ -516,14 +513,16 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       catchCategory(CATCH_CATEGORY)
     );
 
+    final var hold = vesselComponent(infiniteBiomassHold(catchCategoriser));
+
     // One memory per vessel, keyed by gear code: what the vessel learns from
     // its fishing operations and what it decides from must be this same
     // instance.
-    final PerVesselFactory<KeyedMemory<String, Int2D, Bucket>> vesselMemory =
-      perVessel(keyedMemory());
+    final KeyedMemoryFactory<String, Int2D, Bucket> vesselMemory =
+      keyedMemory();
 
     final var optionValues = memoryBasedOptionValues(
-      keyedMemorySelector(vesselMemory, vesselProperty("gear.code")),
+      keyedMemorySelector(vesselMemory, stringAttribute("main_fishing_gear")),
       netValuation(
         homePortCatchValuation(catchCategoriser),
         travelCost(routeFunction, timeCost(hourlyCost))
@@ -531,31 +530,35 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     );
 
     final var fleetSegmentMapper = fleetSegmentMapper(
-      "country_of_registration",
-      "loa",
-      vesselLengthClassMapper,
+      stringAttribute("main_fishing_gear"),
+      stringAttribute("country_of_registration"),
+      vesselLengthClass,
       "Industrial"
     );
 
     final var totalAllowableCatchQuotas = scheduledRepeatingFromStart(
-      DAILY,
+      period(ofDays(1)),
       totalAllowableCatchQuotas(fleetSegmentMapper)
     );
 
     final var purseSeinerFishingLocationLegalityChecker =
       fishingLocationLegalityChecker(
+        gear,
+        engine,
         allOf(purseSeinerRegulations, totalAllowableCatchQuotas),
         pathFinder,
         distance,
-        PURSE_SEINE_SET_DURATION
+        purseSeineSetDuration
       );
 
     final var bottomTrawlerFishingLocationLegalityChecker =
       fishingLocationLegalityChecker(
+        gear,
+        engine,
         allOf(bottomTrawlerRegulations, totalAllowableCatchQuotas),
         pathFinder,
         distance,
-        BOTTOM_TRAWLER_SET_DURATION
+        bottomTrawlerSetDuration
       );
 
     // How long it would take to sail to a cell, fish there once, and sail back
@@ -563,35 +566,32 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // cheaper than the regulations, and late in a trip it turns down most
     // cells.
     final var purseSeinerFishAndReturnDurationFunction = combinedDuration(
-      composedFunction(routeFunction, routeProperty("duration")),
-      constant(PURSE_SEINE_SET_DURATION)
+      routeProperty(routeFunction, "duration"),
+      always(purseSeineSetDuration)
     );
     final var bottomTrawlerFishAndReturnDurationFunction = combinedDuration(
-      composedFunction(routeFunction, routeProperty("duration")),
-      constant(BOTTOM_TRAWLER_SET_DURATION)
+      routeProperty(routeFunction, "duration"),
+      always(bottomTrawlerSetDuration)
     );
 
-    // Purse seiners must be back in port by the first PURSE_SEINER_RETURN_TIME
+    // Purse seiners must be back in port by the first purse seiner return time
     // after they depart: at departure, the trip would depart now.
     final var purseSeinerFishingLocationAtDepartureChecker = allOf(
       condition(
         purseSeinerFishAndReturnDurationFunction,
-        lessThan(durationUntil(nextOccurrenceOf(PURSE_SEINER_RETURN_TIME)))
+        lessThan(durationUntil(nextOccurrenceOf(purseSeinerReturnTime)))
       ),
       purseSeinerFishingLocationLegalityChecker
     );
 
     // Whether a vessel at sea could sail to a cell, fish there once, and be
-    // back in port by the first PURSE_SEINER_RETURN_TIME after its trip
+    // back in port by the first purse seiner return time after its trip
     // started.
     final var purseSeinerFishAndReturnInTime = condition(
       purseSeinerFishAndReturnDurationFunction,
       lessThan(
         durationUntil(
-          nextOccurrenceAfter(
-            currentTripStartDateTime(),
-            PURSE_SEINER_RETURN_TIME
-          )
+          nextOccurrenceAfter(currentTripStartDateTime(), purseSeinerReturnTime)
         )
       )
     );
@@ -604,27 +604,25 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       purseSeinerFishingLocationLegalityChecker
     );
 
-    // Bottom trawlers must be back in port within
-    // BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of departing: at departure, that is
-    // the whole of it.
+    // Bottom trawlers must be back in port within their maximum trip duration
+    // of departing: at departure, that is the whole of it.
     final var bottomTrawlerFishingLocationAtDepartureChecker = allOf(
       condition(
         bottomTrawlerFishAndReturnDurationFunction,
-        lessThan(constant(BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION))
+        lessThan(constant(bottomTrawlerMaximumTripDuration))
       ),
       bottomTrawlerFishingLocationLegalityChecker
     );
 
     // Whether a vessel at sea could sail to a cell, fish there once, and be
-    // back in port within BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION of its trip's
-    // start.
+    // back in port within its maximum trip duration of its trip's start.
     final var bottomTrawlerFishAndReturnInTime = condition(
       bottomTrawlerFishAndReturnDurationFunction,
       lessThan(
         durationUntil(
           dateTimeAfter(
             currentTripStartDateTime(),
-            BOTTOM_TRAWLER_MAXIMUM_TRIP_DURATION
+            bottomTrawlerMaximumTripDuration
           )
         )
       )
@@ -638,7 +636,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var purseSeinerReadyForDeparture = checkThat(
       allOf(
-        isPermitted(departNow(), totalAllowableCatchQuotas),
+        isPermitted(departNow(gear), totalAllowableCatchQuotas),
         condition(currentTime(), afterTime(constant(time(21, 59, 59)))),
         condition(
           currentDayOfWeek(),
@@ -659,7 +657,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // after 22:00.
     final var bottomTrawlerReadyForDeparture = checkThat(
       allOf(
-        isPermitted(departNow(), totalAllowableCatchQuotas),
+        isPermitted(departNow(gear), totalAllowableCatchQuotas),
         condition(currentTime(), afterTime(constant(time(6, 59, 59)))),
         condition(
           currentDayOfWeek(),
@@ -673,18 +671,16 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       durationUntil(nextOccurrenceOf(time(7, 0, 0)))
     );
 
-    final var startPurseSeinerTrip = startTrip(
-      epsilonGreedyDestination(
-        PURSE_SEINER_EXPLORATION_PROBABILITY,
-        neighbourhoodGridExplorer(
-          pathFinder,
-          purseSeinerFishingLocationAtDepartureChecker,
-          shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
-          MAXIMUM_EXPLORATION_WIDENING,
-          bestKnownOption(optionValues, currentCell())
-        ),
-        greedyPicker(optionValues, purseSeinerFishingLocationAtDepartureChecker)
-      )
+    final var purseSeinerFirstDestination = epsilonGreedyDestination(
+      PURSE_SEINER_EXPLORATION_PROBABILITY,
+      neighbourhoodGridExplorer(
+        pathFinder,
+        purseSeinerFishingLocationAtDepartureChecker,
+        shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
+        MAXIMUM_EXPLORATION_WIDENING,
+        bestKnownOption(optionValues, currentCell())
+      ),
+      greedyPicker(optionValues, purseSeinerFishingLocationAtDepartureChecker)
     );
 
     final var chooseNextPurseSeinerDestination = chooseNextDestination(
@@ -701,21 +697,16 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    final var startBottomTrawlerTrip = startTrip(
-      epsilonGreedyDestination(
-        BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
-        neighbourhoodGridExplorer(
-          pathFinder,
-          bottomTrawlerFishingLocationAtDepartureChecker,
-          shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
-          MAXIMUM_EXPLORATION_WIDENING,
-          bestKnownOption(optionValues, currentCell())
-        ),
-        greedyPicker(
-          optionValues,
-          bottomTrawlerFishingLocationAtDepartureChecker
-        )
-      )
+    final var bottomTrawlerFirstDestination = epsilonGreedyDestination(
+      BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
+      neighbourhoodGridExplorer(
+        pathFinder,
+        bottomTrawlerFishingLocationAtDepartureChecker,
+        shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
+        MAXIMUM_EXPLORATION_WIDENING,
+        bestKnownOption(optionValues, currentCell())
+      ),
+      greedyPicker(optionValues, bottomTrawlerFishingLocationAtDepartureChecker)
     );
 
     final var chooseNextBottomTrawlerDestination = chooseNextDestination(
@@ -748,7 +739,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
           multiStringKeyFromFunctions(
             speciesProperty("code"),
             speciesProperty("lifeStage"),
-            constant(PURSE_SEINE_GEAR_CODE)
+            always(PURSE_SEINE_GEAR_CODE)
           ),
           discardRatiosTable,
           discardRatiosKeyFromRow,
@@ -764,7 +755,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
           multiStringKeyFromFunctions(
             speciesProperty("code"),
             speciesProperty("lifeStage"),
-            constant(BOTTOM_TRAWLER_GEAR_CODE)
+            always(BOTTOM_TRAWLER_GEAR_CODE)
           ),
           discardRatiosTable,
           discardRatiosKeyFromRow,
@@ -777,6 +768,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var discardMortality = fullDiscardMortality();
 
     final var purseSeinerFishingTask = fishing(
+      gear,
+      hold,
+      fuelTank,
       currentCellFisheable(fisheableBiomassGrids),
       compositeDispositionProcess(
         purseSeineDiscardRates,
@@ -785,6 +779,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
     final var bottomTrawlerFishingTask = fishing(
+      gear,
+      hold,
+      fuelTank,
       currentCellFisheable(fisheableBiomassGrids),
       compositeDispositionProcess(
         bottomTrawlerDiscardRates,
@@ -793,184 +790,180 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    final var purseSeinerBehaviour = behaviour(
+    // Each run of the behaviour either sails home, when the vessel is away
+    // from its home port, or, at the home port, makes a trip or waits. A
+    // change to the vessel takes effect between runs, so a vessel given a new
+    // home port sails there and then departs from it.
+    final var sailHome = travelAlongPathTo(
+      engine,
+      fuelTank,
+      pathFinder,
+      distance,
+      homePortCell(),
+      vesselEventManager()
+    );
+
+    final var purseSeinerBehaviour = selectorTask(
       sequenceTask(
-        selectorTask(
-          checkThat(vesselIsAt(homePortCell())),
-          travelAlongPathTo(
-            pathFinder,
-            distance,
-            homePortCell(),
-            vesselEventManager()
-          )
-        ),
+        checkThat(vesselIsAt(homePortCell())),
         succeedOrWait(
-          sequenceTask(purseSeinerReadyForDeparture, startPurseSeinerTrip),
+          sequenceTask(
+            purseSeinerReadyForDeparture,
+            trip(
+              purseSeinerFirstDestination,
+              untilFail(
+                sequenceTask(
+                  travelAlongPathTo(
+                    engine,
+                    fuelTank,
+                    pathFinder,
+                    distance,
+                    currentTripDestinationCell(),
+                    currentTripEventManager()
+                  ),
+                  purseSeinerFishingTask,
+                  // No time to fish once more here and sail home: going via
+                  // any other cell takes longer, so the trip ends without a
+                  // search.
+                  checkThat(currentCell(), purseSeinerFishAndReturnInTime),
+                  chooseNextPurseSeinerDestination
+                )
+              ),
+              setDestinationToOrigin(),
+              travelAlongPathTo(
+                engine,
+                fuelTank,
+                pathFinder,
+                distance,
+                currentTripDestinationCell(),
+                currentTripEventManager()
+              ),
+              arriveInPort(),
+              payTripCost(tripCostFromHourlyCosts(hourlyCost)),
+              landCatches(hold, constant(hours(1)))
+            )
+          ),
           purseSeinerWaitUntilNextCheckpoint
-        ),
-        untilFail(
-          sequenceTask(
-            travelAlongPathTo(
-              pathFinder,
-              distance,
-              currentTripDestinationCell(),
-              currentTripEventManager()
-            ),
-            purseSeinerFishingTask,
-            // No time to fish once more here and sail home: going via any
-            // other cell takes longer, so the trip ends without a search.
-            checkThat(vesselProperty("cell"), purseSeinerFishAndReturnInTime),
-            chooseNextPurseSeinerDestination
-          )
-        ),
-        setDestinationToOrigin(),
-        travelAlongPathTo(
-          pathFinder,
-          distance,
-          currentTripDestinationCell(),
-          currentTripEventManager()
-        ),
-        arriveInPort(),
-        payTripCost(tripCostFromHourlyCosts(hourlyCost)),
-        landCatches(constant(hours(1))),
-        endTrip()
-      )
+        )
+      ),
+      sailHome
     );
 
-    final var bottomTrawlerBehaviour = behaviour(
+    final var bottomTrawlerBehaviour = selectorTask(
       sequenceTask(
-        selectorTask(
-          checkThat(vesselIsAt(homePortCell())),
-          travelAlongPathTo(
-            pathFinder,
-            distance,
-            homePortCell(),
-            vesselEventManager()
-          )
-        ),
+        checkThat(vesselIsAt(homePortCell())),
         succeedOrWait(
-          sequenceTask(bottomTrawlerReadyForDeparture, startBottomTrawlerTrip),
-          bottomTrawlerWaitUntilNextCheckpoint
-        ),
-        untilFail(
           sequenceTask(
-            travelAlongPathTo(
-              pathFinder,
-              distance,
-              currentTripDestinationCell(),
-              currentTripEventManager()
-            ),
-            bottomTrawlerFishingTask,
-            // No time to fish once more here and sail home: going via any
-            // other cell takes longer, so the trip ends without a search.
-            checkThat(vesselProperty("cell"), bottomTrawlerFishAndReturnInTime),
-            chooseNextBottomTrawlerDestination
-          )
-        ),
-        setDestinationToOrigin(),
-        travelAlongPathTo(
-          pathFinder,
-          distance,
-          currentTripDestinationCell(),
-          currentTripEventManager()
-        ),
-        arriveInPort(),
-        payTripCost(tripCostFromHourlyCosts(hourlyCost)),
-        landCatches(constant(hours(1))),
-        endTrip()
-      )
+            bottomTrawlerReadyForDeparture,
+            trip(
+              bottomTrawlerFirstDestination,
+              untilFail(
+                sequenceTask(
+                  travelAlongPathTo(
+                    engine,
+                    fuelTank,
+                    pathFinder,
+                    distance,
+                    currentTripDestinationCell(),
+                    currentTripEventManager()
+                  ),
+                  bottomTrawlerFishingTask,
+                  // No time to fish once more here and sail home: going via
+                  // any other cell takes longer, so the trip ends without a
+                  // search.
+                  checkThat(currentCell(), bottomTrawlerFishAndReturnInTime),
+                  chooseNextBottomTrawlerDestination
+                )
+              ),
+              setDestinationToOrigin(),
+              travelAlongPathTo(
+                engine,
+                fuelTank,
+                pathFinder,
+                distance,
+                currentTripDestinationCell(),
+                currentTripEventManager()
+              ),
+              arriveInPort(),
+              payTripCost(tripCostFromHourlyCosts(hourlyCost)),
+              landCatches(hold, constant(hours(1)))
+            )
+          ),
+          bottomTrawlerWaitUntilNextCheckpoint
+        )
+      ),
+      sailHome
     );
 
-    final var behaviour = VesselScopeFactoriesByCode.<Behaviour>builder()
-      .factory(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour)
-      .factory(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
-      .defaultFactory(inactiveBehaviour())
-      .build();
+    final var behaviour = choice(
+      by("main_fishing_gear"),
+      when(PURSE_SEINE_GEAR_CODE).then(purseSeinerBehaviour),
+      when(BOTTOM_TRAWLER_GEAR_CODE).then(bottomTrawlerBehaviour),
+      otherwise(none())
+    );
 
-    final var engine = VesselScopeFactoriesByCode.<Engine>builder()
-      .factory(
-        PURSE_SEINE_GEAR_CODE,
-        simpleEngine(
-          infiniteTank(),
-          speedOf(PURSE_SEINER_VESSEL_SPEED_IN_KNOTS, KNOT),
-          volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
-        )
-      )
-      .factory(
-        BOTTOM_TRAWLER_GEAR_CODE,
-        simpleEngine(
-          infiniteTank(),
-          speedOf(BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS, KNOT),
-          volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
-        )
-      )
-      .defaultFactory(
-        simpleEngine(
-          infiniteTank(),
-          // inactive vessels never travel, so this is never read
-          speedOf(0, KNOT),
-          volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
-        )
-      )
-      .build();
-
-    // The fleet before any vessel is loaded: the social network takes it, not
-    // the loader, whose shared fishing event listeners depend on the network (a
-    // factory cycle otherwise).
     final var fleet = fleet(vesselField, portGrid, marketGrid);
     final var socialNetwork = socialNetwork(fleet);
     final var cliqueDynamics = cliqueDynamics(
       socialNetwork,
       multiStringKeyFromFunctions(
-        vesselProperty("homePort.code"),
-        vesselProperty("gear.code")
+        stringAttribute("place_of_registration"),
+        stringAttribute("main_fishing_gear")
       ),
       MAXIMUM_CLIQUE_SIZE
     );
     final var fishingEventSharer = fishingEventSharer(socialNetwork);
 
-    final var fleetLoader = FleetFromVesselRegisterFactory.builder()
-      .fleet(fleet)
-      .data(tableFromCsvFile(inputPath.plus("fleet_register.csv")))
-      .behaviour(behaviour)
-      .dataMapping("behaviour.code", "main_fishing_gear")
-      .hold(infiniteBiomassHold(catchCategoriser))
-      .gear(fishingGear)
-      .dataMapping("gear.code", "main_fishing_gear")
-      .dataMapping("gear.defaultFactory.code", "main_fishing_gear")
-      .engine(engine)
-      .dataMapping("engine.code", "main_fishing_gear")
-      .extraFactory(
-        vesselEventListener(
-          fishingEventRecorder(
-            modelGrid,
-            keyedMemorySelector(
-              vesselMemory,
-              fishingEventProperty("action.gear.code")
-            ),
-            exponentialMovingAverageOfBuckets(OWN_LEARNING_ALPHA)
-          )
-        )
-      )
-      .extraFactory(
-        sharedFishingEventListener(
-          fishingEventRecorder(
-            modelGrid,
-            keyedMemorySelector(
-              vesselMemory,
-              fishingEventProperty("action.gear.code")
-            ),
-            exponentialMovingAverageOfBuckets(SOCIAL_LEARNING_ALPHA)
+    // What a vessel learns from its own fishing and from what its friends
+    // share, into its memory for the gear it fished with
+    final var ownCatchRecorder = vesselComponent(
+      vesselEventListener(
+        fishingEventRecorder(
+          modelGrid,
+          keyedMemorySelector(
+            vesselMemory,
+            stringAttribute("main_fishing_gear")
           ),
-          fishingEventSharer
+          exponentialMovingAverageOfBuckets(OWN_LEARNING_ALPHA)
         )
       )
+    );
+    final var sharedCatchRecorder = vesselComponent(
+      sharedFishingEventListener(
+        fishingEventRecorder(
+          modelGrid,
+          keyedMemorySelector(
+            vesselMemory,
+            stringAttribute("main_fishing_gear")
+          ),
+          exponentialMovingAverageOfBuckets(SOCIAL_LEARNING_ALPHA)
+        ),
+        fishingEventSharer
+      )
+    );
+
+    final var vesselSpecification = vesselSpecification(fleet, behaviour)
+      .homePortAttribute("place_of_registration")
+      .nameAttribute("name_of_vessel")
+      .component("hold", hold)
+      .component("gear", gear)
+      .component("engine", engine)
+      .component("fuelTank", fuelTank)
+      .component("ownCatchRecorder", ownCatchRecorder)
+      .component("sharedCatchRecorder", sharedCatchRecorder)
       .build();
 
+    final var vesselRegister = scheduledByDateTime(
+      vesselRegister(
+        tableFromCsvFile(inputPath.plus("fleet_register.csv")),
+        vesselSpecification
+      )
+    );
+
     final var fixedCostCollector = scheduledRepeatingFromStart(
-      DAILY,
+      period(ofDays(1)),
       fixedCostCollector(
-        fleetLoader,
+        fleet,
         tableLookup(
           costsKeyFromVessel,
           tableFromCsvFile(inputPath.plus("operating_costs.csv")),
@@ -1001,7 +994,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       .component("vesselField", vesselField)
       .component("modelGrid", modelGrid)
       .component("monthlyProcesses", monthlyProcesses)
-      .component("fleet", fleetLoader)
+      .component("fleet", fleet)
+      .component("vesselSpecification", vesselSpecification)
+      .component("vesselRegister", vesselRegister)
       .component("socialNetwork", socialNetwork)
       .component("cliqueDynamics", cliqueDynamics)
       .component("fishingEventSharer", fishingEventSharer)

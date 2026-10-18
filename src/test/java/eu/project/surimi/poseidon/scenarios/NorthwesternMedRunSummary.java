@@ -40,14 +40,13 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import org.joda.money.Money;
 import sim.util.Int2D;
-import uk.ac.ox.poseidon.agents.social.SocialNetwork;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent;
-import uk.ac.ox.poseidon.agents.trips.TripEndEvent;
-import uk.ac.ox.poseidon.agents.trips.TripStartEvent;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.SimulationStartOptions;
 import uk.ac.ox.poseidon.core.events.Listener;
+import uk.ac.ox.poseidon.fishing.social.SocialNetwork;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.trips.TripEndEvent;
+import uk.ac.ox.poseidon.fishing.trips.TripStartEvent;
+import uk.ac.ox.poseidon.fishing.vessels.Vessel;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
 /**
@@ -178,7 +177,7 @@ public class NorthwesternMedRunSummary {
     final long startNanos = System.nanoTime();
     final Simulation simulation = new LocalNorthwesternMedScenario()
       .get()
-      .startNewSimulation(SimulationStartOptions.builder().seed(seed).build());
+      .startNewSimulation(seed);
     final SocialNetwork network = simulation.getComponent(SocialNetwork.class);
     simulation.getEventManager().addListener(
       listener(TripStartEvent.class, event -> {
@@ -208,7 +207,11 @@ public class NorthwesternMedRunSummary {
           event.getAction().getStartCoordinate()
         );
         fishedCells.add(vessel.getCell());
-        final String gearCode = event.getAction().getGear().getCode();
+        final String gearCode = event
+          .getAction()
+          .getAttributes()
+          .get("main_fishing_gear")
+          .toString();
         event
           .getOutcome()
           .getDisposition()
@@ -233,7 +236,7 @@ public class NorthwesternMedRunSummary {
         endedTrips++;
         final Vessel vessel = event.getTrip().getVessel();
         final GearSummary gearSummary = gearSummaries.computeIfAbsent(
-          vessel.getGear().getCode(),
+          vessel.getAttributes().get("main_fishing_gear").toString(),
           code -> new GearSummary()
         );
         final int tripFishingEvents = fishingEventsThisTrip.remove(vessel);
@@ -241,7 +244,7 @@ public class NorthwesternMedRunSummary {
         gearSummary.trips++;
         gearSummary.fishingEvents += tripFishingEvents;
         gearSummary.hours +=
-          event.getTrip().getTimeAtSea().toSeconds() / 3600.0;
+          event.getTrip().getTotalTimeAtSea().toSeconds() / 3600.0;
         gearSummary.tripsByFishingEvents.merge(
           tripFishingEvents,
           1,

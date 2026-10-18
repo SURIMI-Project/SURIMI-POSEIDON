@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.scenarios;
 
 import static eu.project.surimi.poseidon.calibration.Factories.landingsAccumulator;
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
 import eu.project.surimi.poseidon.calibration.LandingsAccumulator;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
@@ -36,7 +37,6 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.SimulationStartOptions;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 /**
@@ -52,30 +52,36 @@ class ScenarioReproducibilityTest {
   void localNorthwesternMedGivesSameLandingsWithSameSeed() {
     assertSameLandingsWithSameSeed(
       new LocalNorthwesternMedScenario(),
+      "main_fishing_gear",
       Period.ofMonths(2)
     );
   }
 
   @Test
   void minimalGivesSameLandingsWithSameSeed() {
-    assertSameLandingsWithSameSeed(new MinimalScenario(), Period.ofYears(1));
+    assertSameLandingsWithSameSeed(
+      new MinimalScenario(),
+      "gear",
+      Period.ofYears(1)
+    );
   }
 
-  // Simulations of one scenario share its factories, and the fleet loader
-  // sets per-vessel values on them while a vessel is built: runs built and
-  // stepped at the same time must still give what each gives alone.
+  // Simulations of one scenario share its factories and their global
+  // products: runs built and stepped at the same time must still give what
+  // each gives alone.
   @Test
   void localNorthwesternMedRunsInParallelGiveTheirSequentialLandings() {
     final Scenario scenario = new LocalNorthwesternMedScenario().get();
     final Period period = Period.ofMonths(2);
     final Map<LandingsAccumulator.Key, Double> sequentialLandings = landings(
       scenario,
+      "main_fishing_gear",
       period
     );
     final List<Map<LandingsAccumulator.Key, Double>> parallelLandings =
       IntStream.range(0, 3)
         .parallel()
-        .mapToObj(_ -> landings(scenario, period))
+        .mapToObj(_ -> landings(scenario, "main_fishing_gear", period))
         .toList();
     assertThat(parallelLandings).containsOnly(sequentialLandings);
   }
@@ -86,6 +92,7 @@ class ScenarioReproducibilityTest {
   void runningLocalNorthwesternMedLeavesTheScenarioUnchanged() {
     assertRunLeavesScenarioUnchanged(
       new LocalNorthwesternMedScenario().get(),
+      "main_fishing_gear",
       Period.ofMonths(2)
     );
   }
@@ -94,46 +101,53 @@ class ScenarioReproducibilityTest {
   void runningMinimalLeavesTheScenarioUnchanged() {
     assertRunLeavesScenarioUnchanged(
       new MinimalScenario().get(),
+      "gear",
       Period.ofYears(1)
     );
   }
 
   private static void assertRunLeavesScenarioUnchanged(
     final Scenario scenario,
+    final String gearAttribute,
     final Period period
   ) {
     // A new writer each time: one writer keeps numbering its anchors
     final String before = new ScenarioWriter().write(scenario);
-    landings(scenario, period);
+    landings(scenario, gearAttribute, period);
     assertThat(new ScenarioWriter().write(scenario)).isEqualTo(before);
   }
 
   private static void assertSameLandingsWithSameSeed(
     final Supplier<Scenario> scenarioSupplier,
+    final String gearAttribute,
     final Period period
   ) {
     final Scenario scenario = scenarioSupplier.get();
     final Map<LandingsAccumulator.Key, Double> firstLandings = landings(
       scenario,
+      gearAttribute,
       period
     );
     assertThat(firstLandings).isNotEmpty();
-    assertThat(landings(scenario, period)).isEqualTo(firstLandings);
-    assertThat(landings(scenarioSupplier.get(), period)).isEqualTo(
+    assertThat(landings(scenario, gearAttribute, period)).isEqualTo(
       firstLandings
     );
+    assertThat(
+      landings(scenarioSupplier.get(), gearAttribute, period)
+    ).isEqualTo(firstLandings);
   }
 
   private static Map<LandingsAccumulator.Key, Double> landings(
     final Scenario scenario,
+    final String gearAttribute,
     final Period period
   ) {
-    final Simulation simulation = scenario.startNewSimulation(
-      SimulationStartOptions.builder()
-        .seed(1)
-        .extraComponent("landingsAccumulator", landingsAccumulator())
-        .build()
-    );
+    final Simulation simulation = scenario
+      .withComponent(
+        "landingsAccumulator",
+        landingsAccumulator(stringAttribute(gearAttribute))
+      )
+      .startNewSimulation(1);
     try {
       simulation.getTemporalSchedule().stepFor(simulation, period);
       return Map.copyOf(

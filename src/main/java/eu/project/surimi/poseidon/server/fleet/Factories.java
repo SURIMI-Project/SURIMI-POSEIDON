@@ -22,9 +22,9 @@
 
 package eu.project.surimi.poseidon.server.fleet;
 
-import uk.ac.ox.poseidon.core.Factory;
-import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
-import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.Scope;
+import uk.ac.ox.poseidon.core.ValueFactory;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 
 /**
  * Static entry points for building this package's factories, mirroring the YAML
@@ -35,22 +35,27 @@ public class Factories {
   private Factories() {}
 
   /**
-   * @return a {@link FleetSegmentMapperFactory} using the given tags and length
-   *         classifier.
+   * @param gearCode          the gear code, read from a vessel's attributes
+   * @param countryCode       the country code, read from a vessel's attributes
+   * @param vesselLengthClass the vessel-length class, read from a vessel's
+   *                          attributes
+   * @param scale             the scale every segment has
+   * @return a {@link FleetSegmentMapperFactory}
    */
   public static <S extends Scope> FleetSegmentMapperFactory<S> fleetSegmentMapper(
-    final String countryCodeTag,
-    final String vesselLengthTag,
-    final Factory<
+    final ValueFactory<? super S, ? super HasAttributes, String> gearCode,
+    final ValueFactory<? super S, ? super HasAttributes, String> countryCode,
+    final ValueFactory<
       ? super S,
-      ? extends NumericIntervalMapper<String>
-    > vesselLengthClassMapper,
+      ? super HasAttributes,
+      String
+    > vesselLengthClass,
     final String scale
   ) {
     return new FleetSegmentMapperFactory<>(
-      countryCodeTag,
-      vesselLengthTag,
-      vesselLengthClassMapper,
+      gearCode,
+      countryCode,
+      vesselLengthClass,
       scale
     );
   }

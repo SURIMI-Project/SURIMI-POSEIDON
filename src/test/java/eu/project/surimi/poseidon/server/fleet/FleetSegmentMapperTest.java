@@ -22,110 +22,74 @@
 
 package eu.project.surimi.poseidon.server.fleet;
 
+import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static uk.ac.ox.poseidon.core.Scope.GLOBAL_SCOPE;
+import static uk.ac.ox.poseidon.core.functions.Factories.intervalLabel;
+import static uk.ac.ox.poseidon.core.functions.IntervalLabelFactory.interval;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.doubleAttribute;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
-import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 
 class FleetSegmentMapperTest {
 
-  private static final NumericIntervalMapper<String> VESSEL_LENGTH_CLASS_MAPPER =
-    new NumericIntervalMapper<>(
-      List.of(
-        new NumericIntervalMapper.Interval<>(12.0, 18.0, "VL1218"),
-        new NumericIntervalMapper.Interval<>(18.0, 24.0, "VL1824")
-      )
-    );
+  private final FleetSegmentMapper mapper = fleetSegmentMapper(
+    stringAttribute("main_fishing_gear"),
+    stringAttribute("country_of_registration"),
+    intervalLabel(
+      doubleAttribute("loa"),
+      interval(12.0, 18.0, "VL1218"),
+      interval(18.0, 24.0, "VL1824")
+    ),
+    "Industrial"
+  ).get(GLOBAL_SCOPE);
 
   @Test
   void mapsGearCountryLengthScaleAndModel() {
-    final FleetSegmentMapper mapper = new FleetSegmentMapper(
-      "country_of_registration",
-      "loa",
-      VESSEL_LENGTH_CLASS_MAPPER,
-      "Industrial"
-    );
-    final Vessel vessel = mock(Vessel.class);
-    final Gear gear = mock(Gear.class);
-    when(vessel.getGear()).thenReturn(gear);
-    when(gear.getCode()).thenReturn("OTB");
-    when(vessel.getTag("country_of_registration")).thenReturn(
-      java.util.Optional.of("ESP")
-    );
-    when(vessel.getTag("loa")).thenReturn(java.util.Optional.of(18.5));
+    final HasAttributes vessel = () ->
+      Map.of(
+        "main_fishing_gear",
+        "OTB",
+        "country_of_registration",
+        "ESP",
+        "loa",
+        18.5
+      );
 
-    final FleetSegment fleetSegment = mapper.apply(vessel);
-
-    assertThat(fleetSegment).isEqualTo(
+    assertThat(mapper.apply(vessel)).isEqualTo(
       new FleetSegment("OTB", "VL1824", "Industrial", "ESP", "POSEIDON")
     );
   }
 
   @Test
-  void returnsNullForMissingOptionalFields() {
-    final FleetSegmentMapper mapper = new FleetSegmentMapper(
-      "country_of_registration",
-      "loa",
-      VESSEL_LENGTH_CLASS_MAPPER,
-      "Industrial"
-    );
-    final Vessel vessel = mock(Vessel.class);
-    when(vessel.getTag("country_of_registration")).thenReturn(
-      java.util.Optional.empty()
-    );
-    when(vessel.getTag("loa")).thenReturn(java.util.Optional.empty());
-
-    final FleetSegment fleetSegment = mapper.apply(vessel);
-
-    assertThat(fleetSegment).isEqualTo(
-      new FleetSegment(null, null, "Industrial", null, "POSEIDON")
-    );
-  }
-
-  @Test
-  void treatsBlankNaAndNonNumericLengthTagsAsMissing() {
-    final FleetSegmentMapper mapper = new FleetSegmentMapper(
-      "country_of_registration",
-      "loa",
-      VESSEL_LENGTH_CLASS_MAPPER,
-      "Industrial"
-    );
-    final Vessel vessel = mock(Vessel.class);
-    when(vessel.getTag("country_of_registration")).thenReturn(
-      java.util.Optional.of(" NA ")
-    );
-    when(vessel.getTag("loa")).thenReturn(
-      java.util.Optional.of("not-a-number")
-    );
-
-    final FleetSegment fleetSegment = mapper.apply(vessel);
-
-    assertThat(fleetSegment.getCountryCode()).isNull();
-    assertThat(fleetSegment.getVesselLengthClass()).isNull();
-  }
-
-  @Test
-  void returnsNullWhenLengthFallsOutsideConfiguredIntervals() {
-    final FleetSegmentMapper mapper = new FleetSegmentMapper(
-      "country_of_registration",
-      "loa",
-      VESSEL_LENGTH_CLASS_MAPPER,
-      "Industrial"
-    );
-    final Vessel vessel = mock(Vessel.class);
-    when(vessel.getTag("country_of_registration")).thenReturn(
-      java.util.Optional.of("ESP")
-    );
-    when(vessel.getTag("loa")).thenReturn(java.util.Optional.of(9.0));
+  void aLengthOutsideEveryClassHasNoClass() {
+    final HasAttributes vessel = () ->
+      Map.of(
+        "main_fishing_gear",
+        "OTB",
+        "country_of_registration",
+        "ESP",
+        "loa",
+        9.0
+      );
 
     final FleetSegment fleetSegment = mapper.apply(vessel);
 
     assertThat(fleetSegment.getCountryCode()).isEqualTo("ESP");
     assertThat(fleetSegment.getVesselLengthClass()).isNull();
+  }
+
+  @Test
+  void anAbsentAttributeIsAnError() {
+    final HasAttributes vessel = () ->
+      Map.of("main_fishing_gear", "OTB", "loa", 18.5);
+
+    assertThatThrownBy(() -> mapper.apply(vessel))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("country_of_registration");
   }
 }

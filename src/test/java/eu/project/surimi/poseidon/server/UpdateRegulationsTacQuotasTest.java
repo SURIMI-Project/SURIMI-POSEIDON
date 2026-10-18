@@ -41,19 +41,17 @@ import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
-import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
-import uk.ac.ox.poseidon.agents.regulations.actions.TemporalFishingAction;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.regulations.actions.TemporalFishingAction;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingOutcome;
 
 class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
@@ -107,20 +105,13 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
   }
 
   private static TemporalFishingAction action(
-    final Vessel vessel,
+    final Map<String, Object> attributes,
     final Interval interval
   ) {
-    return new TemporalFishingAction() {
-      @Override
-      public Interval getInterval() {
-        return interval;
-      }
-
-      @Override
-      public Vessel getAgent() {
-        return vessel;
-      }
-    };
+    final TemporalFishingAction action = mock(TemporalFishingAction.class);
+    when(action.getInterval()).thenReturn(interval);
+    when(action.getAttributes()).thenReturn(attributes);
+    return action;
   }
 
   @Test
@@ -310,7 +301,7 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
   void updateRegulationsTreatsBlankFleetSegmentFieldsAsWildcards() {
     final String simulationId = initialiseSimulation();
     final TotalAllowableCatchQuotas tac = getTac(simulationId);
-    final Vessel otbFra = vessel("OTB", "FRA", 13.0);
+    final Map<String, Object> otbFra = vessel("OTB", "FRA", 13.0);
 
     updateQuotas(
       simulationId,
@@ -471,14 +462,14 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
 
   private void broadcastFishingEvent(
     final String simulationId,
-    final Vessel vessel,
+    final Map<String, Object> vessel,
     final LocalDateTime dateTime,
     final Species species,
     final double biomassInKg
   ) {
     final Simulation simulation = simulationManager.getSimulation(simulationId);
     final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
-    when(action.getAgent()).thenReturn(vessel);
+    when(action.getAttributes()).thenReturn(vessel);
     when(action.getStartDateTime()).thenReturn(dateTime);
 
     simulation
@@ -549,37 +540,34 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
       .getComponent(TotalAllowableCatchQuotas.class);
   }
 
-  private static Vessel vessel() {
+  // The attributes a vessel had when it fished
+  private static Map<String, Object> vessel() {
     return vessel("OTB", "ESP", 18.5);
   }
 
-  private static Vessel vessel(
+  private static Map<String, Object> vessel(
     final String gearCode,
     final String countryCode,
     final double vesselLength
   ) {
-    final Vessel vessel = mock(Vessel.class);
-    final Gear gear = mock(Gear.class);
-    when(vessel.getGear()).thenReturn(gear);
-    when(gear.getCode()).thenReturn(gearCode);
-    when(vessel.getTag("country_of_registration")).thenReturn(
-      Optional.of(countryCode)
+    return Map.of(
+      "main_fishing_gear",
+      gearCode,
+      "country_of_registration",
+      countryCode,
+      "loa",
+      vesselLength
     );
-    when(vessel.getTag("loa")).thenReturn(Optional.of(vesselLength));
-    return vessel;
   }
 
-  private static FleetSegment quotaSegment(final Vessel vessel) {
-    final Gear gear = vessel.getGear();
-    final String gearCode = gear == null ? null : gear.getCode();
-    final Object countryCode = vessel
-      .getTag("country_of_registration")
-      .orElse(null);
+  private static FleetSegment quotaSegment(
+    final Map<String, Object> attributes
+  ) {
     return new FleetSegment(
-      gearCode,
+      attributes.get("main_fishing_gear").toString(),
       null,
       "Industrial",
-      countryCode == null ? null : countryCode.toString(),
+      attributes.get("country_of_registration").toString(),
       "POSEIDON"
     );
   }

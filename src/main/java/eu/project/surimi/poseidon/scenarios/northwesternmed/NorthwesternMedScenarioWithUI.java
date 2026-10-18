@@ -25,17 +25,22 @@ package eu.project.surimi.poseidon.scenarios.northwesternmed;
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.BOTTOM_TRAWLER_GEAR_CODE;
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.PURSE_SEINE_GEAR_CODE;
 import static java.awt.Color.WHITE;
-import static uk.ac.ox.poseidon.agents.vessels.extractors.tags.Factories.stringTagExtractor;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.equal;
+import static uk.ac.ox.poseidon.core.providers.temporal.Factories.currentDateTime;
+import static uk.ac.ox.poseidon.core.providers.temporal.Factories.hasDateTime;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
 import java.util.List;
 import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
 import uk.ac.ox.poseidon.biology.biomass.Factories;
 import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.scopes.SimulationScope;
+import uk.ac.ox.poseidon.core.SimulationScope;
+import uk.ac.ox.poseidon.fishing.vessels.VesselComponent;
+import uk.ac.ox.poseidon.fishing.vessels.VesselSpecificationFactory;
+import uk.ac.ox.poseidon.fishing.vessels.gears.Gear;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
 import uk.ac.ox.poseidon.gui.portrayals.*;
@@ -99,32 +104,42 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
             ),
             new SimpleFieldPortrayalFactory<>(
               "Purse seiner regulations",
-              new RegulationGridPortrayalFactory(
-                scenario.component("purseSeinerRegulations"),
-                scenario.component("vesselField"),
-                condition(
-                  stringTagExtractor("main_fishing_gear"),
-                  equal(PURSE_SEINE_GEAR_CODE)
-                ),
-                scenario.component("bathymetricGrid"),
-                WIDTH,
-                HEIGHT
-              ),
+              RegulationGridPortrayalFactory.builder()
+                .gear(gearOf(scenario))
+                .regulations(scenario.component("purseSeinerRegulations"))
+                .vesselField(scenario.component("vesselField"))
+                .fleet(
+                  condition(
+                    stringAttribute("main_fishing_gear"),
+                    equal(PURSE_SEINE_GEAR_CODE)
+                  )
+                )
+                .bathymetric(scenario.component("bathymetricGrid"))
+                .currentDateTime(currentDateTime())
+                .hasDateTime(hasDateTime())
+                .displayWidth(WIDTH)
+                .displayHeight(HEIGHT)
+                .build(),
               true
             ),
             new SimpleFieldPortrayalFactory<>(
               "Bottom trawler regulations",
-              new RegulationGridPortrayalFactory(
-                scenario.component("bottomTrawlerRegulations"),
-                scenario.component("vesselField"),
-                condition(
-                  stringTagExtractor("main_fishing_gear"),
-                  equal(BOTTOM_TRAWLER_GEAR_CODE)
-                ),
-                scenario.component("bathymetricGrid"),
-                WIDTH,
-                HEIGHT
-              ),
+              RegulationGridPortrayalFactory.builder()
+                .gear(gearOf(scenario))
+                .regulations(scenario.component("bottomTrawlerRegulations"))
+                .vesselField(scenario.component("vesselField"))
+                .fleet(
+                  condition(
+                    stringAttribute("main_fishing_gear"),
+                    equal(BOTTOM_TRAWLER_GEAR_CODE)
+                  )
+                )
+                .bathymetric(scenario.component("bathymetricGrid"))
+                .currentDateTime(currentDateTime())
+                .hasDateTime(hasDateTime())
+                .displayWidth(WIDTH)
+                .displayHeight(HEIGHT)
+                .build(),
               true
             ),
             new SimpleFieldPortrayalFactory<>(
@@ -142,6 +157,18 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
         )
       )
     );
+  }
+
+  // The gear component, taken by name from the vessel specification, so that
+  // the regulation portrayals judge the gear the vessels fish with
+  @SuppressWarnings("unchecked")
+  private static VesselComponent<? extends Gear> gearOf(
+    final Scenario scenario
+  ) {
+    return (VesselComponent<? extends Gear>) scenario
+      .component("vesselSpecification", VesselSpecificationFactory.class)
+      .getComponents()
+      .get("gear");
   }
 
   /**

@@ -36,7 +36,7 @@ import net.jqwik.api.*;
 import net.jqwik.api.constraints.DoubleRange;
 import net.jqwik.api.lifecycle.AfterProperty;
 import net.jqwik.api.lifecycle.BeforeProperty;
-import uk.ac.ox.poseidon.agents.catches.CatchCategory;
+import uk.ac.ox.poseidon.fishing.catches.CatchCategory;
 
 public class SetPricesTest extends ServiceTest {
 

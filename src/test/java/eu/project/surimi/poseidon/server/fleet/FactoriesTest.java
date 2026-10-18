@@ -24,34 +24,35 @@ package eu.project.surimi.poseidon.server.fleet;
 
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.ac.ox.poseidon.core.functions.Factories.numericIntervalToStringMapper;
-import static uk.ac.ox.poseidon.core.scopes.Scope.GLOBAL_SCOPE;
+import static uk.ac.ox.poseidon.core.Scope.GLOBAL_SCOPE;
+import static uk.ac.ox.poseidon.core.functions.Factories.intervalLabel;
+import static uk.ac.ox.poseidon.core.functions.IntervalLabelFactory.interval;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.doubleAttribute;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
 import org.junit.jupiter.api.Test;
-import uk.ac.ox.poseidon.core.functions.NumericIntervalToStringMapperFactory;
-import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.Scope;
 
 class FactoriesTest {
 
   @Test
   void fleetSegmentMapperBuildsFactoryWithProvidedConfiguration() {
-    final var vesselLengthClassMapper = numericIntervalToStringMapper(
-      NumericIntervalToStringMapperFactory.interval(12.0, 18.0, "VL1218")
+    final var gearCode = stringAttribute("main_fishing_gear");
+    final var countryCode = stringAttribute("country_of_registration");
+    final var vesselLengthClass = intervalLabel(
+      doubleAttribute("loa"),
+      interval(12.0, 18.0, "VL1218")
     );
     final FleetSegmentMapperFactory<Scope> factory = fleetSegmentMapper(
-      "country_of_registration",
-      "loa",
-      vesselLengthClassMapper,
+      gearCode,
+      countryCode,
+      vesselLengthClass,
       "Industrial"
     );
 
-    assertThat(factory.getCountryCodeTag()).isEqualTo(
-      "country_of_registration"
-    );
-    assertThat(factory.getVesselLengthTag()).isEqualTo("loa");
-    assertThat(factory.getVesselLengthClassMapper()).isSameAs(
-      vesselLengthClassMapper
-    );
+    assertThat(factory.getGearCode()).isSameAs(gearCode);
+    assertThat(factory.getCountryCode()).isSameAs(countryCode);
+    assertThat(factory.getVesselLengthClass()).isSameAs(vesselLengthClass);
     assertThat(factory.getScale()).isEqualTo("Industrial");
     assertThat(factory.get(GLOBAL_SCOPE)).isNotNull();
   }

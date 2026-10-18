@@ -22,84 +22,46 @@
 
 package eu.project.surimi.poseidon.server.fleet;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import eu.project.surimi.poseidon.server.Server;
 import java.util.function.Function;
 import lombok.NonNull;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.extractors.tags.DoubleTagExtractor;
-import uk.ac.ox.poseidon.agents.vessels.extractors.tags.StringTagExtractor;
-import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
+import lombok.RequiredArgsConstructor;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 
 /**
- * Maps a {@link Vessel} to a {@link FleetSegment} object.
+ * Maps a vessel's attributes to a {@link FleetSegment}: the vessel's current
+ * ones when given a vessel, or the ones an action or a sale recorded when given
+ * that action or sale, so that what happened is reported under the segment the
+ * vessel was in when it happened.
  *
  * <p>
- * The mapper reads:
- *
- * <ul>
- * <li>gear code from {@code vessel.getGear().getCode()}</li>
- * <li>country code from a configured vessel tag</li>
- * <li>vessel length from a configured vessel tag, mapped to a vessel-length
- * class via a {@link NumericIntervalMapper}</li>
- * <li>scale from a configured constant</li>
- * <li>model from {@link Server#MODEL_NAME}</li>
- * </ul>
- *
- * <p>
- * Tag values are normalised before use. Blank strings and {@code NA} are
- * treated as missing. Numeric tag values may be provided either as
- * {@link Number} instances or as parseable strings.
- *
- * <p>
- * Missing, invalid, or unclassified values are mapped to {@code null}. This
- * preserves the wildcard semantics used by
- * {@link FleetSegment#covers(FleetSegment)}.
+ * The gear code, country code and vessel-length class are read from the
+ * attributes; the scale is a configured constant and the model is
+ * {@link Server#MODEL_NAME}. A value read as {@code null} is a wildcard, as in
+ * {@link FleetSegment#covers(FleetSegment)}: a length outside every length
+ * class has no class.
  */
+@RequiredArgsConstructor
 public final class FleetSegmentMapper
-  implements Function<Vessel, FleetSegment>
+  implements Function<HasAttributes, FleetSegment>
 {
 
-  private final @NonNull StringTagExtractor countryCodeExtractor;
-  private final @NonNull DoubleTagExtractor vesselLengthExtractor;
-  private final @NonNull NumericIntervalMapper<String> vesselLengthClassMapper;
+  private final @NonNull Function<? super HasAttributes, String> gearCode;
+  private final @NonNull Function<? super HasAttributes, String> countryCode;
+  private final @NonNull Function<
+    ? super HasAttributes,
+    String
+  > vesselLengthClass;
   private final String scale;
 
-  public FleetSegmentMapper(
-    @NonNull final String countryCodeTag,
-    @NonNull final String vesselLengthTag,
-    @NonNull final NumericIntervalMapper<String> vesselLengthClassMapper,
-    final String scale
-  ) {
-    this.countryCodeExtractor = new StringTagExtractor(countryCodeTag);
-    this.vesselLengthExtractor = new DoubleTagExtractor(vesselLengthTag);
-    this.vesselLengthClassMapper = vesselLengthClassMapper;
-    this.scale = scale;
-  }
-
   @Override
-  public FleetSegment apply(final Vessel vessel) {
-    checkNotNull(vessel);
-
+  public FleetSegment apply(@NonNull final HasAttributes subject) {
     return new FleetSegment(
-      getGearCode(vessel),
-      getVesselLengthClass(vessel),
+      gearCode.apply(subject),
+      vesselLengthClass.apply(subject),
       scale,
-      countryCodeExtractor.apply(vessel),
+      countryCode.apply(subject),
       Server.MODEL_NAME
     );
-  }
-
-  private String getGearCode(final Vessel vessel) {
-    return vessel.getGear() == null ? null : vessel.getGear().getCode();
-  }
-
-  private String getVesselLengthClass(final Vessel vessel) {
-    final Double vesselLength = vesselLengthExtractor.apply(vessel);
-    if (vesselLength == null) {
-      return null;
-    }
-    return vesselLengthClassMapper.apply(vesselLength);
   }
 }

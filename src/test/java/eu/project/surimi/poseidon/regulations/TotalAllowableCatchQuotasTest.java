@@ -22,10 +22,15 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static uk.ac.ox.poseidon.core.Scope.GLOBAL_SCOPE;
+import static uk.ac.ox.poseidon.core.functions.Factories.intervalLabel;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.doubleAttribute;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
 import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
@@ -33,38 +38,35 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
-import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
-import uk.ac.ox.poseidon.agents.regulations.actions.TemporalFishingAction;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEvent;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingEventAccumulator;
-import uk.ac.ox.poseidon.agents.tasks.fishing.FishingOutcome;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
 import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.functions.NumericIntervalMapper;
+import uk.ac.ox.poseidon.core.functions.IntervalLabelFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
+import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.regulations.actions.TemporalFishingAction;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulator;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingOutcome;
 
 class TotalAllowableCatchQuotasTest {
 
   private static final FleetSegmentMapper FLEET_SEGMENT_MAPPER =
-    new FleetSegmentMapper(
-      "country_of_registration",
-      "loa",
-      new NumericIntervalMapper<>(
-        List.of(
-          new NumericIntervalMapper.Interval<>(12.0, 18.0, "VL1218"),
-          new NumericIntervalMapper.Interval<>(18.0, 24.0, "VL1824")
-        )
+    fleetSegmentMapper(
+      stringAttribute("main_fishing_gear"),
+      stringAttribute("country_of_registration"),
+      intervalLabel(
+        doubleAttribute("loa"),
+        IntervalLabelFactory.interval(12.0, 18.0, "VL1218"),
+        IntervalLabelFactory.interval(18.0, 24.0, "VL1824")
       ),
       "Industrial"
-    );
+    ).get(GLOBAL_SCOPE);
   private static final FleetSegment BROAD_OTB_ESP_SEGMENT = new FleetSegment(
     "OTB",
     null,
@@ -110,13 +112,13 @@ class TotalAllowableCatchQuotasTest {
   }
 
   private void recordEvent(
-    final Vessel vessel,
+    final Map<String, Object> attributes,
     final LocalDateTime dateTime,
     final Species species,
     final double weightInKg
   ) {
     final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
-    when(action.getAgent()).thenReturn(vessel);
+    when(action.getAttributes()).thenReturn(attributes);
     final FishingOutcome outcome = new FishingOutcome(
       Bucket.of(species, weightInKg),
       null
@@ -371,8 +373,7 @@ class TotalAllowableCatchQuotasTest {
     tacEndingBoundary.setQuota(interval, quotaSegment(vessel()), cod, 100.0);
 
     final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
-    final Vessel v = vessel();
-    when(action.getAgent()).thenReturn(v);
+    when(action.getAttributes()).thenReturn(vessel());
     final FishingOutcome outcome = new FishingOutcome(
       Bucket.of(cod, 100.0),
       null
@@ -428,8 +429,8 @@ class TotalAllowableCatchQuotasTest {
   @Test
   void closureForOneFleetSegmentDoesNotBlockAnotherFleetSegment() {
     final Species cod = new Species("COD", null, null);
-    final Vessel otbEsp = vessel();
-    final Vessel psFra = vessel("PS", "FRA", 13.0);
+    final Map<String, Object> otbEsp = vessel();
+    final Map<String, Object> psFra = vessel("PS", "FRA", 13.0);
     final LocalDateTime start = LocalDateTime.of(2027, 4, 1, 0, 0);
     final Interval interval = interval(start, start.plusDays(30));
 
@@ -444,8 +445,8 @@ class TotalAllowableCatchQuotasTest {
   @Test
   void effectiveClosureIntervalsAreFilteredByFleetSegment() {
     final Species cod = new Species("COD", null, null);
-    final Vessel otbEsp = vessel();
-    final Vessel psFra = vessel("PS", "FRA", 13.0);
+    final Map<String, Object> otbEsp = vessel();
+    final Map<String, Object> psFra = vessel("PS", "FRA", 13.0);
     final LocalDateTime start = LocalDateTime.of(2027, 4, 1, 0, 0);
     final Interval interval = interval(start, start.plusDays(30));
 
@@ -593,10 +594,11 @@ class TotalAllowableCatchQuotasTest {
   }
 
   @Test
-  void rejectsActionWithoutAgent() {
+  void rejectsActionWithoutTheAttributesItIsJudgedBy() {
     assertThatThrownBy(() ->
       tac.isPermitted(
-        actionWithoutAgent(
+        action(
+          Map.of(),
           interval(
             LocalDateTime.of(2027, 6, 1, 0, 0),
             LocalDateTime.of(2027, 6, 2, 0, 0)
@@ -604,8 +606,8 @@ class TotalAllowableCatchQuotasTest {
         )
       )
     )
-      .isInstanceOf(NullPointerException.class)
-      .hasMessageContaining("Fishing action agent is required.");
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("main_fishing_gear");
   }
 
   private static Interval interval(
@@ -623,70 +625,44 @@ class TotalAllowableCatchQuotasTest {
   }
 
   private static TemporalFishingAction action(
-    final Vessel vessel,
+    final Map<String, Object> attributes,
     final Interval interval
   ) {
-    return new TemporalFishingAction() {
-      @Override
-      public Interval getInterval() {
-        return interval;
-      }
-
-      @Override
-      public Vessel getAgent() {
-        return vessel;
-      }
-    };
+    final TemporalFishingAction action = mock(TemporalFishingAction.class);
+    when(action.getInterval()).thenReturn(interval);
+    when(action.getAttributes()).thenReturn(attributes);
+    return action;
   }
 
-  private static TemporalFishingAction actionWithoutAgent(
-    final Interval interval
+  private static FleetSegment quotaSegment(
+    final Map<String, Object> attributes
   ) {
-    return new TemporalFishingAction() {
-      @Override
-      public Interval getInterval() {
-        return interval;
-      }
-
-      @Override
-      public Vessel getAgent() {
-        return null;
-      }
-    };
-  }
-
-  private static FleetSegment quotaSegment(final Vessel vessel) {
-    final Gear gear = vessel.getGear();
-    final String gearCode = gear == null ? null : gear.getCode();
-    final Object countryCode = vessel
-      .getTag("country_of_registration")
-      .orElse(null);
     return new FleetSegment(
-      gearCode,
+      attributes.get("main_fishing_gear").toString(),
       null,
       "Industrial",
-      countryCode == null ? null : countryCode.toString(),
+      attributes.get("country_of_registration").toString(),
       "POSEIDON"
     );
   }
 
-  private static Vessel vessel() {
+  // The attributes a vessel had when it fished
+  private static Map<String, Object> vessel() {
     return vessel("OTB", "ESP", 18.5);
   }
 
-  private static Vessel vessel(
+  private static Map<String, Object> vessel(
     final String gearCode,
     final String countryCode,
     final double loa
   ) {
-    final Vessel vessel = mock(Vessel.class);
-    final Gear gear = mock(Gear.class);
-    when(vessel.getGear()).thenReturn(gear);
-    when(gear.getCode()).thenReturn(gearCode);
-    when(vessel.getTag("country_of_registration")).thenReturn(
-      Optional.of(countryCode)
+    return Map.of(
+      "main_fishing_gear",
+      gearCode,
+      "country_of_registration",
+      countryCode,
+      "loa",
+      loa
     );
-    when(vessel.getTag("loa")).thenReturn(Optional.of(loa));
-    return vessel;
   }
 }

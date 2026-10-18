@@ -27,6 +27,7 @@ import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternM
 import static java.util.stream.Collectors.summarizingInt;
 import static java.util.stream.Collectors.toMap;
 import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
+import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -133,9 +134,8 @@ public class NorthwesternMedCalibration {
                   );
                 };
                 return (
-                  "components(" +
                   component +
-                  ").delegate.value(" +
+                  ".value(" +
                   multiStringKey(
                     row.getString("species_code"),
                     row.getString("life_stage")
@@ -150,9 +150,13 @@ public class NorthwesternMedCalibration {
       );
 
     final CalibrationProblem problem = new CalibrationProblem(
-      new LocalNorthwesternMedScenario().get(),
+      new LocalNorthwesternMedScenario()
+        .get()
+        .withComponent(
+          "landingsAccumulator",
+          landingsAccumulator(stringAttribute("main_fishing_gear"))
+        ),
       Period.ofYears(yearsSummary.getMax() - yearsSummary.getMin() + 1),
-      ImmutableMap.of("landingsAccumulator", landingsAccumulator()),
       catchabilityParameterRanges,
       new SumSquaredErrors<>(targetLandings, sim ->
         sim.getComponent(LandingsAccumulator.class).get()

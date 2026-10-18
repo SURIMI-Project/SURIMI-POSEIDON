@@ -29,25 +29,37 @@ import com.google.common.collect.ComparisonChain;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import lombok.NonNull;
 import tech.tablesaw.api.*;
-import uk.ac.ox.poseidon.agents.market.Sale;
 import uk.ac.ox.poseidon.core.events.AbstractListener;
+import uk.ac.ox.poseidon.fishing.market.Sale;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 
 /**
  * Accumulates landed biomass from {@link Sale} events into a running total per
  * year, gear, and species/life-stage key, for comparison against real-world
  * landings targets during calibration (see {@code NorthwesternMedCalibration}).
+ * The gear is the code the selling vessel had when it sold, read from the
+ * attributes the sale recorded.
  */
-public class LandingsAccumulator
+public final class LandingsAccumulator
   extends AbstractListener<Sale>
   implements Supplier<Map<LandingsAccumulator.Key, Double>>
 {
 
   private final Map<LandingsAccumulator.Key, Double> landings = new TreeMap<>();
+  private final Function<? super HasAttributes, String> gearCode;
 
-  public LandingsAccumulator() {
+  /**
+   * @param gearCode the gear code, read from the attributes a sale recorded
+   */
+  public LandingsAccumulator(
+    @NonNull final Function<? super HasAttributes, String> gearCode
+  ) {
     super(Sale.class);
+    this.gearCode = gearCode;
   }
 
   /**
@@ -56,7 +68,7 @@ public class LandingsAccumulator
   @Override
   public void receive(final Sale sale) {
     final int year = sale.getDateTime().getYear();
-    final String gearCode = sale.getVessel().getGear().getCode();
+    final String saleGearCode = gearCode.apply(sale);
     sale
       .getItems()
       .stream()
@@ -65,7 +77,7 @@ public class LandingsAccumulator
           item ->
             new Key(
               year,
-              gearCode,
+              saleGearCode,
               multiStringKey(
                 item.getSpecies().getCode(),
                 item.getSpecies().getLifeStage()

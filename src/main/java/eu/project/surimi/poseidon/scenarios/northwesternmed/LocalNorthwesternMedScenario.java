@@ -23,10 +23,10 @@
 package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.INPUT_PATH;
-import static uk.ac.ox.poseidon.agents.market.Factories.priceUpdatesFromTable;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.timeIndexedBiomassGridUpdates;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.timeIndexedBiomassGridsFromNetCdf;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledByDateTime;
+import static uk.ac.ox.poseidon.fishing.market.Factories.priceUpdatesFromTable;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvFile;
 

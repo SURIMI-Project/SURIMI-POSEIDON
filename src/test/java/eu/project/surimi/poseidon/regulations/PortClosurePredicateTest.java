@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.regulations;
 
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,12 +32,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
-import uk.ac.ox.poseidon.agents.regulations.actions.ExtendedFishingAction;
-import uk.ac.ox.poseidon.agents.vessels.Vessel;
-import uk.ac.ox.poseidon.agents.vessels.gears.Gear;
-import uk.ac.ox.poseidon.geography.ports.Port;
+import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttribute;
 
 class PortClosurePredicateTest {
 
@@ -46,7 +46,7 @@ class PortClosurePredicateTest {
   void forbidsWhenPortGearAndDateMatchAWindow() {
     final var predicate = predicate(window(2024, 1, 1, 2024, 1, 31));
     assertThat(
-      predicate.test(action(PORT_CODE, "OTB", LocalDate.of(2024, 1, 15)))
+      predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2024, 1, 15)))
     ).isTrue();
   }
 
@@ -54,7 +54,7 @@ class PortClosurePredicateTest {
   void permitsWhenGearDoesNotMatch() {
     final var predicate = predicate(window(2024, 1, 1, 2024, 1, 31));
     assertThat(
-      predicate.test(action(PORT_CODE, "PS", LocalDate.of(2024, 1, 15)))
+      predicate.apply(null, action(PORT_CODE, "PS", LocalDate.of(2024, 1, 15)))
     ).isFalse();
   }
 
@@ -62,7 +62,7 @@ class PortClosurePredicateTest {
   void permitsWhenDateFallsOutsideTheWindow() {
     final var predicate = predicate(window(2024, 1, 1, 2024, 1, 31));
     assertThat(
-      predicate.test(action(PORT_CODE, "OTB", LocalDate.of(2024, 2, 1)))
+      predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2024, 2, 1)))
     ).isFalse();
   }
 
@@ -70,7 +70,7 @@ class PortClosurePredicateTest {
   void permitsForAnUnlistedPort() {
     final var predicate = predicate(window(2024, 1, 1, 2024, 1, 31));
     assertThat(
-      predicate.test(action("ESVLC", "OTB", LocalDate.of(2024, 1, 15)))
+      predicate.apply(null, action("ESVLC", "OTB", LocalDate.of(2024, 1, 15)))
     ).isFalse();
   }
 
@@ -78,7 +78,7 @@ class PortClosurePredicateTest {
   void forbidsForAFutureYearByExtrapolatingTheLatestWindow() {
     final var predicate = predicate(window(2025, 1, 1, 2025, 1, 31));
     assertThat(
-      predicate.test(action(PORT_CODE, "OTB", LocalDate.of(2028, 1, 15)))
+      predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2028, 1, 15)))
     ).isTrue();
   }
 
@@ -86,25 +86,20 @@ class PortClosurePredicateTest {
   void permitsForAFutureYearWhenTheExtrapolatedWindowDoesNotCoverThatDate() {
     final var predicate = predicate(window(2025, 1, 1, 2025, 1, 31));
     assertThat(
-      predicate.test(action(PORT_CODE, "OTB", LocalDate.of(2028, 2, 1)))
+      predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2028, 2, 1)))
     ).isFalse();
   }
 
   @Test
-  void permitsWhenVesselHasNoHomePort() {
+  void anActionWithNoHomePortIsAnError() {
     final var predicate = predicate(window(2024, 1, 1, 2024, 1, 31));
 
-    final Vessel vessel = mock(Vessel.class);
-    when(vessel.getHomePort()).thenReturn(null);
-
-    final Gear gear = mock(Gear.class);
-    when(gear.getCode()).thenReturn("OTB");
-
     final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
-    when(action.getAgent()).thenReturn(vessel);
-    when(action.getGear()).thenReturn(gear);
+    when(action.getAttributes()).thenReturn(Map.of("main_fishing_gear", "OTB"));
 
-    assertThat(predicate.test(action)).isFalse();
+    assertThatThrownBy(() -> predicate.apply(null, action))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("place_of_registration");
   }
 
   private static PortClosurePredicate predicate(
@@ -114,7 +109,9 @@ class PortClosurePredicateTest {
       ImmutableMap.of(
         PORT_CODE,
         ImmutableMap.of("OTB", ImmutableSet.copyOf(windows))
-      )
+      ),
+      new StringAttribute("place_of_registration"),
+      new StringAttribute("main_fishing_gear")
     );
   }
 
@@ -137,15 +134,6 @@ class PortClosurePredicateTest {
     final String gearCode,
     final LocalDate date
   ) {
-    final Port port = mock(Port.class);
-    when(port.getCode()).thenReturn(portCode);
-
-    final Vessel vessel = mock(Vessel.class);
-    when(vessel.getHomePort()).thenReturn(port);
-
-    final Gear gear = mock(Gear.class);
-    when(gear.getCode()).thenReturn(gearCode);
-
     final var startDateTime = date.atStartOfDay();
     final var interval = Interval.of(
       startDateTime.toInstant(UTC),
@@ -153,8 +141,9 @@ class PortClosurePredicateTest {
     );
 
     final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
-    when(action.getAgent()).thenReturn(vessel);
-    when(action.getGear()).thenReturn(gear);
+    when(action.getAttributes()).thenReturn(
+      Map.of("place_of_registration", portCode, "main_fishing_gear", gearCode)
+    );
     when(action.getInterval()).thenReturn(interval);
     when(action.getStartDateTime()).thenReturn(startDateTime);
 

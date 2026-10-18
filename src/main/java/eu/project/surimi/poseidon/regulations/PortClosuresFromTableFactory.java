@@ -32,13 +32,14 @@ import com.google.common.collect.ImmutableSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
-import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.Scope;
 
 /**
  * Reads a table of {@code (port_code, gear_code, start_date, end_date)} rows
@@ -47,20 +48,21 @@ import uk.ac.ox.poseidon.core.scopes.Scope;
  * from the result; consumers should use
  * {@code getOrDefault(portCode, ImmutableMap.of()).getOrDefault(gearCode, ImmutableSet.of())}.
  */
-@Data
-@NoArgsConstructor
+@Getter
+@ToString
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 public class PortClosuresFromTableFactory<S extends Scope> extends RelativeScopeFactory<
   S,
   ImmutableMap<String, ImmutableMap<String, ImmutableSet<PortClosureWindow>>>
 > {
 
-  private Factory<? super S, Table> table;
-  private String portCodeColumnName;
-  private String gearCodeColumnName;
-  private String startDateColumnName;
-  private String endDateColumnName;
+  private final Factory<? super S, Table> table;
+  private final String portCodeColumnName;
+  private final String gearCodeColumnName;
+  private final String startDateColumnName;
+  private final String endDateColumnName;
 
   @Override
   protected ImmutableMap<

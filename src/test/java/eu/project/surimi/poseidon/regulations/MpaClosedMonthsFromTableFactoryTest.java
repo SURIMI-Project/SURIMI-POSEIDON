@@ -24,7 +24,7 @@ package eu.project.surimi.poseidon.regulations;
 
 import static eu.project.surimi.poseidon.regulations.Factories.mpaClosedMonths;
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.ac.ox.poseidon.core.scopes.Scope.GLOBAL_SCOPE;
+import static uk.ac.ox.poseidon.core.Scope.GLOBAL_SCOPE;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
 import java.time.Month;

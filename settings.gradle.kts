@@ -41,7 +41,7 @@ plugins {
 rootProject.name = "SURIMI-POSEIDON"
 includeBuild("POSEIDON") {
     dependencySubstitution {
-        substitute(module("POSEIDON:agents")).using(project(":agents"))
+        substitute(module("POSEIDON:fishing")).using(project(":fishing"))
         substitute(module("POSEIDON:biology")).using(project(":biology"))
         substitute(module("POSEIDON:calibration")).using(project(":calibration"))
         substitute(module("POSEIDON:examples")).using(project(":examples"))

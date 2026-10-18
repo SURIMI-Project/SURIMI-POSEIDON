@@ -24,34 +24,57 @@ package eu.project.surimi.poseidon.regulations;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.function.BiFunction;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.MappingFactory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
-import uk.ac.ox.poseidon.core.scopes.Scope;
+import uk.ac.ox.poseidon.core.Scope;
+import uk.ac.ox.poseidon.core.ValueFactory;
+import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
+import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 
 /**
  * Factory for {@link PortClosurePredicate}, sourcing its port closure windows
- * from a table.
+ * from a table, with the home port and gear codes read from the attributes an
+ * action recorded.
  */
-@Data
-@NoArgsConstructor
+@Getter
+@ToString
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class PortClosurePredicateFactory<S extends Scope> extends RelativeScopeFactory<
-  S,
-  PortClosurePredicate
-> {
+@SuperBuilder(toBuilder = true)
+public class PortClosurePredicateFactory<S extends Scope>
+  extends RelativeScopeFactory<
+    S,
+    BiFunction<Object, ExtendedFishingAction, Boolean>
+  >
+  implements MappingFactory<S, Object, ExtendedFishingAction, Boolean>
+{
 
-  private Factory<
+  private final Factory<
     ? super S,
     ImmutableMap<String, ImmutableMap<String, ImmutableSet<PortClosureWindow>>>
   > portClosures;
+  private final ValueFactory<
+    ? super S,
+    ? super HasAttributes,
+    String
+  > homePortCode;
+  private final ValueFactory<? super S, ? super HasAttributes, String> gearCode;
 
   @Override
-  protected PortClosurePredicate newInstance(final S scope) {
-    return new PortClosurePredicate(portClosures.get(scope));
+  protected BiFunction<Object, ExtendedFishingAction, Boolean> newInstance(
+    final S scope
+  ) {
+    return new PortClosurePredicate(
+      portClosures.get(scope),
+      homePortCode.get(scope),
+      gearCode.get(scope)
+    );
   }
 }
