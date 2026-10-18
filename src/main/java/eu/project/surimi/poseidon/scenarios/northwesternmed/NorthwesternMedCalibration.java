@@ -114,40 +114,8 @@ public class NorthwesternMedCalibration {
       .stream()
       .collect(summarizingInt(LandingsAccumulator.Key::year));
 
-    final DoubleRange catchabilityRange = new DoubleRange(
-      MIN_CATCHABILITY,
-      MAX_CATCHABILITY
-    );
     final ImmutableMap<String, DoubleRange> catchabilityParameterRanges =
-      ImmutableMap.copyOf(
-        Table.read()
-          .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
-          .stream()
-          .collect(
-            toMap(
-              row -> {
-                final String component = switch (row.getString("gear_code")) {
-                  case "PS" -> "purseSeinerCatchabilities";
-                  case "OTB" -> "bottomTrawlerCatchabilities";
-                  default -> throw new IllegalArgumentException(
-                    "Unsupported gear: " + row.getString("gear")
-                  );
-                };
-                return (
-                  component +
-                  ".value(" +
-                  multiStringKey(
-                    row.getString("species_code"),
-                    row.getString("life_stage")
-                  ) +
-                  ")"
-                );
-              },
-              _ -> catchabilityRange,
-              (a, _) -> a
-            )
-          )
-      );
+      catchabilityParameterRanges();
 
     final CalibrationProblem problem = new CalibrationProblem(
       new LocalNorthwesternMedScenario()
@@ -181,6 +149,47 @@ public class NorthwesternMedCalibration {
     System.out.println("Best parameters: " + result.parameters());
     System.out.println("Best fitness: " + result.fitness());
     System.out.println("Generations: " + result.generations());
+  }
+
+  /**
+   * @return the range each catchability is calibrated over, by the address of
+   *         the catchability in the scenario: one per gear, species and life
+   *         stage of the discard ratios
+   */
+  static ImmutableMap<String, DoubleRange> catchabilityParameterRanges() {
+    final DoubleRange catchabilityRange = new DoubleRange(
+      MIN_CATCHABILITY,
+      MAX_CATCHABILITY
+    );
+    return ImmutableMap.copyOf(
+      Table.read()
+        .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
+        .stream()
+        .collect(
+          toMap(
+            row -> {
+              final String component = switch (row.getString("gear_code")) {
+                case "PS" -> "purseSeinerCatchabilities";
+                case "OTB" -> "bottomTrawlerCatchabilities";
+                default -> throw new IllegalArgumentException(
+                  "Unsupported gear: " + row.getString("gear")
+                );
+              };
+              return (
+                component +
+                ".value(" +
+                multiStringKey(
+                  row.getString("species_code"),
+                  row.getString("life_stage")
+                ) +
+                ")"
+              );
+            },
+            _ -> catchabilityRange,
+            (a, _) -> a
+          )
+        )
+    );
   }
 
   /**
