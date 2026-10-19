@@ -108,11 +108,11 @@ class NorthwesternMedVoyageHomeTest {
         .getComponent(Fleet.class)
         .getVessel(VESSEL_ID)
         .orElseThrow();
-      assertThat(portGrid.getPorts().map(portGrid::getLocation)).doesNotContain(
+      assertThat(portGrid.getPorts().map(portGrid::getCell)).doesNotContain(
         vessel.getCell()
       );
       simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
-      final Int2D castellon = portGrid.getLocation(
+      final Int2D castellon = portGrid.getCell(
         portGrid.getObject("ESCAS").orElseThrow()
       );
       assertThat(departureCells).isNotEmpty().containsOnly(castellon);

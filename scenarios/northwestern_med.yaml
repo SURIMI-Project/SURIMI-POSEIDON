@@ -733,7 +733,7 @@ components:
                                   predicate: !!uk.ac.ox.poseidon.fishing.trips.CellWasFishedThisTripFactory {
                                     }
                                 - *id024
-                                - &id036 !!uk.ac.ox.poseidon.fishing.regulations.predicates.FishingLocationLegalityCheckerFactory
+                                - &id036 !!uk.ac.ox.poseidon.fishing.regulations.predicates.FishingCellLegalityCheckerFactory
                                   currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                     }
                                   engine: *id021
@@ -1065,7 +1065,7 @@ components:
                                   predicate: !!uk.ac.ox.poseidon.fishing.trips.CellWasFishedThisTripFactory {
                                     }
                                 - *id043
-                                - &id048 !!uk.ac.ox.poseidon.fishing.regulations.predicates.FishingLocationLegalityCheckerFactory
+                                - &id048 !!uk.ac.ox.poseidon.fishing.regulations.predicates.FishingCellLegalityCheckerFactory
                                   currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                     }
                                   engine: *id021

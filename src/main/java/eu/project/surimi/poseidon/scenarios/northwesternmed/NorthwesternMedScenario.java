@@ -73,7 +73,7 @@ import static uk.ac.ox.poseidon.fishing.market.Factories.marketGrid;
 import static uk.ac.ox.poseidon.fishing.market.Factories.oneBiomassMarketPerPort;
 import static uk.ac.ox.poseidon.fishing.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.fishing.regulations.actions.Factories.departNow;
-import static uk.ac.ox.poseidon.fishing.regulations.predicates.Factories.fishingLocationLegalityChecker;
+import static uk.ac.ox.poseidon.fishing.regulations.predicates.Factories.fishingCellLegalityChecker;
 import static uk.ac.ox.poseidon.fishing.social.Factories.*;
 import static uk.ac.ox.poseidon.fishing.tasks.accounting.Factories.payTripCost;
 import static uk.ac.ox.poseidon.fishing.tasks.branches.Factories.selectorTask;
@@ -548,8 +548,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       totalAllowableCatchQuotas(fleetSegmentMapper)
     );
 
-    final var purseSeinerFishingLocationLegalityChecker =
-      fishingLocationLegalityChecker(
+    final var purseSeinerFishingCellLegalityChecker =
+      fishingCellLegalityChecker(
         gear,
         engine,
         allOf(purseSeinerRegulations, totalAllowableCatchQuotas),
@@ -557,8 +557,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         purseSeineSetDuration
       );
 
-    final var bottomTrawlerFishingLocationLegalityChecker =
-      fishingLocationLegalityChecker(
+    final var bottomTrawlerFishingCellLegalityChecker =
+      fishingCellLegalityChecker(
         gear,
         engine,
         allOf(bottomTrawlerRegulations, totalAllowableCatchQuotas),
@@ -581,12 +581,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     // Purse seiners must be back in port by the first purse seiner return time
     // after they depart: at departure, the trip would depart now.
-    final var purseSeinerFishingLocationAtDepartureChecker = allOf(
+    final var purseSeinerFishingCellAtDepartureChecker = allOf(
       condition(
         purseSeinerFishAndReturnDurationFunction,
         lessThan(durationUntil(nextOccurrenceOf(purseSeinerReturnTime)))
       ),
-      purseSeinerFishingLocationLegalityChecker
+      purseSeinerFishingCellLegalityChecker
     );
 
     // Whether a vessel at sea could travel to a cell, fish there once, and be
@@ -603,20 +603,20 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     // At sea, a vessel does not fish the same cell twice in a trip. Tested
     // first, before the checks that need a path.
-    final var purseSeinerFishingLocationAtSeaChecker = allOf(
+    final var purseSeinerFishingCellAtSeaChecker = allOf(
       not(cellWasFishedThisTrip()),
       purseSeinerFishAndReturnInTime,
-      purseSeinerFishingLocationLegalityChecker
+      purseSeinerFishingCellLegalityChecker
     );
 
     // Bottom trawlers must be back in port within their maximum trip duration
     // of departing: at departure, that is the whole of it.
-    final var bottomTrawlerFishingLocationAtDepartureChecker = allOf(
+    final var bottomTrawlerFishingCellAtDepartureChecker = allOf(
       condition(
         bottomTrawlerFishAndReturnDurationFunction,
         lessThan(constant(bottomTrawlerMaximumTripDuration))
       ),
-      bottomTrawlerFishingLocationLegalityChecker
+      bottomTrawlerFishingCellLegalityChecker
     );
 
     // Whether a vessel at sea could travel to a cell, fish there once, and be
@@ -633,10 +633,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    final var bottomTrawlerFishingLocationAtSeaChecker = allOf(
+    final var bottomTrawlerFishingCellAtSeaChecker = allOf(
       not(cellWasFishedThisTrip()),
       bottomTrawlerFishAndReturnInTime,
-      bottomTrawlerFishingLocationLegalityChecker
+      bottomTrawlerFishingCellLegalityChecker
     );
 
     final var purseSeinerReadyForDeparture = checkThat(
@@ -680,12 +680,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       PURSE_SEINER_EXPLORATION_PROBABILITY,
       neighbourhoodGridExplorer(
         pathFinder,
-        purseSeinerFishingLocationAtDepartureChecker,
+        purseSeinerFishingCellAtDepartureChecker,
         shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
         MAXIMUM_EXPLORATION_WIDENING,
         bestKnownOption(optionValues, currentCell())
       ),
-      greedyPicker(optionValues, purseSeinerFishingLocationAtDepartureChecker)
+      greedyPicker(optionValues, purseSeinerFishingCellAtDepartureChecker)
     );
 
     final var chooseNextPurseSeinerDestination = chooseNextDestination(
@@ -693,12 +693,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         PURSE_SEINER_EXPLORATION_PROBABILITY,
         neighbourhoodGridExplorer(
           pathFinder,
-          purseSeinerFishingLocationAtSeaChecker,
+          purseSeinerFishingCellAtSeaChecker,
           shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
           MAXIMUM_EXPLORATION_WIDENING,
           currentCell()
         ),
-        greedyPicker(optionValues, purseSeinerFishingLocationAtSeaChecker)
+        greedyPicker(optionValues, purseSeinerFishingCellAtSeaChecker)
       )
     );
 
@@ -706,12 +706,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
       neighbourhoodGridExplorer(
         pathFinder,
-        bottomTrawlerFishingLocationAtDepartureChecker,
+        bottomTrawlerFishingCellAtDepartureChecker,
         shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
         MAXIMUM_EXPLORATION_WIDENING,
         bestKnownOption(optionValues, currentCell())
       ),
-      greedyPicker(optionValues, bottomTrawlerFishingLocationAtDepartureChecker)
+      greedyPicker(optionValues, bottomTrawlerFishingCellAtDepartureChecker)
     );
 
     final var chooseNextBottomTrawlerDestination = chooseNextDestination(
@@ -719,12 +719,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
         neighbourhoodGridExplorer(
           pathFinder,
-          bottomTrawlerFishingLocationAtSeaChecker,
+          bottomTrawlerFishingCellAtSeaChecker,
           shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
           MAXIMUM_EXPLORATION_WIDENING,
           currentCell()
         ),
-        greedyPicker(optionValues, bottomTrawlerFishingLocationAtSeaChecker)
+        greedyPicker(optionValues, bottomTrawlerFishingCellAtSeaChecker)
       )
     );
 
