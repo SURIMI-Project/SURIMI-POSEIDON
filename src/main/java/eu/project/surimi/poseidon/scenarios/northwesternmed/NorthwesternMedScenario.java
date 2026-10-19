@@ -124,6 +124,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.function.Supplier;
 import sim.util.Int2D;
 import tech.tablesaw.api.Table;
@@ -891,7 +892,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var socialNetwork = socialNetwork(fleet);
     final var cliqueDynamics = cliqueDynamics(
       socialNetwork,
-      multiStringKeyFromFunctions(
+      List.of(
         stringAttribute("place_of_registration"),
         stringAttribute("main_fishing_gear")
       ),

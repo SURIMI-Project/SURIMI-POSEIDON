@@ -1237,17 +1237,13 @@ components:
       vesselSpecification: *id053
   socialNetwork: *id054
   cliqueDynamics: !!uk.ac.ox.poseidon.fishing.social.CliqueDynamicsFactory
-    groupingKey: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
-      mapping: !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
-        functions:
-        - !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
-          value: !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
-            name: place_of_registration
-          }
-        - !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
-          value: !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
-            name: main_fishing_gear
-          }
+    groupingValues:
+    - !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
+      name: place_of_registration
+    }
+    - !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
+      name: main_fishing_gear
+    }
     maximumCliqueSize: 5
     network: *id054
     randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
