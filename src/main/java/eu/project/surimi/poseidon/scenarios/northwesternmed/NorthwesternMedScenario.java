@@ -106,6 +106,7 @@ import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCa
 import static uk.ac.ox.poseidon.geography.grids.Factories.*;
 import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
+import static uk.ac.ox.poseidon.geography.paths.Factories.pathLengthCalculator;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromTable;
 import static uk.ac.ox.poseidon.geography.predicates.Factories.isActiveWaterCell;
@@ -350,6 +351,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var pathFinder = pathFinder(bathymetricGrid, portGrid, distance);
 
+    // How far apart two cells are by sea, shared by the routes and the
+    // fishing-location checks, so that each length is measured once
+    final var pathLengthCalculator = pathLengthCalculator(pathFinder, distance);
+
     final var species = speciesFromData(
       tableFromCsvFile(inputPath.plus("species.csv")),
       "species_code",
@@ -441,7 +446,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // The route a vessel would travel to fish at a cell and come back: one
     // definition of the journey for both the fishing-location checks and the
     // travel cost.
-    final var routeFunction = routeViaDestination(engine, pathFinder, distance);
+    final var routeFunction = routeViaDestination(engine, pathLengthCalculator);
 
     final var zeroBiomassAllocator = filteredAllocator(
       supplierAllocator(constant(0.0)),
@@ -547,8 +552,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         gear,
         engine,
         allOf(purseSeinerRegulations, totalAllowableCatchQuotas),
-        pathFinder,
-        distance,
+        pathLengthCalculator,
         purseSeineSetDuration
       );
 
@@ -557,8 +561,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         gear,
         engine,
         allOf(bottomTrawlerRegulations, totalAllowableCatchQuotas),
-        pathFinder,
-        distance,
+        pathLengthCalculator,
         bottomTrawlerSetDuration
       );
 
