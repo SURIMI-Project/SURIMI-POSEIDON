@@ -507,7 +507,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // prices.csv.
     final var marketGrid = marketGrid(
       portGrid,
-      oneBiomassMarketPerPort(portGrid)
+      oneBiomassMarketPerPort(portGrid, "EUR")
     );
 
     final var catchCategoriser = uniformCatchCategoriser(

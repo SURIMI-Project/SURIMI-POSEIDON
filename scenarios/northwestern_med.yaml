@@ -193,6 +193,7 @@ components:
     biomassGrids: *id007
   marketGrid: &id012 !!uk.ac.ox.poseidon.fishing.market.MarketGridFactory
     markets: !!uk.ac.ox.poseidon.fishing.market.OneBiomassMarketPerPortFactory
+      currencyCode: EUR
       eventManager: !!uk.ac.ox.poseidon.core.EventManagerFactory {
         }
       portGrid: &id008 !!uk.ac.ox.poseidon.geography.ports.PortGridFactory

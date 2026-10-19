@@ -197,8 +197,8 @@ public class MinimalScenario implements Supplier<Scenario> {
       )
       .toList();
 
-    final var market1 = biomassMarket(port1, MARKET_CODES.get(0));
-    final var market2 = biomassMarket(port2, MARKET_CODES.get(1));
+    final var market1 = biomassMarket(port1, MARKET_CODES.get(0), "GBP");
+    final var market2 = biomassMarket(port2, MARKET_CODES.get(1), "GBP");
     final var markets = listOf(market1, market2);
 
     final var initialPrices = initialPrices(

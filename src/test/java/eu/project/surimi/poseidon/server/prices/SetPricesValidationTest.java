@@ -96,10 +96,31 @@ class SetPricesValidationTest extends ServiceTest {
     );
   }
 
+  @Test
+  void updateRejectedInAnotherCurrencyThanTheMarkets() {
+    final StatusRuntimeException error = assertThrows(
+      StatusRuntimeException.class,
+      () -> updatePrice(SPECIES_CODE, null, 2.0, "EUR")
+    );
+    assertEquals(
+      Status.INVALID_ARGUMENT.getCode(),
+      error.getStatus().getCode()
+    );
+  }
+
   private void updatePrice(
     final String speciesCode,
     final String lifeStage,
     final double price
+  ) {
+    updatePrice(speciesCode, lifeStage, price, "GBP");
+  }
+
+  private void updatePrice(
+    final String speciesCode,
+    final String lifeStage,
+    final double price,
+    final String currencyCode
   ) {
     speciesPriceConsumerStub.updateSpeciesPrices(
       UpdateSpeciesPricesRequest.newBuilder()
@@ -108,7 +129,7 @@ class SetPricesValidationTest extends ServiceTest {
           SpeciesPriceSummary.newBuilder().addSpeciesPrices(
             SpeciesPrice.newBuilder()
               .setMarketCode(MARKET_CODE)
-              .setCurrency("GBP")
+              .setCurrency(currencyCode)
               .setCategoryCode(GEAR_CODE)
               .setSpecies(toProtoSpecies(speciesCode, lifeStage))
               .setPrice(price)

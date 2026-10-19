@@ -37,6 +37,7 @@ import net.jqwik.api.constraints.DoubleRange;
 import net.jqwik.api.lifecycle.AfterProperty;
 import net.jqwik.api.lifecycle.BeforeProperty;
 import uk.ac.ox.poseidon.fishing.catches.CatchCategory;
+import uk.ac.ox.poseidon.fishing.market.BiomassMarket;
 
 public class SetPricesTest extends ServiceTest {
 
@@ -62,10 +63,12 @@ public class SetPricesTest extends ServiceTest {
   void myProperty(
     @ForAll @DoubleRange(max = 1E6) final double price,
     @ForAll("marketCodes") final String marketCode,
-    @ForAll("currencyCodes") final String currencyCode,
     @ForAll("gearCodes") final String gearCode,
     @ForAll("speciesCodes") final String speciesCode
   ) {
+    final BiomassMarket market = getMarketsById(
+      simulationManager.getSimulation(simulationId)
+    ).get(marketCode);
     // noinspection ResultOfMethodCallIgnored
     speciesPriceConsumerStub.updateSpeciesPrices(
       UpdateSpeciesPricesRequest.newBuilder()
@@ -74,7 +77,7 @@ public class SetPricesTest extends ServiceTest {
           SpeciesPriceSummary.newBuilder().addSpeciesPrices(
             SpeciesPrice.newBuilder()
               .setMarketCode(marketCode)
-              .setCurrency(currencyCode)
+              .setCurrency(market.getCurrencyUnit().getCode())
               .setCategoryCode(gearCode)
               .setSpecies(
                 Species.newBuilder().setSpeciesCode(speciesCode).build()
@@ -85,11 +88,7 @@ public class SetPricesTest extends ServiceTest {
         )
         .build()
     );
-    // TODO: test currency code
-    final double priceInSimulation = getMarketsById(
-      simulationManager.getSimulation(simulationId)
-    )
-      .get(marketCode)
+    final double priceInSimulation = market
       .getPrices()
       .get(new CatchCategory(gearCode))
       .get(
@@ -109,11 +108,6 @@ public class SetPricesTest extends ServiceTest {
   @Provide
   Arbitrary<String> speciesCodes() {
     return Arbitraries.of(SPECIES_CODES);
-  }
-
-  @Provide
-  Arbitrary<String> currencyCodes() {
-    return Arbitraries.of("GBP", "EUR", "USD");
   }
 
   @Provide

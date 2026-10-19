@@ -53,7 +53,7 @@ import uk.ac.ox.poseidon.geography.grids.ObjectGrid;
 /**
  * Handles {@code UpdateSpeciesPrices}: sets each requested species price on the
  * matching market (by {@code marketCode}), ignoring prices for unknown markets.
- * Rejects a request that would mix a generic (no life stage) price with an
+ * Rejects a price in another currency than its market trades in. Rejects a request that would mix a generic (no life stage) price with an
  * already-staged one, or vice versa, for the same species/category/market,
  * since {@link BiomassMarket#getPrice} falls back to {@link Species#covers} and
  * such a mix would make that lookup ambiguous.
@@ -102,6 +102,7 @@ public class UpdateSpeciesPricesRequestHandler
           // ignore prices for unknown markets
 
           final CurrencyUnit currencyUnit = parseCurrency(price.getCurrency());
+          validateMarketCurrency(market, currencyUnit);
           final Unit<Mass> biomassUnit =
             simulationProperties.getStandardMassUnit();
           final Price marketPrice = new Price(
@@ -139,11 +140,26 @@ public class UpdateSpeciesPricesRequestHandler
       .build();
   }
 
-  private CurrencyUnit parseCurrency(final String currency) {
+  private CurrencyUnit parseCurrency(final String currencyCode) {
     try {
-      return CurrencyUnit.of(currency);
+      return CurrencyUnit.of(currencyCode);
     } catch (final IllegalCurrencyException e) {
       throw wrap(INVALID_ARGUMENT, e);
+    }
+  }
+
+  private void validateMarketCurrency(
+    final BiomassMarket market,
+    final CurrencyUnit currencyUnit
+  ) {
+    if (!currencyUnit.equals(market.getCurrencyUnit())) {
+      throw INVALID_ARGUMENT.withDescription(
+        "Market '%s' trades in %s, not %s.".formatted(
+          market.getCode(),
+          market.getCurrencyUnit(),
+          currencyUnit
+        )
+      ).asRuntimeException();
     }
   }
 
