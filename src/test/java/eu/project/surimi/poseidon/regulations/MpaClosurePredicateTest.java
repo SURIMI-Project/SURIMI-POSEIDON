@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import sim.util.Int2D;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
@@ -139,6 +140,7 @@ class MpaClosurePredicateTest {
   ) {
     final ModelGrid modelGrid = mock(ModelGrid.class);
     when(modelGrid.toCell(COORDINATE)).thenReturn(CELL);
+    when(modelGrid.getAllCells()).thenAnswer(invocation -> Stream.of(CELL));
     return new MpaClosurePredicate(
       modelGrid,
       mpaGrids,

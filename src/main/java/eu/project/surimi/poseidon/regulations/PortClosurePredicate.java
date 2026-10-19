@@ -22,14 +22,20 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
+
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 import uk.ac.ox.poseidon.regulations.predicates.temporal.BetweenDates;
@@ -47,18 +53,52 @@ import uk.ac.ox.poseidon.regulations.predicates.temporal.BetweenDates;
  * difference and re-checked — the closure calendar is assumed to repeat
  * indefinitely into the future. No such extrapolation is done backwards: an
  * action before the earliest recorded year is simply permitted.
+ * <p>
+ * Each port/gear pair's date ranges, and its latest window for each end year,
+ * are prepared once, when the predicate is built.
  */
-@RequiredArgsConstructor
 public class PortClosurePredicate
   implements BiFunction<Object, ExtendedFishingAction, Boolean>
 {
 
+  private static final PortGearClosures NO_CLOSURES = PortGearClosures.of(
+    ImmutableSet.of()
+  );
+
   private final @NonNull ImmutableMap<
     String,
-    ImmutableMap<String, ImmutableSet<PortClosureWindow>>
-  > portClosures;
+    ImmutableMap<String, PortGearClosures>
+  > closures;
   private final @NonNull Function<? super HasAttributes, String> homePortCode;
   private final @NonNull Function<? super HasAttributes, String> gearCode;
+
+  public PortClosurePredicate(
+    @NonNull final ImmutableMap<
+      String,
+      ImmutableMap<String, ImmutableSet<PortClosureWindow>>
+    > portClosures,
+    @NonNull final Function<? super HasAttributes, String> homePortCode,
+    @NonNull final Function<? super HasAttributes, String> gearCode
+  ) {
+    this.closures = portClosures
+      .entrySet()
+      .stream()
+      .collect(
+        toImmutableMap(Map.Entry::getKey, portEntry ->
+          portEntry
+            .getValue()
+            .entrySet()
+            .stream()
+            .collect(
+              toImmutableMap(Map.Entry::getKey, gearEntry ->
+                PortGearClosures.of(gearEntry.getValue())
+              )
+            )
+        )
+      );
+    this.homePortCode = homePortCode;
+    this.gearCode = gearCode;
+  }
 
   @Override
   @SuppressFBWarnings(
@@ -70,38 +110,73 @@ public class PortClosurePredicate
     final Object context,
     final ExtendedFishingAction action
   ) {
-    final ImmutableMap<String, ImmutableSet<PortClosureWindow>> portWindows =
-      portClosures.getOrDefault(homePortCode.apply(action), ImmutableMap.of());
-    final ImmutableSet<PortClosureWindow> windows = portWindows.getOrDefault(
-      gearCode.apply(action),
-      ImmutableSet.of()
-    );
-    if (
-      windows
-        .stream()
-        .anyMatch(window -> betweenDates(window).apply(null, action))
-    ) {
-      return true;
-    }
+    return closures
+      .getOrDefault(homePortCode.apply(action), ImmutableMap.of())
+      .getOrDefault(gearCode.apply(action), NO_CLOSURES)
+      .covers(action);
+  }
 
-    final var actionYear = action.getStartDateTime().getYear();
-    return windows
-      .stream()
-      .filter(window -> actionYear > window.endDate().getYear())
-      .max(Comparator.comparing(PortClosureWindow::endDate))
-      .map(latest -> {
-        final var yearsAhead = actionYear - latest.endDate().getYear();
-        return betweenDates(
-          new PortClosureWindow(
-            latest.startDate().plusYears(yearsAhead),
-            latest.endDate().plusYears(yearsAhead)
-          )
-        ).apply(null, action);
-      })
-      .orElse(false);
+  private static ImmutableSortedMap<
+    Integer,
+    PortClosureWindow
+  > latestWindowsByEndYear(final ImmutableSet<PortClosureWindow> windows) {
+    return windows.stream().collect(
+      toImmutableSortedMap(
+        Comparator.naturalOrder(),
+        window -> window.endDate().getYear(),
+        window -> window,
+        // on equal end dates, the first window is kept
+        (first, second) ->
+          second.endDate().isAfter(first.endDate()) ? second : first
+      )
+    );
+  }
+
+  private static BetweenDates shifted(
+    final PortClosureWindow window,
+    final int year
+  ) {
+    final var yearsAhead = year - window.endDate().getYear();
+    return betweenDates(
+      new PortClosureWindow(
+        window.startDate().plusYears(yearsAhead),
+        window.endDate().plusYears(yearsAhead)
+      )
+    );
   }
 
   private static BetweenDates betweenDates(final PortClosureWindow window) {
     return new BetweenDates(window.startDate(), window.endDate());
+  }
+
+  private record PortGearClosures(
+    ImmutableList<BetweenDates> dateRanges,
+    ImmutableSortedMap<Integer, PortClosureWindow> latestWindowsByEndYear
+  ) {
+    static PortGearClosures of(final ImmutableSet<PortClosureWindow> windows) {
+      return new PortGearClosures(
+        windows
+          .stream()
+          .map(PortClosurePredicate::betweenDates)
+          .collect(toImmutableList()),
+        PortClosurePredicate.latestWindowsByEndYear(windows)
+      );
+    }
+
+    boolean covers(final ExtendedFishingAction action) {
+      for (final BetweenDates dateRange : dateRanges) {
+        if (dateRange.apply(null, action)) {
+          return true;
+        }
+      }
+      final var actionYear = action.getStartDateTime().getYear();
+      final var previousYearsWindow = latestWindowsByEndYear.lowerEntry(
+        actionYear
+      );
+      return (
+        previousYearsWindow != null &&
+        shifted(previousYearsWindow.getValue(), actionYear).apply(null, action)
+      );
+    }
   }
 }

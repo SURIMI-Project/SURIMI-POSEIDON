@@ -22,13 +22,17 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import static com.google.common.collect.ImmutableListMultimap.toImmutableListMultimap;
+
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.time.Month;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import sim.util.Int2D;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
@@ -44,14 +48,16 @@ import uk.ac.ox.poseidon.geography.grids.ModelGrid;
  * closed / restricting nobody, matching {@link MpaClosedMonthsFromTableFactory}
  * and {@link MpaFleetRestrictionsFromTableFactory}'s absence semantics. A cell
  * covered by more than one MPA is forbidden if any one of them applies.
+ * <p>
+ * The MPAs covering each cell are found once, when the predicate is built, so
+ * the grids are read only then.
  */
-@RequiredArgsConstructor
 public class MpaClosurePredicate
   implements BiFunction<Object, ExtendedFishingAction, Boolean>
 {
 
   private final @NonNull ModelGrid modelGrid;
-  private final @NonNull ImmutableMap<String, DoubleGridWrapper> mpaGrids;
+  private final @NonNull ImmutableListMultimap<Int2D, String> mpaIdsByCell;
   private final @NonNull ImmutableMap<
     String,
     ImmutableSet<Month>
@@ -63,32 +69,62 @@ public class MpaClosurePredicate
   private final @NonNull Function<? super HasAttributes, String> gearCode;
   private final @NonNull Function<? super HasAttributes, String> countryCode;
 
+  public MpaClosurePredicate(
+    @NonNull final ModelGrid modelGrid,
+    @NonNull final ImmutableMap<String, DoubleGridWrapper> mpaGrids,
+    @NonNull final ImmutableMap<String, ImmutableSet<Month>> mpaClosedMonths,
+    @NonNull final ImmutableMap<
+      String,
+      ImmutableSet<GearCountry>
+    > mpaFleetRestrictions,
+    @NonNull final Function<? super HasAttributes, String> gearCode,
+    @NonNull final Function<? super HasAttributes, String> countryCode
+  ) {
+    this.modelGrid = modelGrid;
+    this.mpaIdsByCell = modelGrid
+      .getAllCells()
+      .flatMap(cell ->
+        mpaGrids
+          .entrySet()
+          .stream()
+          .filter(entry -> entry.getValue().getValue(cell) > 0)
+          .map(entry -> Map.entry(cell, entry.getKey()))
+      )
+      .collect(toImmutableListMultimap(Map.Entry::getKey, Map.Entry::getValue));
+    this.mpaClosedMonths = mpaClosedMonths;
+    this.mpaFleetRestrictions = mpaFleetRestrictions;
+    this.gearCode = gearCode;
+    this.countryCode = countryCode;
+  }
+
   @Override
   public Boolean apply(
     final Object context,
     final ExtendedFishingAction action
   ) {
-    final var cell = modelGrid.toCell(action.getStartCoordinate());
+    final var mpaIds = mpaIdsByCell.get(
+      modelGrid.toCell(action.getStartCoordinate())
+    );
+    if (mpaIds.isEmpty()) {
+      return false;
+    }
     final var gearCountry = new GearCountry(
       gearCode.apply(action),
       countryCode.apply(action)
     );
     final var month = action.getStartDateTime().getMonth();
-
-    return mpaGrids
-      .entrySet()
-      .stream()
-      .filter(entry -> entry.getValue().getValue(cell) > 0)
-      .anyMatch(entry -> {
-        final String mpaId = entry.getKey();
-        final var restrictedFleets = mpaFleetRestrictions.get(mpaId);
-        final var closedMonths = mpaClosedMonths.get(mpaId);
-        return (
-          restrictedFleets != null &&
-          restrictedFleets.contains(gearCountry) &&
-          closedMonths != null &&
-          closedMonths.contains(month)
-        );
-      });
+    for (final String mpaId : mpaIds) {
+      final var restrictedFleets = mpaFleetRestrictions.get(mpaId);
+      final var closedMonths = mpaClosedMonths.get(mpaId);
+      if (
+        restrictedFleets != null &&
+        restrictedFleets.contains(gearCountry) &&
+        closedMonths != null &&
+        closedMonths.contains(month)
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 }

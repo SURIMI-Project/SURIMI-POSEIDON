@@ -91,6 +91,17 @@ class PortClosurePredicateTest {
   }
 
   @Test
+  void forbidsWithinTheRecordedYearsByShiftingThePreviousYearsLatestWindow() {
+    final var predicate = predicate(
+      window(2024, 1, 1, 2024, 1, 31),
+      window(2025, 3, 1, 2025, 3, 31)
+    );
+    assertThat(
+      predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2025, 1, 15)))
+    ).isTrue();
+  }
+
+  @Test
   void anActionWithNoHomePortIsAnError() {
     final var predicate = predicate(window(2024, 1, 1, 2024, 1, 31));
 
