@@ -28,6 +28,9 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 - Root tests run **without a module prefix**: `./gradlew test`.
 - Submodule tests need the included-build prefix from the root: `./gradlew :POSEIDON:core:test`.
   The `./gradlew :core:test` form in `POSEIDON/AGENTS.md` only works from inside `POSEIDON/`.
+- `./gradlew :POSEIDON:build` from the root runs the submodule's tests but not its SpotBugs or
+  Spotless checks. For the full check, run `./gradlew build` from inside `POSEIDON/`; a
+  module's `./gradlew :POSEIDON:<module>:build` from the root runs its SpotBugs but not Spotless.
 - `-Werror` is a submodule convention (`buildlogic.java-common-conventions`): it applies to code
   under `POSEIDON/`, not to `src/`.
 
