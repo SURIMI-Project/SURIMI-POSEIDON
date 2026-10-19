@@ -29,8 +29,11 @@ import static java.util.stream.Collectors.mapping;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import java.time.Year;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,11 +45,13 @@ import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.Scope;
 
 /**
- * Reads a table of {@code (port_code, gear_code, start_date, end_date)} rows
- * and groups it by port, then by gear, into the set of date windows that gear
- * is closed for at that port. A port/gear pair with no rows is simply absent
- * from the result; consumers should use
- * {@code getOrDefault(portCode, ImmutableMap.of()).getOrDefault(gearCode, ImmutableSet.of())}.
+ * Reads a table of {@code (port_code, gear_code, season, start_date, end_date)}
+ * rows and groups it by port, then by gear, then by season, into the date
+ * windows that gear is closed for at that port in each season. A season is
+ * labelled by a year, and may hold several windows (a winter closure and a
+ * spring one, say); a window may start in the year before its label, as a
+ * closure running from December into January does. Seasons are in order. A
+ * port/gear pair with no rows is simply absent from the result.
  */
 @Getter
 @ToString
@@ -55,19 +60,29 @@ import uk.ac.ox.poseidon.core.Scope;
 @SuperBuilder(toBuilder = true)
 public class PortClosuresFromTableFactory<S extends Scope> extends RelativeScopeFactory<
   S,
-  ImmutableMap<String, ImmutableMap<String, ImmutableSet<PortClosureWindow>>>
+  ImmutableMap<
+    String,
+    ImmutableMap<
+      String,
+      ImmutableSortedMap<Year, ImmutableSet<PortClosureWindow>>
+    >
+  >
 > {
 
   private final Factory<? super S, Table> table;
   private final String portCodeColumnName;
   private final String gearCodeColumnName;
+  private final String seasonColumnName;
   private final String startDateColumnName;
   private final String endDateColumnName;
 
   @Override
   protected ImmutableMap<
     String,
-    ImmutableMap<String, ImmutableSet<PortClosureWindow>>
+    ImmutableMap<
+      String,
+      ImmutableSortedMap<Year, ImmutableSet<PortClosureWindow>>
+    >
   > newInstance(final S scope) {
     return table
       .get(scope)
@@ -79,13 +94,17 @@ public class PortClosuresFromTableFactory<S extends Scope> extends RelativeScope
           groupingBy(
             row -> row.getString(gearCodeColumnName),
             LinkedHashMap::new,
-            mapping(
-              row ->
-                new PortClosureWindow(
-                  row.getDate(startDateColumnName),
-                  row.getDate(endDateColumnName)
-                ),
-              toImmutableSet()
+            groupingBy(
+              row -> Year.of(row.getInt(seasonColumnName)),
+              TreeMap::new,
+              mapping(
+                row ->
+                  new PortClosureWindow(
+                    row.getDate(startDateColumnName),
+                    row.getDate(endDateColumnName)
+                  ),
+                toImmutableSet()
+              )
             )
           )
         )
@@ -98,7 +117,11 @@ public class PortClosuresFromTableFactory<S extends Scope> extends RelativeScope
             .getValue()
             .entrySet()
             .stream()
-            .collect(toImmutableMap(Entry::getKey, Entry::getValue))
+            .collect(
+              toImmutableMap(Entry::getKey, gearEntry ->
+                ImmutableSortedMap.copyOfSorted(gearEntry.getValue())
+              )
+            )
         )
       );
   }

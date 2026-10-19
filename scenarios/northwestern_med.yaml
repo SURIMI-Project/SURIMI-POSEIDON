@@ -284,6 +284,7 @@ components:
             endDateColumnName: end_date
             gearCodeColumnName: gear_code
             portCodeColumnName: port_code
+            seasonColumnName: year
             startDateColumnName: start_date
             table: !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
               dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory

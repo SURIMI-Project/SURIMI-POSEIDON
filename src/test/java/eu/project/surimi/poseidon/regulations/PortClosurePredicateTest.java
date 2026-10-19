@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,6 +33,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Year;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
@@ -91,14 +95,47 @@ class PortClosurePredicateTest {
   }
 
   @Test
-  void forbidsWithinTheRecordedYearsByShiftingThePreviousYearsLatestWindow() {
+  void permitsWithinTheRecordedSeasonsOutsideTheirWindows() {
     final var predicate = predicate(
       window(2024, 1, 1, 2024, 1, 31),
       window(2025, 3, 1, 2025, 3, 31)
     );
     assertThat(
       predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2025, 1, 15)))
+    ).isFalse();
+  }
+
+  @Test
+  void repeatsEveryWindowOfTheLastSeason() {
+    final var predicate = predicate(
+      window(2024, 11, 15, 2025, 1, 15),
+      window(2025, 4, 1, 2025, 4, 30)
+    );
+    assertThat(
+      predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2027, 1, 10)))
     ).isTrue();
+    assertThat(
+      predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2027, 4, 10)))
+    ).isTrue();
+  }
+
+  @Test
+  void repeatsAWindowSpanningNewYearFromTheDecemberAfterTheLastSeason() {
+    final var predicate = predicate(window(2024, 11, 15, 2025, 1, 15));
+    assertThat(
+      predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2025, 12, 1)))
+    ).isTrue();
+  }
+
+  @Test
+  void repeatsOnlyTheLastSeason() {
+    final var predicate = predicate(
+      window(2024, 3, 1, 2024, 3, 31),
+      window(2025, 1, 1, 2025, 1, 31)
+    );
+    assertThat(
+      predicate.apply(null, action(PORT_CODE, "OTB", LocalDate.of(2026, 3, 15)))
+    ).isFalse();
   }
 
   @Test
@@ -113,13 +150,28 @@ class PortClosurePredicateTest {
       .hasMessageContaining("place_of_registration");
   }
 
+  /** Puts each window in the season labelled by its end date's year. */
   private static PortClosurePredicate predicate(
     final PortClosureWindow... windows
   ) {
     return new PortClosurePredicate(
       ImmutableMap.of(
         PORT_CODE,
-        ImmutableMap.of("OTB", ImmutableSet.copyOf(windows))
+        ImmutableMap.of(
+          "OTB",
+          Arrays.stream(windows).collect(
+            toImmutableSortedMap(
+              Comparator.naturalOrder(),
+              window -> Year.of(window.endDate().getYear()),
+              ImmutableSet::of,
+              (first, second) ->
+                ImmutableSet.<PortClosureWindow>builder()
+                  .addAll(first)
+                  .addAll(second)
+                  .build()
+            )
+          )
+        )
       ),
       new StringAttribute("place_of_registration"),
       new StringAttribute("main_fishing_gear")

@@ -24,8 +24,10 @@ package eu.project.surimi.poseidon.regulations;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import java.time.Month;
+import java.time.Year;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scope;
@@ -134,6 +136,7 @@ public class Factories {
     final Factory<? super S, Table> table,
     final String portCodeColumnName,
     final String gearCodeColumnName,
+    final String seasonColumnName,
     final String startDateColumnName,
     final String endDateColumnName
   ) {
@@ -141,6 +144,7 @@ public class Factories {
       table,
       portCodeColumnName,
       gearCodeColumnName,
+      seasonColumnName,
       startDateColumnName,
       endDateColumnName
     );
@@ -159,7 +163,10 @@ public class Factories {
       ? super S,
       ImmutableMap<
         String,
-        ImmutableMap<String, ImmutableSet<PortClosureWindow>>
+        ImmutableMap<
+          String,
+          ImmutableSortedMap<Year, ImmutableSet<PortClosureWindow>>
+        >
       >
     > portClosures,
     final ValueFactory<? super S, ? super HasAttributes, String> homePortCode,

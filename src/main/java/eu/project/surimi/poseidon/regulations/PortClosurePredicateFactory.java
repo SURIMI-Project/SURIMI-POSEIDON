@@ -24,6 +24,8 @@ package eu.project.surimi.poseidon.regulations;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import java.time.Year;
 import java.util.function.BiFunction;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -58,7 +60,13 @@ public class PortClosurePredicateFactory<S extends Scope>
 
   private final Factory<
     ? super S,
-    ImmutableMap<String, ImmutableMap<String, ImmutableSet<PortClosureWindow>>>
+    ImmutableMap<
+      String,
+      ImmutableMap<
+        String,
+        ImmutableSortedMap<Year, ImmutableSet<PortClosureWindow>>
+      >
+    >
   > portClosures;
   private final ValueFactory<
     ? super S,

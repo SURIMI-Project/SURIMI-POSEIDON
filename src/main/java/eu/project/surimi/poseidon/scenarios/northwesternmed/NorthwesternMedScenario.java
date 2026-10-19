@@ -258,6 +258,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       tableFromCsvFile(inputPath.plus("port_closures.csv")),
       "port_code",
       "gear_code",
+      "year",
       "start_date",
       "end_date"
     );
