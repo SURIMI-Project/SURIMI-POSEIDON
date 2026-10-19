@@ -8,16 +8,25 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.46/a5cfe99fdf320e84955ef653f2ce1bf789d11385/lombok-1.18.46.jar" />
         </processorPath>
-        <module name="POSEIDON.agents.main" />
         <module name="POSEIDON.core.main" />
+        <module name="POSEIDON.fishing.test" />
         <module name="POSEIDON.calibration.main" />
         <module name="POSEIDON.gui.main" />
+        <module name="POSEIDON.gui.test" />
+        <module name="POSEIDON.regulations.test" />
         <module name="POSEIDON.io.main" />
-        <module name="POSEIDON.regulations.main" />
         <module name="SURIMI-POSEIDON.main" />
+        <module name="POSEIDON.io.test" />
+        <module name="POSEIDON.examples.test" />
+        <module name="POSEIDON.examples.main" />
+        <module name="POSEIDON.biology.test" />
+        <module name="POSEIDON.fishing.main" />
+        <module name="POSEIDON.regulations.main" />
+        <module name="POSEIDON.core.test" />
         <module name="POSEIDON.geography.main" />
         <module name="POSEIDON.biology.main" />
-        <module name="POSEIDON.examples.main" />
+        <module name="POSEIDON.geography.test" />
+        <module name="POSEIDON.calibration.test" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="25" />
@@ -39,6 +48,9 @@
       <module name="POSEIDON.examples" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.examples.main" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.examples.test" options="-Werror -Xlint:-processing -Xlint:unchecked" />
+      <module name="POSEIDON.fishing" options="-Werror -Xlint:-processing -Xlint:unchecked" />
+      <module name="POSEIDON.fishing.main" options="-Werror -Xlint:-processing -Xlint:unchecked" />
+      <module name="POSEIDON.fishing.test" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.geography" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.geography.main" options="-Werror -Xlint:-processing -Xlint:unchecked" />
       <module name="POSEIDON.geography.test" options="-Werror -Xlint:-processing -Xlint:unchecked" />
