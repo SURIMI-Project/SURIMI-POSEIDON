@@ -44,10 +44,10 @@ import uk.ac.ox.poseidon.geography.ports.PortGrid;
 
 /**
  * A purse seiner of Tarragona is registered in Alicante while the simulation
- * runs, then in Castellón the next day, while it is still sailing to Alicante,
- * about twenty hours away: from then on it departs from Castellón, never from
- * Alicante, since a voyage home is a run of its behaviour of its own and the
- * change takes effect when the voyage ends.
+ * runs, then in Castellón the next day, while it is still travelling to
+ * Alicante, about twenty hours away: from then on it departs from Castellón,
+ * never from Alicante, since a voyage home is a run of its behaviour of its own
+ * and the change takes effect when the voyage ends.
  */
 class NorthwesternMedVoyageHomeTest {
 

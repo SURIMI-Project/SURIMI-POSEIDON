@@ -437,7 +437,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var fuelTank = vesselComponent(infiniteTank());
 
-    // The route a vessel would sail to fish at a cell and come back: one
+    // The route a vessel would travel to fish at a cell and come back: one
     // definition of the journey for both the fishing-location checks and the
     // travel cost.
     final var routeFunction = routeViaDestination(engine, pathFinder, distance);
@@ -561,9 +561,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         bottomTrawlerSetDuration
       );
 
-    // How long it would take to sail to a cell, fish there once, and sail back
-    // to port. The checkers below test it before the legality checker: it is
-    // cheaper than the regulations, and late in a trip it turns down most
+    // How long it would take to travel to a cell, fish there once, and travel
+    // back to port. The checkers below test it before the legality checker: it
+    // is cheaper than the regulations, and late in a trip it turns down most
     // cells.
     final var purseSeinerFishAndReturnDurationFunction = combinedDuration(
       routeProperty(routeFunction, "duration"),
@@ -584,7 +584,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       purseSeinerFishingLocationLegalityChecker
     );
 
-    // Whether a vessel at sea could sail to a cell, fish there once, and be
+    // Whether a vessel at sea could travel to a cell, fish there once, and be
     // back in port by the first purse seiner return time after its trip
     // started.
     final var purseSeinerFishAndReturnInTime = condition(
@@ -614,7 +614,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       bottomTrawlerFishingLocationLegalityChecker
     );
 
-    // Whether a vessel at sea could sail to a cell, fish there once, and be
+    // Whether a vessel at sea could travel to a cell, fish there once, and be
     // back in port within its maximum trip duration of its trip's start.
     final var bottomTrawlerFishAndReturnInTime = condition(
       bottomTrawlerFishAndReturnDurationFunction,
@@ -790,17 +790,26 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    // Each run of the behaviour either sails home, when the vessel is away
+    // Each run of the behaviour either travels home, when the vessel is away
     // from its home port, or, at the home port, makes a trip or waits. A
     // change to the vessel takes effect between runs, so a vessel given a new
-    // home port sails there and then departs from it.
-    final var sailHome = travelAlongPathTo(
+    // home port travels there and then departs from it.
+    final var travelHome = travelAlongPathTo(
       engine,
       fuelTank,
       pathFinder,
       distance,
       homePortCell(),
       vesselEventManager()
+    );
+
+    final var travelToTripDestination = travelAlongPathTo(
+      engine,
+      fuelTank,
+      pathFinder,
+      distance,
+      currentTripDestinationCell(),
+      currentTripEventManager()
     );
 
     final var purseSeinerBehaviour = selectorTask(
@@ -813,16 +822,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
               purseSeinerFirstDestination,
               untilFail(
                 sequenceTask(
-                  travelAlongPathTo(
-                    engine,
-                    fuelTank,
-                    pathFinder,
-                    distance,
-                    currentTripDestinationCell(),
-                    currentTripEventManager()
-                  ),
+                  travelToTripDestination,
                   purseSeinerFishingTask,
-                  // No time to fish once more here and sail home: going via
+                  // No time to fish once more here and travel home: going via
                   // any other cell takes longer, so the trip ends without a
                   // search.
                   checkThat(currentCell(), purseSeinerFishAndReturnInTime),
@@ -830,14 +832,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
               ),
               setDestinationToOrigin(),
-              travelAlongPathTo(
-                engine,
-                fuelTank,
-                pathFinder,
-                distance,
-                currentTripDestinationCell(),
-                currentTripEventManager()
-              ),
+              travelToTripDestination,
               arriveInPort(),
               payTripCost(tripCostFromHourlyCosts(hourlyCost)),
               landCatches(hold, constant(hours(1)))
@@ -846,7 +841,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
           purseSeinerWaitUntilNextCheckpoint
         )
       ),
-      sailHome
+      travelHome
     );
 
     final var bottomTrawlerBehaviour = selectorTask(
@@ -859,16 +854,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
               bottomTrawlerFirstDestination,
               untilFail(
                 sequenceTask(
-                  travelAlongPathTo(
-                    engine,
-                    fuelTank,
-                    pathFinder,
-                    distance,
-                    currentTripDestinationCell(),
-                    currentTripEventManager()
-                  ),
+                  travelToTripDestination,
                   bottomTrawlerFishingTask,
-                  // No time to fish once more here and sail home: going via
+                  // No time to fish once more here and travel home: going via
                   // any other cell takes longer, so the trip ends without a
                   // search.
                   checkThat(currentCell(), bottomTrawlerFishAndReturnInTime),
@@ -876,14 +864,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
                 )
               ),
               setDestinationToOrigin(),
-              travelAlongPathTo(
-                engine,
-                fuelTank,
-                pathFinder,
-                distance,
-                currentTripDestinationCell(),
-                currentTripEventManager()
-              ),
+              travelToTripDestination,
               arriveInPort(),
               payTripCost(tripCostFromHourlyCosts(hourlyCost)),
               landCatches(hold, constant(hours(1)))
@@ -892,7 +873,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
           bottomTrawlerWaitUntilNextCheckpoint
         )
       ),
-      sailHome
+      travelHome
     );
 
     final var behaviour = choice(
