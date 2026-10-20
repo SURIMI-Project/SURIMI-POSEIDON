@@ -69,11 +69,12 @@ jobs:
         # Before the image push, so a version already tagged on another commit fails the run instead
         # of overwriting that version's image. Pushing a tag that already points to this commit succeeds.
         # The checkout's credentials are POSEIDON_PAT, which cannot write to this repository: clear them
-        # and push with GITHUB_TOKEN instead.
+        # and push with GITHUB_TOKEN instead. --no-verify skips the Git LFS pre-push hook, which fails to
+        # authenticate its lock check and has nothing to upload: the commit is already on the remote.
         if: github.event_name == 'push'
         run: >
           git -c http.https://github.com/.extraheader=
-          push "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          push --no-verify "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
           "HEAD:refs/tags/v${{ steps.gitversion.outputs.SemVer }}"
 
       - name: Log in to GHCR
