@@ -222,6 +222,14 @@ tasks.register("pushDockerImage", Exec::class) {
     commandLine("sh", "-c", dockerImageTags.joinToString(" && ") { "docker push $dockerImageName:$it" })
 }
 
+// Missing comments are not reported, and any other Javadoc problem fails the build
+tasks.withType<Javadoc>().configureEach {
+    (options as StandardJavadocDocletOptions).apply {
+        addBooleanOption("Xdoclint:all,-missing", true)
+        addBooleanOption("Werror", true)
+    }
+}
+
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
