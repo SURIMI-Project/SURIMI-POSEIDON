@@ -186,14 +186,17 @@ submodule.
 ## Docker image
 
 ```
-./gradlew stageForImage      # build/image/: jar, runtime libs, logging.properties, scenarios/northwestern_med.yaml
-./gradlew buildDockerImage    # docker build -t ghcr.io/surimi-project/surimiposeidon:latest .
-./gradlew pushDockerImage     # docker push to GHCR — confirm with the user before running
+./gradlew stageForImage                               # build/image/: jar, runtime libs, logging.properties,
+                                                    # scenarios/northwestern_med.yaml
+./gradlew buildDockerImage -PdockerImageVersion=1.2.3
+./gradlew pushDockerImage -PdockerImageVersion=1.2.3  # pushes :latest and :1.2.3 to GHCR
 ```
 
-CI already rebuilds and pushes the image: the Java CI workflow (`.github/workflows/gradle.yml`)
-runs `pushDockerImage` on every push to `main`, though not on pull requests. A merge to `main`
-therefore publishes a new `:latest` with no manual push.
+The GitHub workflow (`.github/workflows/gradle.yml`) installs GitVersion, records the extracted
+`SemVer`, and passes it into Gradle as `-PdockerImageVersion=<SemVer>`. The Gradle task then builds
+and pushes both `ghcr.io/surimi-project/surimiposeidon:latest` and
+`ghcr.io/surimi-project/surimiposeidon:<SemVer>`, and creates the matching `v<SemVer>` git tag on
+`main`. Pull requests still run the build without publishing the image.
 
 Entry point: `eu.project.surimi.poseidon.server.Server`. Default port `50051` (`-p`), scenario
 folder `scenarios` (`-s`). The image has no input data: with `AWS_BUCKET_NAME` set, `S3Inputs`
