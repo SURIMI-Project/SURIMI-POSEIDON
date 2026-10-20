@@ -177,6 +177,12 @@ After cloning or pulling: `git submodule update --init --recursive`.
 - A change that touches a submodule is two commits: one inside the submodule, then a pointer bump
   here. Push the submodule commit before pushing a superproject commit that points to it.
 
+## Merging
+
+Merge branches into `main` by fast-forward only (`git merge --ff-only`), never with a merge commit.
+If `main` has moved on, rebase the branch onto it first. The same holds in the `POSEIDON`
+submodule.
+
 ## Docker image
 
 ```
