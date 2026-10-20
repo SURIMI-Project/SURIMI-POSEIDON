@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -41,7 +41,7 @@ import java.util.Optional;
  * Exports spans via OTLP/gRPC when the {@code OTEL_EXPORTER_OTLP_ENDPOINT}
  * environment variable is set; otherwise traces are collected but not exported.
  */
-public class OpenTelemetryConfiguration {
+public final class OpenTelemetryConfiguration {
 
   private static final System.Logger logger = System.getLogger(
     OpenTelemetryConfiguration.class.getName()
@@ -52,6 +52,8 @@ public class OpenTelemetryConfiguration {
    * class-load time.
    */
   public static final OpenTelemetry openTelemetry = initOpenTelemetry();
+
+  private OpenTelemetryConfiguration() {}
 
   /**
    * @return a new {@link OpenTelemetry} SDK instance, registered as the global

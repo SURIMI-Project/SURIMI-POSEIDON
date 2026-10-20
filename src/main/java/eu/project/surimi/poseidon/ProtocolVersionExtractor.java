@@ -33,7 +33,9 @@ import java.util.concurrent.Callable;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
-public class ProtocolVersionExtractor {
+public final class ProtocolVersionExtractor {
+
+  private ProtocolVersionExtractor() {}
 
   public static String getSurimiProtocolVersion() {
     final String fullString = extractVersion(
