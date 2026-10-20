@@ -43,6 +43,10 @@ import uk.ac.ox.poseidon.gui.portrayals.*;
  */
 public class MinimalScenarioWithUI extends ScenarioWithUI {
 
+  /**
+   * @param scenario a {@link MinimalScenario}, whose components the displays
+   *                 look up by name
+   */
   public MinimalScenarioWithUI(final Scenario scenario) {
     super(
       scenario,

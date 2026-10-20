@@ -63,6 +63,10 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
   // scale doesn't clip the most abundant stocks.
   private static final String DISPLAY_CARRYING_CAPACITY = "700000 kg";
 
+  /**
+   * @param scenario a {@link NorthwesternMedScenario}, whose components the
+   *                 displays look up by name
+   */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public NorthwesternMedScenarioWithUI(final Scenario scenario) {
     super(

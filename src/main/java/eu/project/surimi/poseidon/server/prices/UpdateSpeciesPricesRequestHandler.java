@@ -69,6 +69,7 @@ public class UpdateSpeciesPricesRequestHandler
     UpdateSpeciesPricesRequestHandler.class.getName()
   );
 
+  /** @param simulationManager the simulations this handler can reach */
   public UpdateSpeciesPricesRequestHandler(
     final SimulationManager simulationManager
   ) {

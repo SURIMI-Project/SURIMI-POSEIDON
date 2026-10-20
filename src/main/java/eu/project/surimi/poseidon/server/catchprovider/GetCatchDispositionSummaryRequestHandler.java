@@ -64,6 +64,7 @@ public class GetCatchDispositionSummaryRequestHandler
     GetCatchDispositionSummaryRequestHandler.class.getName()
   );
 
+  /** @param simulationManager the simulations this handler can reach */
   public GetCatchDispositionSummaryRequestHandler(
     final SimulationManager simulationManager
   ) {

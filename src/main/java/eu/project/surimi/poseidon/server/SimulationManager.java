@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -78,6 +78,9 @@ public class SimulationManager {
     return contains(parseId(simulationId));
   }
 
+  /**
+   * @return whether a simulation is registered under {@code simulationId}.
+   */
   public boolean contains(final UUID simulationId) {
     return simulations.asMap().containsKey(simulationId);
   }
@@ -89,6 +92,9 @@ public class SimulationManager {
     return getSimulation(parseId(simulationId));
   }
 
+  /**
+   * @return the registered simulation, or throws {@code NOT_FOUND}.
+   */
   public Simulation getSimulation(final UUID simulationId) {
     final Simulation simulation = simulations.getIfPresent(simulationId);
     if (simulation == null) {
@@ -147,6 +153,14 @@ public class SimulationManager {
     private final ImmutableSet<SpeciesKey> speciesKeys;
     private final ImmutableSet<FleetSegment> fleetSegments;
 
+    /**
+     * @param stepSize           the length of one simulation step
+     * @param standardMassUnit   the unit masses cross the wire in
+     * @param marketCodes        the contract's market codes; copied
+     * @param priceCategoryCodes the contract's price category codes; copied
+     * @param speciesKeys        the contract's species; copied
+     * @param fleetSegments      the contract's fleet segments; copied
+     */
     public SimulationProperties(
       final Period stepSize,
       final Unit<Mass> standardMassUnit,
@@ -225,6 +239,10 @@ public class SimulationManager {
     remove(parseId(simulationId));
   }
 
+  /**
+   * Unregisters a simulation; its properties are reclaimed once it becomes
+   * unreferenced.
+   */
   public void remove(final UUID simulationId) {
     simulations.invalidate(simulationId);
   }

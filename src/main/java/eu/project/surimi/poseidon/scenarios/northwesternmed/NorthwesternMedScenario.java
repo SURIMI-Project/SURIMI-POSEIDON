@@ -134,6 +134,12 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.fishing.choices.KeyedMemoryFactory;
 
+/**
+ * The Northwestern Mediterranean scenario, the one this server serves in
+ * production, built from the data in {@code inputs/northwestern_med}. The
+ * {@code writeNorthwesternMedScenario} Gradle task writes it to
+ * {@code scenarios/northwestern_med.yaml}, which the server reads.
+ */
 public class NorthwesternMedScenario implements Supplier<Scenario> {
 
   public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);

@@ -64,6 +64,7 @@ public class GetSalesRequestHandler
     GetSalesRequestHandler.class.getName()
   );
 
+  /** @param simulationManager the simulations this handler can reach */
   public GetSalesRequestHandler(final SimulationManager simulationManager) {
     super(simulationManager);
   }

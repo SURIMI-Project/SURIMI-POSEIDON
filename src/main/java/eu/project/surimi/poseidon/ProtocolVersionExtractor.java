@@ -33,10 +33,21 @@ import java.util.concurrent.Callable;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+/**
+ * Reads the version of the SURIMI protocol this server was built against from
+ * the Maven metadata of the generated protocol library.
+ */
 public final class ProtocolVersionExtractor {
 
   private ProtocolVersionExtractor() {}
 
+  /**
+   * @return the last dot-separated part of the protocol library's version,
+   *         which is the commit hash of the protocol definitions it was
+   *         generated from
+   * @throws io.grpc.StatusRuntimeException {@code INTERNAL} if the version
+   *                                        cannot be read
+   */
   public static String getSurimiProtocolVersion() {
     final String fullString = extractVersion(
       FisheryServiceGrpc.class

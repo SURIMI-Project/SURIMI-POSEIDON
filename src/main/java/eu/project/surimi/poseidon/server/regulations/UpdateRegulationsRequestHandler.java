@@ -53,6 +53,7 @@ public class UpdateRegulationsRequestHandler
   >
 {
 
+  /** @param simulationManager the simulations this handler can reach */
   public UpdateRegulationsRequestHandler(
     final SimulationManager simulationManager
   ) {

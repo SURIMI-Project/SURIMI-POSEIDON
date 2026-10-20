@@ -75,6 +75,14 @@ public class PortClosurePredicate
   private final @NonNull Function<? super HasAttributes, String> homePortCode;
   private final @NonNull Function<? super HasAttributes, String> gearCode;
 
+  /**
+   * @param portClosures each home port's closure windows, by gear code, then
+   *                     by season
+   * @param homePortCode reads the home port code from the attributes an action
+   *                     recorded
+   * @param gearCode     reads the gear code from the attributes an action
+   *                     recorded
+   */
   public PortClosurePredicate(
     @NonNull final ImmutableMap<
       String,

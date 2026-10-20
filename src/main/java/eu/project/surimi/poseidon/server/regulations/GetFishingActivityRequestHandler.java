@@ -49,6 +49,7 @@ public class GetFishingActivityRequestHandler
   >
 {
 
+  /** @param simulationManager the simulations this handler can reach */
   public GetFishingActivityRequestHandler(
     final SimulationManager simulationManager
   ) {

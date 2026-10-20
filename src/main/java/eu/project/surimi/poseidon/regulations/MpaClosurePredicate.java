@@ -69,6 +69,17 @@ public class MpaClosurePredicate
   private final @NonNull Function<? super HasAttributes, String> gearCode;
   private final @NonNull Function<? super HasAttributes, String> countryCode;
 
+  /**
+   * @param modelGrid            the grid the MPA masks are defined over
+   * @param mpaGrids             each MPA's mask, by MPA ID
+   * @param mpaClosedMonths      the months each MPA is closed, by MPA ID
+   * @param mpaFleetRestrictions the (gear, country) pairs each MPA restricts,
+   *                             by MPA ID
+   * @param gearCode             reads the gear code from the attributes an
+   *                             action recorded
+   * @param countryCode          reads the country code from the attributes an
+   *                             action recorded
+   */
   public MpaClosurePredicate(
     @NonNull final ModelGrid modelGrid,
     @NonNull final ImmutableMap<String, DoubleGridWrapper> mpaGrids,
