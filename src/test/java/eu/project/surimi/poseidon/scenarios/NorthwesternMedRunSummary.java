@@ -65,7 +65,7 @@ import uk.ac.ox.poseidon.geography.Coordinate;
  * APIs that are stable across the shared-observations work, so that it also
  * runs against older POSEIDON versions.
  */
-public class NorthwesternMedRunSummary {
+public final class NorthwesternMedRunSummary {
 
   private static final double EARTH_RADIUS_IN_KM = 6371.0;
 
@@ -86,7 +86,7 @@ public class NorthwesternMedRunSummary {
   private final Map<String, GearSummary> gearSummaries = new TreeMap<>();
 
   /** What the vessels of one gear did, counted over the trips that ended. */
-  private static class GearSummary {
+  private static final class GearSummary {
 
     private final Set<Vessel> vessels = new HashSet<>();
     private int trips;

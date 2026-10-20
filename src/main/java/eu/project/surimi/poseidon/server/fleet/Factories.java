@@ -30,7 +30,7 @@ import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
  * Static entry points for building this package's factories, mirroring the YAML
  * factory-method convention used throughout POSEIDON scenarios.
  */
-public class Factories {
+public final class Factories {
 
   private Factories() {}
 

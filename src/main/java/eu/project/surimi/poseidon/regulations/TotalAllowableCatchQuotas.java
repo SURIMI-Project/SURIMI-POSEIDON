@@ -466,7 +466,7 @@ public class TotalAllowableCatchQuotas
   ) {}
 
   @Value
-  private static class QuotaKey {
+  private static final class QuotaKey {
 
     FleetSegment fleetSegment;
     Interval interval;

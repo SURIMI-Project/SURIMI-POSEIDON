@@ -31,7 +31,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 /**
  * Small request-validation helpers shared across gRPC handlers.
  */
-public class Utils {
+public final class Utils {
 
   private Utils() {}
 

@@ -42,7 +42,7 @@ import uk.ac.ox.poseidon.geography.grids.ModelGrid;
  * mirroring the YAML factory-method convention used throughout POSEIDON
  * scenarios.
  */
-public class Factories {
+public final class Factories {
 
   private Factories() {}
 
