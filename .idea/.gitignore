@@ -9,3 +9,8 @@
 # Generated from Gradle on every sync
 /modules.xml
 /modules/
+/compiler.xml
+/gradle.xml
+/kotlinc.xml
+# Personal spell-check dictionaries
+/dictionaries/
