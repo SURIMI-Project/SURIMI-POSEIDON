@@ -84,7 +84,6 @@ import uk.ac.ox.poseidon.biology.biomass.BiomassGridFactory;
 import uk.ac.ox.poseidon.biology.species.SpeciesFactory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.utils.Pair;
-import uk.ac.ox.poseidon.fishing.market.PriceEntryFactory;
 
 /**
  * A small, hand-built (not YAML-loaded) scenario used by tests: a 3x3 grid, two
@@ -192,7 +191,7 @@ public class MinimalScenario implements Supplier<Scenario> {
                 price(portIndex + i * 0.1, "GBP", "kg")
               )
             )
-            .toArray(PriceEntryFactory[]::new)
+            .toList()
         )
       )
       .toList();

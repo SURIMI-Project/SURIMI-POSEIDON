@@ -27,6 +27,7 @@ import static java.util.Collections.nCopies;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 
 import java.util.List;
+import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGrid;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.SimulationScope;
@@ -43,7 +44,6 @@ import uk.ac.ox.poseidon.gui.portrayals.*;
 public class MinimalScenarioWithUI extends ScenarioWithUI {
 
   public MinimalScenarioWithUI(final Scenario scenario) {
-    // noinspection unchecked
     super(
       scenario,
       List.of(
@@ -54,7 +54,7 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
               scenario.component("bathymetricGrid")
             ),
             new SpeciesBiomassFieldsPortrayalFactory(
-              scenario.component("biomassGrids", ListFactory.class),
+              scenario.component("biomassGrids"),
               carryingCapacityGridPerSpecies(scenario),
               false
             ),
@@ -94,18 +94,17 @@ public class MinimalScenarioWithUI extends ScenarioWithUI {
 
   // Every species shares the one carrying capacity grid, which the portrayal
   // pairs with each species' biomass grid in turn
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  private static ListFactory carryingCapacityGridPerSpecies(
-    final Scenario scenario
-  ) {
-    final Factory<SimulationScope, ?> carryingCapacityGrid = scenario.component(
-      "carryingCapacityGrid"
-    );
+  private static ListFactory<
+    SimulationScope,
+    CarryingCapacityGrid
+  > carryingCapacityGridPerSpecies(final Scenario scenario) {
+    final Factory<SimulationScope, CarryingCapacityGrid> carryingCapacityGrid =
+      scenario.component("carryingCapacityGrid");
     return listOf(
       nCopies(
         MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE.size(),
         carryingCapacityGrid
-      ).toArray(Factory[]::new)
+      )
     );
   }
 
