@@ -1,6 +1,7 @@
 [versions]
 assertj = "3.27.7"
 caffeine = "3.2.3"
+checkstyle = "14.3.0"
 freefair = "9.8.2"
 grpc = "1.82.0"
 jackson2 = "2.18.11" # build classpath only, via node-gradle

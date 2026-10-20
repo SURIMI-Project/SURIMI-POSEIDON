@@ -28,20 +28,22 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 - Root tests run **without a module prefix**: `./gradlew test`.
 - Submodule tests need the included-build prefix from the root: `./gradlew :POSEIDON:core:test`.
   The `./gradlew :core:test` form in `POSEIDON/AGENTS.md` only works from inside `POSEIDON/`.
-- `./gradlew :POSEIDON:build` from the root runs the submodule's tests but not its SpotBugs or
-  Spotless checks. For the full check, run `./gradlew build` from inside `POSEIDON/`; a
-  module's `./gradlew :POSEIDON:<module>:build` from the root runs its SpotBugs but not Spotless.
+- `./gradlew :POSEIDON:build` from the root runs the submodule's tests but not its SpotBugs,
+  Checkstyle or Spotless checks. For the full check, run `./gradlew build` from inside
+  `POSEIDON/`; a module's `./gradlew :POSEIDON:<module>:build` from the root runs its SpotBugs and
+  Checkstyle but not Spotless.
 
 ## Commands
 
 ```
-./gradlew build                                          # root + POSEIDON: compile, tests, spotbugs
+./gradlew build                                          # root + POSEIDON: compile, tests, spotbugs, checkstyle
 ./gradlew test                                           # root tests (~3 min, mostly NW Med runs)
 ./gradlew test --tests "eu.project.surimi.poseidon.server.SimulationServiceTest"            # one class
 ./gradlew test --tests "eu.project.surimi.poseidon.server.SimulationServiceTest.methodName"  # one method
 ./gradlew :POSEIDON:<module>:test                        # a submodule's tests (core, io, agents, …)
 ./gradlew spotbugsMain                                   # SpotBugs
-./gradlew spotlessApply                                  # format src/ with Prettier, add missing license headers
+./gradlew checkstyleMain                                 # Checkstyle (checkstyleTest for tests)
+./gradlew spotlessApply                                  # format src/ with Prettier, remove unused imports, add missing license headers
 ./gradlew :POSEIDON:spotlessApply                        # the same for the submodule
 ./gradlew writeNorthwesternMedScenario                   # regenerate scenarios/northwestern_med.yaml
 ./gradlew run --args="-p 50051"                          # run the server locally
@@ -158,6 +160,11 @@ nets belong in tests, not in call-site syntax.
 `nodejs`/`node-gradle`/`spotless` versions, the Node.js repository in `settings.gradle.kts`, the
 `buildscript` block in `build.gradle.kts` that pins node-gradle's Jackson 2 with the `jackson2`
 version): change both repos together.
+
+Compilation and Checkstyle follow POSEIDON's rules (see "Commands" in `POSEIDON/AGENTS.md`):
+`-Werror -Xlint:all,-serial`, and Checkstyle with `POSEIDON/config/checkstyle/checkstyle.xml`,
+which this repo reads from the submodule rather than keeping a copy. The `checkstyle` version in
+`libs.versions.toml` is duplicated: change both repos together.
 
 ## Submodules
 

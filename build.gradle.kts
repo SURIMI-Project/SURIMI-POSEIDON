@@ -31,6 +31,7 @@ buildscript {
 plugins {
     application
     jacoco
+    checkstyle
     alias(libs.plugins.spotbugs)
     alias(libs.plugins.node.gradle)
     alias(libs.plugins.spotless)
@@ -272,6 +273,14 @@ tasks.jacocoTestCoverageVerification {
             excludes = listOf("lombok.Generated")
         }
     }
+}
+
+checkstyle {
+    toolVersion = libs.versions.checkstyle.get()
+    // The same rules as POSEIDON's
+    configDirectory = file("POSEIDON/config/checkstyle")
+    // Any violation fails the build
+    maxWarnings = 0
 }
 
 spotbugs {
