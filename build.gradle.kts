@@ -34,6 +34,13 @@ plugins {
     alias(libs.plugins.spotbugs)
     alias(libs.plugins.node.gradle)
     alias(libs.plugins.spotless)
+    // Adds Lombok to every source set, and makes Javadoc read the delomboked sources so it
+    // documents the members Lombok generates
+    alias(libs.plugins.freefair.lombok)
+}
+
+lombok {
+    version = libs.versions.lombok
 }
 
 node {
@@ -120,8 +127,6 @@ dependencies {
     implementation("POSEIDON:biology")
     implementation("POSEIDON:io")
     implementation("POSEIDON:calibration")
-    implementation(libs.lombok)
-    annotationProcessor(libs.lombok)
     implementation(libs.caffeine)
     implementation(libs.grpc.services)
     implementation(libs.jcommander)
@@ -224,6 +229,9 @@ tasks.register("pushDockerImage", Exec::class) {
 
 // Missing comments are not reported, and any other Javadoc problem fails the build
 tasks.withType<Javadoc>().configureEach {
+    // Delombok copies every file of the source folders, such as .editorconfig, which Javadoc
+    // would read as packages
+    include("**/*.java")
     (options as StandardJavadocDocletOptions).apply {
         addBooleanOption("Xdoclint:all,-missing", true)
         addBooleanOption("Werror", true)

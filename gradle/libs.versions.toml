@@ -1,6 +1,7 @@
 [versions]
 assertj = "3.27.7"
 caffeine = "3.2.3"
+freefair = "9.8.2"
 grpc = "1.82.0"
 jackson2 = "2.18.11" # build classpath only, via node-gradle
 lombok = "1.18.46"
@@ -52,6 +53,7 @@ opentelemetry = [
 ]
 
 [plugins]
+freefair-lombok = { id = "io.freefair.lombok", version.ref = "freefair" }
 node-gradle = { id = "com.github.node-gradle.node", version.ref = "node-gradle" }
 spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugs" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
