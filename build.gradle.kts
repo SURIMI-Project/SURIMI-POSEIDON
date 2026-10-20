@@ -59,6 +59,7 @@ val isWindows = System.getProperty("os.name").startsWith("Windows")
 
 spotless {
     java {
+        removeUnusedImports()
         prettier(npmPackages)
             .nodeExecutable(
                 tasks.nodeSetup.get().nodeDir.get()
