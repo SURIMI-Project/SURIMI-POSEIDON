@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.scenarios.northwesternmed;
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.BOTTOM_TRAWLER_GEAR_CODE;
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.PURSE_SEINE_GEAR_CODE;
 import static java.awt.Color.WHITE;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.uniformCarryingCapacityGrid;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.equal;
 import static uk.ac.ox.poseidon.core.providers.temporal.Factories.currentDateTime;
@@ -34,10 +35,7 @@ import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
 import java.util.List;
-import uk.ac.ox.poseidon.biology.biomass.CarryingCapacityGridFactory;
-import uk.ac.ox.poseidon.biology.biomass.Factories;
 import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.SimulationScope;
 import uk.ac.ox.poseidon.fishing.vessels.VesselComponent;
 import uk.ac.ox.poseidon.fishing.vessels.VesselSpecificationFactory;
 import uk.ac.ox.poseidon.fishing.vessels.gears.Gear;
@@ -67,7 +65,6 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
    * @param scenario a {@link NorthwesternMedScenario}, whose components the
    *                 displays look up by name
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   public NorthwesternMedScenarioWithUI(final Scenario scenario) {
     super(
       scenario,
@@ -81,7 +78,7 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
             new SpeciesBiomassFieldsPortrayalFactory(
               scenario.component("biomassGrids"),
               listOf(
-                (CarryingCapacityGridFactory) Factories.<SimulationScope>uniformCarryingCapacityGrid(
+                uniformCarryingCapacityGrid(
                   scenario.component("modelGrid"),
                   scenario.component("bathymetricGrid"),
                   massOf(DISPLAY_CARRYING_CAPACITY)
