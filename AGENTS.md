@@ -31,8 +31,6 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 - `./gradlew :POSEIDON:build` from the root runs the submodule's tests but not its SpotBugs or
   Spotless checks. For the full check, run `./gradlew build` from inside `POSEIDON/`; a
   module's `./gradlew :POSEIDON:<module>:build` from the root runs its SpotBugs but not Spotless.
-- `-Werror` is a submodule convention (`buildlogic.java-common-conventions`): it applies to code
-  under `POSEIDON/`, not to `src/`.
 
 ## Commands
 

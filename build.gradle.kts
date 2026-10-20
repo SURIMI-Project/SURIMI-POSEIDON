@@ -166,6 +166,11 @@ java {
     }
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    // MASON makes steppables and the simulation Serializable, but POSEIDON never serializes them
+    options.compilerArgs.addAll(listOf("-Werror", "-Xlint:all,-serial"))
+}
+
 application {
     mainClass = "eu.project.surimi.poseidon.server.Server"
 }
