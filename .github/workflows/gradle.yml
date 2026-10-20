@@ -28,9 +28,23 @@ jobs:
       - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
-          lfs: true
+          # No LFS: each download counts against the quota, so the inputs' LFS files come from the cache below
           token: ${{ secrets.POSEIDON_PAT }}
           fetch-depth: 0
+
+      - name: List the inputs' LFS objects
+        id: inputs-lfs
+        run: echo "oids=$(git -C inputs lfs ls-files --long | cut -d ' ' -f 1 | sort | sha256sum | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the inputs' LFS objects
+        uses: actions/cache@v6
+        with:
+          path: .git/modules/SURIMI-POSEIDON_inputs/lfs/objects
+          key: inputs-lfs-${{ steps.inputs-lfs.outputs.oids }}
+
+      - name: Check out the inputs' LFS files
+        # Downloads only the objects the cache did not restore
+        run: git -C inputs lfs pull
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
