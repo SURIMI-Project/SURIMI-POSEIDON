@@ -20,7 +20,7 @@ D3.3. The API documentation is published at https://surimi-project.github.io/SUR
 
 ## Run the model with the GUI
 
-You need JDK 25 and Git.
+You need JDK 25, Git and [Git LFS](https://git-lfs.com/), which fetches the biomass file.
 
 ```
 git clone --recurse-submodules https://github.com/SURIMI-Project/SURIMI-POSEIDON.git
