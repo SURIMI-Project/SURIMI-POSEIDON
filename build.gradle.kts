@@ -208,35 +208,18 @@ val stageForImage =tasks.register<Sync>("stageForImage") {
 }
 
 val dockerImageName = "ghcr.io/surimi-project/surimiposeidon"
-val dockerImageVersion = providers.gradleProperty("dockerImageVersion")
-    .orElse(providers.environmentVariable("GITVERSION_SEMVER"))
+val dockerImageTags = listOf("latest") +
+    listOfNotNull(providers.gradleProperty("dockerImageVersion").orNull?.takeIf { it.isNotBlank() })
 
 val buildDockerImage = tasks.register("buildDockerImage", Exec::class) {
     dependsOn(stageForImage)
-    val version = dockerImageVersion.orNull
-    val command = mutableListOf(
-        "docker",
-        "build",
-        "-f",
-        "Dockerfile",
-        ".",
-        "-t",
-        "${dockerImageName}:latest"
-    )
-    if (!version.isNullOrBlank()) {
-        command += listOf("-t", "${dockerImageName}:${version}")
-    }
-    commandLine(command)
+    commandLine(listOf("docker", "build", ".") + dockerImageTags.flatMap { listOf("-t", "$dockerImageName:$it") })
 }
 
 tasks.register("pushDockerImage", Exec::class) {
     dependsOn(buildDockerImage)
-    val version = dockerImageVersion.orNull
-    val command = mutableListOf("docker", "push", "${dockerImageName}:latest")
-    if (!version.isNullOrBlank()) {
-        command += "${dockerImageName}:${version}"
-    }
-    commandLine(command)
+    // docker push takes a single image reference, so each tag is pushed separately
+    commandLine("sh", "-c", dockerImageTags.joinToString(" && ") { "docker push $dockerImageName:$it" })
 }
 
 tasks.named<Test>("test") {

@@ -13,6 +13,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# Runs on main must not overlap, or two of them could compute the same version for different commits
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
   build:
 
@@ -20,7 +24,6 @@ jobs:
     permissions:
       contents: write
       packages: write
-
     steps:
       - uses: actions/checkout@v6
         with:
@@ -28,24 +31,6 @@ jobs:
           lfs: true
           token: ${{ secrets.POSEIDON_PAT }}
           fetch-depth: 0
-
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v4.1.0
-        with:
-          versionSpec: '6.4.0'
-
-      - name: Run GitVersion
-        id: gitversion
-        uses: gittools/actions/gitversion/execute@v4.1.0
-        with:
-          overrideConfig: |
-            workflow=TrunkBased/preview1
-            commit-message-incrementing=Enabled
-            tag-prefix=v
-            increment=Patch
-
-      - name: Show extracted version
-        run: echo "Version is ${{ steps.gitversion.outputs.SemVer }}"
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -63,6 +48,34 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: ./gradlew build javadoc
 
+      - name: Install GitVersion
+        if: github.event_name == 'push'
+        uses: gittools/actions/gitversion/setup@v4.1.0
+        with:
+          versionSpec: '6.4.0'
+
+      - name: Run GitVersion
+        if: github.event_name == 'push'
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.1.0
+        with:
+          overrideConfig: |
+            workflow=TrunkBased/preview1
+            commit-message-incrementing=Enabled
+            tag-prefix=v
+            increment=Patch
+
+      - name: Create git tag
+        # Before the image push, so a version already tagged on another commit fails the run instead
+        # of overwriting that version's image. Pushing a tag that already points to this commit succeeds.
+        # The checkout's credentials are POSEIDON_PAT, which cannot write to this repository: clear them
+        # and push with GITHUB_TOKEN instead.
+        if: github.event_name == 'push'
+        run: >
+          git -c http.https://github.com/.extraheader=
+          push "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          "HEAD:refs/tags/v${{ steps.gitversion.outputs.SemVer }}"
+
       - name: Log in to GHCR
         # Only pushes to main publish the image, not pull requests
         if: github.event_name == 'push'
@@ -71,17 +84,6 @@ jobs:
       - name: Build and push Docker image via Gradle
         if: github.event_name == 'push'
         run: ./gradlew pushDockerImage -PdockerImageVersion="${{ steps.gitversion.outputs.SemVer }}"
-
-      - name: Create git tag
-        if: github.event_name == 'push'
-        run: |
-          tag="v${{ steps.gitversion.outputs.SemVer }}"
-          if [ -n "$(git ls-remote --tags origin "refs/tags/$tag")" ]; then
-            echo "Tag $tag already exists, skipping"
-            exit 0
-          fi
-          git tag "$tag"
-          git push origin "$tag"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
