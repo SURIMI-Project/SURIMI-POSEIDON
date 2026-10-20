@@ -18,43 +18,74 @@ jobs:
 
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
+
     steps:
-    - uses: actions/checkout@v6
-      with:
-        submodules: 'recursive'
-        lfs: true
-        token: ${{ secrets.POSEIDON_PAT }}
+      - uses: actions/checkout@v6
+        with:
+          submodules: 'recursive'
+          lfs: true
+          token: ${{ secrets.POSEIDON_PAT }}
+          fetch-depth: 0
 
-    - name: Set up JDK 25
-      uses: actions/setup-java@v5
-      with:
-        java-version: '25'
-        distribution: 'temurin'
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.1.0
+        with:
+          versionSpec: '6.4.0'
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v6
+      - name: Run GitVersion
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.1.0
+        with:
+          overrideConfig: |
+            workflow=TrunkBased/preview1
+            commit-message-incrementing=Enabled
+            tag-prefix=v
+            increment=Patch
 
-    - name: Build with Gradle Wrapper and check the Javadoc
-      env:
-        # For S3InputsIntegrationTest, which is skipped when they are absent (e.g. on forks)
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: ./gradlew build javadoc
+      - name: Show extracted version
+        run: echo "Version is ${{ steps.gitversion.outputs.SemVer }}"
 
-    - name: Log in to GHCR
-      # Only pushes to main publish the image, not pull requests
-      if: github.event_name == 'push'
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'temurin'
 
-    - name: Push docker image with gradle
-      if: github.event_name == 'push'
-      run: ./gradlew pushDockerImage
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: build/reports/jacoco/test/jacocoTestReport.xml
-        fail_ci_if_error: true
+      - name: Build with Gradle Wrapper and check the Javadoc
+        env:
+          # For S3InputsIntegrationTest, which is skipped when they are absent (e.g. on forks)
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: ./gradlew build javadoc
+
+      - name: Log in to GHCR
+        # Only pushes to main publish the image, not pull requests
+        if: github.event_name == 'push'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push Docker image via Gradle
+        if: github.event_name == 'push'
+        run: ./gradlew pushDockerImage -PdockerImageVersion="${{ steps.gitversion.outputs.SemVer }}"
+
+      - name: Create git tag
+        if: github.event_name == 'push'
+        run: |
+          tag="v${{ steps.gitversion.outputs.SemVer }}"
+          if [ -n "$(git ls-remote --tags origin "refs/tags/$tag")" ]; then
+            echo "Tag $tag already exists, skipping"
+            exit 0
+          fi
+          git tag "$tag"
+          git push origin "$tag"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/jacoco/test/jacocoTestReport.xml
+          fail_ci_if_error: true

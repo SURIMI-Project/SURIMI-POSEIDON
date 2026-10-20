@@ -207,14 +207,36 @@ val stageForImage =tasks.register<Sync>("stageForImage") {
     from("scenarios/northwestern_med.yaml") { into("scenarios") }
 }
 
+val dockerImageName = "ghcr.io/surimi-project/surimiposeidon"
+val dockerImageVersion = providers.gradleProperty("dockerImageVersion")
+    .orElse(providers.environmentVariable("GITVERSION_SEMVER"))
+
 val buildDockerImage = tasks.register("buildDockerImage", Exec::class) {
     dependsOn(stageForImage)
-    commandLine("docker", "build", "-t", "ghcr.io/surimi-project/surimiposeidon:latest", ".")
+    val version = dockerImageVersion.orNull
+    val command = mutableListOf(
+        "docker",
+        "build",
+        "-f",
+        "Dockerfile",
+        ".",
+        "-t",
+        "${dockerImageName}:latest"
+    )
+    if (!version.isNullOrBlank()) {
+        command += listOf("-t", "${dockerImageName}:${version}")
+    }
+    commandLine(command)
 }
 
 tasks.register("pushDockerImage", Exec::class) {
     dependsOn(buildDockerImage)
-    commandLine("docker", "push", "ghcr.io/surimi-project/surimiposeidon:latest")
+    val version = dockerImageVersion.orNull
+    val command = mutableListOf("docker", "push", "${dockerImageName}:latest")
+    if (!version.isNullOrBlank()) {
+        command += "${dockerImageName}:${version}"
+    }
+    commandLine(command)
 }
 
 tasks.named<Test>("test") {
