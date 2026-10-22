@@ -38,8 +38,10 @@ import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulator;
@@ -93,6 +95,12 @@ public class GetCatchDispositionSummaryRequestHandler
       Coordinate coordinate,
       Disposition disposition
     ) {}
+    // Sorted, so that the response does not depend on the order things were
+    // caught in, nor on hash codes
+    final Comparator<Coordinate> coordinateOrder =
+      Comparator.<Coordinate>comparingDouble(
+        coordinate -> coordinate.lon
+      ).thenComparingDouble(coordinate -> coordinate.lat);
     return simulation
       .getComponent(FishingEventAccumulator.class)
       .getEvents()
@@ -148,10 +156,13 @@ public class GetCatchDispositionSummaryRequestHandler
       .collect(
         groupingBy(
           Row::fleetSegment,
+          TreeMap::new,
           groupingBy(
             Row::species,
+            TreeMap::new,
             groupingBy(
               Row::coordinate,
+              () -> new TreeMap<>(coordinateOrder),
               collectingAndThen(toList(), rows -> {
                 final List<Disposition> dispositions = rows
                   .stream()
