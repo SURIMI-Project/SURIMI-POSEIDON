@@ -37,8 +37,10 @@ import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import eu.project.surimi.poseidon.server.fleet.FleetSegment;
 import eu.project.surimi.poseidon.server.fleet.FleetSegmentMapper;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import uk.ac.ox.poseidon.biology.biomass.Biomass;
@@ -124,6 +126,17 @@ public class GetSalesRequestHandler
       CurrencyUnit currencyUnit
     ) {}
     record FleetSegmentAndSpecies(FleetSegment fleetSegment, Species species) {}
+    // Sorted, so that the response does not depend on the order things sold
+    // in, nor on hash codes (markets hash by identity)
+    final Comparator<Key> keyOrder = Comparator.<Key, String>comparing(key ->
+      key.market().getCode()
+    )
+      .thenComparing(key -> key.catchCategory().getCode())
+      .thenComparing(Key::currencyUnit);
+    final Comparator<FleetSegmentAndSpecies> fleetSegmentAndSpeciesOrder =
+      Comparator.comparing(FleetSegmentAndSpecies::fleetSegment).thenComparing(
+        FleetSegmentAndSpecies::species
+      );
     final FleetSegmentMapper fleetSegmentMapper = simulation.getComponent(
       FleetSegmentMapper.class
     );
@@ -177,6 +190,7 @@ public class GetSalesRequestHandler
               saleEntry.catchCategory,
               saleEntry.value.getCurrencyUnit()
             ),
+          () -> new TreeMap<>(keyOrder),
           collectingAndThen(
             groupingBy(
               saleEntry ->
@@ -184,6 +198,7 @@ public class GetSalesRequestHandler
                   saleEntry.fleetSegment,
                   saleEntry.species
                 ),
+              () -> new TreeMap<>(fleetSegmentAndSpeciesOrder),
               collectingAndThen(toList(), saleEntries ->
                 summariseSale(saleEntries, simulationProperties)
               )
