@@ -126,13 +126,13 @@ import java.time.Period;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Supplier;
-import sim.util.Int2D;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.fishing.choices.KeyedMemoryFactory;
+import uk.ac.ox.poseidon.geography.grids.Cell;
 
 /**
  * The Northwestern Mediterranean scenario, the one this server serves in
@@ -531,8 +531,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // One memory per vessel, keyed by gear code: what the vessel learns from
     // its fishing operations and what it decides from must be this same
     // instance.
-    final KeyedMemoryFactory<String, Int2D, Bucket> vesselMemory =
-      keyedMemory();
+    final KeyedMemoryFactory<String, Cell, Bucket> vesselMemory = keyedMemory();
 
     final var optionValues = memoryBasedOptionValues(
       keyedMemorySelector(vesselMemory, stringAttribute("main_fishing_gear")),

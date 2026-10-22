@@ -33,13 +33,13 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import sim.util.Int2D;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.events.AbstractListener;
 import uk.ac.ox.poseidon.fishing.trips.TripStartEvent;
 import uk.ac.ox.poseidon.fishing.vessels.Fleet;
 import uk.ac.ox.poseidon.fishing.vessels.Vessel;
+import uk.ac.ox.poseidon.geography.grids.Cell;
 import uk.ac.ox.poseidon.geography.ports.PortGrid;
 
 /**
@@ -81,7 +81,7 @@ class NorthwesternMedVoyageHomeTest {
       )
     );
     final Simulation simulation = scenario.startNewSimulation(1);
-    final List<Int2D> departureCells = new ArrayList<>();
+    final List<Cell> departureCells = new ArrayList<>();
     simulation.getEventManager().addListener(
       new AbstractListener<>(TripStartEvent.class) {
         @Override
@@ -112,7 +112,7 @@ class NorthwesternMedVoyageHomeTest {
         vessel.getCell()
       );
       simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
-      final Int2D castellon = portGrid.getCell(
+      final Cell castellon = portGrid.getCell(
         portGrid.getObject("ESCAS").orElseThrow()
       );
       assertThat(departureCells).isNotEmpty().containsOnly(castellon);

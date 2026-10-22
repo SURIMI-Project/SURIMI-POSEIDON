@@ -725,7 +725,10 @@ components:
                                   }
                         - !!uk.ac.ox.poseidon.fishing.tasks.destinations.ChooseNextDestinationFactory
                           destination: !!uk.ac.ox.poseidon.fishing.choices.EpsilonGreedyDestinationFactory
-                            epsilon: 0.2
+                            epsilon: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
+                              object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
+                                value: 0.2
+                              }
                             exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
                               optionPredicate: &id030 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                                 predicates:
@@ -850,7 +853,10 @@ components:
                     currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                       }
                     initialDestination: !!uk.ac.ox.poseidon.fishing.choices.EpsilonGreedyDestinationFactory
-                      epsilon: 0.2
+                      epsilon: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
+                        object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
+                          value: 0.2
+                        }
                       exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
                         optionPredicate: &id038 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                           predicates:
@@ -1057,7 +1063,10 @@ components:
                                   }
                         - !!uk.ac.ox.poseidon.fishing.tasks.destinations.ChooseNextDestinationFactory
                           destination: !!uk.ac.ox.poseidon.fishing.choices.EpsilonGreedyDestinationFactory
-                            epsilon: 0.2
+                            epsilon: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
+                              object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
+                                value: 0.2
+                              }
                             exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
                               optionPredicate: &id045 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                                 predicates:
@@ -1118,7 +1127,10 @@ components:
                     currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                       }
                     initialDestination: !!uk.ac.ox.poseidon.fishing.choices.EpsilonGreedyDestinationFactory
-                      epsilon: 0.2
+                      epsilon: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
+                        object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
+                          value: 0.2
+                        }
                       exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
                         optionPredicate: &id049 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                           predicates:

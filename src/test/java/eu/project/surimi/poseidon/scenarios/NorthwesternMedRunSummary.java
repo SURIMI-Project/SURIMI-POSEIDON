@@ -39,7 +39,6 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import org.joda.money.Money;
-import sim.util.Int2D;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.events.Listener;
 import uk.ac.ox.poseidon.fishing.social.SocialNetwork;
@@ -48,6 +47,7 @@ import uk.ac.ox.poseidon.fishing.trips.TripEndEvent;
 import uk.ac.ox.poseidon.fishing.trips.TripStartEvent;
 import uk.ac.ox.poseidon.fishing.vessels.Vessel;
 import uk.ac.ox.poseidon.geography.Coordinate;
+import uk.ac.ox.poseidon.geography.grids.Cell;
 
 /**
  * Runs the local Northwestern Mediterranean scenario and prints a one-line
@@ -76,7 +76,7 @@ public final class NorthwesternMedRunSummary {
   private double grossCatchInKg;
   private double retainedCatchInKg;
   private double distanceFromPortInKm;
-  private final Set<Int2D> fishedCells = new HashSet<>();
+  private final Set<Cell> fishedCells = new HashSet<>();
   private final Map<Vessel, Coordinate> tripOrigins = new HashMap<>();
   private double tripProfit;
   private int endedTrips;

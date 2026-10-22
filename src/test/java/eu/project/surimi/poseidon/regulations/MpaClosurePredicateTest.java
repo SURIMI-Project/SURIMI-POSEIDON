@@ -33,17 +33,17 @@ import java.time.Month;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import sim.util.Int2D;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttribute;
 import uk.ac.ox.poseidon.geography.Coordinate;
+import uk.ac.ox.poseidon.geography.grids.Cell;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 class MpaClosurePredicateTest {
 
   private static final Coordinate COORDINATE = new Coordinate(1.0, 2.0);
-  private static final Int2D CELL = new Int2D(3, 4);
+  private static final Cell CELL = new Cell(3, 4);
 
   @Test
   void forbidsInsideMpaWhenGearCountryRestrictedAndMonthClosed() {

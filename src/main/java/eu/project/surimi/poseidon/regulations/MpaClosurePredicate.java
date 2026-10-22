@@ -32,9 +32,9 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import lombok.NonNull;
-import sim.util.Int2D;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
+import uk.ac.ox.poseidon.geography.grids.Cell;
 import uk.ac.ox.poseidon.geography.grids.DoubleGridWrapper;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
@@ -57,7 +57,7 @@ public class MpaClosurePredicate
 {
 
   private final @NonNull ModelGrid modelGrid;
-  private final @NonNull ImmutableListMultimap<Int2D, String> mpaIdsByCell;
+  private final @NonNull ImmutableListMultimap<Cell, String> mpaIdsByCell;
   private final @NonNull ImmutableMap<
     String,
     ImmutableSet<Month>

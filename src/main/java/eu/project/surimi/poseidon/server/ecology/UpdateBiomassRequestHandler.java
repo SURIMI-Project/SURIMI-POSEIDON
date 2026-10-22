@@ -38,11 +38,11 @@ import eu.project.surimi.poseidon.server.SpeciesKey;
 import eu.project.surimi.poseidon.server.WithSimulationRequestHandler;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import sim.util.Int2D;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.Coordinate;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
+import uk.ac.ox.poseidon.geography.grids.Cell;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 /**
@@ -70,7 +70,7 @@ public class UpdateBiomassRequestHandler
     super(simulationManager);
   }
 
-  private static Int2D getSimulationCell(
+  private static Cell getSimulationCell(
     final build.buf.gen.surimi.v1.BiomassCell biomassCell,
     final BathymetricGrid bathymetricGrid
   ) {
@@ -80,7 +80,7 @@ public class UpdateBiomassRequestHandler
     );
     final ModelGrid modelGrid = bathymetricGrid.getModelGrid();
     modelGrid.checkIsInGrid(coordinate);
-    final Int2D cell = modelGrid.toCell(coordinate);
+    final Cell cell = modelGrid.toCell(coordinate);
     checkArgument(
       bathymetricGrid.isActiveWater(cell),
       "Coordinates %s do not point to an active water cell.",
@@ -119,7 +119,7 @@ public class UpdateBiomassRequestHandler
       );
       if (simulationGrid != null) {
         biomassGrid.getBiomassCellsList().forEach(biomassCell -> {
-          final Int2D cell = getSimulationCell(biomassCell, bathymetricGrid);
+          final Cell cell = getSimulationCell(biomassCell, bathymetricGrid);
           simulationGrid.setBiomass(
             cell,
             simulationProperties.convertMassInStandardUnitToKg(
