@@ -22,10 +22,10 @@
 
 package eu.project.surimi.poseidon.scenarios.northwesternmed;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static eu.project.surimi.poseidon.calibration.Factories.landingsAccumulator;
 import static eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario.INPUT_PATH;
 import static java.util.stream.Collectors.summarizingInt;
-import static java.util.stream.Collectors.toMap;
 import static uk.ac.ox.poseidon.core.utils.Utils.multiStringKey;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
@@ -154,48 +154,46 @@ public class NorthwesternMedCalibration {
   /**
    * @return the range each catchability is calibrated over, by the address of
    *         the catchability in the scenario: one per gear, species and life
-   *         stage of the discard ratios
+   *         stage of the discard ratios, in the order of their rows
    */
   static ImmutableMap<String, DoubleRange> catchabilityParameterRanges() {
     final DoubleRange catchabilityRange = new DoubleRange(
       MIN_CATCHABILITY,
       MAX_CATCHABILITY
     );
-    return ImmutableMap.copyOf(
-      Table.read()
-        .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
-        .stream()
-        .collect(
-          toMap(
-            row -> {
-              final String component = switch (row.getString("gear_code")) {
-                case "PS" -> "purseSeinerCatchabilities";
-                case "OTB" -> "bottomTrawlerCatchabilities";
-                default -> throw new IllegalArgumentException(
-                  "Unsupported gear: " + row.getString("gear")
-                );
-              };
-              return (
-                component +
-                ".value(" +
-                multiStringKey(
-                  row.getString("species_code"),
-                  row.getString("life_stage")
-                ) +
-                ")"
+    return Table.read()
+      .csv(INPUT_PATH.resolve("discard_ratios.csv").toFile())
+      .stream()
+      .collect(
+        toImmutableMap(
+          row -> {
+            final String component = switch (row.getString("gear_code")) {
+              case "PS" -> "purseSeinerCatchabilities";
+              case "OTB" -> "bottomTrawlerCatchabilities";
+              default -> throw new IllegalArgumentException(
+                "Unsupported gear: " + row.getString("gear")
               );
-            },
-            _ -> catchabilityRange,
-            (a, _) -> a
-          )
+            };
+            return (
+              component +
+              ".value(" +
+              multiStringKey(
+                row.getString("species_code"),
+                row.getString("life_stage")
+              ) +
+              ")"
+            );
+          },
+          _ -> catchabilityRange,
+          (a, _) -> a
         )
-    );
+      );
   }
 
   /**
-   * @return real-world landings targets read from a CSV with columns
-   *         {@code year}, {@code gear_code}, {@code species_code},
-   *         {@code life_stage}, {@code landings_kg}.
+   * @return real-world landings targets, in the order of the rows of a CSV
+   *         with columns {@code year}, {@code gear_code},
+   *         {@code species_code}, {@code life_stage}, {@code landings_kg}
    */
   private static Map<LandingsAccumulator.Key, Double> readTargetLandings(
     final Path path
@@ -204,7 +202,7 @@ public class NorthwesternMedCalibration {
       .csv(path.toFile())
       .stream()
       .collect(
-        toMap(
+        toImmutableMap(
           row ->
             new LandingsAccumulator.Key(
               row.getInt("year"),
