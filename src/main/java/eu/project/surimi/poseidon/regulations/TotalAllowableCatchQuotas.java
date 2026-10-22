@@ -129,8 +129,12 @@ public class TotalAllowableCatchQuotas
   /**
    * Configured TAC quotas in kilograms, keyed by fleet-quota interval and
    * quota-species.
+   * <p>
+   * Linked, so that catches are counted against quotas in the order the quotas
+   * were set, rather than that of their keys' hash codes.
    */
-  private final Map<QuotaKey, Map<Species, Double>> quotas = new HashMap<>();
+  private final Map<QuotaKey, Map<Species, Double>> quotas =
+    new LinkedHashMap<>();
 
   /**
    * Accumulated gross catches in kilograms, keyed by fleet-quota interval and
@@ -175,11 +179,15 @@ public class TotalAllowableCatchQuotas
       .getTemporalSchedule()
       .getDateTime()
       .toInstant(UTC);
+    // Linked, so that the catches of several fleet segments sharing a quota
+    // are added up in the order of their first fishing event, rather than that
+    // of the segments' hash codes
     fishingEventAccumulator
       .getEvents()
       .collect(
         groupingBy(
           fishingEvent -> fleetSegmentMapper.apply(fishingEvent.getAction()),
+          LinkedHashMap::new,
           reducing(
             Bucket.empty(),
             fishingEvent -> fishingEvent.getOutcome().getGrossCatch(),
@@ -235,9 +243,9 @@ public class TotalAllowableCatchQuotas
   ) {
     checkNotNull(interval, "TAC interval is required.");
     checkNotNull(definitions, "TAC definitions are required.");
-    final Map<QuotaKey, Map<Species, Double>> staged = new HashMap<>();
+    final Map<QuotaKey, Map<Species, Double>> staged = new LinkedHashMap<>();
     quotas.forEach((quotaKey, quotaValues) ->
-      staged.put(quotaKey, new HashMap<>(quotaValues))
+      staged.put(quotaKey, new LinkedHashMap<>(quotaValues))
     );
     definitions.forEach(definition -> {
       checkNotNull(definition, "TAC definition is required.");
@@ -253,7 +261,7 @@ public class TotalAllowableCatchQuotas
       );
       validateNewQuotaDefinition(staged, quotaKey, definition.species());
       staged
-        .computeIfAbsent(quotaKey, __ -> new HashMap<>())
+        .computeIfAbsent(quotaKey, __ -> new LinkedHashMap<>())
         .put(definition.species(), definition.quotaInKg());
     });
     quotas.clear();
