@@ -54,7 +54,8 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 
 ## Testing
 
-- JUnit 5, AssertJ, Mockito, jqwik.
+- JUnit 5, AssertJ, Mockito, jqwik. Assertions follow the AssertJ rules in `POSEIDON/AGENTS.md`
+  ("Build & test commands").
 - The `test` task's JVM args in `build.gradle.kts` are load-bearing: the Mockito agent
   (`MockitoAgentArgumentProvider`) and the flags protobuf/Netty need under JDK 25. Keep them when
   editing the build.
