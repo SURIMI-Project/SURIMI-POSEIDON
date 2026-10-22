@@ -53,14 +53,15 @@ import static uk.ac.ox.poseidon.fishing.market.Factories.*;
 import static uk.ac.ox.poseidon.fishing.tasks.fishing.Factories.fishing;
 import static uk.ac.ox.poseidon.fishing.tasks.fishing.Factories.fishingEventAccumulator;
 import static uk.ac.ox.poseidon.fishing.tasks.landings.Factories.landCatches;
-import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.roundTrip;
+import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.dockAtDestination;
+import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.setDestinationToOrigin;
 import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.travelAlongPathTo;
 import static uk.ac.ox.poseidon.fishing.vessels.Factories.*;
 import static uk.ac.ox.poseidon.fishing.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.fishing.vessels.gears.Factories.fixedBiomassProportionGear;
 import static uk.ac.ox.poseidon.fishing.vessels.holds.Factories.infiniteBiomassHold;
 import static uk.ac.ox.poseidon.fishing.vessels.tanks.Factories.fullTank;
-import static uk.ac.ox.poseidon.fishing.vessels.values.Factories.currentTripDestinationCell;
+import static uk.ac.ox.poseidon.fishing.vessels.values.Factories.currentTripDestination;
 import static uk.ac.ox.poseidon.fishing.vessels.values.Factories.currentTripEventManager;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.doubleAttribute;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
@@ -250,22 +251,24 @@ public class MinimalScenario implements Supplier<Scenario> {
 
     final var fuelTank = vesselComponent(fullTank(volumeOf(100000, LITRE)));
 
+    final var travelToTripDestination = travelAlongPathTo(
+      engine,
+      fuelTank,
+      pathFinder,
+      distance,
+      currentTripDestination(),
+      currentTripEventManager()
+    );
+
     // Each vessel fishes at its favourite spot, a coordinate of the register
     final var behaviour = behaviour(
-      roundTrip(
+      fishingTrip(
         destinationAt(
           modelGrid,
           doubleAttribute("fav_lon"),
           doubleAttribute("fav_lat")
         ),
-        travelAlongPathTo(
-          engine,
-          fuelTank,
-          pathFinder,
-          distance,
-          currentTripDestinationCell(),
-          currentTripEventManager()
-        ),
+        travelToTripDestination,
         fishing(
           gear,
           hold,
@@ -278,6 +281,9 @@ public class MinimalScenario implements Supplier<Scenario> {
             discardMortality(always(0.1))
           )
         ),
+        setDestinationToOrigin(),
+        travelToTripDestination,
+        dockAtDestination(),
         landCatches(hold, constant(hours(1)))
       )
     );

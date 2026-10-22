@@ -43,8 +43,8 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.events.Listener;
 import uk.ac.ox.poseidon.fishing.social.SocialNetwork;
 import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
-import uk.ac.ox.poseidon.fishing.trips.TripEndEvent;
-import uk.ac.ox.poseidon.fishing.trips.TripStartEvent;
+import uk.ac.ox.poseidon.fishing.trips.FishingTripEndEvent;
+import uk.ac.ox.poseidon.fishing.trips.FishingTripStartEvent;
 import uk.ac.ox.poseidon.fishing.vessels.Vessel;
 import uk.ac.ox.poseidon.geography.Coordinate;
 import uk.ac.ox.poseidon.geography.grids.Cell;
@@ -180,7 +180,7 @@ public final class NorthwesternMedRunSummary {
       .startNewSimulation(seed);
     final SocialNetwork network = simulation.getComponent(SocialNetwork.class);
     simulation.getEventManager().addListener(
-      listener(TripStartEvent.class, event -> {
+      listener(FishingTripStartEvent.class, event -> {
         trips++;
         final Vessel vessel = event.getTrip().getVessel();
         tripOrigins.put(vessel, vessel.getCoordinate());
@@ -232,7 +232,7 @@ public final class NorthwesternMedRunSummary {
       })
     );
     simulation.getEventManager().addListener(
-      listener(TripEndEvent.class, event -> {
+      listener(FishingTripEndEvent.class, event -> {
         endedTrips++;
         final Vessel vessel = event.getTrip().getVessel();
         final GearSummary gearSummary = gearSummaries.computeIfAbsent(

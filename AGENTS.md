@@ -149,11 +149,14 @@ run.
 
 ## Code style
 
-Follow the "Code style" section of `POSEIDON/AGENTS.md` (`final` everywhere, lambdas over
-anonymous classes, method references over lambdas, Prettier formatting with comments wrapped by
-hand at 80 columns). Scenario classes such as `NorthwesternMedScenario` are the exception: they
-stay readable for people new to Java, with no method references or other clever tricks; safety
-nets belong in tests, not in call-site syntax.
+Follow the "Code style" section of `POSEIDON/AGENTS.md` (`final` everywhere, lambdas over anonymous
+classes, method references over lambdas, Prettier formatting with comments wrapped by hand at 80
+columns). Scenario classes such as `NorthwesternMedScenario` are the exception: they stay readable
+for people new to Java, with no method references or other clever tricks; safety nets belong in
+tests, not in call-site syntax. Their locals are declared `final var`, so a scenario reads as a
+list of named parts, not a list of types. If a `var` does not compile because Java cannot infer a
+type, the fault lies in the factory helper, not the scenario: fix the helper so its arguments or
+its name fix the type, never by giving the scenario local an explicit type.
 
 `build` runs `spotlessCheck`, which fails on any Java file `spotlessApply` would change: run
 `./gradlew spotlessApply` after editing Java. The formatting setup is duplicated in `POSEIDON/`

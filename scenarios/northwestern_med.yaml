@@ -336,7 +336,7 @@ components:
                 key: cymodocea
                 map: *id009
           modelGrid: *id005
-  bottomTrawlerRegulations: &id044 !!uk.ac.ox.poseidon.regulations.ForbiddenIfFactory
+  bottomTrawlerRegulations: &id045 !!uk.ac.ox.poseidon.regulations.ForbiddenIfFactory
     actionPredicate: !!uk.ac.ox.poseidon.core.predicates.logical.AnyOfFactory
       predicates:
       - !!uk.ac.ox.poseidon.regulations.predicates.spatial.ActionCellPredicateFactory
@@ -435,18 +435,18 @@ components:
     steppable: !!uk.ac.ox.poseidon.core.schedule.SteppableSequenceFactory
       steppables:
       - !!uk.ac.ox.poseidon.core.events.EventClearerFactory
-        eventAccumulator: &id059 !!uk.ac.ox.poseidon.fishing.market.BiomassSaleAccumulatorFactory {
+        eventAccumulator: &id060 !!uk.ac.ox.poseidon.fishing.market.BiomassSaleAccumulatorFactory {
           }
       - !!uk.ac.ox.poseidon.core.events.EventClearerFactory
-        eventAccumulator: &id058 !!uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulatorFactory {
+        eventAccumulator: &id059 !!uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulatorFactory {
           }
-  fleet: &id052 !!uk.ac.ox.poseidon.fishing.vessels.FleetFactory
+  fleet: &id053 !!uk.ac.ox.poseidon.fishing.vessels.FleetFactory
     eventManager: !!uk.ac.ox.poseidon.core.EventManagerFactory {
       }
     marketGrid: *id012
     portGrid: *id008
     vesselField: *id013
-  vesselSpecification: &id053 !!uk.ac.ox.poseidon.fishing.vessels.VesselSpecificationFactory
+  vesselSpecification: &id054 !!uk.ac.ox.poseidon.fishing.vessels.VesselSpecificationFactory
     behaviour: !!uk.ac.ox.poseidon.fishing.vessels.ChosenComponent
       attributes: [
         main_fishing_gear
@@ -460,8 +460,8 @@ components:
             - !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
               children:
               - !!uk.ac.ox.poseidon.fishing.tasks.general.VesselPredicateTaskFactory
-                predicate: !!uk.ac.ox.poseidon.fishing.vessels.values.VesselIsAtFactory
-                  cell: !!uk.ac.ox.poseidon.fishing.vessels.values.HomePortCellFactory {
+                predicate: !!uk.ac.ox.poseidon.fishing.vessels.values.VesselIsDockedAtFactory
+                  port: !!uk.ac.ox.poseidon.fishing.vessels.values.HomePortFactory {
                     }
               - !!uk.ac.ox.poseidon.fishing.tasks.general.SucceedOrWaitFactory
                 mainTask: !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
@@ -512,7 +512,7 @@ components:
                                 - outcome: !!uk.ac.ox.poseidon.fishing.vessels.BuildOutcome
                                     factory: !!uk.ac.ox.poseidon.fishing.vessels.gears.IndexedBiomassCatchabilityGearFactory
                                       duration: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
-                                        object: &id042 !!uk.ac.ox.poseidon.core.time.DurationFactory {
+                                        object: &id043 !!uk.ac.ox.poseidon.core.time.DurationFactory {
                                           days: 0,
                                           hours: 3,
                                           minutes: 0,
@@ -572,10 +572,10 @@ components:
                           value: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
                             mapping: !!uk.ac.ox.poseidon.core.predicates.logical.NotFactory
                               predicate: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
-                                value: !!uk.ac.ox.poseidon.fishing.vessels.values.VesselHasStartedTripTodayFactory
+                                value: &id039 !!uk.ac.ox.poseidon.fishing.vessels.values.HasStartedFishingTripTodayFactory
                                   currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                     }
-                  - !!uk.ac.ox.poseidon.fishing.vessels.TripBlockFactory
+                  - !!uk.ac.ox.poseidon.fishing.vessels.FishingTripBlockFactory
                     children:
                     - !!uk.ac.ox.poseidon.fishing.tasks.decorators.UntilFailTaskFactory
                       child: !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
@@ -583,7 +583,7 @@ components:
                         - &id031 !!uk.ac.ox.poseidon.fishing.tasks.travel.TravelAlongPathFactory
                           currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                             }
-                          destination: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentTripDestinationCellFactory {
+                          destination: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentTripDestinationFactory {
                             }
                           distance: *id017
                           engine: &id021 !!uk.ac.ox.poseidon.fishing.vessels.ChosenComponent
@@ -661,14 +661,14 @@ components:
                                         value: PS
                                       }
                                   map: !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
-                                    keyBuilder: &id039 !!uk.ac.ox.poseidon.io.tables.MultiStringKeyFromRowFactory
+                                    keyBuilder: &id040 !!uk.ac.ox.poseidon.io.tables.MultiStringKeyFromRowFactory
                                       keyColumnNames: [
                                         species_code,
                                         life_stage,
                                         gear_code
                                       ]
                                       
-                                    table: &id040 !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
+                                    table: &id041 !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
                                       dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
                                         encoding: UTF-8
                                         path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
@@ -680,13 +680,13 @@ components:
                               species: *id006
                             - !!uk.ac.ox.poseidon.fishing.catches.disposition.ProportionallyLimitingBiomassToHoldFactory {
                               }
-                            - &id041 !!uk.ac.ox.poseidon.fishing.catches.disposition.FullDiscardMortalityFactory {
+                            - &id042 !!uk.ac.ox.poseidon.fishing.catches.disposition.FullDiscardMortalityFactory {
                               }
                           fisheable: !!uk.ac.ox.poseidon.fishing.fisheables.CurrentCellFisheableFactory
                             fisheableGrid: *id018
                           fuelTank: *id019
                           gear: *id020
-                          hold: &id033 !!uk.ac.ox.poseidon.fishing.vessels.FactoryComponent
+                          hold: &id032 !!uk.ac.ox.poseidon.fishing.vessels.FactoryComponent
                             factory: !!uk.ac.ox.poseidon.fishing.vessels.holds.InfiniteBiomassHoldFactory
                               catchCategoriser: &id029 !!uk.ac.ox.poseidon.fishing.catches.UniformCatchCategoriserFactory
                                 catchCategory: !!uk.ac.ox.poseidon.fishing.catches.CatchCategoryFactory {
@@ -704,12 +704,12 @@ components:
                                       referenceDateTime: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentTripStartDateTimeFactory {
                                         }
                                       times:
-                                      - &id034 !!uk.ac.ox.poseidon.core.time.TimeFactory {
+                                      - &id033 !!uk.ac.ox.poseidon.core.time.TimeFactory {
                                         hour: 6,
                                         minute: 30,
                                         second: 0
                                       }
-                                subject: &id035 !!uk.ac.ox.poseidon.core.functions.CombinedDurationFactory
+                                subject: &id034 !!uk.ac.ox.poseidon.core.functions.CombinedDurationFactory
                                   durations:
                                   - !!uk.ac.ox.poseidon.fishing.travel.RoutePropertyFactory
                                     propertyPath: duration
@@ -736,7 +736,7 @@ components:
                                   predicate: !!uk.ac.ox.poseidon.fishing.trips.CellWasFishedThisTripFactory {
                                     }
                                 - *id024
-                                - &id036 !!uk.ac.ox.poseidon.fishing.regulations.predicates.FishingCellLegalityCheckerFactory
+                                - &id035 !!uk.ac.ox.poseidon.fishing.regulations.predicates.FishingCellLegalityCheckerFactory
                                   currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                     }
                                   engine: *id021
@@ -747,21 +747,19 @@ components:
                                     regulations:
                                     - *id026
                                     - *id016
-                              optionValues: &id037 !!uk.ac.ox.poseidon.fishing.choices.MemoryBasedOptionValuesFactory
-                                memorySelector: !!uk.ac.ox.poseidon.fishing.choices.KeyedMemorySelectorFactory
+                              optionValues: &id036 !!uk.ac.ox.poseidon.fishing.choices.MemoryBasedOptionValuesFactory
+                                memorySelector: &id052 !!uk.ac.ox.poseidon.fishing.choices.KeyedMemorySelectorFactory
                                   key: !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
                                     name: main_fishing_gear
                                   }
-                                  keyedMemory: &id051 !!uk.ac.ox.poseidon.fishing.choices.KeyedMemoryFactory {
-                                    }
                                 valuation: !!uk.ac.ox.poseidon.fishing.choices.NetValuationFactory
                                   costValuation: !!uk.ac.ox.poseidon.fishing.travel.TravelCostFactory
                                     routeCosts:
                                     - !!uk.ac.ox.poseidon.fishing.travel.TimeCostFactory
-                                      hourlyCost: &id032 !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
+                                      hourlyCost: &id038 !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
                                         mapping: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
                                           key: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
-                                            value: &id056 !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
+                                            value: &id057 !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
                                               mapping: !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
                                                 functions:
                                                 - !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
@@ -789,7 +787,7 @@ components:
                                                     name: main_fishing_gear
                                                   }
                                           map: !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
-                                            keyBuilder: &id057 !!uk.ac.ox.poseidon.io.tables.MultiStringKeyFromRowFactory
+                                            keyBuilder: &id058 !!uk.ac.ox.poseidon.io.tables.MultiStringKeyFromRowFactory
                                               keyColumnNames: [
                                                 country_code,
                                                 year,
@@ -833,12 +831,9 @@ components:
                     - !!uk.ac.ox.poseidon.fishing.tasks.travel.SetDestinationToOriginFactory {
                       }
                     - *id031
-                    - !!uk.ac.ox.poseidon.fishing.tasks.travel.ArriveInPortFactory
+                    - !!uk.ac.ox.poseidon.fishing.tasks.travel.DockAtDestinationFactory
                       currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                         }
-                    - !!uk.ac.ox.poseidon.fishing.tasks.accounting.PayTripCostFactory
-                      tripCost: !!uk.ac.ox.poseidon.fishing.vessels.values.TripCostFromHourlyCostsFactory
-                        hourlyCosts: *id032
                     - !!uk.ac.ox.poseidon.fishing.tasks.landings.LandCatchesFactory
                       currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                         }
@@ -849,7 +844,7 @@ components:
                           minutes: 0,
                           seconds: 0
                         }
-                      hold: *id033
+                      hold: *id032
                     currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                       }
                     initialDestination: !!uk.ac.ox.poseidon.fishing.choices.EpsilonGreedyDestinationFactory
@@ -858,7 +853,7 @@ components:
                           value: 0.2
                         }
                       exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
-                        optionPredicate: &id038 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
+                        optionPredicate: &id037 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                           predicates:
                           - !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                             predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
@@ -869,14 +864,14 @@ components:
                                   referenceDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                     }
                                   times:
-                                  - *id034
-                            subject: *id035
-                          - *id036
-                        optionValues: *id037
+                                  - *id033
+                            subject: *id034
+                          - *id035
+                        optionValues: *id036
                         randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                           }
                       explorer: !!uk.ac.ox.poseidon.fishing.choices.NeighbourhoodGridExplorerFactory
-                        cellPredicate: *id038
+                        cellPredicate: *id037
                         maximumWidening: 3
                         neighbourhoodSize: !!uk.ac.ox.poseidon.core.providers.ShiftedIntFactory
                           delegate: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonFactory
@@ -890,11 +885,14 @@ components:
                         searchCentre: !!uk.ac.ox.poseidon.fishing.choices.BestKnownOptionFactory
                           fallback: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentCellFactory {
                             }
-                          optionValues: *id037
+                          optionValues: *id036
                           randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                             }
                       randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                         }
+                    tripCosts:
+                    - !!uk.ac.ox.poseidon.fishing.vessels.values.TimeAtSeaCostFactory
+                      hourlyCosts: *id038
                 waitTask: !!uk.ac.ox.poseidon.fishing.tasks.general.WaitForFactory
                   duration: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
                     currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
@@ -913,17 +911,28 @@ components:
                         minute: 0,
                         second: 0
                       }
-            - &id050 !!uk.ac.ox.poseidon.fishing.tasks.travel.TravelAlongPathFactory
-              currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
-                }
-              destination: !!uk.ac.ox.poseidon.fishing.vessels.values.HomePortCellFactory {
-                }
-              distance: *id017
-              engine: *id021
-              eventManager: !!uk.ac.ox.poseidon.fishing.vessels.values.VesselEventManagerFactory {
-                }
-              fuelTank: *id019
-              pathFinder: *id022
+            - &id051 !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
+              children:
+              - !!uk.ac.ox.poseidon.fishing.tasks.general.VesselPredicateTaskFactory
+                predicate: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
+                  mapping: !!uk.ac.ox.poseidon.core.predicates.logical.NotFactory
+                    predicate: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
+                      value: !!uk.ac.ox.poseidon.fishing.vessels.values.VesselIsDockedAtFactory
+                        port: !!uk.ac.ox.poseidon.fishing.vessels.values.HomePortFactory {
+                          }
+              - !!uk.ac.ox.poseidon.fishing.vessels.TripBlockFactory
+                children:
+                - *id031
+                - !!uk.ac.ox.poseidon.fishing.tasks.travel.DockAtDestinationFactory
+                  currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
+                    }
+                currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
+                  }
+                initialDestination: !!uk.ac.ox.poseidon.core.functions.SomeFactory
+                  delegate: !!uk.ac.ox.poseidon.fishing.vessels.values.HomePortFactory {
+                    }
+                tripCosts: [
+                  ]
         values: [
           PS
         ]
@@ -934,8 +943,8 @@ components:
             - !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
               children:
               - !!uk.ac.ox.poseidon.fishing.tasks.general.VesselPredicateTaskFactory
-                predicate: !!uk.ac.ox.poseidon.fishing.vessels.values.VesselIsAtFactory
-                  cell: !!uk.ac.ox.poseidon.fishing.vessels.values.HomePortCellFactory {
+                predicate: !!uk.ac.ox.poseidon.fishing.vessels.values.VesselIsDockedAtFactory
+                  port: !!uk.ac.ox.poseidon.fishing.vessels.values.HomePortFactory {
                     }
               - !!uk.ac.ox.poseidon.fishing.tasks.general.SucceedOrWaitFactory
                 mainTask: !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
@@ -986,10 +995,8 @@ components:
                           value: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
                             mapping: !!uk.ac.ox.poseidon.core.predicates.logical.NotFactory
                               predicate: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
-                                value: !!uk.ac.ox.poseidon.fishing.vessels.values.VesselHasStartedTripTodayFactory
-                                  currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
-                                    }
-                  - !!uk.ac.ox.poseidon.fishing.vessels.TripBlockFactory
+                                value: *id039
+                  - !!uk.ac.ox.poseidon.fishing.vessels.FishingTripBlockFactory
                     children:
                     - !!uk.ac.ox.poseidon.fishing.tasks.decorators.UntilFailTaskFactory
                       child: !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
@@ -1019,31 +1026,31 @@ components:
                                         value: OTB
                                       }
                                   map: !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
-                                    keyBuilder: *id039
-                                    table: *id040
+                                    keyBuilder: *id040
+                                    table: *id041
                                     valueBuilder: !!uk.ac.ox.poseidon.io.tables.DoubleFromRowFactory {
                                       columnName: discard_ratio
                                     }
                               species: *id006
                             - !!uk.ac.ox.poseidon.fishing.catches.disposition.ProportionallyLimitingBiomassToHoldFactory {
                               }
-                            - *id041
+                            - *id042
                           fisheable: !!uk.ac.ox.poseidon.fishing.fisheables.CurrentCellFisheableFactory
                             fisheableGrid: *id018
                           fuelTank: *id019
                           gear: *id020
-                          hold: *id033
+                          hold: *id032
                         - !!uk.ac.ox.poseidon.fishing.tasks.general.VesselPredicateTaskFactory
                           predicate: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
                             mapping: !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
-                              predicate: &id043 !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
+                              predicate: &id044 !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                                 predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
                                   value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
                                     currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                       }
                                     referenceDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.DateTimeAfterFactory
                                       amountToAdd: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
-                                        object: &id046 !!uk.ac.ox.poseidon.core.time.DurationFactory {
+                                        object: &id047 !!uk.ac.ox.poseidon.core.time.DurationFactory {
                                           days: 0,
                                           hours: 12,
                                           minutes: 0,
@@ -1051,13 +1058,13 @@ components:
                                         }
                                       referenceDateTime: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentTripStartDateTimeFactory {
                                         }
-                                subject: &id047 !!uk.ac.ox.poseidon.core.functions.CombinedDurationFactory
+                                subject: &id048 !!uk.ac.ox.poseidon.core.functions.CombinedDurationFactory
                                   durations:
                                   - !!uk.ac.ox.poseidon.fishing.travel.RoutePropertyFactory
                                     propertyPath: duration
                                     route: *id028
                                   - !!uk.ac.ox.poseidon.core.providers.constant.ConstantMappingFactory
-                                    result: *id042
+                                    result: *id043
                               subject: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
                                 value: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentCellFactory {
                                   }
@@ -1068,28 +1075,28 @@ components:
                                 value: 0.2
                               }
                             exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
-                              optionPredicate: &id045 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
+                              optionPredicate: &id046 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                                 predicates:
                                 - !!uk.ac.ox.poseidon.core.predicates.logical.NotFactory
                                   predicate: !!uk.ac.ox.poseidon.fishing.trips.CellWasFishedThisTripFactory {
                                     }
-                                - *id043
-                                - &id048 !!uk.ac.ox.poseidon.fishing.regulations.predicates.FishingCellLegalityCheckerFactory
+                                - *id044
+                                - &id049 !!uk.ac.ox.poseidon.fishing.regulations.predicates.FishingCellLegalityCheckerFactory
                                   currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                     }
                                   engine: *id021
-                                  fishingDuration: *id042
+                                  fishingDuration: *id043
                                   gear: *id020
                                   pathLengthCalculator: *id025
                                   regulations: !!uk.ac.ox.poseidon.regulations.AllOfRegulationsFactory
                                     regulations:
-                                    - *id044
+                                    - *id045
                                     - *id016
-                              optionValues: *id037
+                              optionValues: *id036
                               randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                                 }
                             explorer: !!uk.ac.ox.poseidon.fishing.choices.NeighbourhoodGridExplorerFactory
-                              cellPredicate: *id045
+                              cellPredicate: *id046
                               maximumWidening: 3
                               neighbourhoodSize: !!uk.ac.ox.poseidon.core.providers.ShiftedIntFactory
                                 delegate: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonFactory
@@ -1107,12 +1114,9 @@ components:
                     - !!uk.ac.ox.poseidon.fishing.tasks.travel.SetDestinationToOriginFactory {
                       }
                     - *id031
-                    - !!uk.ac.ox.poseidon.fishing.tasks.travel.ArriveInPortFactory
+                    - !!uk.ac.ox.poseidon.fishing.tasks.travel.DockAtDestinationFactory
                       currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                         }
-                    - !!uk.ac.ox.poseidon.fishing.tasks.accounting.PayTripCostFactory
-                      tripCost: !!uk.ac.ox.poseidon.fishing.vessels.values.TripCostFromHourlyCostsFactory
-                        hourlyCosts: *id032
                     - !!uk.ac.ox.poseidon.fishing.tasks.landings.LandCatchesFactory
                       currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                         }
@@ -1123,7 +1127,7 @@ components:
                           minutes: 0,
                           seconds: 0
                         }
-                      hold: *id033
+                      hold: *id032
                     currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                       }
                     initialDestination: !!uk.ac.ox.poseidon.fishing.choices.EpsilonGreedyDestinationFactory
@@ -1132,19 +1136,19 @@ components:
                           value: 0.2
                         }
                       exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
-                        optionPredicate: &id049 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
+                        optionPredicate: &id050 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                           predicates:
                           - !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                             predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
                               value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
-                                object: *id046
-                            subject: *id047
-                          - *id048
-                        optionValues: *id037
+                                object: *id047
+                            subject: *id048
+                          - *id049
+                        optionValues: *id036
                         randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                           }
                       explorer: !!uk.ac.ox.poseidon.fishing.choices.NeighbourhoodGridExplorerFactory
-                        cellPredicate: *id049
+                        cellPredicate: *id050
                         maximumWidening: 3
                         neighbourhoodSize: !!uk.ac.ox.poseidon.core.providers.ShiftedIntFactory
                           delegate: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonFactory
@@ -1158,11 +1162,14 @@ components:
                         searchCentre: !!uk.ac.ox.poseidon.fishing.choices.BestKnownOptionFactory
                           fallback: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentCellFactory {
                             }
-                          optionValues: *id037
+                          optionValues: *id036
                           randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                             }
                       randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                         }
+                    tripCosts:
+                    - !!uk.ac.ox.poseidon.fishing.vessels.values.TimeAtSeaCostFactory
+                      hourlyCosts: *id038
                 waitTask: !!uk.ac.ox.poseidon.fishing.tasks.general.WaitForFactory
                   duration: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
                     currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
@@ -1176,44 +1183,36 @@ components:
                         minute: 0,
                         second: 0
                       }
-            - *id050
+            - *id051
         values: [
           OTB
         ]
         
     components:
-      hold: *id033
+      hold: *id032
       gear: *id020
       engine: *id021
       fuelTank: *id019
       ownCatchRecorder: !!uk.ac.ox.poseidon.fishing.vessels.FactoryComponent
         factory: !!uk.ac.ox.poseidon.fishing.vessels.VesselEventListenerFactory
           listener: !!uk.ac.ox.poseidon.fishing.choices.FishingEventRecorderFactory
-            memorySelector: !!uk.ac.ox.poseidon.fishing.choices.KeyedMemorySelectorFactory
-              key: !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
-                name: main_fishing_gear
-              }
-              keyedMemory: *id051
+            memorySelector: *id052
             modelGrid: *id005
             updateRule: !!uk.ac.ox.poseidon.fishing.choices.ExponentialMovingAverageOfBucketsFactory {
               alpha: 0.5
             }
       sharedCatchRecorder: !!uk.ac.ox.poseidon.fishing.vessels.FactoryComponent
         factory: !!uk.ac.ox.poseidon.fishing.social.SharedFishingEventListenerFactory
-          fishingEventSharer: &id055 !!uk.ac.ox.poseidon.fishing.social.FishingEventSharerFactory
-            network: &id054 !!uk.ac.ox.poseidon.fishing.social.SocialNetworkFactory
-              fleet: *id052
+          fishingEventSharer: &id056 !!uk.ac.ox.poseidon.fishing.social.FishingEventSharerFactory
+            network: &id055 !!uk.ac.ox.poseidon.fishing.social.SocialNetworkFactory
+              fleet: *id053
           listener: !!uk.ac.ox.poseidon.fishing.choices.FishingEventRecorderFactory
-            memorySelector: !!uk.ac.ox.poseidon.fishing.choices.KeyedMemorySelectorFactory
-              key: !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
-                name: main_fishing_gear
-              }
-              keyedMemory: *id051
+            memorySelector: *id052
             modelGrid: *id005
             updateRule: !!uk.ac.ox.poseidon.fishing.choices.ExponentialMovingAverageOfBucketsFactory {
               alpha: 0.2
             }
-    fleet: *id052
+    fleet: *id053
     homePortAttribute: place_of_registration
     nameAttribute: name_of_vessel
   vesselRegister: !!uk.ac.ox.poseidon.core.schedule.ScheduledByDateTimeFactory
@@ -1246,8 +1245,8 @@ components:
       startingDateTime: !!uk.ac.ox.poseidon.core.StartingDateTimeFactory {
         }
       vesselIdColumn: cfr
-      vesselSpecification: *id053
-  socialNetwork: *id054
+      vesselSpecification: *id054
+  socialNetwork: *id055
   cliqueDynamics: !!uk.ac.ox.poseidon.fishing.social.CliqueDynamicsFactory
     groupingValues:
     - !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
@@ -1257,10 +1256,10 @@ components:
       name: main_fishing_gear
     }
     maximumCliqueSize: 5
-    network: *id054
+    network: *id055
     randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
       }
-  fishingEventSharer: *id055
+  fishingEventSharer: *id056
   fixedCostCollector: !!uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFromStartFactory
     interval: !!uk.ac.ox.poseidon.core.time.PeriodFactory {
       days: 1,
@@ -1272,9 +1271,9 @@ components:
       cost: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
         mapping: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
           key: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
-            value: *id056
+            value: *id057
           map: !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
-            keyBuilder: *id057
+            keyBuilder: *id058
             table: !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
               dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
                 encoding: UTF-8
@@ -1285,9 +1284,9 @@ components:
               amountColumnName: fixed_cost_per_day,
               currencyColumnName: currency
             }
-      fleet: *id052
-  fishingActionAccumulator: *id058
-  biomassSaleAccumulator: *id059
+      fleet: *id053
+  fishingActionAccumulator: *id059
+  biomassSaleAccumulator: *id060
   directoryRemover: !!uk.ac.ox.poseidon.core.utils.FinalProcessFactory
     process: !!uk.ac.ox.poseidon.io.DirectoryRemoverFactory
       ignoreIfAbsent: false

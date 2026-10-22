@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.events.AbstractListener;
-import uk.ac.ox.poseidon.fishing.trips.TripStartEvent;
+import uk.ac.ox.poseidon.fishing.trips.FishingTripStartEvent;
 import uk.ac.ox.poseidon.fishing.vessels.Fleet;
 import uk.ac.ox.poseidon.fishing.vessels.Vessel;
 import uk.ac.ox.poseidon.geography.grids.Cell;
@@ -83,9 +83,9 @@ class NorthwesternMedVoyageHomeTest {
     final Simulation simulation = scenario.startNewSimulation(1);
     final List<Cell> departureCells = new ArrayList<>();
     simulation.getEventManager().addListener(
-      new AbstractListener<>(TripStartEvent.class) {
+      new AbstractListener<>(FishingTripStartEvent.class) {
         @Override
-        public void receive(final TripStartEvent event) {
+        public void receive(final FishingTripStartEvent event) {
           final Vessel vessel = event.getTrip().getVessel();
           final LocalDateTime now = simulation
             .getTemporalSchedule()

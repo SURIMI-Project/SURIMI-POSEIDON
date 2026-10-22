@@ -75,7 +75,6 @@ import static uk.ac.ox.poseidon.fishing.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.fishing.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.fishing.regulations.predicates.Factories.fishingCellLegalityChecker;
 import static uk.ac.ox.poseidon.fishing.social.Factories.*;
-import static uk.ac.ox.poseidon.fishing.tasks.accounting.Factories.payTripCost;
 import static uk.ac.ox.poseidon.fishing.tasks.branches.Factories.selectorTask;
 import static uk.ac.ox.poseidon.fishing.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.fishing.tasks.decorators.Factories.untilFail;
@@ -127,12 +126,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Supplier;
 import tech.tablesaw.api.Table;
-import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.core.Scenario;
-import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
-import uk.ac.ox.poseidon.fishing.choices.KeyedMemoryFactory;
-import uk.ac.ox.poseidon.geography.grids.Cell;
 
 /**
  * The Northwestern Mediterranean scenario, the one this server serves in
@@ -181,11 +175,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
    * {@code writeNorthwesternMedScenario} Gradle task instead.
    */
   static void main(final String[] args) {
-    final int numSteps = 12 * 10;
-    final Period stepSize = Period.ofMonths(1);
-    final Scenario scenario = new NorthwesternMedScenario().get();
-    final Simulation simulation = scenario.startNewSimulation();
-    final TemporalSchedule temporalSchedule = simulation.getTemporalSchedule();
+    final var numSteps = 12 * 10;
+    final var stepSize = Period.ofMonths(1);
+    final var scenario = new NorthwesternMedScenario().get();
+    final var simulation = scenario.startNewSimulation();
+    final var temporalSchedule = simulation.getTemporalSchedule();
     range(0, numSteps).forEach(_ -> {
       temporalSchedule.stepFor(simulation, stepSize);
       System.out.println(temporalSchedule.getDateTime());
@@ -531,10 +525,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // One memory per vessel, keyed by gear code: what the vessel learns from
     // its fishing operations and what it decides from must be this same
     // instance.
-    final KeyedMemoryFactory<String, Cell, Bucket> vesselMemory = keyedMemory();
+    final var vesselMemory = catchMemoryBy(
+      stringAttribute("main_fishing_gear")
+    );
 
     final var optionValues = memoryBasedOptionValues(
-      keyedMemorySelector(vesselMemory, stringAttribute("main_fishing_gear")),
+      vesselMemory,
       netValuation(
         homePortCatchValuation(catchCategoriser),
         travelCost(routeFunction, timeCost(hourlyCost))
@@ -644,6 +640,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       bottomTrawlerFishingCellLegalityChecker
     );
 
+    // One record per vessel, shared by both gears' behaviours: a vessel whose
+    // gear changes reads the trips it started before the change.
+    final var hasStartedFishingTripToday = hasStartedFishingTripToday();
+
     final var purseSeinerReadyForDeparture = checkThat(
       allOf(
         isPermitted(departNow(gear), totalAllowableCatchQuotas),
@@ -652,7 +652,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
           currentDayOfWeek(),
           in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
         ),
-        not(vesselHasStartedTripToday())
+        not(hasStartedFishingTripToday)
       )
     );
 
@@ -673,7 +673,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
           currentDayOfWeek(),
           in(constant(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY)))
         ),
-        not(vesselHasStartedTripToday())
+        not(hasStartedFishingTripToday)
       )
     );
 
@@ -800,36 +800,33 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    // Each run of the behaviour either travels home, when the vessel is away
-    // from its home port, or, at the home port, makes a trip or waits. A
-    // change to the vessel takes effect between runs, so a vessel given a new
-    // home port travels there and then departs from it.
-    final var travelHome = travelAlongPathTo(
-      engine,
-      fuelTank,
-      pathFinder,
-      distance,
-      homePortCell(),
-      vesselEventManager()
-    );
-
     final var travelToTripDestination = travelAlongPathTo(
       engine,
       fuelTank,
       pathFinder,
       distance,
-      currentTripDestinationCell(),
+      currentTripDestination(),
       currentTripEventManager()
+    );
+
+    // Each run of the behaviour either, docked at the home port, makes a
+    // fishing trip or waits, or, anywhere else, makes a trip to the home port.
+    // A change to the vessel takes effect between runs, so a vessel given a
+    // new home port travels there and then departs from it.
+    final var travelHome = sequenceTask(
+      checkThat(not(vesselIsDockedAt(homePort()))),
+      trip(some(homePort()), travelToTripDestination, dockAtDestination())
     );
 
     final var purseSeinerBehaviour = selectorTask(
       sequenceTask(
-        checkThat(vesselIsAt(homePortCell())),
+        checkThat(vesselIsDockedAt(homePort())),
         succeedOrWait(
           sequenceTask(
             purseSeinerReadyForDeparture,
-            trip(
+            fishingTrip(
               purseSeinerFirstDestination,
+              timeAtSeaCost(hourlyCost),
               untilFail(
                 sequenceTask(
                   travelToTripDestination,
@@ -843,8 +840,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
               ),
               setDestinationToOrigin(),
               travelToTripDestination,
-              arriveInPort(),
-              payTripCost(tripCostFromHourlyCosts(hourlyCost)),
+              dockAtDestination(),
               landCatches(hold, constant(hours(1)))
             )
           ),
@@ -856,12 +852,13 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var bottomTrawlerBehaviour = selectorTask(
       sequenceTask(
-        checkThat(vesselIsAt(homePortCell())),
+        checkThat(vesselIsDockedAt(homePort())),
         succeedOrWait(
           sequenceTask(
             bottomTrawlerReadyForDeparture,
-            trip(
+            fishingTrip(
               bottomTrawlerFirstDestination,
+              timeAtSeaCost(hourlyCost),
               untilFail(
                 sequenceTask(
                   travelToTripDestination,
@@ -875,8 +872,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
               ),
               setDestinationToOrigin(),
               travelToTripDestination,
-              arriveInPort(),
-              payTripCost(tripCostFromHourlyCosts(hourlyCost)),
+              dockAtDestination(),
               landCatches(hold, constant(hours(1)))
             )
           ),
@@ -911,10 +907,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       vesselEventListener(
         fishingEventRecorder(
           modelGrid,
-          keyedMemorySelector(
-            vesselMemory,
-            stringAttribute("main_fishing_gear")
-          ),
+          vesselMemory,
           exponentialMovingAverageOfBuckets(OWN_LEARNING_ALPHA)
         )
       )
@@ -923,10 +916,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       sharedFishingEventListener(
         fishingEventRecorder(
           modelGrid,
-          keyedMemorySelector(
-            vesselMemory,
-            stringAttribute("main_fishing_gear")
-          ),
+          vesselMemory,
           exponentialMovingAverageOfBuckets(SOCIAL_LEARNING_ALPHA)
         ),
         fishingEventSharer
