@@ -41,7 +41,14 @@ import uk.ac.ox.poseidon.fishing.vessels.VesselSpecificationFactory;
 import uk.ac.ox.poseidon.fishing.vessels.gears.Gear;
 import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
-import uk.ac.ox.poseidon.gui.portrayals.*;
+import uk.ac.ox.poseidon.gui.portrayals.BathymetryFieldPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.CoordinatesPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.MarketGridPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.PortGridPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.RegulationGridPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.SimpleFieldPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.SpeciesBiomassFieldsPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.VesselFieldPortrayalFactory;
 
 /**
  * GUI wrapper for {@link NorthwesternMedScenario}: displays bathymetry, species
@@ -70,7 +77,7 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
       scenario,
       List.of(
         new DisplayWrapper2D(
-          "Catalan Mediterranean Sea",
+          "Northwestern Mediterranean Sea",
           List.of(
             new BathymetryFieldPortrayalFactory(
               scenario.component("bathymetricGrid")
