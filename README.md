@@ -34,6 +34,8 @@ the areas closed to each fleet; the inspector shows the model's components and l
 individual vessels. In this mode, biomass and prices are read from the files in
 `inputs/northwestern_med/`.
 
+![The Northwestern Mediterranean scenario in POSEIDON's graphical interface](.github/images/nw_med_gui.png)
+
 ## Run the model as a SURIMI service
 
 Within SURIMI, the model runs as a gRPC service driven by the SURIMI controller, alongside the
