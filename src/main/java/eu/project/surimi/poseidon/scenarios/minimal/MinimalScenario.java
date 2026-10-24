@@ -284,7 +284,7 @@ public class MinimalScenario implements Supplier<Scenario> {
         setDestinationToOrigin(),
         travelToTripDestination,
         dockAtDestination(),
-        landCatches(hold, constant(hours(1)))
+        landCatches(hold, hours(1))
       )
     );
 

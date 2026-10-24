@@ -647,7 +647,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var purseSeinerReadyForDeparture = checkThat(
       allOf(
         isPermitted(departNow(gear), totalAllowableCatchQuotas),
-        condition(currentTime(), afterTime(constant(time(21, 59, 59)))),
+        condition(currentTime(), afterTime(time(21, 59, 59))),
         condition(
           currentDayOfWeek(),
           in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
@@ -668,7 +668,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var bottomTrawlerReadyForDeparture = checkThat(
       allOf(
         isPermitted(departNow(gear), totalAllowableCatchQuotas),
-        condition(currentTime(), afterTime(constant(time(6, 59, 59)))),
+        condition(currentTime(), afterTime(time(6, 59, 59))),
         condition(
           currentDayOfWeek(),
           in(constant(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY)))
@@ -841,7 +841,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
               setDestinationToOrigin(),
               travelToTripDestination,
               dockAtDestination(),
-              landCatches(hold, constant(hours(1)))
+              landCatches(hold, hours(1))
             )
           ),
           purseSeinerWaitUntilNextCheckpoint
@@ -873,7 +873,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
               setDestinationToOrigin(),
               travelToTripDestination,
               dockAtDestination(),
-              landCatches(hold, constant(hours(1)))
+              landCatches(hold, hours(1))
             )
           ),
           bottomTrawlerWaitUntilNextCheckpoint
