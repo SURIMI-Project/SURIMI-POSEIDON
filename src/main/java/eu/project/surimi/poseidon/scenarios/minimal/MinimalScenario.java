@@ -35,8 +35,6 @@ import static uk.ac.ox.poseidon.biology.species.Factories.species;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesByCode;
 import static uk.ac.ox.poseidon.core.functions.Factories.intervalLabel;
 import static uk.ac.ox.poseidon.core.functions.IntervalLabelFactory.interval;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.always;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.quantities.VolumetricFlowRateFactory.LITRE_PER_HOUR;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledByDateTime;
@@ -217,7 +215,7 @@ public class MinimalScenario implements Supplier<Scenario> {
         fixedBiomassProportionGear(
           0.25,
           massOf(1, KILOGRAM),
-          constant(hours(1)),
+          hours(1),
           volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
         )
       ),
@@ -225,7 +223,7 @@ public class MinimalScenario implements Supplier<Scenario> {
         fixedBiomassProportionGear(
           0.5,
           massOf(1, KILOGRAM),
-          constant(hours(1)),
+          hours(1),
           volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
         )
       )
@@ -278,7 +276,7 @@ public class MinimalScenario implements Supplier<Scenario> {
             selectedSpeciesRetention(
               speciesByCode(object(RETAINED_SPECIES_CODES), species)
             ),
-            discardMortality(always(0.1))
+            discardMortality(0.1)
           )
         ),
         setDestinationToOrigin(),

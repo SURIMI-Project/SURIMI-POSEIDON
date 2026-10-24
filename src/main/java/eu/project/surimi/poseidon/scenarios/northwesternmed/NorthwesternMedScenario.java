@@ -402,7 +402,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       by("main_fishing_gear"),
       when(PURSE_SEINE_GEAR_CODE).then(
         indexedBiomassCatchabilityGear(
-          constant(purseSeineSetDuration),
+          purseSeineSetDuration,
           species,
           defaultIfNull(
             mapLookup(speciesProperty("key"), purseSeinerCatchabilities),
@@ -413,7 +413,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       ),
       when(BOTTOM_TRAWLER_GEAR_CODE).then(
         indexedBiomassCatchabilityGear(
-          constant(bottomTrawlerSetDuration),
+          bottomTrawlerSetDuration,
           species,
           defaultIfNull(
             mapLookup(speciesProperty("key"), bottomTrawlerCatchabilities),
@@ -501,7 +501,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var costsKeyFromVessel = multiStringKeyFromFunctions(
       stringAttribute("country_of_registration"),
-      minInt(maxInt(currentYear(), constant(2013)), constant(2023)),
+      minInt(maxInt(currentYear(), 2013), 2023),
       vesselLengthClass,
       stringAttribute("main_fishing_gear")
     );
@@ -615,7 +615,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var bottomTrawlerFishingCellAtDepartureChecker = allOf(
       condition(
         bottomTrawlerFishAndReturnDurationFunction,
-        lessThan(constant(bottomTrawlerMaximumTripDuration))
+        lessThan(bottomTrawlerMaximumTripDuration)
       ),
       bottomTrawlerFishingCellLegalityChecker
     );
