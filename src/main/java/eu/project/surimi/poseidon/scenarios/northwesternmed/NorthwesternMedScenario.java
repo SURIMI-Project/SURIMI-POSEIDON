@@ -51,7 +51,6 @@ import static uk.ac.ox.poseidon.core.predicates.logical.Factories.not;
 import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.always;
-import static uk.ac.ox.poseidon.core.providers.constant.Factories.constant;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.minInt;
 import static uk.ac.ox.poseidon.core.providers.random.Factories.randomPoisson;
@@ -268,11 +267,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var commonActionPredicate = anyOf(
       actionCellPredicate(
         modelGrid,
-        in(
-          constant(
-            cellSetFromGridFile(inputPath.plus("french_eez.asc"), modelGrid, 1)
-          )
-        )
+        in(cellSetFromGridFile(inputPath.plus("french_eez.asc"), modelGrid, 1))
       ),
       mpaClosurePredicate(
         modelGrid,
@@ -450,7 +445,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var routeFunction = routeViaDestination(engine, pathLengthCalculator);
 
     final var zeroBiomassAllocator = filteredAllocator(
-      supplierAllocator(constant(0.0)),
+      supplierAllocator(0.0),
       isActiveWaterCell(bathymetricGrid)
     );
 
@@ -650,7 +645,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         condition(currentTime(), afterTime(time(21, 59, 59))),
         condition(
           currentDayOfWeek(),
-          in(constant(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY)))
+          in(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY))
         ),
         not(hasStartedFishingTripToday)
       )
@@ -671,7 +666,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         condition(currentTime(), afterTime(time(6, 59, 59))),
         condition(
           currentDayOfWeek(),
-          in(constant(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY)))
+          in(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
         ),
         not(hasStartedFishingTripToday)
       )
