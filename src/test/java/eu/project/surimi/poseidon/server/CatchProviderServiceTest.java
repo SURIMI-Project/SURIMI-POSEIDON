@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -26,7 +26,7 @@ import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.SPECI
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import build.buf.gen.surimi.v1.DispositionGrid;
 import build.buf.gen.surimi.v1.FleetSegment;
@@ -51,11 +51,7 @@ public class CatchProviderServiceTest extends ServiceTest {
     step(simulationId, START_DATE_TIME);
     // Just check that we get a grid for each contract fleet segment/species
     // combination
-    assertEquals(
-      contractItems()
-        .getFleetSegmentsList()
-        .stream()
-        .collect(toMap(identity(), _ -> Set.copyOf(SPECIES_CODES))),
+    assertThat(
       getDispositionGrids(simulationId)
         .stream()
         .collect(
@@ -64,6 +60,11 @@ public class CatchProviderServiceTest extends ServiceTest {
             mapping(grid -> grid.getSpecies().getSpeciesCode(), toSet())
           )
         )
+    ).isEqualTo(
+      contractItems()
+        .getFleetSegmentsList()
+        .stream()
+        .collect(toMap(identity(), _ -> Set.copyOf(SPECIES_CODES)))
     );
   }
 
@@ -86,7 +87,7 @@ public class CatchProviderServiceTest extends ServiceTest {
       .stream()
       .map(grid -> grid.getSpecies().getSpeciesCode())
       .collect(toSet());
-    assertEquals(Set.of("A", "B"), reportedSpeciesCodes);
+    assertThat(reportedSpeciesCodes).containsExactlyInAnyOrder("A", "B");
   }
 
   @Test
@@ -108,7 +109,7 @@ public class CatchProviderServiceTest extends ServiceTest {
       .stream()
       .map(DispositionGrid::getFleetSegment)
       .collect(toSet());
-    assertEquals(Set.of(g1), reportedFleetSegments);
+    assertThat(reportedFleetSegments).containsExactly(g1);
   }
 
   private List<DispositionGrid> getDispositionGrids(final String simulationId) {

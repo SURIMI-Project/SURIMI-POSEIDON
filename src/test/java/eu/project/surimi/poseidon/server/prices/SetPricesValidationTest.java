@@ -23,8 +23,8 @@
 package eu.project.surimi.poseidon.server.prices;
 
 import static eu.project.surimi.poseidon.server.prices.UpdateSpeciesPricesRequestHandler.getMarketsById;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 
 import build.buf.gen.surimi.v1.SpeciesPrice;
@@ -64,13 +64,12 @@ class SetPricesValidationTest extends ServiceTest {
 
   @Test
   void stagedUpdateRejectedWhenGenericPriceExists() {
-    final StatusRuntimeException error = assertThrows(
-      StatusRuntimeException.class,
-      () -> updatePrice(SPECIES_CODE, "juvenile", 2.0)
-    );
-    assertEquals(
-      Status.INVALID_ARGUMENT.getCode(),
-      error.getStatus().getCode()
+    assertThatThrownBy(() ->
+      updatePrice(SPECIES_CODE, "juvenile", 2.0)
+    ).isInstanceOfSatisfying(StatusRuntimeException.class, error ->
+      assertThat(error.getStatus().getCode()).isEqualTo(
+        Status.Code.INVALID_ARGUMENT
+      )
     );
   }
 
@@ -86,25 +85,23 @@ class SetPricesValidationTest extends ServiceTest {
       START_DATE_TIME
     );
 
-    final StatusRuntimeException error = assertThrows(
-      StatusRuntimeException.class,
-      () -> updatePrice(UNPRICED_SPECIES_CODE, null, 2.0)
-    );
-    assertEquals(
-      Status.INVALID_ARGUMENT.getCode(),
-      error.getStatus().getCode()
+    assertThatThrownBy(() ->
+      updatePrice(UNPRICED_SPECIES_CODE, null, 2.0)
+    ).isInstanceOfSatisfying(StatusRuntimeException.class, error ->
+      assertThat(error.getStatus().getCode()).isEqualTo(
+        Status.Code.INVALID_ARGUMENT
+      )
     );
   }
 
   @Test
   void updateRejectedInAnotherCurrencyThanTheMarkets() {
-    final StatusRuntimeException error = assertThrows(
-      StatusRuntimeException.class,
-      () -> updatePrice(SPECIES_CODE, null, 2.0, "EUR")
-    );
-    assertEquals(
-      Status.INVALID_ARGUMENT.getCode(),
-      error.getStatus().getCode()
+    assertThatThrownBy(() ->
+      updatePrice(SPECIES_CODE, null, 2.0, "EUR")
+    ).isInstanceOfSatisfying(StatusRuntimeException.class, error ->
+      assertThat(error.getStatus().getCode()).isEqualTo(
+        Status.Code.INVALID_ARGUMENT
+      )
     );
   }
 

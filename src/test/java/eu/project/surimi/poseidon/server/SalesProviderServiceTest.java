@@ -28,7 +28,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import build.buf.gen.surimi.v1.FleetSegment;
 import build.buf.gen.surimi.v1.GetSalesRequest;
@@ -52,11 +51,7 @@ public class SalesProviderServiceTest extends ServiceTest {
     step(simulationId, START_DATE_TIME);
     // Just check that we get sales for each contract fleet segment/species
     // combination
-    assertEquals(
-      contractItems()
-        .getFleetSegmentsList()
-        .stream()
-        .collect(toMap(identity(), _ -> Set.copyOf(RETAINED_SPECIES_CODES))),
+    assertThat(
       getSales(simulationId)
         .stream()
         .collect(
@@ -65,6 +60,11 @@ public class SalesProviderServiceTest extends ServiceTest {
             mapping(sale -> sale.getSpecies().getSpeciesCode(), toSet())
           )
         )
+    ).isEqualTo(
+      contractItems()
+        .getFleetSegmentsList()
+        .stream()
+        .collect(toMap(identity(), _ -> Set.copyOf(RETAINED_SPECIES_CODES)))
     );
   }
 
@@ -85,7 +85,7 @@ public class SalesProviderServiceTest extends ServiceTest {
       .stream()
       .map(Sale::getFleetSegment)
       .collect(toSet());
-    assertEquals(Set.of(g1), reportedFleetSegments);
+    assertThat(reportedFleetSegments).containsExactly(g1);
   }
 
   @Test

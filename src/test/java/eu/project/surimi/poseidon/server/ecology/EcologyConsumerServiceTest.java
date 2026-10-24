@@ -25,8 +25,7 @@ package eu.project.surimi.poseidon.server.ecology;
 import static eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario.LIFE_STAGE_PER_SPECIES_CODE;
 import static eu.project.surimi.poseidon.server.Server.toTimestamp;
 import static java.util.stream.Collectors.toMap;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static tech.units.indriya.unit.Units.GRAM;
 import static tech.units.indriya.unit.Units.KILOGRAM;
@@ -132,7 +131,7 @@ public class EcologyConsumerServiceTest extends ServiceTest {
           )
           .build()
       );
-    assertEquals(simulationId, updateBiomassResponse.getSimulationId());
+    assertThat(updateBiomassResponse.getSimulationId()).isEqualTo(simulationId);
     final Map<
       Pair<String, String>,
       Map<Coordinate, ComparableQuantity<Mass>>
@@ -149,24 +148,24 @@ public class EcologyConsumerServiceTest extends ServiceTest {
           Entry::getValue
         )
       );
-    assertTrue(
+    assertThat(
       grids
         .get(LIFE_STAGE_PER_SPECIES_CODE.getFirst())
         .get(new Coordinate(-1, -1))
         .isEquivalentTo(getQuantity(10_000, unit))
-    );
-    assertTrue(
+    ).isTrue();
+    assertThat(
       grids
         .get(LIFE_STAGE_PER_SPECIES_CODE.getFirst())
         .get(new Coordinate(0, -1))
         .isEquivalentTo(getQuantity(20_000, unit))
-    );
-    assertTrue(
+    ).isTrue();
+    assertThat(
       grids
         .get(LIFE_STAGE_PER_SPECIES_CODE.getLast())
         .get(new Coordinate(-1, -1))
         .isEquivalentTo(getQuantity(30_000, unit))
-    );
+    ).isTrue();
   }
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -179,7 +178,7 @@ public class EcologyConsumerServiceTest extends ServiceTest {
     initialGrids.forEach((speciesCode, initialGrid) -> {
       final var updatedGrid = updatedGrids.get(speciesCode);
       // Check that no cell has seen an increase in biomass
-      assertTrue(
+      assertThat(
         initialGrid
           .entrySet()
           .stream()
@@ -188,17 +187,17 @@ public class EcologyConsumerServiceTest extends ServiceTest {
               .get(entry.getKey())
               .isLessThanOrEqualTo(entry.getValue())
           )
-      );
+      ).isTrue();
       // and that some biomass has been removed (i.e., fished) in at least one
       // cell
-      assertTrue(
+      assertThat(
         initialGrid
           .entrySet()
           .stream()
           .anyMatch(entry ->
             updatedGrid.get(entry.getKey()).isLessThan(entry.getValue())
           )
-      );
+      ).isTrue();
     });
   }
 }

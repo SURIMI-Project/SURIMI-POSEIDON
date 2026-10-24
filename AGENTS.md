@@ -159,11 +159,12 @@ type, the fault lies in the factory helper, not the scenario: fix the helper so 
 its name fix the type, never by giving the scenario local an explicit type.
 
 `build` runs `spotlessCheck`, which fails on any Java file `spotlessApply` would change: run
-`./gradlew spotlessApply` after editing Java. The formatting setup is duplicated in `POSEIDON/`
-(`.prettierrc`, `package.json`, the Spotless block and license header in `build.gradle.kts`, the
-`nodejs`/`node-gradle`/`spotless` versions, the Node.js repository in `settings.gradle.kts`, the
-`buildscript` block in `build.gradle.kts` that pins node-gradle's Jackson 2 with the `jackson2`
-version): change both repos together.
+`./gradlew spotlessApply` after editing Java. It never touches the year in a license header: end the
+year range of every file you modify at the current year yourself (see "Licensing"). The formatting
+setup is duplicated in `POSEIDON/` (`.prettierrc`, `package.json`, the Spotless block and license
+header in `build.gradle.kts`, the `nodejs`/`node-gradle`/`spotless` versions, the Node.js repository
+in `settings.gradle.kts`, the `buildscript` block in `build.gradle.kts` that pins node-gradle's
+Jackson 2 with the `jackson2` version): change both repos together.
 
 Compilation and Checkstyle follow POSEIDON's rules (see "Commands" in `POSEIDON/AGENTS.md`):
 `-Werror -Xlint:all,-serial`, and Checkstyle with `POSEIDON/config/checkstyle/checkstyle.xml`,
