@@ -24,6 +24,8 @@ package eu.project.surimi.poseidon.scenarios;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario;
+import eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenarioWithUI;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenarioWithUI;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
@@ -34,6 +36,13 @@ import org.junit.jupiter.api.Test;
 // the scenario's own code fixes: a wrapper that looks one up wrongly fails
 // when it is built, before any window opens.
 class ScenarioWithUIWrappersTest {
+
+  @Test
+  void anchovyBayWrapperFindsTheComponentsItPortrays() {
+    assertThatCode(() ->
+      new AnchovyBayScenarioWithUI(new AnchovyBayScenario().get())
+    ).doesNotThrowAnyException();
+  }
 
   @Test
   void minimalWrapperFindsTheComponentsItPortrays() {
