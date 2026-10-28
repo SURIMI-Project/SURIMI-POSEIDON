@@ -209,6 +209,22 @@ tasks.register("runNorthwesternMedCalibration", JavaExec::class) {
     jvmArgs("-XX:MaxRAMPercentage=75")
 }
 
+tasks.register("writeAnchovyBayScenario", JavaExec::class) {
+    dependsOn("classes")
+    mainClass.set("uk.ac.ox.poseidon.io.ScenarioWriter")
+    classpath = sourceSets["main"].runtimeClasspath
+    args(
+        "-c", "eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario",
+        "-s", "scenarios/anchovy_bay.yaml"
+    )
+}
+
+tasks.register("runAnchovyBayGui", JavaExec::class) {
+    dependsOn("classes")
+    mainClass.set("eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenarioWithUI")
+    classpath = sourceSets["main"].runtimeClasspath
+}
+
 val stageForImage =tasks.register<Sync>("stageForImage") {
     val imageDir = layout.buildDirectory.dir("image")
     into(imageDir)

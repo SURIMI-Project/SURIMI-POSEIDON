@@ -46,8 +46,10 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 ./gradlew spotlessApply                                  # format src/ with Prettier, remove unused imports, add missing license headers
 ./gradlew :POSEIDON:spotlessApply                        # the same for the submodule
 ./gradlew writeNorthwesternMedScenario                   # regenerate scenarios/northwestern_med.yaml
+./gradlew writeAnchovyBayScenario                        # regenerate scenarios/anchovy_bay.yaml
 ./gradlew run --args="-p 50051"                          # run the server locally
 ./gradlew runNorthwesternMedGui                          # open the NW Med GUI (local inputs)
+./gradlew runAnchovyBayGui                               # open the Anchovy Bay GUI (local only, not served)
 ./gradlew runNorthwesternMedCalibration                  # calibrate NW Med (local inputs, heap 75% of RAM)
 ./gradlew runNorthwesternMedCalibration --args="--population 40"  # size the population to the machine
 ```
@@ -132,6 +134,10 @@ To change the scenario, edit `NorthwesternMedScenario.java` (or the factories it
 regenerate, committing the YAML with the Java change. The committed YAML must come from actually
 running the writer task — a hand edit or scripted find-and-replace by an agent is never
 acceptable, however safe it looks or however well it matches a regenerated copy.
+
+`scenarios/anchovy_bay.yaml` follows the same rules, with `AnchovyBayScenario.java` and
+`./gradlew writeAnchovyBayScenario`. It is local only for now: `stageForImage` does not stage it,
+and the server does not serve it.
 
 Reviewing a regenerated YAML: one added or removed anchor renumbers every later `&idNNN` /
 `*idNNN`, so the raw diff looks huge. Normalise before reading it:
@@ -219,8 +225,10 @@ downloads it into `inputs/` at startup (see `POSEIDON_architecture.md`, "S3 buck
 - `regulations/` — SURIMI-specific regulations: TAC quotas, MPA closures and fleet restrictions,
   port closures.
 - `calibration/` — `LandingsAccumulator` for calibration.
-- `scenarios/` — `minimal/` (tests) and `northwesternmed/` (production scenario, UI, calibration
-  entry point).
+- `ewe/` — reads Ecopath with Ecosim (EwE) models: `EweDatabase` and its `.eiixml` implementation
+  in `eiixml/`, and the factories that turn an Ecospace scenario into a model grid and bathymetry.
+- `scenarios/` — `minimal/` (tests), `northwesternmed/` (production scenario, UI, calibration
+  entry point) and `anchovybay/` (built from an EwE model, local only, UI).
 
 ## Licensing
 

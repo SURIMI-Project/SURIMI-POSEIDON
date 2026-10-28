@@ -1,0 +1,24 @@
+!!uk.ac.ox.poseidon.core.Scenario
+components:
+  modelGrid: &id002 !!eu.project.surimi.poseidon.ewe.ModelGridFromEcospaceBasemapFactory
+    ecospaceBasemap: &id001 !!eu.project.surimi.poseidon.ewe.EcospaceBasemapFromTableFactory
+      ecospaceScenarioName: BayOfAnchovies
+      table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
+        eweDatabase: !!eu.project.surimi.poseidon.ewe.EweDatabaseFactory
+          path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
+            parent: !!uk.ac.ox.poseidon.io.paths.RootPathFactory {
+              path: inputs/anchovy_bay
+            }
+            path: anchovy_bay.eiixml
+        tableName: EcospaceScenario
+  bathymetricGrid: !!eu.project.surimi.poseidon.ewe.BathymetricGridFromEcospaceBasemapFactory
+    ecospaceBasemap: *id001
+    modelGrid: *id002
+startingDateTime: !!uk.ac.ox.poseidon.core.time.DateTimeFactory {
+  day: 1,
+  hour: 0,
+  minute: 0,
+  month: 1,
+  second: 0,
+  year: 1970
+}
