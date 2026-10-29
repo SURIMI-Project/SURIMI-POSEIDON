@@ -171,10 +171,7 @@ public class UpdateSpeciesPricesRequestHandler
   ) {
     final Map<Species, Price> pricesBySpecies = market
       .getPrices()
-      .get(catchCategory);
-    if (pricesBySpecies == null || pricesBySpecies.isEmpty()) {
-      return;
-    }
+      .getOrDefault(catchCategory, Map.of());
     final String speciesCode = requestedSpecies.getCode();
     final boolean requestIsGeneric = requestedSpecies.getLifeStage() == null;
     final boolean hasGenericPrice = pricesBySpecies

@@ -108,9 +108,10 @@ public final class EiiXmlDatabase implements EweDatabase {
    * @return the row's values, in order
    */
   static ImmutableList<String> splitRow(final String row) {
-    if (row.isEmpty()) {
-      return ImmutableList.of("");
-    }
+    return row.isEmpty() ? ImmutableList.of("") : splitNonEmptyRow(row);
+  }
+
+  private static ImmutableList<String> splitNonEmptyRow(final String row) {
     final ImmutableList.Builder<String> values = ImmutableList.builder();
     boolean quoted = false;
     int start = 0;
@@ -350,15 +351,12 @@ public final class EiiXmlDatabase implements EweDatabase {
     }
 
     private static Boolean parseBoolean(final String value) {
-      if (value.equalsIgnoreCase("True")) {
-        return true;
-      }
       checkArgument(
-        value.equalsIgnoreCase("False"),
+        value.equalsIgnoreCase("True") || value.equalsIgnoreCase("False"),
         "Not a boolean: %s",
         value
       );
-      return false;
+      return value.equalsIgnoreCase("True");
     }
 
     Column<?> newColumn(final String name) {

@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.time.Month;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -116,26 +117,28 @@ public class MpaClosurePredicate
     final var mpaIds = mpaIdsByCell.get(
       modelGrid.toCell(action.getStartCoordinate())
     );
-    if (mpaIds.isEmpty()) {
-      return false;
-    }
+    // Most cells have no MPA, so the action's attributes are rarely looked up
+    return !mpaIds.isEmpty() && closesAny(mpaIds, action);
+  }
+
+  private boolean closesAny(
+    final List<String> mpaIds,
+    final ExtendedFishingAction action
+  ) {
     final var gearCountry = new GearCountry(
       gearCode.apply(action),
       countryCode.apply(action)
     );
     final var month = action.getStartDateTime().getMonth();
-    for (final String mpaId : mpaIds) {
+    return mpaIds.stream().anyMatch(mpaId -> {
       final var restrictedFleets = mpaFleetRestrictions.get(mpaId);
       final var closedMonths = mpaClosedMonths.get(mpaId);
-      if (
+      return (
         restrictedFleets != null &&
         restrictedFleets.contains(gearCountry) &&
         closedMonths != null &&
         closedMonths.contains(month)
-      ) {
-        return true;
-      }
-    }
-    return false;
+      );
+    });
   }
 }

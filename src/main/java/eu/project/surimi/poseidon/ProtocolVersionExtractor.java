@@ -27,11 +27,13 @@ import io.grpc.Status;
 import java.io.IOException;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import java.util.stream.Stream;
 
 /**
  * Reads the version of the SURIMI protocol this server was built against from
@@ -96,22 +98,29 @@ public final class ProtocolVersionExtractor {
     final JarInputStream jarInputStream,
     final Class<?> referenceClass
   ) {
-    try {
-      JarEntry jarEntry;
-      while ((jarEntry = jarInputStream.getNextJarEntry()) != null) {
-        final String entryName = jarEntry.getName();
-        if (
+    return Stream.generate(() -> unthrow(jarInputStream::getNextJarEntry))
+      .takeWhile(Objects::nonNull)
+      .map(JarEntry::getName)
+      .filter(
+        entryName ->
           entryName.startsWith("META-INF") &&
           entryName.endsWith("pom.properties")
-        ) {
-          final Properties properties = new Properties();
-          final ClassLoader classLoader = referenceClass.getClassLoader();
-          properties.load(classLoader.getResourceAsStream(entryName));
-          return properties;
-        }
-      }
-    } catch (final IOException ignored) {}
-    return null;
+      )
+      .findFirst()
+      .map(entryName ->
+        unthrow(() -> loadProperties(referenceClass, entryName))
+      )
+      .orElse(null);
+  }
+
+  private static Properties loadProperties(
+    final Class<?> referenceClass,
+    final String entryName
+  ) throws IOException {
+    final Properties properties = new Properties();
+    final ClassLoader classLoader = referenceClass.getClassLoader();
+    properties.load(classLoader.getResourceAsStream(entryName));
+    return properties;
   }
 
   /**
@@ -119,10 +128,12 @@ public final class ProtocolVersionExtractor {
    * can be used in an Optional.map() chain.
    */
   private static <T> T unthrow(final Callable<T> code) {
+    T result;
     try {
-      return code.call();
+      result = code.call();
     } catch (final Exception ignored) {
-      return null;
+      result = null;
     }
+    return result;
   }
 }

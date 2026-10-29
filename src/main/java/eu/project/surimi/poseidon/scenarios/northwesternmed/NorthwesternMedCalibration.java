@@ -88,6 +88,21 @@ public class NorthwesternMedCalibration {
     final JCommander jCommander = JCommander.newBuilder()
       .addObject(calibration)
       .build();
+    if (parse(jCommander, args, calibration)) {
+      calibration.run();
+    }
+  }
+
+  /**
+   * @return whether {@code args} are valid; if they aren't, prints why and the
+   *         usage
+   */
+  private static boolean parse(
+    final JCommander jCommander,
+    final String[] args,
+    final NorthwesternMedCalibration calibration
+  ) {
+    boolean isValid;
     try {
       jCommander.parse(args);
       if (calibration.populationSize < 2) {
@@ -96,12 +111,13 @@ public class NorthwesternMedCalibration {
             calibration.populationSize
         );
       }
+      isValid = true;
     } catch (final ParameterException e) {
       System.err.println(e.getMessage());
       jCommander.usage();
-      return;
+      isValid = false;
     }
-    calibration.run();
+    return isValid;
   }
 
   private void run() {

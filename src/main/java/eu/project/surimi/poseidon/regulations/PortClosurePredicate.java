@@ -152,6 +152,9 @@ public class PortClosurePredicate
       );
     }
 
+    // A loop, not a stream: this runs for every option the legality check
+    // tests, and the stream's overhead showed in profiles.
+    @SuppressWarnings("checkstyle:ReturnCount")
     boolean covers(final ExtendedFishingAction action) {
       for (final BetweenDates dateRange : dateRanges) {
         if (dateRange.apply(null, action)) {
