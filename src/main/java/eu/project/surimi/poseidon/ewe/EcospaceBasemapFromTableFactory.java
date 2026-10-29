@@ -35,7 +35,7 @@ import uk.ac.ox.poseidon.core.Scope;
 /**
  * A {@link RelativeScopeFactory} counterpart of
  * {@link EcospaceBasemap#fromTable(Table, String)}, built via
- * {@link Factories Factories.ecospaceBasemap(...)/Factories.ecospaceBasemapFromEweDatabase(...)}.
+ * {@link Factories Factories.ecospaceBasemapFromTable(...)/Factories.ecospaceBasemap(...)}.
  */
 @Getter
 @ToString

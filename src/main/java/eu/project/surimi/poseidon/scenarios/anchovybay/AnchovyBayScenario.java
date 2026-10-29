@@ -23,7 +23,7 @@
 package eu.project.surimi.poseidon.scenarios.anchovybay;
 
 import static eu.project.surimi.poseidon.ewe.Factories.bathymetricGridFromEcospaceBasemap;
-import static eu.project.surimi.poseidon.ewe.Factories.ecospaceBasemapFromEweDatabase;
+import static eu.project.surimi.poseidon.ewe.Factories.ecospaceBasemap;
 import static eu.project.surimi.poseidon.ewe.Factories.eweDatabase;
 import static eu.project.surimi.poseidon.ewe.Factories.modelGridFromEcospaceBasemap;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
@@ -55,7 +55,7 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
    */
   @Override
   public Scenario get() {
-    final var ecospaceBasemap = ecospaceBasemapFromEweDatabase(
+    final var ecospaceBasemap = ecospaceBasemap(
       eweDatabase(path(INPUT_PATH).plus("anchovy_bay.eiixml")),
       "BayOfAnchovies"
     );
