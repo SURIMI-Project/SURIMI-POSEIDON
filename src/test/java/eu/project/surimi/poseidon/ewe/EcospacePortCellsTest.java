@@ -22,20 +22,14 @@
 
 package eu.project.surimi.poseidon.ewe;
 
-import static eu.project.surimi.poseidon.ewe.EcospaceBasemapTest.ANCHOVY_BAY;
 import static eu.project.surimi.poseidon.ewe.EcospacePortCells.fromTable;
-import static eu.project.surimi.poseidon.ewe.Factories.ecospaceBasemap;
-import static eu.project.surimi.poseidon.ewe.Factories.ecospacePortCells;
-import static eu.project.surimi.poseidon.ewe.Factories.eweDatabase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static uk.ac.ox.poseidon.core.Scope.GLOBAL_SCOPE;
-import static uk.ac.ox.poseidon.io.paths.Factories.path;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
 import org.junit.jupiter.api.Test;
 import tech.tablesaw.api.Table;
-import uk.ac.ox.poseidon.core.Scope;
 import uk.ac.ox.poseidon.geography.Envelope;
 import uk.ac.ox.poseidon.geography.grids.Cell;
 
@@ -90,18 +84,5 @@ class EcospacePortCellsTest {
     assertThatThrownBy(() -> fromTable(table, BASEMAP))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("Expected 2 rows");
-  }
-
-  @Test
-  void readsAnchovyBay() {
-    final EweDatabaseFactory<Scope> eweDatabase = eweDatabase(
-      path(ANCHOVY_BAY)
-    );
-    assertThat(
-      ecospacePortCells(
-        eweDatabase,
-        ecospaceBasemap(eweDatabase, "BayOfAnchovies")
-      ).get(GLOBAL_SCOPE)
-    ).containsExactly(new Cell(7, 1), new Cell(19, 7), new Cell(0, 12));
   }
 }

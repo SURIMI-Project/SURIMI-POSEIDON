@@ -9,7 +9,7 @@ components:
             parent: !!uk.ac.ox.poseidon.io.paths.RootPathFactory {
               path: inputs/anchovy_bay
             }
-            path: anchovy_bay.eiixml
+            path: anchovy_bay.sqlite
         tableName: EcospaceScenario
   bathymetricGrid: &id003 !!eu.project.surimi.poseidon.ewe.BathymetricGridFromEcospaceBasemapFactory
     ecospaceBasemap: *id001

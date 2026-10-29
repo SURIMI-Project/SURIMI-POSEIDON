@@ -25,10 +25,15 @@ package eu.project.surimi.poseidon.scenarios;
 import static eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario.START_DATE;
 import static java.util.stream.IntStream.range;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
 
+import com.google.common.collect.ImmutableList;
+import eu.project.surimi.poseidon.ewe.EcopathGroups;
+import eu.project.surimi.poseidon.ewe.EcospaceBasemap;
+import eu.project.surimi.poseidon.ewe.EcospacePortCells;
+import eu.project.surimi.poseidon.ewe.EweDatabase;
 import eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
@@ -46,9 +51,32 @@ import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 // The scenario goes through YAML and back, as the generated
 // scenarios/anchovy_bay.yaml does, so the EwE factories must survive that trip.
+// The Anchovy Bay models are preliminary and keep changing, so the tests compare
+// the simulation with what the EwE tables say, never with their current content.
 class AnchovyBayScenarioTest {
 
+  private static final Path INPUT_PATH = Path.of("inputs", "anchovy_bay");
+  private static final String ECOSPACE_SCENARIO = "BayOfAnchovies";
+
   private Simulation simulation;
+
+  private static EweDatabase eweDatabase(final String fileName) {
+    return EweDatabase.open(INPUT_PATH.resolve(fileName));
+  }
+
+  /** The database the scenario reads. */
+  private static EweDatabase scenarioDatabase() {
+    return eweDatabase("anchovy_bay.sqlite");
+  }
+
+  private static EcospaceBasemap ecospaceBasemap(
+    final EweDatabase eweDatabase
+  ) {
+    return EcospaceBasemap.fromTable(
+      eweDatabase.table(EcospaceBasemap.TABLE_NAME),
+      ECOSPACE_SCENARIO
+    );
+  }
 
   @BeforeEach
   void startSimulation() {
@@ -75,8 +103,12 @@ class AnchovyBayScenarioTest {
   @Test
   void hasTheEcospaceGrid() {
     final ModelGrid modelGrid = simulation.getComponent(ModelGrid.class);
-    assertThat(modelGrid.getGridWidth()).isEqualTo(20);
-    assertThat(modelGrid.getGridHeight()).isEqualTo(20);
+    final EcospaceBasemap ecospaceBasemap = ecospaceBasemap(scenarioDatabase());
+    assertThat(modelGrid.getGridWidth()).isEqualTo(ecospaceBasemap.getCols());
+    assertThat(modelGrid.getGridHeight()).isEqualTo(ecospaceBasemap.getRows());
+    assertThat(modelGrid.getEnvelope()).isEqualTo(
+      ecospaceBasemap.getEnvelope()
+    );
   }
 
   @Test
@@ -84,10 +116,18 @@ class AnchovyBayScenarioTest {
     final BathymetricGrid bathymetricGrid = simulation.getComponent(
       BathymetricGrid.class
     );
-    assertThat(range(0, 20).mapToObj(x -> new Cell(x, 0))).allMatch(
-      bathymetricGrid::isLand
+    final EcospaceBasemap ecospaceBasemap = ecospaceBasemap(scenarioDatabase());
+    final int cols = ecospaceBasemap.getCols();
+    // EwE's row and column are the cell's y and x
+    assertThat(range(0, ecospaceBasemap.getRows() * cols).boxed()).allSatisfy(
+      i -> {
+        final int row = i / cols;
+        final int col = i % cols;
+        assertThat(bathymetricGrid.getDepth(new Cell(col, row)))
+          .as("depth at row %d, column %d", row, col)
+          .isEqualTo(ecospaceBasemap.getDepth(row, col));
+      }
     );
-    assertThat(bathymetricGrid.getDepth(new Cell(19, 19))).isEqualTo(490);
   }
 
   @Test
@@ -96,10 +136,53 @@ class AnchovyBayScenarioTest {
     final Map<String, Cell> cellsByCode = portGrid
       .getPorts()
       .collect(Collectors.toMap(Port::getCode, portGrid::getCell));
-    assertThat(cellsByCode).containsOnly(
-      entry("P0", new Cell(7, 1)),
-      entry("P1", new Cell(19, 7)),
-      entry("P2", new Cell(0, 12))
+    final EweDatabase eweDatabase = scenarioDatabase();
+    // In row-major order, as the scenario codes them
+    final ImmutableList<Cell> portCells = EcospacePortCells.fromTable(
+      eweDatabase.table(EcospacePortCells.TABLE_NAME),
+      ecospaceBasemap(eweDatabase)
+    ).asList();
+    assertThat(cellsByCode).isEqualTo(
+      range(0, portCells.size())
+        .boxed()
+        .collect(Collectors.toMap(i -> "P" + i, portCells::get))
+    );
+  }
+
+  // The .eiixml and .sqlite files are different saves of the model, so only
+  // what they still share is compared: the base map, and the groups' IDs and
+  // names. Their ports and some Ecopath parameters differ.
+  @Test
+  void readsTheSameBasemapAndGroupsFromBothFormats() {
+    final EweDatabase sqlite = scenarioDatabase();
+    final EweDatabase eiiXml = eweDatabase("anchovy_bay.eiixml");
+    final EcospaceBasemap sqliteBasemap = ecospaceBasemap(sqlite);
+    final EcospaceBasemap eiiXmlBasemap = ecospaceBasemap(eiiXml);
+    assertThat(sqliteBasemap.getScenarioId()).isEqualTo(
+      eiiXmlBasemap.getScenarioId()
+    );
+    assertThat(sqliteBasemap.getRows()).isEqualTo(eiiXmlBasemap.getRows());
+    assertThat(sqliteBasemap.getCols()).isEqualTo(eiiXmlBasemap.getCols());
+    assertThat(sqliteBasemap.getEnvelope()).isEqualTo(
+      eiiXmlBasemap.getEnvelope()
+    );
+    final int cols = sqliteBasemap.getCols();
+    assertThat(range(0, sqliteBasemap.getRows() * cols).boxed()).allSatisfy(
+      i -> {
+        final int row = i / cols;
+        final int col = i % cols;
+        assertThat(sqliteBasemap.getDepth(row, col))
+          .as("depth at row %d, column %d", row, col)
+          .isEqualTo(eiiXmlBasemap.getDepth(row, col));
+        assertThat(sqliteBasemap.isExcluded(row, col))
+          .as("exclusion at row %d, column %d", row, col)
+          .isEqualTo(eiiXmlBasemap.isExcluded(row, col));
+      }
+    );
+    assertThat(
+      EcopathGroups.fromTable(sqlite.table(EcopathGroups.TABLE_NAME))
+    ).isEqualTo(
+      EcopathGroups.fromTable(eiiXml.table(EcopathGroups.TABLE_NAME))
     );
   }
 
@@ -107,18 +190,15 @@ class AnchovyBayScenarioTest {
   void hasASpeciesPerEcopathGroup() {
     assertThat(simulation.getComponents(Species.class))
       .extracting(Species::getCode, Species::getName, Species::getLifeStage)
-      .containsExactlyInAnyOrder(
-        tuple("1", "Detritus", null),
-        tuple("2", "Whales", null),
-        tuple("3", "Seals", null),
-        tuple("4", "Cod", null),
-        tuple("5", "Whiting", null),
-        tuple("6", "Mackerel", null),
-        tuple("7", "Anchovy", null),
-        tuple("8", "Shrimp", null),
-        tuple("9", "Benthos", null),
-        tuple("10", "Zooplankton", null),
-        tuple("11", "Phytoplankton", null)
+      .containsExactlyInAnyOrderElementsOf(
+        EcopathGroups.fromTable(
+          scenarioDatabase().table(EcopathGroups.TABLE_NAME)
+        )
+          .stream()
+          .map(group ->
+            tuple(String.valueOf(group.getId()), group.getName(), null)
+          )
+          .toList()
       );
   }
 }
