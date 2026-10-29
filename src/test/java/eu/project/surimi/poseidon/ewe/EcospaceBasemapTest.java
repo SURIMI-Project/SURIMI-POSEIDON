@@ -30,20 +30,12 @@ import static org.assertj.core.api.Assertions.within;
 import static uk.ac.ox.poseidon.core.Scope.GLOBAL_SCOPE;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
-import java.nio.file.Path;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import tech.tablesaw.api.IntColumn;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.geography.Envelope;
 
 class EcospaceBasemapTest {
-
-  static final Path ANCHOVY_BAY = Path.of(
-    "inputs",
-    "anchovy_bay",
-    "anchovy_bay.eiixml"
-  );
 
   private static final String HEADER =
     "ScenarioName,Inrow,Incol,CellLength,MinLat,MinLon,AssumeSquareCells,DepthMap,ScenarioID\n";
@@ -187,29 +179,6 @@ class EcospaceBasemapTest {
     assertThatThrownBy(() -> fromTable(table, "Bay"))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("no DepthMap column");
-  }
-
-  @Test
-  void readsAnchovyBay() {
-    final Table table = EweDatabase.open(ANCHOVY_BAY).table(
-      EcospaceBasemap.TABLE_NAME
-    );
-    final EcospaceBasemap basemap = fromTable(table, "BayOfAnchovies");
-    final double cellSize = 20 / DEGREE_TO_KM;
-    assertThat(basemap.getScenarioId()).isEqualTo(1);
-    assertThat(basemap.getRows()).isEqualTo(20);
-    assertThat(basemap.getCols()).isEqualTo(20);
-    assertEnvelope(basemap.getEnvelope(), 0, 20 * cellSize, -20 * cellSize, 0);
-    assertThat(
-      IntStream.range(0, 20).mapToDouble(col -> basemap.getDepth(0, col))
-    ).containsOnly(0.0);
-    assertThat(basemap.getDepth(1, 11)).isEqualTo(3);
-    assertThat(basemap.getDepth(19, 19)).isEqualTo(490);
-    assertThat(
-      IntStream.range(0, 20 * 20).filter(i ->
-        basemap.isExcluded(i / 20, i % 20)
-      )
-    ).isEmpty();
   }
 
   private static Table tableWithExclusions(

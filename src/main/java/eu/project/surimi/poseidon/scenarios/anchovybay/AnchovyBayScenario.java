@@ -44,7 +44,7 @@ import uk.ac.ox.poseidon.core.Scenario;
 
 /**
  * The Anchovy Bay scenario, built from the EwE model in
- * {@code inputs/anchovy_bay/anchovy_bay.eiixml}. For now it has only the model
+ * {@code inputs/anchovy_bay/anchovy_bay.sqlite}. For now it has only the model
  * grid, the bathymetry and the ports of the model's "BayOfAnchovies" Ecospace
  * scenario, and the species; fleets and the rest of the biology come later.
  * EwE ports have no names, so each port cell is coded {@code P0}, {@code P1},
@@ -58,8 +58,8 @@ import uk.ac.ox.poseidon.core.Scenario;
 public class AnchovyBayScenario implements Supplier<Scenario> {
 
   // EwE keeps no start date in an Ecosim scenario. It dates a run from the
-  // first year of the time series dataset in use, here the model's only one,
-  // "anchovybay", which starts in 1970. The model's own first year is 0.
+  // first year of the time series dataset in use. The model's three datasets
+  // all start in 1970. The Ecopath model's own first year, 2000, is not used.
   public static final LocalDate START_DATE = LocalDate.of(1970, 1, 1);
   static final Path INPUT_PATH = Path.of("inputs", "anchovy_bay");
 
@@ -69,7 +69,7 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
   @Override
   public Scenario get() {
     final var eweDatabase = eweDatabase(
-      path(INPUT_PATH).plus("anchovy_bay.eiixml")
+      path(INPUT_PATH).plus("anchovy_bay.sqlite")
     );
     final var ecospaceBasemap = ecospaceBasemap(eweDatabase, "BayOfAnchovies");
     final var modelGrid = modelGridFromEcospaceBasemap(ecospaceBasemap);
