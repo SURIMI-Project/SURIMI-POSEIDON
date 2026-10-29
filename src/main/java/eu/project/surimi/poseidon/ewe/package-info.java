@@ -29,7 +29,8 @@
  * <p>
  * The file format is isolated behind {@code EweDatabase}: only its
  * implementations, in subpackages such as
- * {@link eu.project.surimi.poseidon.ewe.eiixml}, know how a format stores the
+ * {@link eu.project.surimi.poseidon.ewe.eiixml} and
+ * {@link eu.project.surimi.poseidon.ewe.sqlite}, know how a format stores the
  * tables. Everything else works on Tablesaw tables with EwE's column names, and
  * accepts any such table, whatever its source and column types. Tables are read
  * on request and cached by the factories that read them; they are shared by

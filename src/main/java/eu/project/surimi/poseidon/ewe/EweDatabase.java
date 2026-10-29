@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.ewe;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import eu.project.surimi.poseidon.ewe.eiixml.EiiXmlDatabase;
+import eu.project.surimi.poseidon.ewe.sqlite.SqliteDatabase;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
@@ -50,6 +51,12 @@ public interface EweDatabase {
   String EIIXML_EXTENSION = ".eiixml";
 
   /**
+   * The file extension of EwE's SQLite format, handled by
+   * {@link SqliteDatabase}.
+   */
+  String SQLITE_EXTENSION = ".sqlite";
+
+  /**
    * Opens the EwE database stored at {@code path}, choosing the format from the
    * file extension. This is the only place that maps a file to a format.
    *
@@ -65,13 +72,15 @@ public interface EweDatabase {
       path
     );
     final String lowerCasePath = path.toString().toLowerCase(Locale.ROOT);
+    final boolean isEiiXml = lowerCasePath.endsWith(EIIXML_EXTENSION);
     checkArgument(
-      lowerCasePath.endsWith(EIIXML_EXTENSION),
-      "Unsupported EwE database format: %s (supported: %s)",
+      isEiiXml || lowerCasePath.endsWith(SQLITE_EXTENSION),
+      "Unsupported EwE database format: %s (supported: %s, %s)",
       path,
-      EIIXML_EXTENSION
+      EIIXML_EXTENSION,
+      SQLITE_EXTENSION
     );
-    return new EiiXmlDatabase(path);
+    return isEiiXml ? new EiiXmlDatabase(path) : new SqliteDatabase(path);
   }
 
   /**
