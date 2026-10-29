@@ -26,7 +26,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.ewe.EweColumns.booleanValue;
 import static eu.project.surimi.poseidon.ewe.EweColumns.column;
 import static eu.project.surimi.poseidon.ewe.EweColumns.number;
+import static eu.project.surimi.poseidon.ewe.EweColumns.optionalString;
 import static eu.project.surimi.poseidon.ewe.EweColumns.wholeNumber;
+import static java.util.function.Predicate.not;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +42,8 @@ import uk.ac.ox.poseidon.geography.Envelope;
 /**
  * The base map of an Ecospace scenario of an EwE model: its grid of
  * {@code rows x cols} square cells, the geographic {@link Envelope} the grid
- * covers, and the depth of each cell. This mirrors EwE's
+ * covers, the depth of each cell, and which cells are excluded from the
+ * model. This mirrors EwE's
  * {@code cEcospaceBasemap}. Cells are indexed as in EwE, by row and column, row
  * 0 being the northernmost.
  * <p>
@@ -65,6 +68,10 @@ import uk.ac.ox.poseidon.geography.Envelope;
  * metres, which POSEIDON's lon/lat grids can't represent.</li>
  * <li>{@code DepthMap} is the depth of each cell, in metres, as a full map
  * string (see {@link EweMaps}). Land is 0.</li>
+ * <li>{@code ExclusionMap} is the cells excluded from the model, as a full
+ * boolean map string (see {@link EweMaps}). A missing column or value, or an
+ * empty string, excludes no cells, as in EwE, whose databases have had this
+ * column only since version 6.4.</li>
  * </ul>
  * Column names are matched case-insensitively, and column types are not
  * prescribed (see {@link EweColumns}).
@@ -93,6 +100,7 @@ public final class EcospaceBasemap {
   private static final String CELL_LENGTH = "CellLength";
   private static final String ASSUME_SQUARE_CELLS = "AssumeSquareCells";
   private static final String DEPTH_MAP = "DepthMap";
+  private static final String EXCLUSION_MAP = "ExclusionMap";
 
   /** The ID of the Ecospace scenario, EwE's {@code ScenarioID}. */
   private final int scenarioId;
@@ -113,6 +121,9 @@ public final class EcospaceBasemap {
   @Getter(lombok.AccessLevel.NONE)
   private final double[][] depth;
 
+  @Getter(lombok.AccessLevel.NONE)
+  private final boolean[][] excluded;
+
   /**
    * @param scenarioId the ID of the Ecospace scenario
    * @param rows       the number of rows of the grid
@@ -120,15 +131,19 @@ public final class EcospaceBasemap {
    * @param envelope   the geographic bounding box of the grid
    * @param depth      the depth of each cell, in metres, indexed
    *                   {@code [row][col]}; it is copied
+   * @param excluded   whether each cell is excluded from the model, indexed
+   *                   {@code [row][col]}; it is copied
    * @throws IllegalArgumentException if the dimensions are not positive or
-   *                                  {@code depth} is not {@code rows x cols}
+   *                                  {@code depth} or {@code excluded} is not
+   *                                  {@code rows x cols}
    */
   public EcospaceBasemap(
     final int scenarioId,
     final int rows,
     final int cols,
     @NonNull final Envelope envelope,
-    final double @NonNull [][] depth
+    final double @NonNull [][] depth,
+    final boolean @NonNull [][] excluded
   ) {
     checkArgument(
       rows > 0 && cols > 0,
@@ -141,6 +156,13 @@ public final class EcospaceBasemap {
       rows,
       cols
     );
+    checkArgument(
+      excluded.length == rows &&
+        Arrays.stream(excluded).allMatch(row -> row.length == cols),
+      "The exclusion map is not %s x %s",
+      rows,
+      cols
+    );
     this.scenarioId = scenarioId;
     this.rows = rows;
     this.cols = cols;
@@ -148,6 +170,9 @@ public final class EcospaceBasemap {
     this.depth = Arrays.stream(depth)
       .map(double[]::clone)
       .toArray(double[][]::new);
+    this.excluded = Arrays.stream(excluded)
+      .map(boolean[]::clone)
+      .toArray(boolean[][]::new);
   }
 
   /**
@@ -165,7 +190,8 @@ public final class EcospaceBasemap {
    *                                  positive whole number, the dimensions or
    *                                  cell length are not positive,
    *                                  {@code AssumeSquareCells} is true, or the
-   *                                  depth map doesn't match the dimensions
+   *                                  depth or exclusion map doesn't match the
+   *                                  dimensions
    */
   public static EcospaceBasemap fromTable(
     @NonNull final Table table,
@@ -223,7 +249,11 @@ public final class EcospaceBasemap {
       rows,
       cols,
       envelope,
-      EweMaps.decodeFullMap(depthMap, rows, cols)
+      EweMaps.decodeFullMap(depthMap, rows, cols),
+      optionalString(table, EXCLUSION_MAP, row)
+        .filter(not(String::isBlank))
+        .map(exclusionMap -> EweMaps.decodeBooleanMap(exclusionMap, rows, cols))
+        .orElseGet(() -> new boolean[rows][cols])
     );
   }
 
@@ -234,5 +264,14 @@ public final class EcospaceBasemap {
    */
   public double getDepth(final int row, final int col) {
     return depth[row][col];
+  }
+
+  /**
+   * @param row the row, 0 being the northernmost
+   * @param col the column, 0 being the westernmost
+   * @return whether the cell is excluded from the model
+   */
+  public boolean isExcluded(final int row, final int col) {
+    return excluded[row][col];
   }
 }

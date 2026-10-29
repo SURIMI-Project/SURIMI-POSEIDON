@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.ewe;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.Optional;
 import tech.tablesaw.api.BooleanColumn;
 import tech.tablesaw.api.NumericColumn;
 import tech.tablesaw.api.Table;
@@ -48,6 +49,24 @@ final class EweColumns {
       name
     );
     return table.column(name);
+  }
+
+  /**
+   * @return the value as a string, or empty if the table has no such column or
+   *         the value is missing
+   */
+  static Optional<String> optionalString(
+    final Table table,
+    final String name,
+    final int row
+  ) {
+    if (table.columnNames().stream().noneMatch(name::equalsIgnoreCase)) {
+      return Optional.empty();
+    }
+    final Column<?> column = table.column(name);
+    return column.isMissing(row)
+      ? Optional.empty()
+      : Optional.of(column.getString(row));
   }
 
   static double number(final Table table, final String name, final int row) {

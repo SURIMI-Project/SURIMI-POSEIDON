@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.ewe;
 
+import java.util.stream.IntStream;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,12 +31,14 @@ import lombok.experimental.SuperBuilder;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.Scope;
+import uk.ac.ox.poseidon.geography.grids.Cell;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 /**
  * A {@link RelativeScopeFactory} for the {@link ModelGrid} of an
  * {@link EcospaceBasemap}: a grid of the base map's columns and rows over its
- * envelope, with every cell active. EwE's row 0 is the northern edge, as is a
+ * envelope, whose active cells are those the base map doesn't exclude
+ * ({@link EcospaceBasemap#isExcluded}). EwE's row 0 is the northern edge, as is a
  * model grid's {@code y = 0}, so EwE cell {@code (row, col)} is model grid cell
  * {@code (x = col, y = row)}. Built via
  * {@link Factories#modelGridFromEcospaceBasemap(Factory)}.
@@ -59,6 +62,15 @@ public class ModelGridFromEcospaceBasemapFactory<S extends Scope> extends Relati
       basemap.getCols(),
       basemap.getRows(),
       basemap.getEnvelope()
+    ).withActiveCells(
+      IntStream.range(0, basemap.getRows())
+        .boxed()
+        .flatMap(row ->
+          IntStream.range(0, basemap.getCols())
+            .filter(col -> !basemap.isExcluded(row, col))
+            .mapToObj(col -> new Cell(col, row))
+        )
+        .toList()
     );
   }
 }
