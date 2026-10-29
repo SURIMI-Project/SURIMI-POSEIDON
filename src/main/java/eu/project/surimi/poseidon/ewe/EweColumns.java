@@ -69,6 +69,19 @@ final class EweColumns {
       : Optional.of(column.getString(row));
   }
 
+  /**
+   * @return the value as a string
+   * @throws IllegalArgumentException if the table has no such column, or the
+   *                                  value is missing or blank
+   */
+  static String string(final Table table, final String name, final int row) {
+    final Column<?> column = column(table, name);
+    checkArgument(!column.isMissing(row), "No value in column %s", name);
+    final String value = column.getString(row);
+    checkArgument(!value.isBlank(), "Blank value in column %s", name);
+    return value;
+  }
+
   static double number(final Table table, final String name, final int row) {
     final Column<?> column = column(table, name);
     checkArgument(!column.isMissing(row), "No value in column %s", name);
