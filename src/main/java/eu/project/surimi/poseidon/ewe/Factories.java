@@ -87,7 +87,7 @@ public final class Factories {
    *         {@link EcospaceBasemap}
    * @see EcospaceBasemap#fromTable(Table, String)
    */
-  public static <S extends Scope> EcospaceBasemapFromTableFactory<S> ecospaceBasemap(
+  public static <S extends Scope> EcospaceBasemapFromTableFactory<S> ecospaceBasemapFromTable(
     final Factory<? super S, ? extends Table> table,
     final String ecospaceScenarioName
   ) {
@@ -102,11 +102,11 @@ public final class Factories {
    *         {@code EcospaceScenario} table
    * @see EcospaceBasemap#fromTable(Table, String)
    */
-  public static <S extends Scope> EcospaceBasemapFromTableFactory<S> ecospaceBasemapFromEweDatabase(
+  public static <S extends Scope> EcospaceBasemapFromTableFactory<S> ecospaceBasemap(
     final Factory<? super S, ? extends EweDatabase> eweDatabase,
     final String ecospaceScenarioName
   ) {
-    return ecospaceBasemap(
+    return ecospaceBasemapFromTable(
       ecospaceScenarioTable(eweDatabase),
       ecospaceScenarioName
     );

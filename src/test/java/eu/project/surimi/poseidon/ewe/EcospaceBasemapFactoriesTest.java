@@ -25,7 +25,7 @@ package eu.project.surimi.poseidon.ewe;
 import static eu.project.surimi.poseidon.ewe.EcospaceBasemap.DEGREE_TO_KM;
 import static eu.project.surimi.poseidon.ewe.EcospaceBasemapTest.ANCHOVY_BAY;
 import static eu.project.surimi.poseidon.ewe.Factories.bathymetricGridFromEcospaceBasemap;
-import static eu.project.surimi.poseidon.ewe.Factories.ecospaceBasemapFromEweDatabase;
+import static eu.project.surimi.poseidon.ewe.Factories.ecospaceBasemap;
 import static eu.project.surimi.poseidon.ewe.Factories.eweDatabase;
 import static eu.project.surimi.poseidon.ewe.Factories.modelGridFromEcospaceBasemap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,7 +47,7 @@ class EcospaceBasemapFactoriesTest {
   private static final double CELL_SIZE = 20 / DEGREE_TO_KM;
 
   private final EcospaceBasemapFromTableFactory<Scope> basemap =
-    ecospaceBasemapFromEweDatabase(
+    ecospaceBasemap(
       eweDatabase(path(ANCHOVY_BAY)),
       "BayOfAnchovies"
     );
