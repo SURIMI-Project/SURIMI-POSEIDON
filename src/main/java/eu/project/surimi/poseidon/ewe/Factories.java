@@ -32,9 +32,10 @@ import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
 /**
  * Factories for reading EwE models: opening an EwE database, reading its
- * tables, and building POSEIDON components from them. Each extraction takes any
- * table with the right EwE columns, and comes with a {@code ...FromEweDatabase}
- * helper that reads that table from an EwE database.
+ * tables, and building POSEIDON components from them. Each extraction has a
+ * {@code ...FromTable} helper, which takes any table with the right EwE
+ * columns, and a helper without the suffix, which reads that table from an EwE
+ * database.
  */
 public final class Factories {
 
@@ -80,6 +81,19 @@ public final class Factories {
   }
 
   /**
+   * @param eweDatabase the EwE database to read from
+   * @return a {@link RelativeScopeFactory} for the database's
+   *         {@code EcospaceScenarioFleet} table, read once and then cached;
+   *         share it to read the table once for several extractions
+   * @see EcospacePortCells#TABLE_NAME
+   */
+  public static <S extends Scope> EweTableFactory<S> ecospaceScenarioFleetTable(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase
+  ) {
+    return eweTable(eweDatabase, EcospacePortCells.TABLE_NAME);
+  }
+
+  /**
    * @param table                any table with the columns of EwE's
    *                             {@code EcospaceScenario} table
    * @param ecospaceScenarioName the name of the Ecospace scenario
@@ -109,6 +123,39 @@ public final class Factories {
     return ecospaceBasemapFromTable(
       ecospaceScenarioTable(eweDatabase),
       ecospaceScenarioName
+    );
+  }
+
+  /**
+   * @param table           any table with the columns of EwE's
+   *                        {@code EcospaceScenarioFleet} table
+   * @param ecospaceBasemap the base map of the Ecospace scenario
+   * @return a {@link RelativeScopeFactory} for the cells that are a port of at
+   *         least one of the scenario's fleets
+   * @see EcospacePortCells#fromTable(Table, EcospaceBasemap)
+   */
+  public static <S extends Scope> EcospacePortCellsFromTableFactory<S> ecospacePortCellsFromTable(
+    final Factory<? super S, ? extends Table> table,
+    final Factory<? super S, ? extends EcospaceBasemap> ecospaceBasemap
+  ) {
+    return new EcospacePortCellsFromTableFactory<>(table, ecospaceBasemap);
+  }
+
+  /**
+   * @param eweDatabase     the EwE database to read from
+   * @param ecospaceBasemap the base map of the Ecospace scenario
+   * @return a {@link RelativeScopeFactory} for the cells that are a port of at
+   *         least one of the scenario's fleets, read from the database's
+   *         {@code EcospaceScenarioFleet} table
+   * @see EcospacePortCells#fromTable(Table, EcospaceBasemap)
+   */
+  public static <S extends Scope> EcospacePortCellsFromTableFactory<S> ecospacePortCells(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase,
+    final Factory<? super S, ? extends EcospaceBasemap> ecospaceBasemap
+  ) {
+    return ecospacePortCellsFromTable(
+      ecospaceScenarioFleetTable(eweDatabase),
+      ecospaceBasemap
     );
   }
 

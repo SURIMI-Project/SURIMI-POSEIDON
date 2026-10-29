@@ -23,14 +23,16 @@
 package eu.project.surimi.poseidon.ewe;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static eu.project.surimi.poseidon.ewe.EweColumns.booleanValue;
+import static eu.project.surimi.poseidon.ewe.EweColumns.column;
+import static eu.project.surimi.poseidon.ewe.EweColumns.number;
+import static eu.project.surimi.poseidon.ewe.EweColumns.wholeNumber;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.Getter;
 import lombok.NonNull;
-import tech.tablesaw.api.BooleanColumn;
-import tech.tablesaw.api.NumericColumn;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.columns.Column;
 import uk.ac.ox.poseidon.geography.Envelope;
@@ -47,6 +49,8 @@ import uk.ac.ox.poseidon.geography.Envelope;
  * from:
  * <ul>
  * <li>{@code ScenarioName} selects the row.</li>
+ * <li>{@code ScenarioID} is the scenario's ID, which other Ecospace tables,
+ * such as {@code EcospaceScenarioFleet}, refer to it by.</li>
  * <li>{@code Inrow} and {@code Incol} are the numbers of rows and columns.</li>
  * <li>{@code MinLat} and {@code MinLon} are the latitude and longitude of the
  * grid's <em>top-left</em> corner, despite their names (see
@@ -62,10 +66,8 @@ import uk.ac.ox.poseidon.geography.Envelope;
  * <li>{@code DepthMap} is the depth of each cell, in metres, as a full map
  * string (see {@link EweMaps}). Land is 0.</li>
  * </ul>
- * Column names are matched case-insensitively. Column types are not prescribed:
- * any numeric column holds a number, and a boolean is either a boolean column
- * or a numeric one, where 0 is false and any other number is true (Access, for
- * example, stores true as -1).
+ * Column names are matched case-insensitively, and column types are not
+ * prescribed (see {@link EweColumns}).
  */
 @Getter
 public final class EcospaceBasemap {
@@ -83,6 +85,7 @@ public final class EcospaceBasemap {
   public static final double DEGREE_TO_KM = 40007.862917 / 360;
 
   private static final String SCENARIO_NAME = "ScenarioName";
+  private static final String SCENARIO_ID = "ScenarioID";
   private static final String ROWS = "Inrow";
   private static final String COLS = "Incol";
   private static final String MIN_LAT = "MinLat";
@@ -90,6 +93,9 @@ public final class EcospaceBasemap {
   private static final String CELL_LENGTH = "CellLength";
   private static final String ASSUME_SQUARE_CELLS = "AssumeSquareCells";
   private static final String DEPTH_MAP = "DepthMap";
+
+  /** The ID of the Ecospace scenario, EwE's {@code ScenarioID}. */
+  private final int scenarioId;
 
   /** The number of rows of the grid. */
   private final int rows;
@@ -108,15 +114,17 @@ public final class EcospaceBasemap {
   private final double[][] depth;
 
   /**
-   * @param rows     the number of rows of the grid
-   * @param cols     the number of columns of the grid
-   * @param envelope the geographic bounding box of the grid
-   * @param depth    the depth of each cell, in metres, indexed
-   *                 {@code [row][col]}; it is copied
+   * @param scenarioId the ID of the Ecospace scenario
+   * @param rows       the number of rows of the grid
+   * @param cols       the number of columns of the grid
+   * @param envelope   the geographic bounding box of the grid
+   * @param depth      the depth of each cell, in metres, indexed
+   *                   {@code [row][col]}; it is copied
    * @throws IllegalArgumentException if the dimensions are not positive or
    *                                  {@code depth} is not {@code rows x cols}
    */
   public EcospaceBasemap(
+    final int scenarioId,
     final int rows,
     final int cols,
     @NonNull final Envelope envelope,
@@ -133,6 +141,7 @@ public final class EcospaceBasemap {
       rows,
       cols
     );
+    this.scenarioId = scenarioId;
     this.rows = rows;
     this.cols = cols;
     this.envelope = envelope;
@@ -152,8 +161,9 @@ public final class EcospaceBasemap {
    * @return the scenario's base map
    * @throws IllegalArgumentException if no row or more than one row has that
    *                                  scenario name, a column is missing or has
-   *                                  the wrong kind of values, the dimensions
-   *                                  or cell length are not positive,
+   *                                  the wrong kind of values, the ID is not a
+   *                                  positive whole number, the dimensions or
+   *                                  cell length are not positive,
    *                                  {@code AssumeSquareCells} is true, or the
    *                                  depth map doesn't match the dimensions
    */
@@ -188,6 +198,7 @@ public final class EcospaceBasemap {
       ecospaceScenarioName,
       ASSUME_SQUARE_CELLS
     );
+    final int scenarioId = wholeNumber(table, SCENARIO_ID, row);
     final int rows = wholeNumber(table, ROWS, row);
     final int cols = wholeNumber(table, COLS, row);
     final double cellLength = number(table, CELL_LENGTH, row);
@@ -208,85 +219,12 @@ public final class EcospaceBasemap {
     );
     final String depthMap = column(table, DEPTH_MAP).getString(row);
     return new EcospaceBasemap(
+      scenarioId,
       rows,
       cols,
       envelope,
       EweMaps.decodeFullMap(depthMap, rows, cols)
     );
-  }
-
-  private static Column<?> column(final Table table, final String name) {
-    checkArgument(
-      table.columnNames().stream().anyMatch(name::equalsIgnoreCase),
-      "Table %s has no %s column",
-      table.name(),
-      name
-    );
-    return table.column(name);
-  }
-
-  private static double number(
-    final Table table,
-    final String name,
-    final int row
-  ) {
-    final Column<?> column = column(table, name);
-    checkArgument(!column.isMissing(row), "No value in column %s", name);
-    return number(column, row);
-  }
-
-  private static double number(
-    final Table table,
-    final String name,
-    final int row,
-    final double defaultValue
-  ) {
-    final Column<?> column = column(table, name);
-    return column.isMissing(row) ? defaultValue : number(column, row);
-  }
-
-  private static double number(final Column<?> column, final int row) {
-    if (column instanceof final NumericColumn<?> numberColumn) {
-      return numberColumn.getDouble(row);
-    }
-    throw new IllegalArgumentException(
-      "Column " + column.name() + " is not numeric"
-    );
-  }
-
-  private static int wholeNumber(
-    final Table table,
-    final String name,
-    final int row
-  ) {
-    final double value = number(table, name, row);
-    checkArgument(
-      value > 0 && value <= Integer.MAX_VALUE && value == Math.rint(value),
-      "%s must be a positive whole number, but is %s",
-      name,
-      value
-    );
-    return (int) value;
-  }
-
-  private static boolean booleanValue(
-    final Table table,
-    final String name,
-    final int row,
-    final boolean defaultValue
-  ) {
-    final Column<?> column = column(table, name);
-    if (column.isMissing(row)) {
-      return defaultValue;
-    }
-    return switch (column) {
-      case final BooleanColumn booleanColumn -> booleanColumn.get(row);
-      case final NumericColumn<?> numberColumn -> numberColumn.getDouble(row) !=
-        0;
-      default -> throw new IllegalArgumentException(
-        "Column " + name + " is neither boolean nor numeric"
-      );
-    };
   }
 
   /**

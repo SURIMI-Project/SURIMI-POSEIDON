@@ -30,11 +30,12 @@ import uk.ac.ox.poseidon.gui.DisplayWrapper2D;
 import uk.ac.ox.poseidon.gui.ScenarioWithUI;
 import uk.ac.ox.poseidon.gui.portrayals.BathymetryFieldPortrayalFactory;
 import uk.ac.ox.poseidon.gui.portrayals.CoordinatesPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.PortGridPortrayalFactory;
 import uk.ac.ox.poseidon.gui.portrayals.SimpleFieldPortrayalFactory;
 
 /**
- * GUI wrapper for {@link AnchovyBayScenario}: displays bathymetry and grid
- * coordinates over the scenario's model grid.
+ * GUI wrapper for {@link AnchovyBayScenario}: displays bathymetry, ports and
+ * grid coordinates over the scenario's model grid.
  */
 public class AnchovyBayScenarioWithUI extends ScenarioWithUI {
 
@@ -51,6 +52,11 @@ public class AnchovyBayScenarioWithUI extends ScenarioWithUI {
           List.of(
             new BathymetryFieldPortrayalFactory(
               scenario.component("bathymetricGrid")
+            ),
+            new SimpleFieldPortrayalFactory<>(
+              "Ports",
+              new PortGridPortrayalFactory(scenario.component("portGrid")),
+              true
             ),
             new SimpleFieldPortrayalFactory<>(
               "Coordinates",

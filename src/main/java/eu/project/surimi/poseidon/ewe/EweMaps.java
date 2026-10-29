@@ -48,8 +48,11 @@ import java.util.zip.GZIPInputStream;
  * <p>
  * Only full maps (one value per cell) are handled. EwE also writes masked maps,
  * which hold only the water cells of each row; reading those needs the depth
- * map, and is not supported yet. Decoding is strict: where EwE silently keeps
- * default values for missing or unreadable cells, this throws.
+ * map, and is not supported yet. Boolean maps, such as a fleet's
+ * {@code PortMap}, are full maps of {@code 0} and {@code 1}, but EwE writes a
+ * row of a boolean map only if it holds at least one true cell, so an empty
+ * row is all false. Decoding is strict: where EwE silently keeps default
+ * values for missing or unreadable cells, this throws.
  */
 public final class EweMaps {
 
@@ -73,6 +76,52 @@ public final class EweMaps {
     final int rows,
     final int cols
   ) {
+    final String[] segments = segments(map, rows, cols);
+    return IntStream.range(0, rows)
+      .mapToObj(row -> {
+        final String[] tokens = tokens(segments[row], row, cols);
+        return IntStream.range(0, cols)
+          .mapToDouble(col -> parse(tokens[col], row, col))
+          .toArray();
+      })
+      .toArray(double[][]::new);
+  }
+
+  /**
+   * @param map  the map string, compressed or not
+   * @param rows the number of rows of the map, EwE's {@code Inrow}
+   * @param cols the number of columns of the map, EwE's {@code Incol}
+   * @return the map's values, indexed {@code [row][col]}, row 0 being the
+   *         northernmost; a row that is empty in the string is all false
+   * @throws IllegalArgumentException if the string doesn't hold exactly
+   *                                  {@code rows} rows, each empty or of
+   *                                  {@code cols} values that are {@code 0}
+   *                                  or {@code 1}
+   */
+  public static boolean[][] decodeBooleanMap(
+    final String map,
+    final int rows,
+    final int cols
+  ) {
+    final String[] segments = segments(map, rows, cols);
+    final boolean[][] values = new boolean[rows][cols];
+    for (int row = 0; row < rows; row++) {
+      if (segments[row].isEmpty()) {
+        continue;
+      }
+      final String[] tokens = tokens(segments[row], row, cols);
+      for (int col = 0; col < cols; col++) {
+        values[row][col] = parseBoolean(tokens[col], row, col);
+      }
+    }
+    return values;
+  }
+
+  private static String[] segments(
+    final String map,
+    final int rows,
+    final int cols
+  ) {
     checkArgument(
       rows > 0 && cols > 0,
       "A map needs at least one row and one column"
@@ -84,12 +133,10 @@ public final class EweMaps {
       rows,
       segments.length
     );
-    return IntStream.range(0, rows)
-      .mapToObj(row -> parseRow(segments[row], row, cols))
-      .toArray(double[][]::new);
+    return segments;
   }
 
-  private static double[] parseRow(
+  private static String[] tokens(
     final String segment,
     final int row,
     final int cols
@@ -102,9 +149,21 @@ public final class EweMaps {
       row,
       tokens.length
     );
-    return IntStream.range(0, cols)
-      .mapToDouble(col -> parse(tokens[col], row, col))
-      .toArray();
+    return tokens;
+  }
+
+  private static boolean parseBoolean(
+    final String token,
+    final int row,
+    final int col
+  ) {
+    return switch (token.strip()) {
+      case "0" -> false;
+      case "1" -> true;
+      default -> throw new IllegalArgumentException(
+        "Not 0 or 1 in row " + row + ", column " + col + ": " + token
+      );
+    };
   }
 
   private static double parse(
