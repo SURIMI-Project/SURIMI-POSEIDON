@@ -21,6 +21,7 @@ commons-io = "2.22.0"
 protovalidate = "1.2.2"
 awssdk = "2.55.11"
 gson = "2.14.0"
+sqlite-jdbc = "3.53.4.0"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
@@ -44,6 +45,7 @@ spotbugs-annotations = { module = "com.github.spotbugs:spotbugs-annotations" }
 aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "awssdk" }
 aws-url-connection-client = { module = "software.amazon.awssdk:url-connection-client", version.ref = "awssdk" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 
 [bundles]
 opentelemetry = [

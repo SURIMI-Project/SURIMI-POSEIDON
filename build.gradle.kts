@@ -145,6 +145,7 @@ dependencies {
     }
     implementation(libs.aws.url.connection.client)
     implementation(libs.gson)
+    implementation(libs.sqlite.jdbc)
     compileOnly("${libs.spotbugs.annotations.get()}:${spotbugs.toolVersion.get()}")
     implementation("build.buf.gen:surimi_surimi-protocol_grpc_java:1.84.0.2.20261006161938.4e6356c78867")
     testImplementation(libs.jqwik)
