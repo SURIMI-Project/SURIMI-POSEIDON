@@ -69,6 +69,44 @@ class EcospaceBasemapFactoriesTest {
   }
 
   @Test
+  void everyAnchovyBayCellIsActive() {
+    final ModelGrid grid = modelGrid.get(GLOBAL_SCOPE);
+    assertThat(grid.getAllCells().allMatch(grid::isActive)).isTrue();
+  }
+
+  @Test
+  void theCellsTheBasemapExcludesAreInactive() {
+    // A 2 x 3 base map, all water except for land at EwE's row 0, column 0,
+    // which excludes row 0, column 1 and row 1, column 2
+    final EcospaceBasemap excluding = new EcospaceBasemap(
+      1,
+      2,
+      3,
+      new Envelope(0, 3, -2, 0),
+      new double[][] { { 0, 5, 5 }, { 5, 5, 5 } },
+      new boolean[][] { { false, true, false }, { false, false, true } }
+    );
+    final ModelGridFromEcospaceBasemapFactory<Scope> excludingGrid =
+      modelGridFromEcospaceBasemap(_ -> excluding);
+    final ModelGrid grid = excludingGrid.get(GLOBAL_SCOPE);
+    assertThat(grid.getActiveCells()).containsExactlyInAnyOrder(
+      new Cell(0, 0),
+      new Cell(2, 0),
+      new Cell(0, 1),
+      new Cell(1, 1)
+    );
+    final BathymetricGrid bathymetry = bathymetricGridFromEcospaceBasemap(
+      _ -> excluding,
+      excludingGrid
+    ).get(GLOBAL_SCOPE);
+    assertThat(bathymetry.getActiveWaterCells()).containsExactlyInAnyOrder(
+      new Cell(2, 0),
+      new Cell(0, 1),
+      new Cell(1, 1)
+    );
+  }
+
+  @Test
   void eweRowsAndColumnsAreModelGridYAndX() {
     final ModelGrid grid = modelGrid.get(GLOBAL_SCOPE);
     // the centre of EwE's row 1, column 11

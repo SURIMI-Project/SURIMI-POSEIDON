@@ -49,7 +49,8 @@ class EcospacePortCellsTest {
     2,
     3,
     new Envelope(0, 3, -2, 0),
-    new double[2][3]
+    new double[2][3],
+    new boolean[2][3]
   );
 
   private static Table table(final String... rows) {

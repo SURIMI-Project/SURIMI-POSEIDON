@@ -205,5 +205,52 @@ class EcospaceBasemapTest {
     ).containsOnly(0.0);
     assertThat(basemap.getDepth(1, 11)).isEqualTo(3);
     assertThat(basemap.getDepth(19, 19)).isEqualTo(490);
+    assertThat(
+      IntStream.range(0, 20 * 20).filter(i ->
+        basemap.isExcluded(i / 20, i % 20)
+      )
+    ).isEmpty();
+  }
+
+  private static Table tableWithExclusions(
+    final String bayExclusionMap,
+    final String coveExclusionMap
+  ) {
+    return tableFromCsvString(
+      HEADER.replace("\n", ",ExclusionMap\n") +
+        BAY.replace("\n", "," + bayExclusionMap + "\n") +
+        COVE.replace("\n", "," + coveExclusionMap + "\n")
+    ).get(GLOBAL_SCOPE);
+  }
+
+  @Test
+  void readsTheExclusionMap() {
+    final Table table = tableWithExclusions("\"0,1,0;;\"", "");
+    final EcospaceBasemap bay = fromTable(table, "Bay");
+    assertThat(bay.isExcluded(0, 1)).isTrue();
+    assertThat(bay.isExcluded(0, 0)).isFalse();
+    assertThat(bay.isExcluded(0, 2)).isFalse();
+    assertThat(bay.isExcluded(1, 0)).isFalse();
+    // A missing value excludes no cells
+    assertThat(fromTable(table, "Cove").isExcluded(0, 0)).isFalse();
+  }
+
+  @Test
+  void excludesNoCellsWithoutAnExclusionMapColumn() {
+    final EcospaceBasemap basemap = fromTable(table(BAY), "Bay");
+    for (int row = 0; row < 2; row++) {
+      for (int col = 0; col < 3; col++) {
+        assertThat(basemap.isExcluded(row, col)).isFalse();
+      }
+    }
+  }
+
+  @Test
+  void rejectsAnExclusionMapThatDoesNotMatchTheDimensions() {
+    assertThatThrownBy(() ->
+      fromTable(tableWithExclusions("\"0,1;;\"", ""), "Bay")
+    )
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Expected 3 values in row 0");
   }
 }

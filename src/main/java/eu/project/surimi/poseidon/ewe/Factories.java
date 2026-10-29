@@ -162,7 +162,8 @@ public final class Factories {
   /**
    * @param ecospaceBasemap the Ecospace base map
    * @return a {@link RelativeScopeFactory} for a {@link ModelGrid} with the
-   *         base map's dimensions and envelope, with every cell active
+   *         base map's dimensions and envelope, whose active cells are those
+   *         the base map doesn't exclude
    * @see ModelGridFromEcospaceBasemapFactory
    */
   public static <S extends Scope> ModelGridFromEcospaceBasemapFactory<S> modelGridFromEcospaceBasemap(
