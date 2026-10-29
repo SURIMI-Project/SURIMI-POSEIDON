@@ -188,9 +188,10 @@ public final class EweMaps {
    * {@code cStringUtils.Decompress} does
    */
   static String decompress(final String map) {
-    if (!map.startsWith(GZIP_PREFIX)) {
-      return map;
-    }
+    return map.startsWith(GZIP_PREFIX) ? gunzipped(map) : map;
+  }
+
+  private static String gunzipped(final String map) {
     final byte[] compressed = Base64.getMimeDecoder().decode(
       map.substring(GZIP_PREFIX.length())
     );

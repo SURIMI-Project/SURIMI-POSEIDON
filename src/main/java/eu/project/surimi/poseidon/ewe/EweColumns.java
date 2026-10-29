@@ -60,13 +60,14 @@ final class EweColumns {
     final String name,
     final int row
   ) {
-    if (table.columnNames().stream().noneMatch(name::equalsIgnoreCase)) {
-      return Optional.empty();
-    }
-    final Column<?> column = table.column(name);
-    return column.isMissing(row)
-      ? Optional.empty()
-      : Optional.of(column.getString(row));
+    return table
+      .columnNames()
+      .stream()
+      .filter(name::equalsIgnoreCase)
+      .findFirst()
+      .<Column<?>>map(table::column)
+      .filter(column -> !column.isMissing(row))
+      .map(column -> column.getString(row));
   }
 
   /**
@@ -125,9 +126,16 @@ final class EweColumns {
     final boolean defaultValue
   ) {
     final Column<?> column = column(table, name);
-    if (column.isMissing(row)) {
-      return defaultValue;
-    }
+    return column.isMissing(row)
+      ? defaultValue
+      : presentBooleanValue(column, name, row);
+  }
+
+  private static boolean presentBooleanValue(
+    final Column<?> column,
+    final String name,
+    final int row
+  ) {
     return switch (column) {
       case final BooleanColumn booleanColumn -> booleanColumn.get(row);
       case final NumericColumn<?> numberColumn -> numberColumn.getDouble(row) !=

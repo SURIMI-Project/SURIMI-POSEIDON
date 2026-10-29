@@ -113,13 +113,24 @@ public final class S3Inputs {
     final Path inputsFolder
   ) {
     final String bucket = env.get("AWS_BUCKET_NAME");
+    final Optional<S3Inputs> inputs;
     if (bucket == null || bucket.isBlank()) {
       logger.log(
         INFO,
         "AWS_BUCKET_NAME is not set: reading the local " + inputsFolder
       );
-      return Optional.empty();
+      inputs = Optional.empty();
+    } else {
+      inputs = Optional.of(fromBucket(env, bucket, inputsFolder));
     }
+    return inputs;
+  }
+
+  private static S3Inputs fromBucket(
+    final Map<String, String> env,
+    final String bucket,
+    final Path inputsFolder
+  ) {
     if (Files.exists(inputsFolder)) {
       throw new IllegalStateException(
         "AWS_BUCKET_NAME is set, so inputs are downloaded from S3, but " +
@@ -141,7 +152,7 @@ public final class S3Inputs {
       .httpClientBuilder(UrlConnectionHttpClient.builder())
       .overrideConfiguration(c -> c.apiCallTimeout(TIMEOUT))
       .build();
-    return Optional.of(new S3Inputs(s3, bucket, inputsFolder));
+    return new S3Inputs(s3, bucket, inputsFolder);
   }
 
   /**
