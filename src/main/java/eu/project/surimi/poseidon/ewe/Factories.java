@@ -70,6 +70,19 @@ public final class Factories {
   /**
    * @param eweDatabase the EwE database to read from
    * @return a {@link RelativeScopeFactory} for the database's
+   *         {@code EcopathGroup} table, read once and then cached; share it to
+   *         read the table once for several extractions
+   * @see EcopathGroups#TABLE_NAME
+   */
+  public static <S extends Scope> EweTableFactory<S> ecopathGroupTable(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase
+  ) {
+    return eweTable(eweDatabase, EcopathGroups.TABLE_NAME);
+  }
+
+  /**
+   * @param eweDatabase the EwE database to read from
+   * @return a {@link RelativeScopeFactory} for the database's
    *         {@code EcospaceScenario} table, read once and then cached; share it
    *         to read the table once for several extractions
    * @see EcospaceBasemap#TABLE_NAME
@@ -91,6 +104,31 @@ public final class Factories {
     final Factory<? super S, ? extends EweDatabase> eweDatabase
   ) {
     return eweTable(eweDatabase, EcospacePortCells.TABLE_NAME);
+  }
+
+  /**
+   * @param table any table with the columns of EwE's {@code EcopathGroup}
+   *              table
+   * @return a {@link RelativeScopeFactory} for the model's functional groups,
+   *         in the order of the table's rows
+   * @see EcopathGroups#fromTable(Table)
+   */
+  public static <S extends Scope> EcopathGroupsFromTableFactory<S> ecopathGroupsFromTable(
+    final Factory<? super S, ? extends Table> table
+  ) {
+    return new EcopathGroupsFromTableFactory<>(table);
+  }
+
+  /**
+   * @param eweDatabase the EwE database to read from
+   * @return a {@link RelativeScopeFactory} for the model's functional groups,
+   *         read from the database's {@code EcopathGroup} table
+   * @see EcopathGroups#fromTable(Table)
+   */
+  public static <S extends Scope> EcopathGroupsFromTableFactory<S> ecopathGroups(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase
+  ) {
+    return ecopathGroupsFromTable(ecopathGroupTable(eweDatabase));
   }
 
   /**
