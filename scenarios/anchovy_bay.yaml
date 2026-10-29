@@ -28,6 +28,12 @@ components:
         prefix: P
       }
       modelGrid: *id002
+  species: !!eu.project.surimi.poseidon.ewe.SpeciesFromEcopathSpeciesMappingFactory
+    ecopathSpeciesMapping: !!eu.project.surimi.poseidon.ewe.EcopathSpeciesMappingFromGroupsFactory
+      groups: !!eu.project.surimi.poseidon.ewe.EcopathGroupsFromTableFactory
+        table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
+          eweDatabase: *id004
+          tableName: EcopathGroup
 startingDateTime: !!uk.ac.ox.poseidon.core.time.DateTimeFactory {
   day: 1,
   hour: 0,

@@ -26,6 +26,7 @@ import static eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario
 import static java.util.stream.IntStream.range;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 
 import eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario;
 import java.util.Map;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.grids.Cell;
@@ -99,5 +101,24 @@ class AnchovyBayScenarioTest {
       entry("P1", new Cell(19, 7)),
       entry("P2", new Cell(0, 12))
     );
+  }
+
+  @Test
+  void hasASpeciesPerEcopathGroup() {
+    assertThat(simulation.getComponents(Species.class))
+      .extracting(Species::getCode, Species::getName, Species::getLifeStage)
+      .containsExactlyInAnyOrder(
+        tuple("1", "Detritus", null),
+        tuple("2", "Whales", null),
+        tuple("3", "Seals", null),
+        tuple("4", "Cod", null),
+        tuple("5", "Whiting", null),
+        tuple("6", "Mackerel", null),
+        tuple("7", "Anchovy", null),
+        tuple("8", "Shrimp", null),
+        tuple("9", "Benthos", null),
+        tuple("10", "Zooplankton", null),
+        tuple("11", "Phytoplankton", null)
+      );
   }
 }

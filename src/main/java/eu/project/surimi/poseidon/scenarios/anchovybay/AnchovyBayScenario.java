@@ -23,10 +23,13 @@
 package eu.project.surimi.poseidon.scenarios.anchovybay;
 
 import static eu.project.surimi.poseidon.ewe.Factories.bathymetricGridFromEcospaceBasemap;
+import static eu.project.surimi.poseidon.ewe.Factories.ecopathGroups;
+import static eu.project.surimi.poseidon.ewe.Factories.ecopathSpeciesMappingFromGroups;
 import static eu.project.surimi.poseidon.ewe.Factories.ecospaceBasemap;
 import static eu.project.surimi.poseidon.ewe.Factories.ecospacePortCells;
 import static eu.project.surimi.poseidon.ewe.Factories.eweDatabase;
 import static eu.project.surimi.poseidon.ewe.Factories.modelGridFromEcospaceBasemap;
+import static eu.project.surimi.poseidon.ewe.Factories.speciesFromEcopathSpeciesMapping;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.prefixedId;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
@@ -43,8 +46,11 @@ import uk.ac.ox.poseidon.core.Scenario;
  * The Anchovy Bay scenario, built from the EwE model in
  * {@code inputs/anchovy_bay/anchovy_bay.eiixml}. For now it has only the model
  * grid, the bathymetry and the ports of the model's "BayOfAnchovies" Ecospace
- * scenario; fleets and biology come later. EwE ports have no names, so each
- * port cell is coded {@code P0}, {@code P1}, and so on, in row-major order.
+ * scenario, and the species; fleets and the rest of the biology come later.
+ * EwE ports have no names, so each port cell is coded {@code P0}, {@code P1},
+ * and so on, in row-major order. Each functional group of the Ecopath model,
+ * detritus included, is a species of its own, coded by the group's ID and
+ * named after it.
  * The {@code writeAnchovyBayScenario}
  * Gradle task writes it to {@code scenarios/anchovy_bay.yaml}. The server does
  * not serve it.
@@ -80,12 +86,17 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
       bathymetricGrid,
       haversineDistanceCalculator(modelGrid)
     );
+    final var ecopathSpeciesMapping = ecopathSpeciesMappingFromGroups(
+      ecopathGroups(eweDatabase)
+    );
+    final var species = speciesFromEcopathSpeciesMapping(ecopathSpeciesMapping);
 
     return Scenario.builder()
       .startingDateTime(startOf(START_DATE))
       .component("modelGrid", modelGrid)
       .component("bathymetricGrid", bathymetricGrid)
       .component("portGrid", portGrid)
+      .component("species", species)
       .build();
   }
 }
