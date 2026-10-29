@@ -46,10 +46,10 @@ class EcospaceBasemapTest {
   );
 
   private static final String HEADER =
-    "ScenarioName,Inrow,Incol,CellLength,MinLat,MinLon,AssumeSquareCells,DepthMap\n";
+    "ScenarioName,Inrow,Incol,CellLength,MinLat,MinLon,AssumeSquareCells,DepthMap,ScenarioID\n";
   private static final String BAY =
-    "Bay,2,3,20,10,5,False,\"0,0,3;4,5.5,490;\"\n";
-  private static final String COVE = "Cove,1,1,10,,,False,\"7;\"\n";
+    "Bay,2,3,20,10,5,False,\"0,0,3;4,5.5,490;\",1\n";
+  private static final String COVE = "Cove,1,1,10,,,False,\"7;\",2\n";
 
   private static Table table(final String... rows) {
     return tableFromCsvString(HEADER + String.join("", rows)).get(GLOBAL_SCOPE);
@@ -76,6 +76,7 @@ class EcospaceBasemapTest {
     assertThat(table.column("Inrow")).isInstanceOf(IntColumn.class);
     final EcospaceBasemap basemap = fromTable(table, "Bay");
     final double cellSize = 20 / DEGREE_TO_KM;
+    assertThat(basemap.getScenarioId()).isEqualTo(1);
     assertThat(basemap.getRows()).isEqualTo(2);
     assertThat(basemap.getCols()).isEqualTo(3);
     assertEnvelope(
@@ -172,6 +173,15 @@ class EcospaceBasemapTest {
   }
 
   @Test
+  void rejectsAMissingScenarioId() {
+    assertThatThrownBy(() ->
+      fromTable(table(BAY.replace(",1\n", ",\n")), "Bay")
+    )
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("ScenarioID");
+  }
+
+  @Test
   void rejectsATableWithoutADepthMap() {
     final Table table = table(BAY).removeColumns("DepthMap");
     assertThatThrownBy(() -> fromTable(table, "Bay"))
@@ -186,6 +196,7 @@ class EcospaceBasemapTest {
     );
     final EcospaceBasemap basemap = fromTable(table, "BayOfAnchovies");
     final double cellSize = 20 / DEGREE_TO_KM;
+    assertThat(basemap.getScenarioId()).isEqualTo(1);
     assertThat(basemap.getRows()).isEqualTo(20);
     assertThat(basemap.getCols()).isEqualTo(20);
     assertEnvelope(basemap.getEnvelope(), 0, 20 * cellSize, -20 * cellSize, 0);

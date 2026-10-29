@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.ewe;
 
+import static eu.project.surimi.poseidon.ewe.EweMaps.decodeBooleanMap;
 import static eu.project.surimi.poseidon.ewe.EweMaps.decodeFullMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -99,5 +100,44 @@ class EweMapsTest {
     assertThatThrownBy(() ->
       decodeFullMap("0,0,3,;4,5.5,490;", 2, 3)
     ).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void decodesABooleanMapWithEmptyRowsAllFalse() {
+    assertThat(decodeBooleanMap(";0,1,0;;1,0,0;", 4, 3)).isDeepEqualTo(
+      new boolean[][] {
+        { false, false, false },
+        { false, true, false },
+        { false, false, false },
+        { true, false, false }
+      }
+    );
+  }
+
+  @Test
+  void decodesACompressedBooleanMap() throws IOException {
+    assertThat(decodeBooleanMap(gzip(";0,1;"), 2, 2)).isDeepEqualTo(
+      new boolean[][] { { false, false }, { false, true } }
+    );
+  }
+
+  @Test
+  void rejectsBooleanValuesThatAreNotZeroOrOne() {
+    assertThatThrownBy(() -> decodeBooleanMap("0,2;;", 2, 2))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Not 0 or 1 in row 0, column 1");
+    assertThatThrownBy(() -> decodeBooleanMap("0,;;", 2, 2))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Not 0 or 1 in row 0, column 1");
+  }
+
+  @Test
+  void rejectsABooleanMapOfTheWrongShape() {
+    assertThatThrownBy(() -> decodeBooleanMap(";;;", 2, 2))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Expected 2 rows");
+    assertThatThrownBy(() -> decodeBooleanMap("0,1,0;;", 2, 2))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Expected 2 values in row 0, but found 3");
   }
 }

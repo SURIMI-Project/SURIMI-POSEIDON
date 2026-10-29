@@ -24,9 +24,14 @@ package eu.project.surimi.poseidon.scenarios.anchovybay;
 
 import static eu.project.surimi.poseidon.ewe.Factories.bathymetricGridFromEcospaceBasemap;
 import static eu.project.surimi.poseidon.ewe.Factories.ecospaceBasemap;
+import static eu.project.surimi.poseidon.ewe.Factories.ecospacePortCells;
 import static eu.project.surimi.poseidon.ewe.Factories.eweDatabase;
 import static eu.project.surimi.poseidon.ewe.Factories.modelGridFromEcospaceBasemap;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
+import static uk.ac.ox.poseidon.core.utils.Factories.prefixedId;
+import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
+import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
+import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromCells;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
 
 import java.nio.file.Path;
@@ -37,8 +42,10 @@ import uk.ac.ox.poseidon.core.Scenario;
 /**
  * The Anchovy Bay scenario, built from the EwE model in
  * {@code inputs/anchovy_bay/anchovy_bay.eiixml}. For now it has only the model
- * grid and the bathymetry of the model's "BayOfAnchovies" Ecospace scenario;
- * fleets, ports and biology come later. The {@code writeAnchovyBayScenario}
+ * grid, the bathymetry and the ports of the model's "BayOfAnchovies" Ecospace
+ * scenario; fleets and biology come later. EwE ports have no names, so each
+ * port cell is coded {@code P0}, {@code P1}, and so on, in row-major order.
+ * The {@code writeAnchovyBayScenario}
  * Gradle task writes it to {@code scenarios/anchovy_bay.yaml}. The server does
  * not serve it.
  */
@@ -55,20 +62,30 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
    */
   @Override
   public Scenario get() {
-    final var ecospaceBasemap = ecospaceBasemap(
-      eweDatabase(path(INPUT_PATH).plus("anchovy_bay.eiixml")),
-      "BayOfAnchovies"
+    final var eweDatabase = eweDatabase(
+      path(INPUT_PATH).plus("anchovy_bay.eiixml")
     );
+    final var ecospaceBasemap = ecospaceBasemap(eweDatabase, "BayOfAnchovies");
     final var modelGrid = modelGridFromEcospaceBasemap(ecospaceBasemap);
     final var bathymetricGrid = bathymetricGridFromEcospaceBasemap(
       ecospaceBasemap,
       modelGrid
+    );
+    final var portGrid = portGrid(
+      portsFromCells(
+        ecospacePortCells(eweDatabase, ecospaceBasemap),
+        modelGrid,
+        prefixedId("P")
+      ),
+      bathymetricGrid,
+      haversineDistanceCalculator(modelGrid)
     );
 
     return Scenario.builder()
       .startingDateTime(startOf(START_DATE))
       .component("modelGrid", modelGrid)
       .component("bathymetricGrid", bathymetricGrid)
+      .component("portGrid", portGrid)
       .build();
   }
 }

@@ -25,8 +25,11 @@ package eu.project.surimi.poseidon.scenarios;
 import static eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario.START_DATE;
 import static java.util.stream.IntStream.range;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +37,8 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.grids.Cell;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
+import uk.ac.ox.poseidon.geography.ports.Port;
+import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
@@ -81,5 +86,18 @@ class AnchovyBayScenarioTest {
       bathymetricGrid::isLand
     );
     assertThat(bathymetricGrid.getDepth(new Cell(19, 19))).isEqualTo(490);
+  }
+
+  @Test
+  void hasAPortOnEachEcospacePortCell() {
+    final PortGrid portGrid = simulation.getComponent(PortGrid.class);
+    final Map<String, Cell> cellsByCode = portGrid
+      .getPorts()
+      .collect(Collectors.toMap(Port::getCode, portGrid::getCell));
+    assertThat(cellsByCode).containsOnly(
+      entry("P0", new Cell(7, 1)),
+      entry("P1", new Cell(19, 7)),
+      entry("P2", new Cell(0, 12))
+    );
   }
 }

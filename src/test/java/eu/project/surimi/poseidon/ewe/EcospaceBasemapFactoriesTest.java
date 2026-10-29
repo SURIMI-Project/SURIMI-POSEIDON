@@ -47,10 +47,7 @@ class EcospaceBasemapFactoriesTest {
   private static final double CELL_SIZE = 20 / DEGREE_TO_KM;
 
   private final EcospaceBasemapFromTableFactory<Scope> basemap =
-    ecospaceBasemap(
-      eweDatabase(path(ANCHOVY_BAY)),
-      "BayOfAnchovies"
-    );
+    ecospaceBasemap(eweDatabase(path(ANCHOVY_BAY)), "BayOfAnchovies");
   private final ModelGridFromEcospaceBasemapFactory<Scope> modelGrid =
     modelGridFromEcospaceBasemap(basemap);
 

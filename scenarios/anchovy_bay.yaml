@@ -4,16 +4,30 @@ components:
     ecospaceBasemap: &id001 !!eu.project.surimi.poseidon.ewe.EcospaceBasemapFromTableFactory
       ecospaceScenarioName: BayOfAnchovies
       table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-        eweDatabase: !!eu.project.surimi.poseidon.ewe.EweDatabaseFactory
+        eweDatabase: &id004 !!eu.project.surimi.poseidon.ewe.EweDatabaseFactory
           path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
             parent: !!uk.ac.ox.poseidon.io.paths.RootPathFactory {
               path: inputs/anchovy_bay
             }
             path: anchovy_bay.eiixml
         tableName: EcospaceScenario
-  bathymetricGrid: !!eu.project.surimi.poseidon.ewe.BathymetricGridFromEcospaceBasemapFactory
+  bathymetricGrid: &id003 !!eu.project.surimi.poseidon.ewe.BathymetricGridFromEcospaceBasemapFactory
     ecospaceBasemap: *id001
     modelGrid: *id002
+  portGrid: !!uk.ac.ox.poseidon.geography.ports.PortGridFactory
+    bathymetricGrid: *id003
+    distanceCalculator: !!uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory
+      modelGrid: *id002
+    ports: !!uk.ac.ox.poseidon.geography.ports.PortsFromCellsFactory
+      cells: !!eu.project.surimi.poseidon.ewe.EcospacePortCellsFromTableFactory
+        ecospaceBasemap: *id001
+        table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
+          eweDatabase: *id004
+          tableName: EcospaceScenarioFleet
+      code: !!uk.ac.ox.poseidon.core.utils.PrefixedIdFactory {
+        prefix: P
+      }
+      modelGrid: *id002
 startingDateTime: !!uk.ac.ox.poseidon.core.time.DateTimeFactory {
   day: 1,
   hour: 0,
