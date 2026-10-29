@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.ewe;
 
 import java.nio.file.Path;
+import java.util.List;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
@@ -129,6 +130,34 @@ public final class Factories {
     final Factory<? super S, ? extends EweDatabase> eweDatabase
   ) {
     return ecopathGroupsFromTable(ecopathGroupTable(eweDatabase));
+  }
+
+  /**
+   * @param ecopathGroups the functional groups of an Ecopath model
+   * @return a {@link RelativeScopeFactory} for an
+   *         {@link EcopathSpeciesMapping} that maps each group to a species of
+   *         its own
+   * @see EcopathSpeciesMapping#fromGroups(List)
+   */
+  public static <S extends Scope> EcopathSpeciesMappingFromGroupsFactory<S> ecopathSpeciesMappingFromGroups(
+    final Factory<? super S, ? extends List<EcopathGroup>> ecopathGroups
+  ) {
+    return new EcopathSpeciesMappingFromGroupsFactory<>(ecopathGroups);
+  }
+
+  /**
+   * @param ecopathSpeciesMapping a mapping of Ecopath groups to species
+   * @return a {@link RelativeScopeFactory} for the mapping's species, in the
+   *         mapping's order
+   * @see SpeciesFromEcopathSpeciesMappingFactory
+   */
+  public static <S extends Scope> SpeciesFromEcopathSpeciesMappingFactory<S> speciesFromEcopathSpeciesMapping(
+    final Factory<
+      ? super S,
+      ? extends EcopathSpeciesMapping
+    > ecopathSpeciesMapping
+  ) {
+    return new SpeciesFromEcopathSpeciesMappingFactory<>(ecopathSpeciesMapping);
   }
 
   /**
