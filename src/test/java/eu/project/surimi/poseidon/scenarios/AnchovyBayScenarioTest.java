@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.google.common.collect.ImmutableList;
+import eu.project.surimi.poseidon.ewe.EcopathCatches;
 import eu.project.surimi.poseidon.ewe.EcopathGroups;
 import eu.project.surimi.poseidon.ewe.EcospaceBasemap;
 import eu.project.surimi.poseidon.ewe.EcospacePortCells;
@@ -187,14 +188,17 @@ class AnchovyBayScenarioTest {
   }
 
   @Test
-  void hasASpeciesPerEcopathGroup() {
+  void hasASpeciesPerEcopathGroupCaughtInEcopath() {
+    final EweDatabase eweDatabase = scenarioDatabase();
+    final EcopathCatches ecopathCatches = EcopathCatches.fromTable(
+      eweDatabase.table(EcopathCatches.TABLE_NAME)
+    );
     assertThat(simulation.getComponents(Species.class))
       .extracting(Species::getCode, Species::getName, Species::getLifeStage)
       .containsExactlyInAnyOrderElementsOf(
-        EcopathGroups.fromTable(
-          scenarioDatabase().table(EcopathGroups.TABLE_NAME)
-        )
+        EcopathGroups.fromTable(eweDatabase.table(EcopathGroups.TABLE_NAME))
           .stream()
+          .filter(ecopathCatches::isCaught)
           .map(group ->
             tuple(String.valueOf(group.getId()), group.getName(), null)
           )

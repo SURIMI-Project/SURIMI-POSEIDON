@@ -227,7 +227,8 @@ downloads it into `inputs/` at startup (see `POSEIDON_architecture.md`, "S3 buck
 - `calibration/` — `LandingsAccumulator` for calibration.
 - `ewe/` — reads Ecopath with Ecosim (EwE) models: `EweDatabase` and its implementations, for
   `.eiixml` in `eiixml/` and `.sqlite` in `sqlite/`, and the factories that turn an Ecospace
-  scenario into a model grid and bathymetry.
+  scenario into a model grid, bathymetry and ports, and Ecopath groups into species (by default,
+  the groups some fleet catches in Ecopath).
 - `scenarios/` — `minimal/` (tests), `northwesternmed/` (production scenario, UI, calibration
   entry point) and `anchovybay/` (built from an EwE model, local only, UI).
 
