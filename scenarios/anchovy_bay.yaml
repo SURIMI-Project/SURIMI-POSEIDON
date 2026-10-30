@@ -30,10 +30,16 @@ components:
       modelGrid: *id002
   species: !!eu.project.surimi.poseidon.ewe.SpeciesFromEcopathSpeciesMappingFactory
     ecopathSpeciesMapping: !!eu.project.surimi.poseidon.ewe.EcopathSpeciesMappingFromGroupsFactory
-      groups: !!eu.project.surimi.poseidon.ewe.EcopathGroupsFromTableFactory
-        table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-          eweDatabase: *id004
-          tableName: EcopathGroup
+      groups: !!eu.project.surimi.poseidon.ewe.FilteredEcopathGroupsFactory
+        groups: !!eu.project.surimi.poseidon.ewe.EcopathGroupsFromTableFactory
+          table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
+            eweDatabase: *id004
+            tableName: EcopathGroup
+        predicate: !!eu.project.surimi.poseidon.ewe.CaughtInEcopathFactory
+          ecopathCatches: !!eu.project.surimi.poseidon.ewe.EcopathCatchesFromTableFactory
+            table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
+              eweDatabase: *id004
+              tableName: EcopathCatch
 startingDateTime: !!uk.ac.ox.poseidon.core.time.DateTimeFactory {
   day: 1,
   hour: 0,

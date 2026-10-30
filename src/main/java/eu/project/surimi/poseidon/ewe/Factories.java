@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.util.List;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.MappingFactory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.Scope;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
@@ -84,6 +85,19 @@ public final class Factories {
   /**
    * @param eweDatabase the EwE database to read from
    * @return a {@link RelativeScopeFactory} for the database's
+   *         {@code EcopathCatch} table, read once and then cached; share it to
+   *         read the table once for several extractions
+   * @see EcopathCatches#TABLE_NAME
+   */
+  public static <S extends Scope> EweTableFactory<S> ecopathCatchTable(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase
+  ) {
+    return eweTable(eweDatabase, EcopathCatches.TABLE_NAME);
+  }
+
+  /**
+   * @param eweDatabase the EwE database to read from
+   * @return a {@link RelativeScopeFactory} for the database's
    *         {@code EcospaceScenario} table, read once and then cached; share it
    *         to read the table once for several extractions
    * @see EcospaceBasemap#TABLE_NAME
@@ -130,6 +144,75 @@ public final class Factories {
     final Factory<? super S, ? extends EweDatabase> eweDatabase
   ) {
     return ecopathGroupsFromTable(ecopathGroupTable(eweDatabase));
+  }
+
+  /**
+   * @param table any table with the columns of EwE's {@code EcopathCatch}
+   *              table
+   * @return a {@link RelativeScopeFactory} for the model's Ecopath catches
+   * @see EcopathCatches#fromTable(Table)
+   */
+  public static <S extends Scope> EcopathCatchesFromTableFactory<S> ecopathCatchesFromTable(
+    final Factory<? super S, ? extends Table> table
+  ) {
+    return new EcopathCatchesFromTableFactory<>(table);
+  }
+
+  /**
+   * @param eweDatabase the EwE database to read from
+   * @return a {@link RelativeScopeFactory} for the model's Ecopath catches,
+   *         read from the database's {@code EcopathCatch} table
+   * @see EcopathCatches#fromTable(Table)
+   */
+  public static <S extends Scope> EcopathCatchesFromTableFactory<S> ecopathCatches(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase
+  ) {
+    return ecopathCatchesFromTable(ecopathCatchTable(eweDatabase));
+  }
+
+  /**
+   * @param ecopathCatches the Ecopath catches of the model
+   * @return a {@link MappingFactory} for a yes/no mapping of groups that is
+   *         true iff some fleet lands or discards some of the group
+   * @see CaughtInEcopath
+   */
+  public static <S extends Scope> CaughtInEcopathFactory<S> caughtInEcopath(
+    final Factory<? super S, ? extends EcopathCatches> ecopathCatches
+  ) {
+    return new CaughtInEcopathFactory<>(ecopathCatches);
+  }
+
+  /**
+   * @param propertyPath the dotted path of properties to follow from the
+   *                     group, e.g. {@code "id"} or {@code "name"}
+   * @return a {@link uk.ac.ox.poseidon.core.GlobalScopeFactory} for an
+   *         {@link uk.ac.ox.poseidon.core.functions.ObjectProperty} of an
+   *         Ecopath group
+   * @see EcopathGroupPropertyFactory
+   */
+  public static <R> EcopathGroupPropertyFactory<R> ecopathGroupProperty(
+    final String propertyPath
+  ) {
+    return new EcopathGroupPropertyFactory<>(propertyPath);
+  }
+
+  /**
+   * @param ecopathGroups the functional groups of an Ecopath model
+   * @param predicate     the yes/no mapping a group must pass to be kept
+   * @return a {@link RelativeScopeFactory} for the groups that pass the
+   *         predicate, in their original order
+   * @see FilteredEcopathGroupsFactory
+   */
+  public static <S extends Scope> FilteredEcopathGroupsFactory<S> filteredEcopathGroups(
+    final Factory<? super S, ? extends List<EcopathGroup>> ecopathGroups,
+    final MappingFactory<
+      ? super S,
+      ? super Void,
+      ? super EcopathGroup,
+      Boolean
+    > predicate
+  ) {
+    return new FilteredEcopathGroupsFactory<>(ecopathGroups, predicate);
   }
 
   /**
