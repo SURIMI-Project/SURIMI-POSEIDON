@@ -67,7 +67,7 @@ class AnchovyBayScenarioTest {
 
   /** The database the scenario reads. */
   private static EweDatabase scenarioDatabase() {
-    return eweDatabase("anchovy_bay.sqlite");
+    return eweDatabase("anchovy_bay.eiixml");
   }
 
   private static EcospaceBasemap ecospaceBasemap(
@@ -155,8 +155,8 @@ class AnchovyBayScenarioTest {
   // names. Their ports and some Ecopath parameters differ.
   @Test
   void readsTheSameBasemapAndGroupsFromBothFormats() {
-    final EweDatabase sqlite = scenarioDatabase();
-    final EweDatabase eiiXml = eweDatabase("anchovy_bay.eiixml");
+    final EweDatabase sqlite = eweDatabase("anchovy_bay.sqlite");
+    final EweDatabase eiiXml = scenarioDatabase();
     final EcospaceBasemap sqliteBasemap = ecospaceBasemap(sqlite);
     final EcospaceBasemap eiiXmlBasemap = ecospaceBasemap(eiiXml);
     assertThat(sqliteBasemap.getScenarioId()).isEqualTo(
