@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.scenarios.anchovybay;
 
 import static eu.project.surimi.poseidon.ewe.Factories.bathymetricGridFromEcospaceBasemap;
+import static eu.project.surimi.poseidon.ewe.Factories.biomassAllocatorsFromEcospace;
 import static eu.project.surimi.poseidon.ewe.Factories.caughtInEcopath;
 import static eu.project.surimi.poseidon.ewe.Factories.ecopathCatches;
 import static eu.project.surimi.poseidon.ewe.Factories.ecopathGroups;
@@ -33,8 +34,10 @@ import static eu.project.surimi.poseidon.ewe.Factories.eweDatabase;
 import static eu.project.surimi.poseidon.ewe.Factories.filteredEcopathGroups;
 import static eu.project.surimi.poseidon.ewe.Factories.modelGridFromEcospaceBasemap;
 import static eu.project.surimi.poseidon.ewe.Factories.speciesFromEcopathSpeciesMapping;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.biomassGrids;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.prefixedId;
+import static uk.ac.ox.poseidon.geography.areas.Factories.sphericalCellAreaCalculator;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromCells;
@@ -49,11 +52,13 @@ import uk.ac.ox.poseidon.core.Scenario;
  * The Anchovy Bay scenario, built from the EwE model in
  * {@code inputs/anchovy_bay/anchovy_bay.eiixml}. For now it has only the model
  * grid, the bathymetry and the ports of the model's "BayOfAnchovies" Ecospace
- * scenario, and the species; fleets and the rest of the biology come later.
+ * scenario, and the species with their starting biomass; fleets and the rest
+ * of the biology come later.
  * EwE ports have no names, so each port cell is coded {@code P0}, {@code P1},
  * and so on, in row-major order. Each functional group that some fleet lands
  * or discards in the Ecopath model is a species of its own, coded by the
- * group's ID and named after it.
+ * group's ID and named after it. Its starting biomass is the group's Ecopath
+ * biomass spread over the water cells as Ecospace spreads it.
  * The {@code writeAnchovyBayScenario}
  * Gradle task writes it to {@code scenarios/anchovy_bay.yaml}. The server does
  * not serve it.
@@ -96,6 +101,17 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
       )
     );
     final var species = speciesFromEcopathSpeciesMapping(ecopathSpeciesMapping);
+    final var biomassGrids = biomassGrids(
+      modelGrid,
+      species,
+      biomassAllocatorsFromEcospace(
+        eweDatabase,
+        ecospaceBasemap,
+        sphericalCellAreaCalculator(modelGrid),
+        ecopathSpeciesMapping,
+        species
+      )
+    );
 
     return Scenario.builder()
       .startingDateTime(startOf(START_DATE))
@@ -103,6 +119,7 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
       .component("bathymetricGrid", bathymetricGrid)
       .component("portGrid", portGrid)
       .component("species", species)
+      .component("biomassGrids", biomassGrids)
       .build();
   }
 }

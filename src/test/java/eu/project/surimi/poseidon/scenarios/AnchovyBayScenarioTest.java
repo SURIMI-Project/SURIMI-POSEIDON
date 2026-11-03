@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.google.common.collect.ImmutableList;
+import eu.project.surimi.poseidon.ewe.EcopathBiomasses;
 import eu.project.surimi.poseidon.ewe.EcopathCatches;
 import eu.project.surimi.poseidon.ewe.EcopathGroups;
 import eu.project.surimi.poseidon.ewe.EcospaceBasemap;
@@ -40,8 +41,10 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.geography.areas.SphericalCellAreaCalculator;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.grids.Cell;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
@@ -204,5 +207,66 @@ class AnchovyBayScenarioTest {
           )
           .toList()
       );
+  }
+
+  // Ecospace spreads a group's Ecopath biomass B so that its mean density over
+  // the water cells is B, however the habitat capacity shapes it. The total
+  // in kg therefore lies between B times the number of water cells times the
+  // smallest and the largest of their areas.
+  @Test
+  void spreadsTheEcopathBiomassOfEachSpeciesOverTheWaterCells() {
+    final EweDatabase eweDatabase = scenarioDatabase();
+    final EcospaceBasemap ecospaceBasemap = ecospaceBasemap(eweDatabase);
+    final EcopathBiomasses ecopathBiomasses = EcopathBiomasses.fromTable(
+      eweDatabase.table(EcopathGroups.TABLE_NAME)
+    );
+    final SphericalCellAreaCalculator cellAreas =
+      new SphericalCellAreaCalculator(simulation.getComponent(ModelGrid.class));
+    final int cols = ecospaceBasemap.getCols();
+    final ImmutableList<Cell> waterCells = range(
+      0,
+      ecospaceBasemap.getRows() * cols
+    )
+      .filter(i -> ecospaceBasemap.isWater(i / cols, i % cols))
+      .mapToObj(i -> new Cell(i % cols, i / cols))
+      .collect(ImmutableList.toImmutableList());
+    final double smallestArea = waterCells
+      .stream()
+      .mapToDouble(cellAreas::areaInSquareKm)
+      .min()
+      .orElseThrow();
+    final double largestArea = waterCells
+      .stream()
+      .mapToDouble(cellAreas::areaInSquareKm)
+      .max()
+      .orElseThrow();
+    final var biomassGrids = simulation.getComponents(BiomassGrid.class);
+    assertThat(biomassGrids)
+      .extracting(BiomassGrid::getSpecies)
+      .containsExactlyInAnyOrderElementsOf(
+        simulation.getComponents(Species.class)
+      );
+    assertThat(biomassGrids).allSatisfy(biomassGrid -> {
+      final double biomassInKgPerSquareKm =
+        ecopathBiomasses.getBiomass(
+          Integer.parseInt(biomassGrid.getSpecies().getCode())
+        ) * 1000;
+      assertThat(range(0, ecospaceBasemap.getRows() * cols).boxed())
+        .as("biomass of %s", biomassGrid.getSpecies())
+        .allSatisfy(i -> {
+          final Cell cell = new Cell(i % cols, i / cols);
+          if (waterCells.contains(cell)) {
+            assertThat(biomassGrid.getValue(cell)).as("%s", cell).isPositive();
+          } else {
+            assertThat(biomassGrid.getValue(cell)).as("%s", cell).isNaN();
+          }
+        });
+      assertThat(
+        waterCells.stream().mapToDouble(biomassGrid::getValue).sum()
+      ).isBetween(
+        biomassInKgPerSquareKm * waterCells.size() * smallestArea * (1 - 1e-9),
+        biomassInKgPerSquareKm * waterCells.size() * largestArea * (1 + 1e-9)
+      );
+    });
   }
 }

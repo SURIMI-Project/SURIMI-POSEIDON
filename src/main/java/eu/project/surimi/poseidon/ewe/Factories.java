@@ -22,13 +22,16 @@
 
 package eu.project.surimi.poseidon.ewe;
 
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.List;
 import tech.tablesaw.api.Table;
+import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Factory;
 import uk.ac.ox.poseidon.core.MappingFactory;
 import uk.ac.ox.poseidon.core.RelativeScopeFactory;
 import uk.ac.ox.poseidon.core.Scope;
+import uk.ac.ox.poseidon.geography.areas.CellAreaCalculator;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
 
@@ -337,6 +340,221 @@ public final class Factories {
     return new BathymetricGridFromEcospaceBasemapFactory<>(
       ecospaceBasemap,
       modelGrid
+    );
+  }
+
+  /**
+   * @param eweDatabase the EwE database to read from
+   * @return a {@link RelativeScopeFactory} for the database's
+   *         {@code EcospaceScenarioGroup} table, read once and then cached;
+   *         share it to read the table once for several extractions
+   * @see EcospaceGroups#TABLE_NAME
+   */
+  public static <S extends Scope> EweTableFactory<S> ecospaceScenarioGroupTable(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase
+  ) {
+    return eweTable(eweDatabase, EcospaceGroups.TABLE_NAME);
+  }
+
+  /**
+   * @param eweDatabase the EwE database to read from
+   * @return a {@link RelativeScopeFactory} for the database's
+   *         {@code EcospaceScenarioHabitat} table, read once and then cached;
+   *         share it to read the table once for several extractions
+   * @see EcospaceHabitats#HABITAT_TABLE_NAME
+   */
+  public static <S extends Scope> EweTableFactory<S> ecospaceScenarioHabitatTable(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase
+  ) {
+    return eweTable(eweDatabase, EcospaceHabitats.HABITAT_TABLE_NAME);
+  }
+
+  /**
+   * @param eweDatabase the EwE database to read from
+   * @return a {@link RelativeScopeFactory} for the database's
+   *         {@code EcospaceScenarioGroupHabitat} table, read once and then
+   *         cached; share it to read the table once for several extractions
+   * @see EcospaceHabitats#GROUP_HABITAT_TABLE_NAME
+   */
+  public static <S extends Scope> EweTableFactory<S> ecospaceScenarioGroupHabitatTable(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase
+  ) {
+    return eweTable(eweDatabase, EcospaceHabitats.GROUP_HABITAT_TABLE_NAME);
+  }
+
+  /**
+   * @param table           any table with the columns of EwE's
+   *                        {@code EcospaceScenarioGroup} table
+   * @param ecospaceBasemap the base map of the Ecospace scenario
+   * @return a {@link RelativeScopeFactory} for the scenario's groups, by the
+   *         ID of their Ecopath group
+   * @see EcospaceGroups#fromTable(Table, EcospaceBasemap)
+   */
+  public static <S extends Scope> EcospaceGroupsFromTableFactory<S> ecospaceGroupsFromTable(
+    final Factory<? super S, ? extends Table> table,
+    final Factory<? super S, ? extends EcospaceBasemap> ecospaceBasemap
+  ) {
+    return new EcospaceGroupsFromTableFactory<>(table, ecospaceBasemap);
+  }
+
+  /**
+   * @param eweDatabase     the EwE database to read from
+   * @param ecospaceBasemap the base map of the Ecospace scenario
+   * @return a {@link RelativeScopeFactory} for the scenario's groups, by the
+   *         ID of their Ecopath group, read from the database's
+   *         {@code EcospaceScenarioGroup} table
+   * @see EcospaceGroups#fromTable(Table, EcospaceBasemap)
+   */
+  public static <S extends Scope> EcospaceGroupsFromTableFactory<S> ecospaceGroups(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase,
+    final Factory<? super S, ? extends EcospaceBasemap> ecospaceBasemap
+  ) {
+    return ecospaceGroupsFromTable(
+      ecospaceScenarioGroupTable(eweDatabase),
+      ecospaceBasemap
+    );
+  }
+
+  /**
+   * @param habitatTable      any table with the columns of EwE's
+   *                          {@code EcospaceScenarioHabitat} table
+   * @param groupHabitatTable any table with the columns of EwE's
+   *                          {@code EcospaceScenarioGroupHabitat} table
+   * @param ecospaceBasemap   the base map of the Ecospace scenario
+   * @return a {@link RelativeScopeFactory} for the scenario's habitats and the
+   *         groups' preferences
+   * @see EcospaceHabitats#fromTables(Table, Table, EcospaceBasemap)
+   */
+  public static <S extends Scope> EcospaceHabitatsFromTablesFactory<S> ecospaceHabitatsFromTables(
+    final Factory<? super S, ? extends Table> habitatTable,
+    final Factory<? super S, ? extends Table> groupHabitatTable,
+    final Factory<? super S, ? extends EcospaceBasemap> ecospaceBasemap
+  ) {
+    return new EcospaceHabitatsFromTablesFactory<>(
+      habitatTable,
+      groupHabitatTable,
+      ecospaceBasemap
+    );
+  }
+
+  /**
+   * @param eweDatabase     the EwE database to read from
+   * @param ecospaceBasemap the base map of the Ecospace scenario
+   * @return a {@link RelativeScopeFactory} for the scenario's habitats and the
+   *         groups' preferences, read from the database's
+   *         {@code EcospaceScenarioHabitat} and
+   *         {@code EcospaceScenarioGroupHabitat} tables
+   * @see EcospaceHabitats#fromTables(Table, Table, EcospaceBasemap)
+   */
+  public static <S extends Scope> EcospaceHabitatsFromTablesFactory<S> ecospaceHabitats(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase,
+    final Factory<? super S, ? extends EcospaceBasemap> ecospaceBasemap
+  ) {
+    return ecospaceHabitatsFromTables(
+      ecospaceScenarioHabitatTable(eweDatabase),
+      ecospaceScenarioGroupHabitatTable(eweDatabase),
+      ecospaceBasemap
+    );
+  }
+
+  /**
+   * @param table any table with the columns of EwE's {@code EcopathGroup}
+   *              table
+   * @return a {@link RelativeScopeFactory} for the biomass entered for the
+   *         model's groups
+   * @see EcopathBiomasses#fromTable(Table)
+   */
+  public static <S extends Scope> EcopathBiomassesFromTableFactory<S> ecopathBiomassesFromTable(
+    final Factory<? super S, ? extends Table> table
+  ) {
+    return new EcopathBiomassesFromTableFactory<>(table);
+  }
+
+  /**
+   * @param eweDatabase the EwE database to read from
+   * @return a {@link RelativeScopeFactory} for the biomass entered for the
+   *         model's groups, read from the database's {@code EcopathGroup}
+   *         table
+   * @see EcopathBiomasses#fromTable(Table)
+   */
+  public static <S extends Scope> EcopathBiomassesFromTableFactory<S> ecopathBiomasses(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase
+  ) {
+    return ecopathBiomassesFromTable(ecopathGroupTable(eweDatabase));
+  }
+
+  /**
+   * @param ecospaceBasemap       the base map of the Ecospace scenario
+   * @param ecospaceGroups        the scenario's groups, by Ecopath group ID
+   * @param ecospaceHabitats      the scenario's habitats and the groups'
+   *                              preferences
+   * @param ecopathBiomasses      the biomass entered for the Ecopath groups
+   * @param cellAreaCalculator    POSEIDON's areas of the model grid's cells
+   * @param ecopathSpeciesMapping how the groups' biomass is shared between
+   *                              species
+   * @param species               the species to give a starting biomass to
+   * @return a {@link RelativeScopeFactory} for one allocator of starting
+   *         biomass per species, in the order of {@code species}
+   * @see BiomassAllocatorsFromEcospaceFactory
+   * @see EcospaceStartingBiomass
+   */
+  public static <S extends Scope> BiomassAllocatorsFromEcospaceFactory<S> biomassAllocatorsFromEcospace(
+    final Factory<? super S, ? extends EcospaceBasemap> ecospaceBasemap,
+    final Factory<
+      ? super S,
+      ? extends ImmutableMap<Integer, EcospaceGroup>
+    > ecospaceGroups,
+    final Factory<? super S, ? extends EcospaceHabitats> ecospaceHabitats,
+    final Factory<? super S, ? extends EcopathBiomasses> ecopathBiomasses,
+    final Factory<? super S, ? extends CellAreaCalculator> cellAreaCalculator,
+    final Factory<
+      ? super S,
+      ? extends EcopathSpeciesMapping
+    > ecopathSpeciesMapping,
+    final Factory<? super S, ? extends List<? extends Species>> species
+  ) {
+    return new BiomassAllocatorsFromEcospaceFactory<>(
+      ecospaceBasemap,
+      ecospaceGroups,
+      ecospaceHabitats,
+      ecopathBiomasses,
+      cellAreaCalculator,
+      ecopathSpeciesMapping,
+      species
+    );
+  }
+
+  /**
+   * @param eweDatabase           the EwE database to read from
+   * @param ecospaceBasemap       the base map of the Ecospace scenario
+   * @param cellAreaCalculator    POSEIDON's areas of the model grid's cells
+   * @param ecopathSpeciesMapping how the groups' biomass is shared between
+   *                              species
+   * @param species               the species to give a starting biomass to
+   * @return a {@link RelativeScopeFactory} for one allocator of starting
+   *         biomass per species, in the order of {@code species}, reading the
+   *         groups, habitats, biomasses and cell areas from the database
+   * @see BiomassAllocatorsFromEcospaceFactory
+   * @see EcospaceStartingBiomass
+   */
+  public static <S extends Scope> BiomassAllocatorsFromEcospaceFactory<S> biomassAllocatorsFromEcospace(
+    final Factory<? super S, ? extends EweDatabase> eweDatabase,
+    final Factory<? super S, ? extends EcospaceBasemap> ecospaceBasemap,
+    final Factory<? super S, ? extends CellAreaCalculator> cellAreaCalculator,
+    final Factory<
+      ? super S,
+      ? extends EcopathSpeciesMapping
+    > ecopathSpeciesMapping,
+    final Factory<? super S, ? extends List<? extends Species>> species
+  ) {
+    return biomassAllocatorsFromEcospace(
+      ecospaceBasemap,
+      ecospaceGroups(eweDatabase, ecospaceBasemap),
+      ecospaceHabitats(eweDatabase, ecospaceBasemap),
+      ecopathBiomasses(eweDatabase),
+      cellAreaCalculator,
+      ecopathSpeciesMapping,
+      species
     );
   }
 }

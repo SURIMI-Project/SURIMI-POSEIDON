@@ -28,8 +28,8 @@ components:
         prefix: P
       }
       modelGrid: *id002
-  species: !!eu.project.surimi.poseidon.ewe.SpeciesFromEcopathSpeciesMappingFactory
-    ecopathSpeciesMapping: !!eu.project.surimi.poseidon.ewe.EcopathSpeciesMappingFromGroupsFactory
+  species: &id006 !!eu.project.surimi.poseidon.ewe.SpeciesFromEcopathSpeciesMappingFactory
+    ecopathSpeciesMapping: &id005 !!eu.project.surimi.poseidon.ewe.EcopathSpeciesMappingFromGroupsFactory
       groups: !!eu.project.surimi.poseidon.ewe.FilteredEcopathGroupsFactory
         groups: !!eu.project.surimi.poseidon.ewe.EcopathGroupsFromTableFactory
           table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
@@ -40,6 +40,32 @@ components:
             table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
               eweDatabase: *id004
               tableName: EcopathCatch
+  biomassGrids: !!uk.ac.ox.poseidon.biology.biomass.BiomassGridsFactory
+    biomassAllocators: !!eu.project.surimi.poseidon.ewe.BiomassAllocatorsFromEcospaceFactory
+      cellAreaCalculator: !!uk.ac.ox.poseidon.geography.areas.SphericalCellAreaCalculatorFactory
+        modelGrid: *id002
+      ecopathBiomasses: !!eu.project.surimi.poseidon.ewe.EcopathBiomassesFromTableFactory
+        table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
+          eweDatabase: *id004
+          tableName: EcopathGroup
+      ecopathSpeciesMapping: *id005
+      ecospaceBasemap: *id001
+      ecospaceGroups: !!eu.project.surimi.poseidon.ewe.EcospaceGroupsFromTableFactory
+        ecospaceBasemap: *id001
+        table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
+          eweDatabase: *id004
+          tableName: EcospaceScenarioGroup
+      ecospaceHabitats: !!eu.project.surimi.poseidon.ewe.EcospaceHabitatsFromTablesFactory
+        ecospaceBasemap: *id001
+        groupHabitatTable: !!eu.project.surimi.poseidon.ewe.EweTableFactory
+          eweDatabase: *id004
+          tableName: EcospaceScenarioGroupHabitat
+        habitatTable: !!eu.project.surimi.poseidon.ewe.EweTableFactory
+          eweDatabase: *id004
+          tableName: EcospaceScenarioHabitat
+      species: *id006
+    modelGrid: *id002
+    species: *id006
 startingDateTime: !!uk.ac.ox.poseidon.core.time.DateTimeFactory {
   day: 1,
   hour: 0,

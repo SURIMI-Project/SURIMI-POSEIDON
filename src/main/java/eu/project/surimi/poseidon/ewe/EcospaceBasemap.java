@@ -274,4 +274,54 @@ public final class EcospaceBasemap {
   public boolean isExcluded(final int row, final int col) {
     return excluded[row][col];
   }
+
+  /**
+   * A water cell is one of positive depth that is not excluded, as for EwE's
+   * {@code nWaterCells}: Ecospace sets the depth of excluded cells to a null
+   * value before running ({@code cEcoSpace.UpdateDepthMap}).
+   *
+   * @param row the row, 0 being the northernmost
+   * @param col the column, 0 being the westernmost
+   * @return whether the cell is a water cell
+   */
+  public boolean isWater(final int row, final int col) {
+    return depth[row][col] > 0 && !excluded[row][col];
+  }
+
+  /**
+   * Decodes a masked map of this base map, such as a habitat map, which EwE
+   * writes for the cells of positive depth only, excluded or not (see
+   * {@link EweMaps#decodeMaskedMap(String, boolean[][])}).
+   *
+   * @param map the map string, compressed or not
+   * @return the map's values, indexed {@code [row][col]};
+   *         {@link Double#NaN} where the depth is not positive
+   * @throws IllegalArgumentException if the string doesn't hold one number
+   *                                  per cell of positive depth
+   */
+  public double[][] decodeMaskedMap(@NonNull final String map) {
+    final boolean[][] mask = new boolean[rows][cols];
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; col++) {
+        mask[row][col] = depth[row][col] > 0;
+      }
+    }
+    return EweMaps.decodeMaskedMap(map, mask);
+  }
+
+  /**
+   * @param value the value of the map
+   * @return a map in the shape {@link #decodeMaskedMap(String)} gives, with
+   *         {@code value} where the depth is positive and {@link Double#NaN}
+   *         elsewhere, as EwE leaves a masked layer that has no map string
+   */
+  public double[][] uniformMaskedMap(final double value) {
+    return IntStream.range(0, rows)
+      .mapToObj(row ->
+        IntStream.range(0, cols)
+          .mapToDouble(col -> depth[row][col] > 0 ? value : Double.NaN)
+          .toArray()
+      )
+      .toArray(double[][]::new);
+  }
 }

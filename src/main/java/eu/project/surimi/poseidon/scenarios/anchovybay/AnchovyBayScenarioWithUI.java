@@ -23,6 +23,9 @@
 package eu.project.surimi.poseidon.scenarios.anchovybay;
 
 import static java.awt.Color.WHITE;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.uniformCarryingCapacityGrid;
+import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
+import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 
 import java.util.List;
 import uk.ac.ox.poseidon.core.Scenario;
@@ -32,12 +35,19 @@ import uk.ac.ox.poseidon.gui.portrayals.BathymetryFieldPortrayalFactory;
 import uk.ac.ox.poseidon.gui.portrayals.CoordinatesPortrayalFactory;
 import uk.ac.ox.poseidon.gui.portrayals.PortGridPortrayalFactory;
 import uk.ac.ox.poseidon.gui.portrayals.SimpleFieldPortrayalFactory;
+import uk.ac.ox.poseidon.gui.portrayals.SpeciesBiomassFieldsPortrayalFactory;
 
 /**
- * GUI wrapper for {@link AnchovyBayScenario}: displays bathymetry, ports and
- * grid coordinates over the scenario's model grid.
+ * GUI wrapper for {@link AnchovyBayScenario}: displays bathymetry, biomass,
+ * ports and grid coordinates over the scenario's model grid.
  */
 public class AnchovyBayScenarioWithUI extends ScenarioWithUI {
+
+  // Purely a colour-scale ceiling for the per-species biomass panels, shared
+  // by every species: it is not a carrying capacity, and it is set above the
+  // most abundant species' starting biomass per cell, so the scarcest species
+  // show only faintly.
+  private static final String DISPLAY_CARRYING_CAPACITY = "3000000 kg";
 
   /**
    * @param scenario an {@link AnchovyBayScenario}, whose components the
@@ -52,6 +62,17 @@ public class AnchovyBayScenarioWithUI extends ScenarioWithUI {
           List.of(
             new BathymetryFieldPortrayalFactory(
               scenario.component("bathymetricGrid")
+            ),
+            new SpeciesBiomassFieldsPortrayalFactory(
+              scenario.component("biomassGrids"),
+              listOf(
+                uniformCarryingCapacityGrid(
+                  scenario.component("modelGrid"),
+                  scenario.component("bathymetricGrid"),
+                  massOf(DISPLAY_CARRYING_CAPACITY)
+                )
+              ),
+              false
             ),
             new SimpleFieldPortrayalFactory<>(
               "Ports",

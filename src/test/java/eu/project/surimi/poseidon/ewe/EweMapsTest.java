@@ -24,13 +24,16 @@ package eu.project.surimi.poseidon.ewe;
 
 import static eu.project.surimi.poseidon.ewe.EweMaps.decodeBooleanMap;
 import static eu.project.surimi.poseidon.ewe.EweMaps.decodeFullMap;
+import static eu.project.surimi.poseidon.ewe.EweMaps.decodeMaskedMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +41,13 @@ class EweMapsTest {
 
   private static final String MAP = "0,0,3;4,5.5,490;";
   private static final double[][] VALUES = { { 0, 0, 3 }, { 4, 5.5, 490 } };
+
+  // Boxed, so that NaN equals NaN
+  private static List<List<Double>> rows(final double[][] map) {
+    return Arrays.stream(map)
+      .map(row -> Arrays.stream(row).boxed().toList())
+      .toList();
+  }
 
   private static String gzip(final String map) throws IOException {
     final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -139,5 +149,72 @@ class EweMapsTest {
     assertThatThrownBy(() -> decodeBooleanMap("0,1,0;;", 2, 2))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("Expected 2 values in row 0, but found 3");
+  }
+
+  // Water (true) and land (false), as a masked map's mask
+  private static final boolean[][] MASK = {
+    { false, true, true, false },
+    { false, false, false, false },
+    { true, false, true, true }
+  };
+
+  @Test
+  void decodesTheCellsOfTheMaskOfAMaskedMapInOrder() {
+    assertThat(rows(decodeMaskedMap("1,2,;;3,4.5,6;", MASK))).isEqualTo(
+      rows(new double[][] {
+        { Double.NaN, 1, 2, Double.NaN },
+        { Double.NaN, Double.NaN, Double.NaN, Double.NaN },
+        { 3, Double.NaN, 4.5, 6 }
+      })
+    );
+  }
+
+  @Test
+  void decodesAMaskedMapWithoutTheTrailingSeparators() {
+    assertThat(decodeMaskedMap("1,2;;3,4.5,6;", MASK)[0]).containsExactly(
+      Double.NaN,
+      1,
+      2,
+      Double.NaN
+    );
+  }
+
+  @Test
+  void rejectsAMaskedMapWithTheWrongNumberOfValuesInARow() {
+    assertThatThrownBy(() -> decodeMaskedMap("1,2,3;;3,4.5,6;", MASK))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Expected 2 values in row 0, but found 3");
+    assertThatThrownBy(() -> decodeMaskedMap("1,2;5;3,4.5,6;", MASK))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Expected 0 values in row 1, but found 1");
+    assertThatThrownBy(() -> decodeMaskedMap(";;3,4.5,6;", MASK))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Expected 2 values in row 0, but found 0");
+  }
+
+  @Test
+  void rejectsAMaskedMapWithTheWrongNumberOfRows() {
+    assertThatThrownBy(() -> decodeMaskedMap("1,2;;", MASK)).isInstanceOf(
+      IllegalArgumentException.class
+    );
+    assertThatThrownBy(() ->
+      decodeMaskedMap("1,2;;3,4.5,6;7", MASK)
+    ).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void rejectsAMaskWithoutRows() {
+    assertThatThrownBy(() -> decodeMaskedMap("1;", new boolean[0][0]))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("The mask has no rows");
+  }
+
+  @Test
+  void rejectsAMaskThatIsNotRectangular() {
+    assertThatThrownBy(() ->
+      decodeMaskedMap("1;1;", new boolean[][] { { true, false }, { true } })
+    )
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("The mask is not rectangular");
   }
 }

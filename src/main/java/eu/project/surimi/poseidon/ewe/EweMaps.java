@@ -29,7 +29,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
 
@@ -46,12 +48,14 @@ import java.util.zip.GZIPInputStream;
  * last one empty, and within a row the cells are separated by {@code ,}. Double
  * quotes are ignored, as in EwE.
  * <p>
- * Only full maps (one value per cell) are handled. EwE also writes masked maps,
- * which hold only the water cells of each row; reading those needs the depth
- * map, and is not supported yet. Boolean maps, such as a fleet's
- * {@code PortMap}, are full maps of {@code 0} and {@code 1}, but EwE writes a
- * row of a boolean map only if it holds at least one true cell, so an empty
- * row is all false. Decoding is strict: where EwE silently keeps default
+ * Most maps are full maps, with one value per cell. Masked maps, such as the
+ * habitat maps, hold only the cells of a mask, for EwE the cells of positive
+ * depth, so reading them needs the depth map. EwE's writer puts a {@code ,}
+ * after each value of the mask but the row's last, and one more after the last
+ * if a cell outside the mask follows it in the row. Boolean maps, such as a
+ * fleet's {@code PortMap}, are full maps of {@code 0} and {@code 1}, but EwE
+ * writes a row of a boolean map only if it holds at least one true cell, so an
+ * empty row is all false. Decoding is strict: where EwE silently keeps default
  * values for missing or unreadable cells, this throws.
  */
 public final class EweMaps {
@@ -115,6 +119,72 @@ public final class EweMaps {
       }
     }
     return values;
+  }
+
+  /**
+   * @param map  the map string, compressed or not
+   * @param mask which cells the map holds a value for, indexed
+   *             {@code [row][col]}: for EwE, the cells of positive depth in
+   *             the base map's {@code DepthMap}
+   * @return the map's values, indexed {@code [row][col]}, row 0 being the
+   *         northernmost; {@link Double#NaN} outside the mask
+   * @throws IllegalArgumentException if the mask is empty or not rectangular,
+   *                                  or the string doesn't hold one row per
+   *                                  row of the mask, each with exactly one
+   *                                  number per cell of the mask in that row
+   */
+  public static double[][] decodeMaskedMap(
+    final String map,
+    final boolean[][] mask
+  ) {
+    final int rows = mask.length;
+    checkArgument(rows > 0, "The mask has no rows");
+    final int cols = mask[0].length;
+    checkArgument(
+      Arrays.stream(mask).allMatch(maskRow -> maskRow.length == cols),
+      "The mask is not rectangular"
+    );
+    final String[] segments = segments(map, rows, cols);
+    return IntStream.range(0, rows)
+      .mapToObj(row -> maskedRow(segments[row], mask[row], row))
+      .toArray(double[][]::new);
+  }
+
+  private static double[] maskedRow(
+    final String segment,
+    final boolean[] maskRow,
+    final int row
+  ) {
+    final int[] maskedCols = IntStream.range(0, maskRow.length)
+      .filter(col -> maskRow[col])
+      .toArray();
+    final List<String> tokens = maskedTokens(segment, maskedCols.length, row);
+    final double[] values = new double[maskRow.length];
+    Arrays.fill(values, Double.NaN);
+    IntStream.range(0, maskedCols.length).forEach(
+      i -> values[maskedCols[i]] = parse(tokens.get(i), row, maskedCols[i])
+    );
+    return values;
+  }
+
+  private static List<String> maskedTokens(
+    final String segment,
+    final int count,
+    final int row
+  ) {
+    final List<String> tokens = segment.isEmpty()
+      ? List.of()
+      : List.of(segment.split(",", -1));
+    final boolean trailingSeparator =
+      tokens.size() == count + 1 && tokens.getLast().isEmpty();
+    checkArgument(
+      tokens.size() == count || (count > 0 && trailingSeparator),
+      "Expected %s values in row %s, but found %s",
+      count,
+      row,
+      tokens.size()
+    );
+    return tokens.subList(0, count);
   }
 
   private static String[] segments(
