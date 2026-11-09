@@ -399,10 +399,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         indexedBiomassCatchabilityGear(
           purseSeineSetDuration,
           species,
-          defaultIfNull(
-            mapLookup(speciesProperty("key"), purseSeinerCatchabilities),
-            0.0
-          ),
+          mapLookup(speciesProperty("key"), purseSeinerCatchabilities, 0.0),
           massOf(1, KILOGRAM)
         )
       ),
@@ -410,10 +407,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         indexedBiomassCatchabilityGear(
           bottomTrawlerSetDuration,
           species,
-          defaultIfNull(
-            mapLookup(speciesProperty("key"), bottomTrawlerCatchabilities),
-            0.0
-          ),
+          mapLookup(speciesProperty("key"), bottomTrawlerCatchabilities, 0.0),
           massOf(1, KILOGRAM)
         )
       ),
@@ -739,33 +733,29 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var purseSeineDiscardRates = discardRates(
       species,
-      defaultIfNull(
-        tableLookup(
-          multiStringKeyFromFunctions(
-            speciesProperty("code"),
-            speciesProperty("lifeStage"),
-            always(PURSE_SEINE_GEAR_CODE)
-          ),
-          discardRatiosTable,
-          discardRatiosKeyFromRow,
-          doubleFromRow("discard_ratio")
+      tableLookup(
+        multiStringKeyFromFunctions(
+          speciesProperty("code"),
+          speciesProperty("lifeStage"),
+          always(PURSE_SEINE_GEAR_CODE)
         ),
+        discardRatiosTable,
+        discardRatiosKeyFromRow,
+        doubleFromRow("discard_ratio"),
         0.0
       )
     );
     final var bottomTrawlerDiscardRates = discardRates(
       species,
-      defaultIfNull(
-        tableLookup(
-          multiStringKeyFromFunctions(
-            speciesProperty("code"),
-            speciesProperty("lifeStage"),
-            always(BOTTOM_TRAWLER_GEAR_CODE)
-          ),
-          discardRatiosTable,
-          discardRatiosKeyFromRow,
-          doubleFromRow("discard_ratio")
+      tableLookup(
+        multiStringKeyFromFunctions(
+          speciesProperty("code"),
+          speciesProperty("lifeStage"),
+          always(BOTTOM_TRAWLER_GEAR_CODE)
         ),
+        discardRatiosTable,
+        discardRatiosKeyFromRow,
+        doubleFromRow("discard_ratio"),
         0.0
       )
     );

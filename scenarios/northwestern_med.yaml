@@ -495,15 +495,12 @@ components:
                                         unitString: kg,
                                         value: 1.0
                                       }
-                                      proportionFunction: !!uk.ac.ox.poseidon.core.functions.DefaultIfNullFactory
-                                        defaultValue: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
-                                          value: 0.0
+                                      proportionFunction: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
+                                        defaultValue: 0.0
+                                        key: !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                                          propertyPath: key
                                         }
-                                        delegate: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
-                                          key: !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
-                                            propertyPath: key
-                                          }
-                                          map: *id014
+                                        map: *id014
                                       species: *id006
                                   values: [
                                     PS
@@ -522,15 +519,12 @@ components:
                                         unitString: kg,
                                         value: 1.0
                                       }
-                                      proportionFunction: !!uk.ac.ox.poseidon.core.functions.DefaultIfNullFactory
-                                        defaultValue: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
-                                          value: 0.0
+                                      proportionFunction: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
+                                        defaultValue: 0.0
+                                        key: !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                                          propertyPath: key
                                         }
-                                        delegate: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
-                                          key: !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
-                                            propertyPath: key
-                                          }
-                                          map: *id015
+                                        map: *id015
                                       species: *id006
                                   values: [
                                     OTB
@@ -643,40 +637,37 @@ components:
                           dispositionProcess: !!uk.ac.ox.poseidon.fishing.catches.disposition.CompositeDispositionProcessFactory
                             dispositionStrategies:
                             - !!uk.ac.ox.poseidon.fishing.catches.disposition.IndexedDiscardRatesFactory
-                              rateFunction: !!uk.ac.ox.poseidon.core.functions.DefaultIfNullFactory
-                                defaultValue: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
-                                  value: 0.0
-                                }
-                                delegate: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
-                                  key: !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
-                                    functions:
-                                    - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
-                                      propertyPath: code
+                              rateFunction: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
+                                defaultValue: 0.0
+                                key: !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
+                                  functions:
+                                  - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                                    propertyPath: code
+                                  }
+                                  - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                                    propertyPath: lifeStage
+                                  }
+                                  - !!uk.ac.ox.poseidon.core.providers.constant.ConstantMappingFactory
+                                    result: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
+                                      value: PS
                                     }
-                                    - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
-                                      propertyPath: lifeStage
-                                    }
-                                    - !!uk.ac.ox.poseidon.core.providers.constant.ConstantMappingFactory
-                                      result: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
-                                        value: PS
-                                      }
-                                  map: !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
-                                    keyBuilder: &id040 !!uk.ac.ox.poseidon.io.tables.MultiStringKeyFromRowFactory
-                                      keyColumnNames: [
-                                        species_code,
-                                        life_stage,
-                                        gear_code
-                                      ]
-                                      
-                                    table: &id041 !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
-                                      dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
-                                        encoding: UTF-8
-                                        path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
-                                          parent: *id001
-                                          path: discard_ratios.csv
-                                    valueBuilder: !!uk.ac.ox.poseidon.io.tables.DoubleFromRowFactory {
-                                      columnName: discard_ratio
-                                    }
+                                map: !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
+                                  keyBuilder: &id040 !!uk.ac.ox.poseidon.io.tables.MultiStringKeyFromRowFactory
+                                    keyColumnNames: [
+                                      species_code,
+                                      life_stage,
+                                      gear_code
+                                    ]
+                                    
+                                  table: &id041 !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
+                                    dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
+                                      encoding: UTF-8
+                                      path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
+                                        parent: *id001
+                                        path: discard_ratios.csv
+                                  valueBuilder: !!uk.ac.ox.poseidon.io.tables.DoubleFromRowFactory {
+                                    columnName: discard_ratio
+                                  }
                               species: *id006
                             - !!uk.ac.ox.poseidon.fishing.catches.disposition.ProportionallyLimitingBiomassToHoldFactory {
                               }
@@ -758,6 +749,7 @@ components:
                                     - !!uk.ac.ox.poseidon.fishing.travel.TimeCostFactory
                                       hourlyCost: &id038 !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
                                         mapping: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
+                                          defaultValue: null
                                           key: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
                                             value: &id057 !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
                                               mapping: !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
@@ -1008,29 +1000,26 @@ components:
                           dispositionProcess: !!uk.ac.ox.poseidon.fishing.catches.disposition.CompositeDispositionProcessFactory
                             dispositionStrategies:
                             - !!uk.ac.ox.poseidon.fishing.catches.disposition.IndexedDiscardRatesFactory
-                              rateFunction: !!uk.ac.ox.poseidon.core.functions.DefaultIfNullFactory
-                                defaultValue: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
-                                  value: 0.0
-                                }
-                                delegate: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
-                                  key: !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
-                                    functions:
-                                    - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
-                                      propertyPath: code
+                              rateFunction: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
+                                defaultValue: 0.0
+                                key: !!uk.ac.ox.poseidon.core.functions.MultiStringKeyFromFunctionsFactory
+                                  functions:
+                                  - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                                    propertyPath: code
+                                  }
+                                  - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
+                                    propertyPath: lifeStage
+                                  }
+                                  - !!uk.ac.ox.poseidon.core.providers.constant.ConstantMappingFactory
+                                    result: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
+                                      value: OTB
                                     }
-                                    - !!uk.ac.ox.poseidon.biology.species.extractors.SpeciesPropertyFactory {
-                                      propertyPath: lifeStage
-                                    }
-                                    - !!uk.ac.ox.poseidon.core.providers.constant.ConstantMappingFactory
-                                      result: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
-                                        value: OTB
-                                      }
-                                  map: !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
-                                    keyBuilder: *id040
-                                    table: *id041
-                                    valueBuilder: !!uk.ac.ox.poseidon.io.tables.DoubleFromRowFactory {
-                                      columnName: discard_ratio
-                                    }
+                                map: !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
+                                  keyBuilder: *id040
+                                  table: *id041
+                                  valueBuilder: !!uk.ac.ox.poseidon.io.tables.DoubleFromRowFactory {
+                                    columnName: discard_ratio
+                                  }
                               species: *id006
                             - !!uk.ac.ox.poseidon.fishing.catches.disposition.ProportionallyLimitingBiomassToHoldFactory {
                               }
@@ -1270,6 +1259,7 @@ components:
     steppable: !!uk.ac.ox.poseidon.fishing.vessels.accounts.FixedCostCollectorFactory
       cost: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
         mapping: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
+          defaultValue: null
           key: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
             value: *id057
           map: !!uk.ac.ox.poseidon.io.tables.MapFromTableFactory
