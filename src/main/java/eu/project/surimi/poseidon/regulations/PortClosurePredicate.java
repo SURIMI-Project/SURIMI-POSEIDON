@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import lombok.NonNull;
+import lombok.Value;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 import uk.ac.ox.poseidon.regulations.predicates.temporal.BetweenDates;
@@ -131,13 +132,15 @@ public class PortClosurePredicate
   }
 
   private static BetweenDates betweenDates(final PortClosureWindow window) {
-    return new BetweenDates(window.startDate(), window.endDate());
+    return new BetweenDates(window.getStartDate(), window.getEndDate());
   }
 
-  private record PortGearClosures(
-    ImmutableList<BetweenDates> dateRanges,
-    ImmutableSet<PortClosureWindow> lastSeasonWindows
-  ) {
+  @Value
+  private static final class PortGearClosures {
+
+    ImmutableList<BetweenDates> dateRanges;
+    ImmutableSet<PortClosureWindow> lastSeasonWindows;
+
     static PortGearClosures of(
       final ImmutableSortedMap<Year, ImmutableSet<PortClosureWindow>> seasons
     ) {
@@ -167,10 +170,14 @@ public class PortClosurePredicate
         if (
           shiftedCovers(
             window,
-            actionYear - window.startDate().getYear(),
+            actionYear - window.getStartDate().getYear(),
             action
           ) ||
-          shiftedCovers(window, actionYear - window.endDate().getYear(), action)
+          shiftedCovers(
+            window,
+            actionYear - window.getEndDate().getYear(),
+            action
+          )
         ) {
           return true;
         }
@@ -187,8 +194,8 @@ public class PortClosurePredicate
         years >= 1 &&
         betweenDates(
           new PortClosureWindow(
-            window.startDate().plusYears(years),
-            window.endDate().plusYears(years)
+            window.getStartDate().plusYears(years),
+            window.getEndDate().plusYears(years)
           )
         ).apply(null, action)
       );

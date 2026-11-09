@@ -126,7 +126,7 @@ public class BiomassAllocatorsFromEcospaceFactory<S extends Scope> extends Relat
       .map(entry -> scaled(groupKilograms(kilograms, entry.getKey()), entry))
       .reduce(BiomassAllocatorsFromEcospaceFactory::sum)
       .orElseThrow();
-    return (final Cell cell) -> speciesKilograms[cell.y()][cell.x()];
+    return (final Cell cell) -> speciesKilograms[cell.getY()][cell.getX()];
   }
 
   private static double[][] groupKilograms(

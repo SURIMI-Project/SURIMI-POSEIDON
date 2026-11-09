@@ -43,6 +43,7 @@ import javax.xml.stream.XMLStreamReader;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import tech.tablesaw.api.BooleanColumn;
 import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.api.LongColumn;
@@ -283,16 +284,18 @@ public final class EiiXmlDatabase implements EweDatabase {
     final List<String> values,
     final String tableName
   ) {
-    final Column<?> column = declaration.type().newColumn(declaration.name());
+    final Column<?> column = declaration
+      .getType()
+      .newColumn(declaration.getName());
     IntStream.range(0, values.size()).forEach(row -> {
       try {
-        column.appendObj(declaration.type().parse(values.get(row)));
+        column.appendObj(declaration.getType().parse(values.get(row)));
       } catch (final IllegalArgumentException e) {
         throw new IllegalArgumentException(
           "Cannot read value \"" +
             values.get(row) +
             "\" of column " +
-            declaration.name() +
+            declaration.getName() +
             " in row " +
             (row + 1) +
             " of table " +
@@ -307,7 +310,12 @@ public final class EiiXmlDatabase implements EweDatabase {
   }
 
   /** A column's name and type, from the table's {@code Columns} attribute. */
-  private record ColumnDeclaration(String name, ColumnType type) {}
+  @Value
+  private static final class ColumnDeclaration {
+
+    String name;
+    ColumnType type;
+  }
 
   /**
    * The Tablesaw column type of an {@code .eiixml} column, and how to read its

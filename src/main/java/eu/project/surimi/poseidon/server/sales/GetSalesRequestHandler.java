@@ -41,6 +41,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import lombok.Value;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import uk.ac.ox.poseidon.biology.biomass.Biomass;
@@ -89,7 +90,7 @@ public class GetSalesRequestHandler
       .sum();
     final double totalValue = saleEntries
       .stream()
-      .map(SaleEntry::value)
+      .map(SaleEntry::getValue)
       .reduce(Money::plus)
       .map(money -> money.getAmount().doubleValue())
       .orElse(0.0);
@@ -120,23 +121,30 @@ public class GetSalesRequestHandler
       toLocalDateTime(request.getStartDateTime()),
       toLocalDateTime(request.getEndDateTime())
     );
-    record Key(
-      Market market,
-      CatchCategory catchCategory,
-      CurrencyUnit currencyUnit
-    ) {}
-    record FleetSegmentAndSpecies(FleetSegment fleetSegment, Species species) {}
+    @Value
+    final class Key {
+
+      Market market;
+      CatchCategory catchCategory;
+      CurrencyUnit currencyUnit;
+    }
+    @Value
+    final class FleetSegmentAndSpecies {
+
+      FleetSegment fleetSegment;
+      Species species;
+    }
     // Sorted, so that the response does not depend on the order things sold
     // in, nor on hash codes (markets hash by identity)
     final Comparator<Key> keyOrder = Comparator.<Key, String>comparing(key ->
-      key.market().getCode()
+      key.getMarket().getCode()
     )
-      .thenComparing(key -> key.catchCategory().getCode())
-      .thenComparing(Key::currencyUnit);
+      .thenComparing(key -> key.getCatchCategory().getCode())
+      .thenComparing(Key::getCurrencyUnit);
     final Comparator<FleetSegmentAndSpecies> fleetSegmentAndSpeciesOrder =
-      Comparator.comparing(FleetSegmentAndSpecies::fleetSegment).thenComparing(
-        FleetSegmentAndSpecies::species
-      );
+      Comparator.comparing(
+        FleetSegmentAndSpecies::getFleetSegment
+      ).thenComparing(FleetSegmentAndSpecies::getSpecies);
     final FleetSegmentMapper fleetSegmentMapper = simulation.getComponent(
       FleetSegmentMapper.class
     );
@@ -211,8 +219,8 @@ public class GetSalesRequestHandler
       .stream()
       .map(entry ->
         MarketSales.newBuilder()
-          .setMarketCode(entry.getKey().market().getCode())
-          .setCurrency(entry.getKey().currencyUnit().getCode())
+          .setMarketCode(entry.getKey().getMarket().getCode())
+          .setCurrency(entry.getKey().getCurrencyUnit().getCode())
           .addAllSales(entry.getValue())
           .build()
       )
@@ -230,12 +238,14 @@ public class GetSalesRequestHandler
    * One sold item, flattened out of a {@code Sale} event for grouping by
    * market/catch category/fleet segment/species.
    */
-  private record SaleEntry(
-    Market market,
-    FleetSegment fleetSegment,
-    CatchCategory catchCategory,
-    Species species,
-    Biomass biomass,
-    Money value
-  ) {}
+  @Value
+  private static final class SaleEntry {
+
+    Market market;
+    FleetSegment fleetSegment;
+    CatchCategory catchCategory;
+    Species species;
+    Biomass biomass;
+    Money value;
+  }
 }

@@ -32,6 +32,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import lombok.NonNull;
+import lombok.Value;
 import tech.tablesaw.api.*;
 import uk.ac.ox.poseidon.core.events.AbstractListener;
 import uk.ac.ox.poseidon.fishing.market.Sale;
@@ -104,11 +105,13 @@ public final class LandingsAccumulator
    * with {@link uk.ac.ox.poseidon.core.utils.Utils#multiStringKey}) identifying
    * one accumulated landings total.
    */
-  public record Key(
-    Integer year,
-    String gearCode,
-    String speciesKey
-  ) implements Comparable<Key> {
+  @Value
+  public static final class Key implements Comparable<Key> {
+
+    Integer year;
+    String gearCode;
+    String speciesKey;
+
     @Override
     public int compareTo(final Key other) {
       return ComparisonChain.start()

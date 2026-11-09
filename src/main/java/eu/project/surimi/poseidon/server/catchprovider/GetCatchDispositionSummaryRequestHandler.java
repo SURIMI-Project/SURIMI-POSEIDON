@@ -42,6 +42,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import lombok.Value;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulator;
@@ -89,12 +90,14 @@ public class GetCatchDispositionSummaryRequestHandler
     final FleetSegmentMapper fleetSegmentMapper = simulation.getComponent(
       FleetSegmentMapper.class
     );
-    record Row(
-      FleetSegment fleetSegment,
-      Species species,
-      Coordinate coordinate,
-      Disposition disposition
-    ) {}
+    @Value
+    final class Row {
+
+      FleetSegment fleetSegment;
+      Species species;
+      Coordinate coordinate;
+      Disposition disposition;
+    }
     // Sorted, so that the response does not depend on the order things were
     // caught in, nor on hash codes
     final Comparator<Coordinate> coordinateOrder =
@@ -155,31 +158,31 @@ public class GetCatchDispositionSummaryRequestHandler
       )
       .collect(
         groupingBy(
-          Row::fleetSegment,
+          Row::getFleetSegment,
           TreeMap::new,
           groupingBy(
-            Row::species,
+            Row::getSpecies,
             TreeMap::new,
             groupingBy(
-              Row::coordinate,
+              Row::getCoordinate,
               () -> new TreeMap<>(coordinateOrder),
               collectingAndThen(toList(), rows -> {
                 final List<Disposition> dispositions = rows
                   .stream()
-                  .map(Row::disposition)
+                  .map(Row::getDisposition)
                   .toList();
                 return new Disposition(
                   dispositions
                     .stream()
-                    .mapToDouble(Disposition::grossCatchInKg)
+                    .mapToDouble(Disposition::getGrossCatchInKg)
                     .sum(),
                   dispositions
                     .stream()
-                    .mapToDouble(Disposition::liveDiscardsInKg)
+                    .mapToDouble(Disposition::getLiveDiscardsInKg)
                     .sum(),
                   dispositions
                     .stream()
-                    .mapToDouble(Disposition::deadDiscardsInKg)
+                    .mapToDouble(Disposition::getDeadDiscardsInKg)
                     .sum()
                 );
               })
@@ -252,9 +255,11 @@ public class GetCatchDispositionSummaryRequestHandler
    * Summed gross catch, live discards, and dead discards for one
    * gear/species/coordinate.
    */
-  record Disposition(
-    double grossCatchInKg,
-    double liveDiscardsInKg,
-    double deadDiscardsInKg
-  ) {}
+  @Value
+  static final class Disposition {
+
+    double grossCatchInKg;
+    double liveDiscardsInKg;
+    double deadDiscardsInKg;
+  }
 }

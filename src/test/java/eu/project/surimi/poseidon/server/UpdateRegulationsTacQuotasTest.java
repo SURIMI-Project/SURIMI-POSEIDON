@@ -43,6 +43,8 @@ import io.grpc.StatusRuntimeException;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.biology.buckets.Bucket;
@@ -510,9 +512,9 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
     for (final QuotaEntry quotaEntry : quotaEntries) {
       regulationsSummary.addTotalAllowableCatches(
         TotalAllowableCatch.newBuilder()
-          .setFleetSegment(toProtoFleetSegment(quotaEntry.fleetSegment()))
-          .setSpecies(toProtoSpecies(quotaEntry.species()))
-          .setCatch(quotaEntry.quotaInKg())
+          .setFleetSegment(toProtoFleetSegment(quotaEntry.getFleetSegment()))
+          .setSpecies(toProtoSpecies(quotaEntry.getSpecies()))
+          .setCatch(quotaEntry.getQuotaInKg())
           .build()
       );
     }
@@ -524,11 +526,14 @@ class UpdateRegulationsTacQuotasTest extends ServiceTest {
       .build();
   }
 
-  private record QuotaEntry(
-    Species species,
-    double quotaInKg,
-    FleetSegment fleetSegment
-  ) {
+  @Value
+  @AllArgsConstructor
+  private static final class QuotaEntry {
+
+    Species species;
+    double quotaInKg;
+    FleetSegment fleetSegment;
+
     private QuotaEntry(final Species species, final double quotaInKg) {
       this(species, quotaInKg, POSEIDON_FLEET_SEGMENT);
     }

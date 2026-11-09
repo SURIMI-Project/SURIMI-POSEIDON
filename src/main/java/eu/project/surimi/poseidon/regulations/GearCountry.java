@@ -22,8 +22,15 @@
 
 package eu.project.surimi.poseidon.regulations;
 
+import lombok.Value;
+
 /**
  * A gear/country pair, used as the key identifying which fleets are restricted
  * from fishing in an MPA.
  */
-public record GearCountry(String gearCode, String countryCode) {}
+@Value
+public final class GearCountry {
+
+  String gearCode;
+  String countryCode;
+}

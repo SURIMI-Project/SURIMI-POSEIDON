@@ -113,7 +113,7 @@ public class UpdateRegulationsRequestHandler
       })
       .filter(quotaDefinition ->
         simulationProperties.overlapsContractFleetSegment(
-          quotaDefinition.fleetSegment()
+          quotaDefinition.getFleetSegment()
         )
       )
       .toList();

@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.sqlite.SQLiteConfig;
 import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.api.LongColumn;
@@ -188,14 +189,14 @@ public final class SqliteDatabase implements EweDatabase {
     final List<Column<?>> columns = declarations
       .stream()
       .<Column<?>>map(declaration ->
-        declaration.type().newColumn(declaration.name())
+        declaration.getType().newColumn(declaration.getName())
       )
       .toList();
     final String query =
       "SELECT " +
       declarations
         .stream()
-        .map(declaration -> quote(declaration.name()))
+        .map(declaration -> quote(declaration.getName()))
         .map(column -> "typeof(" + column + "), " + column)
         .collect(joining(", ")) +
       " FROM " +
@@ -214,7 +215,7 @@ public final class SqliteDatabase implements EweDatabase {
             columns
               .get(col)
               .appendObj(
-                declaration.type().read(resultSet, 2 * col + 2, storageClass)
+                declaration.getType().read(resultSet, 2 * col + 2, storageClass)
               );
           } catch (final IllegalArgumentException e) {
             throw new IllegalArgumentException(
@@ -223,9 +224,9 @@ public final class SqliteDatabase implements EweDatabase {
                 " (stored as " +
                 storageClass +
                 ") of column " +
-                declaration.name() +
+                declaration.getName() +
                 " (declared " +
-                declaration.declaredType() +
+                declaration.getDeclaredType() +
                 ") in row " +
                 row +
                 " of table " +
@@ -242,11 +243,13 @@ public final class SqliteDatabase implements EweDatabase {
   }
 
   /** A column's name and declared type, from {@code pragma_table_info}. */
-  private record ColumnDeclaration(
-    String name,
-    String declaredType,
-    ColumnType type
-  ) {}
+  @Value
+  private static final class ColumnDeclaration {
+
+    String name;
+    String declaredType;
+    ColumnType type;
+  }
 
   /**
    * The Tablesaw column type of a SQLite column, and how to read its values.

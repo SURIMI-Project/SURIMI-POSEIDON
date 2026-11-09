@@ -23,9 +23,15 @@
 package eu.project.surimi.poseidon.regulations;
 
 import java.time.LocalDate;
+import lombok.Value;
 
 /**
  * A date range, inclusive of both ends, during which a port/gear pair is closed
  * to fishing.
  */
-public record PortClosureWindow(LocalDate startDate, LocalDate endDate) {}
+@Value
+public final class PortClosureWindow {
+
+  LocalDate startDate;
+  LocalDate endDate;
+}

@@ -250,19 +250,22 @@ public class TotalAllowableCatchQuotas
     definitions.forEach(definition -> {
       checkNotNull(definition, "TAC definition is required.");
       checkArgument(
-        definition.quotaInKg() >= 0.0,
+        definition.getQuotaInKg() >= 0.0,
         "TAC quota must be non-negative."
       );
-      checkNotNull(definition.fleetSegment(), "TAC fleet segment is required.");
-      checkNotNull(definition.species(), "TAC species is required.");
+      checkNotNull(
+        definition.getFleetSegment(),
+        "TAC fleet segment is required."
+      );
+      checkNotNull(definition.getSpecies(), "TAC species is required.");
       final QuotaKey quotaKey = new QuotaKey(
-        definition.fleetSegment(),
+        definition.getFleetSegment(),
         interval
       );
-      validateNewQuotaDefinition(staged, quotaKey, definition.species());
+      validateNewQuotaDefinition(staged, quotaKey, definition.getSpecies());
       staged
         .computeIfAbsent(quotaKey, __ -> new LinkedHashMap<>())
-        .put(definition.species(), definition.quotaInKg());
+        .put(definition.getSpecies(), definition.getQuotaInKg());
     });
     quotas.clear();
     quotas.putAll(staged);
@@ -463,15 +466,19 @@ public class TotalAllowableCatchQuotas
   /**
    * One quota to set through {@link #setQuotas(Interval, Collection)}.
    *
-   * @param fleetSegment fleet segment to which the quota applies
-   * @param species      quota-species key
-   * @param quotaInKg    allowed biomass in kilograms (must be non-negative)
    */
-  public record QuotaDefinition(
-    FleetSegment fleetSegment,
-    Species species,
-    double quotaInKg
-  ) {}
+  @Value
+  public static final class QuotaDefinition {
+
+    /** Fleet segment to which the quota applies. */
+    FleetSegment fleetSegment;
+
+    /** Quota-species key. */
+    Species species;
+
+    /** Allowed biomass in kilograms (must be non-negative). */
+    double quotaInKg;
+  }
 
   @Value
   private static final class QuotaKey {

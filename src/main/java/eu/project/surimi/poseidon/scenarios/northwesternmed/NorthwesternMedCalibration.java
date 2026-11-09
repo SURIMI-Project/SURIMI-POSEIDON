@@ -128,7 +128,7 @@ public class NorthwesternMedCalibration {
     final var yearsSummary = targetLandings
       .keySet()
       .stream()
-      .collect(summarizingInt(LandingsAccumulator.Key::year));
+      .collect(summarizingInt(LandingsAccumulator.Key::getYear));
 
     final ImmutableMap<String, DoubleRange> catchabilityParameterRanges =
       catchabilityParameterRanges();
@@ -162,9 +162,9 @@ public class NorthwesternMedCalibration {
       )
     );
 
-    System.out.println("Best parameters: " + result.parameters());
-    System.out.println("Best fitness: " + result.fitness());
-    System.out.println("Generations: " + result.generations());
+    System.out.println("Best parameters: " + result.getParameters());
+    System.out.println("Best fitness: " + result.getFitness());
+    System.out.println("Generations: " + result.getGenerations());
   }
 
   /**

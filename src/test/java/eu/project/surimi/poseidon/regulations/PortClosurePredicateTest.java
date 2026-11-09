@@ -162,7 +162,7 @@ class PortClosurePredicateTest {
           Arrays.stream(windows).collect(
             toImmutableSortedMap(
               Comparator.naturalOrder(),
-              window -> Year.of(window.endDate().getYear()),
+              window -> Year.of(window.getEndDate().getYear()),
               ImmutableSet::of,
               (first, second) ->
                 ImmutableSet.<PortClosureWindow>builder()
