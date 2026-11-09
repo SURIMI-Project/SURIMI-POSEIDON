@@ -63,24 +63,15 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 
 ## Code style
 
-Follow the "Code style" section of `POSEIDON/AGENTS.md` (`final` everywhere, lambdas over anonymous
-classes, method references over lambdas, Prettier formatting with comments wrapped by hand at 80
-columns). Scenario classes such as `NorthwesternMedScenario` are the exception: they stay readable
-for people new to Java, with no method references or other clever tricks; safety nets belong in
-tests, not in call-site syntax. Their locals are declared `final var`, so a scenario reads as a
-list of named parts, not a list of types. If a `var` does not compile because Java cannot infer a
-type, the fault lies in the factory helper, not the scenario: fix the helper so its arguments or
-its name fix the type, never by giving the scenario local an explicit type.
+Follow `POSEIDON/AGENTS.md` ("Code style") and `POSEIDON/docs/agents/code-style.md`, including the
+scenario-class conventions, which apply to `NorthwesternMedScenario` and `AnchovyBayScenario`.
 
 `build` runs `spotlessCheck`, which fails on any Java file `spotlessApply` would change: run
 `./gradlew spotlessApply` after editing Java. Compilation and Checkstyle follow POSEIDON's rules
 (see "Commands" in `POSEIDON/AGENTS.md`): `-Werror -Xlint:all,-serial`, and Checkstyle with
 `POSEIDON/config/checkstyle/checkstyle.xml`, which this repo reads from the submodule rather than
-keeping a copy.
-
-The formatting setup and the `checkstyle` version in `libs.versions.toml` are duplicated in
-`POSEIDON/`: change both repos together. `POSEIDON/AGENTS.md` ("Code style") lists the duplicated
-files.
+keeping a copy. The formatting setup and the `checkstyle` version are duplicated in `POSEIDON/`:
+change both repos together (the files are listed in `POSEIDON/docs/agents/code-style.md`).
 
 ## Submodules
 
@@ -100,9 +91,8 @@ After cloning or pulling: `git submodule update --init --recursive`.
 
 ## Merging
 
-Merge branches into `main` by fast-forward only (`git merge --ff-only`), never with a merge commit.
-If `main` has moved on, rebase the branch onto it first. The same holds in the `POSEIDON`
-submodule.
+Merge into `main` as `POSEIDON/AGENTS.md` ("Merging") says: fast-forward only, never a merge
+commit. The same holds in the `POSEIDON` submodule.
 
 ## Licensing
 
