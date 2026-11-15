@@ -44,7 +44,7 @@ import static uk.ac.ox.poseidon.core.utils.Factories.*;
 import static uk.ac.ox.poseidon.fishing.catches.Factories.catchCategory;
 import static uk.ac.ox.poseidon.fishing.catches.Factories.uniformCatchCategoriser;
 import static uk.ac.ox.poseidon.fishing.catches.disposition.Factories.*;
-import static uk.ac.ox.poseidon.fishing.choices.Factories.destinationAt;
+import static uk.ac.ox.poseidon.fishing.choices.Factories.destinationAtCoordinate;
 import static uk.ac.ox.poseidon.fishing.fields.Factories.vesselField;
 import static uk.ac.ox.poseidon.fishing.fisheables.Factories.currentCellFisheable;
 import static uk.ac.ox.poseidon.fishing.market.Factories.*;
@@ -265,7 +265,7 @@ public class MinimalScenario implements Supplier<Scenario> {
     // Each vessel fishes at its favourite spot, a coordinate of the register
     final var behaviour = behaviour(
       fishingTrip(
-        destinationAt(
+        destinationAtCoordinate(
           modelGrid,
           doubleAttribute("fav_lon"),
           doubleAttribute("fav_lat")
