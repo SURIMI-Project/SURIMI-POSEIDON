@@ -780,7 +780,7 @@ components:
                                     catchCategoriser: *id029
                                     currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                       }
-                              randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                              rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                                 }
                             explorer: !!uk.ac.ox.poseidon.fishing.choices.NeighbourhoodGridExplorerFactory
                               cellPredicate: *id030
@@ -788,15 +788,15 @@ components:
                               neighbourhoodSize: !!uk.ac.ox.poseidon.core.providers.ShiftedIntFactory
                                 delegate: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonFactory
                                   mean: 1.0
-                                  randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                                  rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                                     }
                                 shift: 1
                               pathFinder: *id022
-                              randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                              rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                                 }
                               searchCentre: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentCellFactory {
                                 }
-                            randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                            rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                               }
                     - !!uk.ac.ox.poseidon.fishing.tasks.travel.SetDestinationToOriginFactory {
                       }
@@ -838,7 +838,7 @@ components:
                             subject: *id034
                           - *id035
                         optionValues: *id036
-                        randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                        rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                           }
                       explorer: !!uk.ac.ox.poseidon.fishing.choices.NeighbourhoodGridExplorerFactory
                         cellPredicate: *id037
@@ -846,19 +846,19 @@ components:
                         neighbourhoodSize: !!uk.ac.ox.poseidon.core.providers.ShiftedIntFactory
                           delegate: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonFactory
                             mean: 1.0
-                            randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                            rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                               }
                           shift: 1
                         pathFinder: *id022
-                        randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                        rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                           }
                         searchCentre: !!uk.ac.ox.poseidon.fishing.choices.BestKnownOptionFactory
                           fallback: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentCellFactory {
                             }
                           optionValues: *id036
-                          randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                          rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                             }
-                      randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                      rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                         }
                     tripCosts:
                     - !!uk.ac.ox.poseidon.fishing.vessels.values.TimeAtSeaCostFactory
@@ -1056,7 +1056,7 @@ components:
                                     - *id045
                                     - *id016
                               optionValues: *id036
-                              randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                              rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                                 }
                             explorer: !!uk.ac.ox.poseidon.fishing.choices.NeighbourhoodGridExplorerFactory
                               cellPredicate: *id046
@@ -1064,15 +1064,15 @@ components:
                               neighbourhoodSize: !!uk.ac.ox.poseidon.core.providers.ShiftedIntFactory
                                 delegate: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonFactory
                                   mean: 1.0
-                                  randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                                  rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                                     }
                                 shift: 1
                               pathFinder: *id022
-                              randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                              rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                                 }
                               searchCentre: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentCellFactory {
                                 }
-                            randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                            rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                               }
                     - !!uk.ac.ox.poseidon.fishing.tasks.travel.SetDestinationToOriginFactory {
                       }
@@ -1108,7 +1108,7 @@ components:
                             subject: *id048
                           - *id049
                         optionValues: *id036
-                        randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                        rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                           }
                       explorer: !!uk.ac.ox.poseidon.fishing.choices.NeighbourhoodGridExplorerFactory
                         cellPredicate: *id050
@@ -1116,19 +1116,19 @@ components:
                         neighbourhoodSize: !!uk.ac.ox.poseidon.core.providers.ShiftedIntFactory
                           delegate: !!uk.ac.ox.poseidon.core.providers.random.RandomPoissonFactory
                             mean: 1.0
-                            randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                            rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                               }
                           shift: 1
                         pathFinder: *id022
-                        randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                        rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                           }
                         searchCentre: !!uk.ac.ox.poseidon.fishing.choices.BestKnownOptionFactory
                           fallback: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentCellFactory {
                             }
                           optionValues: *id036
-                          randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                          rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                             }
-                      randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+                      rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
                         }
                     tripCosts:
                     - !!uk.ac.ox.poseidon.fishing.vessels.values.TimeAtSeaCostFactory
@@ -1216,7 +1216,7 @@ components:
     }
     maximumCliqueSize: 5
     network: *id055
-    randomNumberGenerator: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
+    rng: !!uk.ac.ox.poseidon.core.RandomNumberGeneratorFactory {
       }
   fishingEventSharer: *id056
   fixedCostCollector: !!uk.ac.ox.poseidon.core.schedule.ScheduledRepeatingFromStartFactory
