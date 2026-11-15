@@ -13,7 +13,9 @@ For agents, the rule is strict:
 To change the scenario, edit `NorthwesternMedScenario.java` (or the factories it composes) and
 regenerate, committing the YAML with the Java change. The committed YAML must come from actually
 running the writer task — a hand edit or scripted find-and-replace by an agent is never
-acceptable, however safe it looks or however well it matches a regenerated copy.
+acceptable, however safe it looks or however well it matches a regenerated copy. Commit whatever
+the writer task produces: the YAML needs no review, and any drift from earlier changes goes into
+the same commit.
 
 `scenarios/anchovy_bay.yaml` follows the same rules, with `AnchovyBayScenario.java` and
 `./gradlew writeAnchovyBayScenario`. It is local only for now: `stageForImage` does not stage it,
@@ -24,19 +26,3 @@ and the server does not serve it.
 Under `src/main/java/eu/project/surimi/poseidon/scenarios/`: `minimal/` holds the scenario the
 tests use, `northwesternmed/` the production scenario (with its UI and calibration entry point), and
 `anchovybay/` the scenario built from an EwE model (local only, with a UI).
-
-## Reviewing a regenerated YAML
-
-One added or removed anchor renumbers every later `&idNNN` / `*idNNN`, so the raw diff looks huge.
-Normalise before reading it:
-
-```
-diff <(git show HEAD:scenarios/northwestern_med.yaml | sed -E 's/id[0-9]+/idN/g') \
-     <(sed -E 's/id[0-9]+/idN/g' scenarios/northwestern_med.yaml)
-```
-
-If the regenerated diff is wider than your change (the committed YAML had drifted from what the
-Java produces), stop and tell the user; how to resolve the drift is their call. One clean way to
-separate the drift from your own change: stash your Java changes, regenerate and commit the drift
-alone, then unstash, regenerate and commit your change — each commit then comes from a real writer
-run.
