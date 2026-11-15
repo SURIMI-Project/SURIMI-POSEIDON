@@ -137,8 +137,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
   public static final LocalDate START_DATE = LocalDate.of(2013, 1, 1);
   static final Path INPUT_PATH = Path.of("inputs", "northwestern_med");
-  private static final double OWN_LEARNING_ALPHA = 0.5;
-  private static final double SOCIAL_LEARNING_ALPHA = 0.2;
+  private static final double FIRST_HAND_LEARNING_ALPHA = 0.5;
+  private static final double SECOND_HAND_LEARNING_ALPHA = 0.2;
   private static final int MAXIMUM_CLIQUE_SIZE = 5;
   private static final double PURSE_SEINER_EXPLORATION_PROBABILITY = 0.2;
   private static final double BOTTOM_TRAWLER_EXPLORATION_PROBABILITY = 0.2;
@@ -515,19 +515,19 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var hold = vesselComponent(infiniteBiomassHold(catchCategoriser));
 
-    // One memory per vessel, keyed by gear code: what the vessel learns from
-    // its fishing operations and what it decides from must be this same
-    // instance.
-    final var vesselMemory = catchMemoryBy(
+    // One memory per vessel, partitioned by the gear of the fishing event or
+    // of the reading vessel: what the vessel learns from its fishing
+    // operations and what it decides from must be this same instance.
+    final var catchMemory = catchesByCellPartitionedBy(
       stringAttribute("main_fishing_gear")
     );
 
-    final var optionValues = memoryBasedOptionValues(
-      vesselMemory,
-      netValuation(
-        homePortCatchValuation(catchCategoriser),
-        travelCost(routeFunction, timeCost(hourlyCost))
-      )
+    final var cellValues = netOptionValues(
+      memoryBasedOptionValues(
+        catchMemory,
+        homePortCatchValuation(catchCategoriser)
+      ),
+      travelCost(routeFunction, timeCost(hourlyCost))
     );
 
     final var fleetSegmentMapper = fleetSegmentMapper(
@@ -575,7 +575,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     // Purse seiners must be back in port by the first purse seiner return time
     // after they depart: at departure, the trip would depart now.
-    final var purseSeinerFishingCellAtDepartureChecker = allOf(
+    final var cellEligibilityCriteriaForPurseSeinerAtDeparture = allOf(
       condition(
         purseSeinerFishAndReturnDurationFunction,
         lessThan(durationUntil(nextOccurrenceOf(purseSeinerReturnTime)))
@@ -597,7 +597,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     // At sea, a vessel does not fish the same cell twice in a trip. Tested
     // first, before the checks that need a path.
-    final var purseSeinerFishingCellAtSeaChecker = allOf(
+    final var cellEligibilityCriteriaForPurseSeinerAtSea = allOf(
       not(cellWasFishedThisTrip()),
       purseSeinerFishAndReturnInTime,
       purseSeinerFishingCellLegalityChecker
@@ -605,7 +605,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     // Bottom trawlers must be back in port within their maximum trip duration
     // of departing: at departure, that is the whole of it.
-    final var bottomTrawlerFishingCellAtDepartureChecker = allOf(
+    final var cellEligibilityCriteriaForBottomTrawlerAtDeparture = allOf(
       condition(
         bottomTrawlerFishAndReturnDurationFunction,
         lessThan(bottomTrawlerMaximumTripDuration)
@@ -627,7 +627,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    final var bottomTrawlerFishingCellAtSeaChecker = allOf(
+    final var cellEligibilityCriteriaForBottomTrawlerAtSea = allOf(
       not(cellWasFishedThisTrip()),
       bottomTrawlerFishAndReturnInTime,
       bottomTrawlerFishingCellLegalityChecker
@@ -674,55 +674,58 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       durationUntil(nextOccurrenceOf(time(7, 0, 0)))
     );
 
-    final var purseSeinerFirstDestination = epsilonGreedyDestination(
+    final var purseSeinerFirstDestination = epsilonGreedyPicker(
       PURSE_SEINER_EXPLORATION_PROBABILITY,
-      neighbourhoodGridExplorer(
+      nearbyCellPicker(
         pathFinder,
-        purseSeinerFishingCellAtDepartureChecker,
+        cellEligibilityCriteriaForPurseSeinerAtDeparture,
         shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
         MAXIMUM_EXPLORATION_WIDENING,
-        bestKnownOption(optionValues, currentCell())
+        fallbackPicker(greedyPicker(cellValues), some(currentCell()))
       ),
-      greedyPicker(optionValues, purseSeinerFishingCellAtDepartureChecker)
+      greedyPicker(cellValues, cellEligibilityCriteriaForPurseSeinerAtDeparture)
     );
 
     final var chooseNextPurseSeinerDestination = chooseNextDestination(
-      epsilonGreedyDestination(
+      epsilonGreedyPicker(
         PURSE_SEINER_EXPLORATION_PROBABILITY,
-        neighbourhoodGridExplorer(
+        nearbyCellPicker(
           pathFinder,
-          purseSeinerFishingCellAtSeaChecker,
+          cellEligibilityCriteriaForPurseSeinerAtSea,
           shiftedInt(randomPoisson(PURSE_SEINER_MEAN_EXPLORATION_RADIUS), 1),
           MAXIMUM_EXPLORATION_WIDENING,
-          currentCell()
+          some(currentCell())
         ),
-        greedyPicker(optionValues, purseSeinerFishingCellAtSeaChecker)
+        greedyPicker(cellValues, cellEligibilityCriteriaForPurseSeinerAtSea)
       )
     );
 
-    final var bottomTrawlerFirstDestination = epsilonGreedyDestination(
+    final var bottomTrawlerFirstDestination = epsilonGreedyPicker(
       BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
-      neighbourhoodGridExplorer(
+      nearbyCellPicker(
         pathFinder,
-        bottomTrawlerFishingCellAtDepartureChecker,
+        cellEligibilityCriteriaForBottomTrawlerAtDeparture,
         shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
         MAXIMUM_EXPLORATION_WIDENING,
-        bestKnownOption(optionValues, currentCell())
+        fallbackPicker(greedyPicker(cellValues), some(currentCell()))
       ),
-      greedyPicker(optionValues, bottomTrawlerFishingCellAtDepartureChecker)
+      greedyPicker(
+        cellValues,
+        cellEligibilityCriteriaForBottomTrawlerAtDeparture
+      )
     );
 
     final var chooseNextBottomTrawlerDestination = chooseNextDestination(
-      epsilonGreedyDestination(
+      epsilonGreedyPicker(
         BOTTOM_TRAWLER_EXPLORATION_PROBABILITY,
-        neighbourhoodGridExplorer(
+        nearbyCellPicker(
           pathFinder,
-          bottomTrawlerFishingCellAtSeaChecker,
+          cellEligibilityCriteriaForBottomTrawlerAtSea,
           shiftedInt(randomPoisson(BOTTOM_TRAWLER_MEAN_EXPLORATION_RADIUS), 1),
           MAXIMUM_EXPLORATION_WIDENING,
-          currentCell()
+          some(currentCell())
         ),
-        greedyPicker(optionValues, bottomTrawlerFishingCellAtSeaChecker)
+        greedyPicker(cellValues, cellEligibilityCriteriaForBottomTrawlerAtSea)
       )
     );
 
@@ -888,27 +891,29 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       ),
       MAXIMUM_CLIQUE_SIZE
     );
-    final var fishingEventSharer = fishingEventSharer(socialNetwork);
+    final var fishingActionSharer = fishingActionSharer(socialNetwork);
 
     // What a vessel learns from its own fishing and from what its friends
     // share, into its memory for the gear it fished with
     final var ownCatchRecorder = vesselComponent(
       vesselEventListener(
-        fishingEventRecorder(
-          modelGrid,
-          vesselMemory,
-          exponentialMovingAverageOfBuckets(OWN_LEARNING_ALPHA)
+        fishingActionRecorder(
+          fishingCell(),
+          retainedCatch(),
+          catchMemory,
+          exponentialMovingAverageOfBuckets(FIRST_HAND_LEARNING_ALPHA)
         )
       )
     );
     final var sharedCatchRecorder = vesselComponent(
-      sharedFishingEventListener(
-        fishingEventRecorder(
-          modelGrid,
-          vesselMemory,
-          exponentialMovingAverageOfBuckets(SOCIAL_LEARNING_ALPHA)
+      sharedFishingActionListener(
+        fishingActionRecorder(
+          fishingCell(),
+          retainedCatch(),
+          catchMemory,
+          exponentialMovingAverageOfBuckets(SECOND_HAND_LEARNING_ALPHA)
         ),
-        fishingEventSharer
+        fishingActionSharer
       )
     );
 
@@ -969,7 +974,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       .component("vesselRegister", vesselRegister)
       .component("socialNetwork", socialNetwork)
       .component("cliqueDynamics", cliqueDynamics)
-      .component("fishingEventSharer", fishingEventSharer)
+      .component("fishingActionSharer", fishingActionSharer)
       .component("fixedCostCollector", fixedCostCollector)
       .component("fishingActionAccumulator", fishingActionAccumulator)
       .component("biomassSaleAccumulator", biomassSaleAccumulator)
