@@ -49,7 +49,7 @@ import uk.ac.ox.poseidon.core.events.EventAccumulator;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.fishing.market.BiomassSaleAccumulator;
 import uk.ac.ox.poseidon.fishing.market.Sale;
-import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingActionEvent;
 import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.geography.Coordinate;
 
@@ -110,9 +110,8 @@ public class SimulateStepBoundariesTest extends ServiceTest {
       MONTH
     );
     final EventAccumulator<Sale> allSales = new EventAccumulator<>(Sale.class);
-    final EventAccumulator<FishingEvent> allCatches = new EventAccumulator<>(
-      FishingEvent.class
-    );
+    final EventAccumulator<FishingActionEvent> allCatches =
+      new EventAccumulator<>(FishingActionEvent.class);
     simulation.getEventManager().addListener(allSales);
     simulation.getEventManager().addListener(allCatches);
 

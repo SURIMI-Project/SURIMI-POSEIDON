@@ -42,7 +42,7 @@ import org.joda.money.Money;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.events.Listener;
 import uk.ac.ox.poseidon.fishing.social.SocialNetwork;
-import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingActionEvent;
 import uk.ac.ox.poseidon.fishing.trips.FishingTripEndEvent;
 import uk.ac.ox.poseidon.fishing.trips.FishingTripStartEvent;
 import uk.ac.ox.poseidon.fishing.vessels.Vessel;
@@ -188,7 +188,7 @@ public final class NorthwesternMedRunSummary {
       })
     );
     simulation.getEventManager().addListener(
-      listener(FishingEvent.class, event -> {
+      listener(FishingActionEvent.class, event -> {
         final Vessel vessel = event.getAction().getAgent();
         fishingEvents++;
         fishingEventsThisTrip.merge(vessel, 1, Integer::sum);

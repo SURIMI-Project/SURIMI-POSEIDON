@@ -56,7 +56,7 @@ import uk.ac.ox.poseidon.regulations.Regulations;
  * and species.
  * <p>
  * This regulation consumes
- * {@link uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent}s and accumulates
+ * {@link uk.ac.ox.poseidon.fishing.tasks.fishing.FishingActionEvent}s and accumulates
  * caught biomass per fleet-quota interval, where a fleet-quota interval is a
  * fleet segment plus an interval. Fishing is permitted unless a requested
  * fishing action overlaps a closed portion of at least one fleet-quota interval
@@ -70,7 +70,7 @@ import uk.ac.ox.poseidon.regulations.Regulations;
  * <ul>
  * <li>TAC accounting is limited to fleet segment, species, and time. Area and
  * stock dimensions are intentionally not modelled here.</li>
- * <li>{@link uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent} is the
+ * <li>{@link uk.ac.ox.poseidon.fishing.tasks.fishing.FishingActionEvent} is the
  * accounting trigger. Accumulated catches from the
  * {@link FishingEventAccumulator} are processed during the
  * {@link #step(SimState)} call.</li>

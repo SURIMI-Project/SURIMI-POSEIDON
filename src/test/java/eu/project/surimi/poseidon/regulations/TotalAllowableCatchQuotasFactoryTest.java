@@ -48,7 +48,7 @@ import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.core.SimulationScope;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.regulations.actions.TemporalFishingAction;
-import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingActionEvent;
 import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingOutcome;
 
 class TotalAllowableCatchQuotasFactoryTest {
@@ -104,7 +104,7 @@ class TotalAllowableCatchQuotasFactoryTest {
     simulation
       .getEventManager()
       .broadcast(
-        new FishingEvent(
+        new FishingActionEvent(
           action,
           new FishingOutcome(Bucket.of(cod, 100.0), null)
         )

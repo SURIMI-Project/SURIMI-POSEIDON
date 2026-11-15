@@ -50,7 +50,7 @@ import uk.ac.ox.poseidon.core.functions.IntervalLabelFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.regulations.actions.TemporalFishingAction;
-import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingActionEvent;
 import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEventAccumulator;
 import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingOutcome;
 
@@ -79,7 +79,7 @@ class TotalAllowableCatchQuotasTest {
   private TotalAllowableCatchQuotas tac;
   private Simulation simulation;
   private TemporalSchedule temporalSchedule;
-  private List<FishingEvent> eventList;
+  private List<FishingActionEvent> eventList;
 
   @BeforeEach
   void setUp() {
@@ -123,7 +123,7 @@ class TotalAllowableCatchQuotasTest {
       Bucket.of(species, weightInKg),
       null
     );
-    eventList.add(new FishingEvent(action, outcome));
+    eventList.add(new FishingActionEvent(action, outcome));
   }
 
   @Test
@@ -378,7 +378,7 @@ class TotalAllowableCatchQuotasTest {
       Bucket.of(cod, 100.0),
       null
     );
-    final FishingEvent event = new FishingEvent(action, outcome);
+    final FishingActionEvent event = new FishingActionEvent(action, outcome);
     when(secondAccumulator.getEvents()).thenAnswer(__ -> Stream.of(event));
 
     when(temporalSchedule.getDateTime()).thenReturn(end);

@@ -46,7 +46,7 @@ import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
-import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingEvent;
+import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingActionEvent;
 import uk.ac.ox.poseidon.fishing.tasks.fishing.FishingOutcome;
 
 class GetFishingActivityTest extends ServiceTest {
@@ -332,7 +332,9 @@ class GetFishingActivityTest extends ServiceTest {
       Bucket.of(species, biomassInKg),
       null
     );
-    simulation.getEventManager().broadcast(new FishingEvent(action, outcome));
+    simulation
+      .getEventManager()
+      .broadcast(new FishingActionEvent(action, outcome));
     simulation
       .getTemporalSchedule()
       .stepUntil(simulation, dateTime.plusDays(1));

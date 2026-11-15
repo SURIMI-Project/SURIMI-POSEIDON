@@ -74,7 +74,7 @@ import static uk.ac.ox.poseidon.fishing.money.Factories.moneyFromRow;
 import static uk.ac.ox.poseidon.fishing.regulations.actions.Factories.departNow;
 import static uk.ac.ox.poseidon.fishing.regulations.predicates.Factories.fishingCellLegalityChecker;
 import static uk.ac.ox.poseidon.fishing.social.Factories.*;
-import static uk.ac.ox.poseidon.fishing.tasks.branches.Factories.selectorTask;
+import static uk.ac.ox.poseidon.fishing.tasks.branches.Factories.fallbackTask;
 import static uk.ac.ox.poseidon.fishing.tasks.branches.Factories.sequenceTask;
 import static uk.ac.ox.poseidon.fishing.tasks.decorators.Factories.untilFail;
 import static uk.ac.ox.poseidon.fishing.tasks.destinations.Factories.chooseNextDestination;
@@ -102,7 +102,7 @@ import static uk.ac.ox.poseidon.geography.allocators.Factories.supplierAllocator
 import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
 import static uk.ac.ox.poseidon.geography.grids.Factories.*;
-import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.cellValue;
+import static uk.ac.ox.poseidon.geography.grids.extractors.Factories.gridReading;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathFinder;
 import static uk.ac.ox.poseidon.geography.paths.Factories.pathLengthCalculator;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
@@ -284,15 +284,15 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       ),
       actionCellPredicate(
         modelGrid,
-        condition(cellValue(rockGrid), greaterThan(0.0))
+        condition(gridReading(rockGrid), greaterThan(0.0))
       ),
       actionCellPredicate(
         modelGrid,
-        condition(cellValue(posidoniaGrid), greaterThan(0.0))
+        condition(gridReading(posidoniaGrid), greaterThan(0.0))
       ),
       actionCellPredicate(
         modelGrid,
-        condition(cellValue(cymodoceaGrid), greaterThan(0.0))
+        condition(gridReading(cymodoceaGrid), greaterThan(0.0))
       )
     );
 
@@ -301,7 +301,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         actionCellPredicate(
           modelGrid,
           condition(
-            cellValue(bathymetricGrid),
+            gridReading(bathymetricGrid),
             greaterThan(PURSE_SEINER_MINIMUM_DEPTH_THRESHOLD)
           )
         ),
@@ -314,14 +314,14 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         actionCellPredicate(
           modelGrid,
           condition(
-            cellValue(bathymetricGrid),
+            gridReading(bathymetricGrid),
             greaterThan(BOTTOM_TRAWLER_MINIMUM_DEPTH_THRESHOLD)
           )
         ),
         actionCellPredicate(
           modelGrid,
           condition(
-            cellValue(bathymetricGrid),
+            gridReading(bathymetricGrid),
             lessThan(BOTTOM_TRAWLER_MAXIMUM_DEPTH_THRESHOLD)
           )
         ),
@@ -803,7 +803,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       trip(some(homePort()), travelToTripDestination, dockAtDestination())
     );
 
-    final var purseSeinerBehaviour = selectorTask(
+    final var purseSeinerBehaviour = fallbackTask(
       sequenceTask(
         checkThat(vesselIsDockedAt(homePort())),
         succeedOrWait(
@@ -835,7 +835,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       travelHome
     );
 
-    final var bottomTrawlerBehaviour = selectorTask(
+    final var bottomTrawlerBehaviour = fallbackTask(
       sequenceTask(
         checkThat(vesselIsDockedAt(homePort())),
         succeedOrWait(

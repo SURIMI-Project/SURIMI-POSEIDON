@@ -153,14 +153,14 @@ class MpaClosurePredicateTest {
 
   private static ImmutableMap<String, DoubleGridWrapper> mpaGrids(
     final String mpaId,
-    final double cellValue
+    final double gridReading
   ) {
-    return ImmutableMap.of(mpaId, gridWrapper(cellValue));
+    return ImmutableMap.of(mpaId, gridWrapper(gridReading));
   }
 
-  private static DoubleGridWrapper gridWrapper(final double cellValue) {
+  private static DoubleGridWrapper gridWrapper(final double gridReading) {
     final DoubleGridWrapper grid = mock(DoubleGridWrapper.class);
-    when(grid.getValue(CELL)).thenReturn(cellValue);
+    when(grid.getValue(CELL)).thenReturn(gridReading);
     return grid;
   }
 
