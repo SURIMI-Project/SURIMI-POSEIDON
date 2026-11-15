@@ -447,14 +447,12 @@ components:
     portGrid: *id008
     vesselField: *id013
   vesselSpecification: &id054 !!uk.ac.ox.poseidon.fishing.vessels.VesselSpecificationFactory
-    behaviour: !!uk.ac.ox.poseidon.fishing.vessels.ChosenComponent
-      attributes: [
-        main_fishing_gear
-      ]
-      defaultOutcome: !!uk.ac.ox.poseidon.fishing.vessels.NoComponent {
+    behaviour: !!uk.ac.ox.poseidon.fishing.vessels.VaryingComponent
+      attribute: main_fishing_gear
+      defaultVariant: !!uk.ac.ox.poseidon.fishing.vessels.NoComponent {
         }
-      rows:
-      - outcome: !!uk.ac.ox.poseidon.fishing.vessels.BuildOutcome
+      variants:
+        PS: !!uk.ac.ox.poseidon.fishing.vessels.FactoryVariant
           factory: !!uk.ac.ox.poseidon.fishing.tasks.branches.FallbackTaskFactory
             children:
             - !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
@@ -475,14 +473,12 @@ components:
                             actionFunction: !!uk.ac.ox.poseidon.fishing.regulations.actions.DepartNowActionFunctionFactory
                               currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                 }
-                              gear: &id020 !!uk.ac.ox.poseidon.fishing.vessels.ChosenComponent
-                                attributes: [
-                                  main_fishing_gear
-                                ]
-                                defaultOutcome: !!uk.ac.ox.poseidon.fishing.vessels.NoComponent {
+                              gear: &id020 !!uk.ac.ox.poseidon.fishing.vessels.VaryingComponent
+                                attribute: main_fishing_gear
+                                defaultVariant: !!uk.ac.ox.poseidon.fishing.vessels.NoComponent {
                                   }
-                                rows:
-                                - outcome: !!uk.ac.ox.poseidon.fishing.vessels.BuildOutcome
+                                variants:
+                                  PS: !!uk.ac.ox.poseidon.fishing.vessels.FactoryVariant
                                     factory: !!uk.ac.ox.poseidon.fishing.vessels.gears.IndexedBiomassCatchabilityGearFactory
                                       duration: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                                         object: &id023 !!uk.ac.ox.poseidon.core.time.DurationFactory {
@@ -502,11 +498,7 @@ components:
                                         }
                                         map: *id014
                                       species: *id006
-                                  values: [
-                                    PS
-                                  ]
-                                  
-                                - outcome: !!uk.ac.ox.poseidon.fishing.vessels.BuildOutcome
+                                  OTB: !!uk.ac.ox.poseidon.fishing.vessels.FactoryVariant
                                     factory: !!uk.ac.ox.poseidon.fishing.vessels.gears.IndexedBiomassCatchabilityGearFactory
                                       duration: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                                         object: &id043 !!uk.ac.ox.poseidon.core.time.DurationFactory {
@@ -526,10 +518,6 @@ components:
                                         }
                                         map: *id015
                                       species: *id006
-                                  values: [
-                                    OTB
-                                  ]
-                                  
                             regulations: *id016
                         - !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
                           value: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
@@ -580,14 +568,12 @@ components:
                           destination: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentTripDestinationFactory {
                             }
                           distance: *id017
-                          engine: &id021 !!uk.ac.ox.poseidon.fishing.vessels.ChosenComponent
-                            attributes: [
-                              main_fishing_gear
-                            ]
-                            defaultOutcome: !!uk.ac.ox.poseidon.fishing.vessels.NoComponent {
+                          engine: &id021 !!uk.ac.ox.poseidon.fishing.vessels.VaryingComponent
+                            attribute: main_fishing_gear
+                            defaultVariant: !!uk.ac.ox.poseidon.fishing.vessels.NoComponent {
                               }
-                            rows:
-                            - outcome: !!uk.ac.ox.poseidon.fishing.vessels.BuildOutcome
+                            variants:
+                              PS: !!uk.ac.ox.poseidon.fishing.vessels.FactoryVariant
                                 factory: !!uk.ac.ox.poseidon.fishing.vessels.engines.SimpleEngineFactory
                                   cruisingSpeed: !!uk.ac.ox.poseidon.core.quantities.SpeedFactory {
                                     unitString: kn,
@@ -597,11 +583,7 @@ components:
                                     unitString: l,
                                     value: 0.0
                                   }
-                              values: [
-                                PS
-                              ]
-                              
-                            - outcome: !!uk.ac.ox.poseidon.fishing.vessels.BuildOutcome
+                              OTB: !!uk.ac.ox.poseidon.fishing.vessels.FactoryVariant
                                 factory: !!uk.ac.ox.poseidon.fishing.vessels.engines.SimpleEngineFactory
                                   cruisingSpeed: !!uk.ac.ox.poseidon.core.quantities.SpeedFactory {
                                     unitString: kn,
@@ -611,10 +593,6 @@ components:
                                     unitString: l,
                                     value: 0.0
                                   }
-                              values: [
-                                OTB
-                              ]
-                              
                           eventManager: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentTripEventManagerFactory {
                             }
                           fuelTank: &id019 !!uk.ac.ox.poseidon.fishing.vessels.FactoryComponent
@@ -925,11 +903,7 @@ components:
                     }
                 tripCosts: [
                   ]
-        values: [
-          PS
-        ]
-        
-      - outcome: !!uk.ac.ox.poseidon.fishing.vessels.BuildOutcome
+        OTB: !!uk.ac.ox.poseidon.fishing.vessels.FactoryVariant
           factory: !!uk.ac.ox.poseidon.fishing.tasks.branches.FallbackTaskFactory
             children:
             - !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
@@ -1173,10 +1147,6 @@ components:
                         second: 0
                       }
             - *id051
-        values: [
-          OTB
-        ]
-        
     components:
       hold: *id032
       gear: *id020

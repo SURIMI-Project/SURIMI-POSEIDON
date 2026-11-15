@@ -393,9 +393,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     // Vessels with a gear other than these two have no gear, no engine and no
     // behaviour: they stay in port
-    final var gear = choice(
-      by("main_fishing_gear"),
-      when(PURSE_SEINE_GEAR_CODE).then(
+    final var gear = varyingBy(
+      "main_fishing_gear",
+      none(),
+      when(
+        PURSE_SEINE_GEAR_CODE,
         indexedBiomassCatchabilityGear(
           purseSeineSetDuration,
           species,
@@ -403,32 +405,34 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
           massOf(1, KILOGRAM)
         )
       ),
-      when(BOTTOM_TRAWLER_GEAR_CODE).then(
+      when(
+        BOTTOM_TRAWLER_GEAR_CODE,
         indexedBiomassCatchabilityGear(
           bottomTrawlerSetDuration,
           species,
           mapLookup(speciesProperty("key"), bottomTrawlerCatchabilities, 0.0),
           massOf(1, KILOGRAM)
         )
-      ),
-      otherwise(none())
+      )
     );
 
-    final var engine = choice(
-      by("main_fishing_gear"),
-      when(PURSE_SEINE_GEAR_CODE).then(
+    final var engine = varyingBy(
+      "main_fishing_gear",
+      none(),
+      when(
+        PURSE_SEINE_GEAR_CODE,
         simpleEngine(
           speedOf(PURSE_SEINER_VESSEL_SPEED_IN_KNOTS, KNOT),
           volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
         )
       ),
-      when(BOTTOM_TRAWLER_GEAR_CODE).then(
+      when(
+        BOTTOM_TRAWLER_GEAR_CODE,
         simpleEngine(
           speedOf(BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS, KNOT),
           volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
         )
-      ),
-      otherwise(none())
+      )
     );
 
     final var fuelTank = vesselComponent(infiniteTank());
@@ -867,11 +871,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       travelHome
     );
 
-    final var behaviour = choice(
-      by("main_fishing_gear"),
-      when(PURSE_SEINE_GEAR_CODE).then(purseSeinerBehaviour),
-      when(BOTTOM_TRAWLER_GEAR_CODE).then(bottomTrawlerBehaviour),
-      otherwise(none())
+    final var behaviour = varyingBy(
+      "main_fishing_gear",
+      none(),
+      when(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour),
+      when(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
     );
 
     final var fleet = fleet(vesselField, portGrid, marketGrid);

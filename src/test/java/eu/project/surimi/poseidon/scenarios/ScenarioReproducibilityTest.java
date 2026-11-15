@@ -37,6 +37,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import uk.ac.ox.poseidon.core.Scenario;
 import uk.ac.ox.poseidon.core.Simulation;
+import uk.ac.ox.poseidon.io.ScenarioLoader;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
 /**
@@ -55,6 +56,18 @@ class ScenarioReproducibilityTest {
       "main_fishing_gear",
       Period.ofMonths(2)
     );
+  }
+
+  @Test
+  void localNorthwesternMedYamlGivesTheSameLandingsAsJava() {
+    final Scenario scenario = new LocalNorthwesternMedScenario().get();
+    final Scenario loaded = new ScenarioLoader("eu.project.surimi").load(
+      new ScenarioWriter().write(scenario)
+    );
+
+    assertThat(
+      landings(loaded, "main_fishing_gear", Period.ofMonths(2))
+    ).isEqualTo(landings(scenario, "main_fishing_gear", Period.ofMonths(2)));
   }
 
   @Test

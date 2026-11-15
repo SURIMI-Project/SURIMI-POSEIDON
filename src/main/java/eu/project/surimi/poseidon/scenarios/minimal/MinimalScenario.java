@@ -209,9 +209,10 @@ public class MinimalScenario implements Supplier<Scenario> {
     final var vesselField = vesselField(modelGrid);
     final var pathFinder = pathFinder(bathymetricGrid, portGrid, distance);
 
-    final var gear = choice(
-      by("gear"),
-      when("G1").then(
+    final var gear = varyingBy(
+      "gear",
+      when(
+        "G1",
         fixedBiomassProportionGear(
           0.25,
           massOf(1, KILOGRAM),
@@ -219,7 +220,8 @@ public class MinimalScenario implements Supplier<Scenario> {
           volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
         )
       ),
-      when("G2").then(
+      when(
+        "G2",
         fixedBiomassProportionGear(
           0.5,
           massOf(1, KILOGRAM),
@@ -230,12 +232,14 @@ public class MinimalScenario implements Supplier<Scenario> {
     );
 
     // Each gear's catch is sold under a catch category named after the gear
-    final var hold = choice(
-      by("gear"),
-      when("G1").then(
+    final var hold = varyingBy(
+      "gear",
+      when(
+        "G1",
         infiniteBiomassHold(uniformCatchCategoriser(catchCategory("G1")))
       ),
-      when("G2").then(
+      when(
+        "G2",
         infiniteBiomassHold(uniformCatchCategoriser(catchCategory("G2")))
       )
     );
