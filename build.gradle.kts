@@ -226,6 +226,12 @@ tasks.register("runAnchovyBayGui", JavaExec::class) {
     classpath = sourceSets["main"].runtimeClasspath
 }
 
+tasks.register("runStylisedTrawlGui", JavaExec::class) {
+    dependsOn("classes")
+    mainClass.set("eu.project.surimi.poseidon.scenarios.stylisedtrawl.StylisedTrawlFisheryScenarioWithUI")
+    classpath = sourceSets["main"].runtimeClasspath
+}
+
 val stageForImage =tasks.register<Sync>("stageForImage") {
     val imageDir = layout.buildDirectory.dir("image")
     into(imageDir)

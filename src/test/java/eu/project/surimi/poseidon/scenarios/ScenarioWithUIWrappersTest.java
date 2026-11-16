@@ -30,6 +30,8 @@ import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenarioWithUI;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenarioWithUI;
+import eu.project.surimi.poseidon.scenarios.stylisedtrawl.StylisedTrawlFisheryScenario;
+import eu.project.surimi.poseidon.scenarios.stylisedtrawl.StylisedTrawlFisheryScenarioWithUI;
 import org.junit.jupiter.api.Test;
 
 // The wrappers take the scenario's components by name and type, which only
@@ -56,6 +58,15 @@ class ScenarioWithUIWrappersTest {
     assertThatCode(() ->
       new NorthwesternMedScenarioWithUI(
         new LocalNorthwesternMedScenario().get()
+      )
+    ).doesNotThrowAnyException();
+  }
+
+  @Test
+  void stylisedTrawlFisheryWrapperFindsTheComponentsItPortrays() {
+    assertThatCode(() ->
+      new StylisedTrawlFisheryScenarioWithUI(
+        new StylisedTrawlFisheryScenario().get()
       )
     ).doesNotThrowAnyException();
   }
