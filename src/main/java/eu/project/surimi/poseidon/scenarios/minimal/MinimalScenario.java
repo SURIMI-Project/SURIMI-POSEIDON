@@ -286,11 +286,11 @@ public class MinimalScenario implements Supplier<Scenario> {
         setDestinationToOrigin(),
         travelToTripDestination,
         dockAtDestination(),
-        landCatches(hold, hours(1))
+        landCatches(hold, hours(1), marketGrid)
       )
     );
 
-    final var fleet = fleet(vesselField, portGrid, marketGrid);
+    final var fleet = fleet(vesselField, portGrid);
 
     final var vesselSpecification = vesselSpecification(fleet, behaviour)
       .homePortAttribute("place_of_registration")

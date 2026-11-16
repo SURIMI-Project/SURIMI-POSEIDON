@@ -525,7 +525,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var cellValues = netOptionValues(
       memoryBasedOptionValues(
         catchMemory,
-        homePortCatchValuation(catchCategoriser)
+        homePortCatchValuation(catchCategoriser, marketGrid)
       ),
       travelCost(routeFunction, timeCost(hourlyCost))
     );
@@ -831,7 +831,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
               setDestinationToOrigin(),
               travelToTripDestination,
               dockAtDestination(),
-              landCatches(hold, hours(1))
+              landCatches(hold, hours(1), marketGrid)
             )
           ),
           purseSeinerWaitUntilNextCheckpoint
@@ -863,7 +863,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
               setDestinationToOrigin(),
               travelToTripDestination,
               dockAtDestination(),
-              landCatches(hold, hours(1))
+              landCatches(hold, hours(1), marketGrid)
             )
           ),
           bottomTrawlerWaitUntilNextCheckpoint
@@ -879,7 +879,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       when(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
     );
 
-    final var fleet = fleet(vesselField, portGrid, marketGrid);
+    final var fleet = fleet(vesselField, portGrid);
     final var socialNetwork = socialNetwork(fleet);
     final var cliqueDynamics = cliqueDynamics(
       socialNetwork,
