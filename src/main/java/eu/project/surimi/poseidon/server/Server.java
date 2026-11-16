@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.server;
 
 import static eu.project.surimi.poseidon.server.OpenTelemetryConfiguration.openTelemetry;
+import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.INFO;
 import static java.time.ZoneOffset.UTC;
 
@@ -120,7 +121,7 @@ public class Server {
       );
       grpcServer.awaitTermination();
     } catch (final ParameterException | IOException | InterruptedException e) {
-      System.err.println(e.getMessage());
+      logger.log(ERROR, e.getMessage());
     }
   }
 
