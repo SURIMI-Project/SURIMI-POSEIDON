@@ -194,10 +194,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final Scenario.ScenarioBuilder builder = Scenario.builder();
 
     final var purseSeinerReturnTime = time(6, 30, 0);
-    // A set's typical duration. Fishers can't know how long a given set will
-    // take, so the checks that a set fits (before the return time, within the
-    // trip's length) and is legal plan with this; the gear's sets last this
-    // long too, for now.
+    // How long a set lasts with each gear, for now always, so it is also the
+    // gear's expected duration, which the legality checks plan with. The checks
+    // that a set fits (before the return time, within the trip's length) plan
+    // with it too.
     final var purseSeineSetDuration = hours(1);
     final var bottomTrawlerSetDuration = hours(3);
     final var bottomTrawlerMaximumTripDuration = hours(12);
@@ -547,8 +547,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         gear,
         engine,
         allOf(purseSeinerRegulations, totalAllowableCatchQuotas),
-        pathLengthCalculator,
-        purseSeineSetDuration
+        pathLengthCalculator
       );
 
     final var bottomTrawlerFishingCellLegalityChecker =
@@ -556,8 +555,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         gear,
         engine,
         allOf(bottomTrawlerRegulations, totalAllowableCatchQuotas),
-        pathLengthCalculator,
-        bottomTrawlerSetDuration
+        pathLengthCalculator
       );
 
     // How long it would take to travel to a cell, fish there once, and travel
