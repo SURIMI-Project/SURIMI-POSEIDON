@@ -162,7 +162,7 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
   private static final double DAILY_GROWTH_RATE = 0.02;
   private static final double DIFFERENTIAL_PERCENTAGE_TO_MOVE = 0.05;
   private static final double PERCENTAGE_LIMIT_ON_DAILY_MOVEMENT = 0.05;
-  private static final double CATCHABILITY = 0.01;
+  private static final double CATCHABILITY = 0.0125;
 
   // The demonstration MPA: a rectangle, on cell boundaries, closed to every
   // trawler from MPA_START_DATE on. It spans the whole width of the fished
