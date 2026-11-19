@@ -16,6 +16,16 @@ starting biomass, spread over the water cells as Ecospace spreads it.
   exists, never as a specification. Where EwE has no field for something
   POSEIDON needs, such as life-stage labels, raise it as a design question
   rather than inventing a rule.
+- The `ewe` package serves standalone use only: loading any EwE model on its
+  own, outside SURIMI, with no contract, taking everything it can from the model
+  and leaving the biology to EwE. It never reads or knows about the
+  pre-processing pipeline's files (such as `species.csv` or `ports.csv`) or the
+  contract.
+- SURIMI scenarios never read an EwE model, public or not: the pre-processing
+  pipeline extracts what they need into `inputs/`, and EwE's biomass arrives at
+  runtime through the controller. `AnchovyBayScenario` still reads the model
+  through the `ewe` package for now. It is to become a pipeline-fed scenario
+  like NW Med's, and its model loading a generic scenario of its own.
 - The `ewe` package will move to core POSEIDON, where `inputs/` is not
   available. Its tests use synthetic tables (CSV strings) or small inline
   `.eiixml` files only. Checks that need the Anchovy Bay model go in
