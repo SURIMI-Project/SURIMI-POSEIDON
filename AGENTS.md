@@ -1,46 +1,53 @@
 # AGENTS.md
 
-Guidance for coding agents (Claude Code and others) working in this repository. Longer
-topic-specific docs live in `docs/agents/` — read the relevant one before working in the area it
-covers:
+Guidance for coding agents (Claude Code and others) working in this repository.
+Longer topic-specific docs live in `docs/agents/` — read the relevant one before
+working in the area it covers:
 
-- `docs/agents/scenario-generation.md` — before changing or regenerating a scenario YAML, or
-  reviewing a regenerated one.
-- `docs/agents/protocol-and-contract.md` — before touching a gRPC handler, the contract, or the
-  protocol version.
-- `docs/agents/ewe-models.md` — before touching the `ewe` package or the Anchovy Bay scenario.
+- `docs/agents/scenario-generation.md` — before changing or regenerating a
+  scenario YAML, or reviewing a regenerated one.
+- `docs/agents/protocol-and-contract.md` — before touching a gRPC handler, the
+  contract, or the protocol version.
+- `docs/agents/ewe-models.md` — before touching the `ewe` package or the Anchovy
+  Bay scenario.
 - `docs/agents/testing.md` — before writing or running service tests.
 - `docs/agents/docker-image.md` — before building or pushing the image.
 
 ## What this is
 
-SURIMI-POSEIDON is a gRPC service (Java 25) that wraps the **POSEIDON** agent-based fisheries
-model and exposes it to the SURIMI controller as the `FisheryService` gRPC API. This repo is the
-*service layer*: gRPC handlers, request/response mapping, TAC-quota tracking, and the concrete
-scenarios that get served (Northwestern Mediterranean in production, a minimal scenario for
-tests). The simulation framework itself (agents, biology, regulations engine, YAML scenario
-(de)serialization, GUI) lives in the `POSEIDON/` submodule.
+SURIMI-POSEIDON is a gRPC service (Java 25) that wraps the **POSEIDON**
+agent-based fisheries model and exposes it to the SURIMI controller as the
+`FisheryService` gRPC API. This repo is the _service layer_: gRPC handlers,
+request/response mapping, TAC-quota tracking, and the concrete scenarios that
+get served (Northwestern Mediterranean in production, a minimal scenario for
+tests). The simulation framework itself (agents, biology, regulations engine,
+YAML scenario (de)serialization, GUI) lives in the `POSEIDON/` submodule.
 
 Read before working here:
 
-- `POSEIDON/AGENTS.md` and the `POSEIDON/docs/agents/` docs it lists — before touching code under
-  `POSEIDON/`, and for the Factory/Scenario pattern this repo's scenarios and factories also follow.
+- `POSEIDON/AGENTS.md` and the `POSEIDON/docs/agents/` docs it lists — before
+  touching code under `POSEIDON/`, and for the Factory/Scenario pattern this
+  repo's scenarios and factories also follow.
   `POSEIDON/docs/agents/conceptual-correctness.md` applies here too.
-- `POSEIDON_architecture.md` — gRPC method tables, interceptor stack, error handling, k8s/env
-  config, CI. It is hand-maintained and lags the code; where they disagree, the code wins.
+- `POSEIDON_architecture.md` — gRPC method tables, interceptor stack, error
+  handling, k8s/env config, CI. It is hand-maintained and lags the code; where
+  they disagree, the code wins.
 
 ## Composite build
 
-The root project (`src/main`, `src/test`, package `eu.project.surimi.poseidon`) is a single Gradle
-project that `includeBuild("POSEIDON")`s the submodule, substituting `POSEIDON:<module>` coordinates
-for its subprojects (see `settings.gradle.kts`). Consequences:
+The root project (`src/main`, `src/test`, package `eu.project.surimi.poseidon`)
+is a single Gradle project that `includeBuild("POSEIDON")`s the submodule,
+substituting `POSEIDON:<module>` coordinates for its subprojects (see
+`settings.gradle.kts`). Consequences:
 
 - Root tests run **without a module prefix**: `./gradlew test`.
-- Submodule tests need the included-build prefix from the root: `./gradlew :POSEIDON:core:test`.
-  The `./gradlew :core:test` form in `POSEIDON/AGENTS.md` only works from inside `POSEIDON/`.
-- `./gradlew :POSEIDON:build` from the root runs the submodule's tests but not its SpotBugs,
-  Checkstyle or Spotless checks. For the full check, run `./gradlew build` from inside
-  `POSEIDON/`; a module's `./gradlew :POSEIDON:<module>:build` from the root runs its SpotBugs and
+- Submodule tests need the included-build prefix from the root:
+  `./gradlew :POSEIDON:core:test`. The `./gradlew :core:test` form in
+  `POSEIDON/AGENTS.md` only works from inside `POSEIDON/`.
+- `./gradlew :POSEIDON:build` from the root runs the submodule's tests but not
+  its SpotBugs, Checkstyle or Spotless checks. For the full check, run
+  `./gradlew build` from inside `POSEIDON/`; a module's
+  `./gradlew :POSEIDON:<module>:build` from the root runs its SpotBugs and
   Checkstyle but not Spotless.
 
 ## Commands
@@ -63,39 +70,43 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 
 ## Code style
 
-Follow `POSEIDON/AGENTS.md` ("Code style") and `POSEIDON/docs/agents/code-style.md`, including the
-scenario-class conventions, which apply to `NorthwesternMedScenario` and `AnchovyBayScenario`.
-Hard-wrap Markdown at 80 columns, except headings, URLs, code blocks and tables.
+Follow `POSEIDON/AGENTS.md` ("Code style") and
+`POSEIDON/docs/agents/code-style.md`, including the scenario-class conventions,
+which apply to `NorthwesternMedScenario` and `AnchovyBayScenario`. Hard-wrap
+Markdown at 80 columns, except headings, URLs, code blocks and tables.
 
-Spotless, compilation and Checkstyle follow POSEIDON's rules (see "Build & test commands" in
-`POSEIDON/AGENTS.md`): run `./gradlew spotlessApply` after editing Java. Checkstyle reads
-`POSEIDON/config/checkstyle/checkstyle.xml` from the submodule. The formatting setup and the
-`checkstyle` version are duplicated in `POSEIDON/`: change both repos together (the files are
-listed in `POSEIDON/docs/agents/code-style.md`).
+Spotless, compilation and Checkstyle follow POSEIDON's rules (see "Build & test
+commands" in `POSEIDON/AGENTS.md`): run `./gradlew spotlessApply` after editing
+Java. Checkstyle reads `POSEIDON/config/checkstyle/checkstyle.xml` from the
+submodule. The formatting setup and the `checkstyle` version are duplicated in
+`POSEIDON/`: change both repos together (the files are listed in
+`POSEIDON/docs/agents/code-style.md`).
 
 ## Submodules
 
 Two submodules (`.gitmodules`), each its own repo:
 
 - `POSEIDON/` — framework code, `main` branch of `poseidon-fisheries/POSEIDON`.
-- `inputs/` — scenario data (`SURIMI-Project/SURIMI-POSEIDON_inputs`, `master` branch); large files
-  are in Git LFS.
+- `inputs/` — scenario data (`SURIMI-Project/SURIMI-POSEIDON_inputs`, `master`
+  branch); large files are in Git LFS.
 
 After cloning or pulling: `git submodule update --init --recursive`.
 
-- `M POSEIDON` / `M inputs` in `git status` means the submodule's checked-out commit differs from
-  the recorded pointer, not uncommitted work here. Stage files by path so an unrelated pointer
-  bump doesn't ride along.
-- A change that touches a submodule is two commits: one inside the submodule, then a pointer bump
-  here. Push the submodule commit before pushing a superproject commit that points to it.
+- `M POSEIDON` / `M inputs` in `git status` means the submodule's checked-out
+  commit differs from the recorded pointer, not uncommitted work here. Stage
+  files by path so an unrelated pointer bump doesn't ride along.
+- A change that touches a submodule is two commits: one inside the submodule,
+  then a pointer bump here. Push the submodule commit before pushing a
+  superproject commit that points to it.
 
 ## Merging
 
-Merge into `main` as `POSEIDON/AGENTS.md` ("Merging") says: fast-forward only, never a merge
-commit. The same holds in the `POSEIDON` submodule.
+Merge into `main` as `POSEIDON/AGENTS.md` ("Merging") says: fast-forward only,
+never a merge commit. The same holds in the `POSEIDON` submodule.
 
 ## Licensing
 
-Every source file carries the GNU GPLv3 header (University of Oxford copyright). The year-range
-rule is in `POSEIDON/AGENTS.md` ("Licensing"): end the year range of every file you modify at the
-current year yourself, since `spotlessApply` adds the header to new files but never changes a year.
+Every source file carries the GNU GPLv3 header (University of Oxford copyright).
+The year-range rule is in `POSEIDON/AGENTS.md` ("Licensing"): end the year range
+of every file you modify at the current year yourself, since `spotlessApply`
+adds the header to new files but never changes a year.
