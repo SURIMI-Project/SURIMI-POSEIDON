@@ -6,8 +6,6 @@ build
 
 .jqwik-database
 
-.opencode
-
 # Prettier, installed by `npm install` for the IDE integration
 node_modules/
 
