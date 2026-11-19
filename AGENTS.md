@@ -65,13 +65,13 @@ for its subprojects (see `settings.gradle.kts`). Consequences:
 
 Follow `POSEIDON/AGENTS.md` ("Code style") and `POSEIDON/docs/agents/code-style.md`, including the
 scenario-class conventions, which apply to `NorthwesternMedScenario` and `AnchovyBayScenario`.
+Hard-wrap Markdown at 80 columns, except headings, URLs, code blocks and tables.
 
-`build` runs `spotlessCheck`, which fails on any Java file `spotlessApply` would change: run
-`./gradlew spotlessApply` after editing Java. Compilation and Checkstyle follow POSEIDON's rules
-(see "Commands" in `POSEIDON/AGENTS.md`): `-Werror -Xlint:all,-serial`, and Checkstyle with
-`POSEIDON/config/checkstyle/checkstyle.xml`, which this repo reads from the submodule rather than
-keeping a copy. The formatting setup and the `checkstyle` version are duplicated in `POSEIDON/`:
-change both repos together (the files are listed in `POSEIDON/docs/agents/code-style.md`).
+Spotless, compilation and Checkstyle follow POSEIDON's rules (see "Build & test commands" in
+`POSEIDON/AGENTS.md`): run `./gradlew spotlessApply` after editing Java. Checkstyle reads
+`POSEIDON/config/checkstyle/checkstyle.xml` from the submodule. The formatting setup and the
+`checkstyle` version are duplicated in `POSEIDON/`: change both repos together (the files are
+listed in `POSEIDON/docs/agents/code-style.md`).
 
 ## Submodules
 
@@ -99,8 +99,3 @@ commit. The same holds in the `POSEIDON` submodule.
 Every source file carries the GNU GPLv3 header (University of Oxford copyright). The year-range
 rule is in `POSEIDON/AGENTS.md` ("Licensing"): end the year range of every file you modify at the
 current year yourself, since `spotlessApply` adds the header to new files but never changes a year.
-
-## Design docs
-
-Design and spec documents (e.g. under `docs/superpowers/specs/`) stay uncommitted: write them and
-leave them for the user to commit, even when a skill's process says to commit.
