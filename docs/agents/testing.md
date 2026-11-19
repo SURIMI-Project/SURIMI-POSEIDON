@@ -5,6 +5,11 @@
 - The `test` task's JVM args in `build.gradle.kts` are load-bearing: the Mockito
   agent (`MockitoAgentArgumentProvider`) and the flags protobuf/Netty need under
   JDK 25. Keep them when editing the build.
+- If `./gradlew test` fails before any test runs, with "Failed to exec spawn
+  helper" from the test executor, rerun it with
+  `JAVA_TOOL_OPTIONS=-Djdk.lang.Process.launchMechanism=FORK` after
+  `./gradlew --stop`. Seen under an agent's sandbox; the JVM could not start the
+  test process.
 - `*ServiceTest` classes extend `ServiceTest`, which starts a real in-process
   gRPC server (full interceptor chain) and talks to it through a stub. Useful
   helpers:
