@@ -2,91 +2,104 @@
 
 ## Overview
 
-POSEIDON is an **agent-based model (ABM) of fisheries** developed at the University of Oxford. It
-is part of the **SURIMI** model ensemble and acts as the fleet / fishery simulation service. POSEIDON is responsible for
-simulating the behaviour of fishing vessels, their catches, earnings, and regulatory compliance
-over time.
+POSEIDON is an **agent-based model (ABM) of fisheries** developed at the
+University of Oxford. It is part of the **SURIMI** model ensemble and acts as
+the fleet / fishery simulation service. POSEIDON is responsible for simulating
+the behaviour of fishing vessels, their catches, earnings, and regulatory
+compliance over time.
 
-Within SURIMI, POSEIDON communicates exclusively with the **SURIMI controller** over **gRPC**.
-It never contacts other SURIMI models directly. The controller drives the simulation lifecycle and
-exchanges fisheries state (biomass, regulations, prices, catch data, sales) at each time step.
+Within SURIMI, POSEIDON communicates exclusively with the **SURIMI controller**
+over **gRPC**. It never contacts other SURIMI models directly. The controller
+drives the simulation lifecycle and exchanges fisheries state (biomass,
+regulations, prices, catch data, sales) at each time step.
 
 The service is written in **Java 25** and developed with **IntelliJ IDEA**.
 
-The code is licensed under the **GNU General Public License v3 (GPL-3.0-or-later)**. Every source file carries the standard GPL-3 header attributing copyright to the University of Oxford.
+The code is licensed under the **GNU General Public License v3
+(GPL-3.0-or-later)**. Every source file carries the standard GPL-3 header
+attributing copyright to the University of Oxford.
 
 ### Build outputs
 
-| Artifact | Gradle task | Description |
-|----------|-------------|-------------|
-| `SURIMI-POSEIDON.jar` | `jar` (via `build`) | Executable JAR containing the compiled service code. Runtime dependencies are placed alongside it in `build/image/lib/` by the `stageForImage` task. |
-| `ghcr.io/surimi-project/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties` and the `scenarios/northwestern_med.yaml` scenario file, but no input data (see [S3 bucket](#s3-bucket)). This is the deployable artefact pushed to GHCR by CI. |
-| `scenarios/northwestern_med.yaml` | `writeNorthwesternMedScenario` | Serialised YAML representation of the `NorthwesternMedScenario`. Generated from Java code and committed to this repo (users may edit it by hand for local runs); also regenerated at Docker image build time to ensure consistency. The data files it references (`inputs/northwestern_med/`) are produced upstream by the SURIMI data-preprocessing pipelines. |
-| Javadoc site | `javadoc` | API documentation, published to GitHub Pages by CI. |
+| Artifact                                       | Gradle task                            | Description                                                                                                                                                                                                                                                                                                                                                     |
+| ---------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SURIMI-POSEIDON.jar`                          | `jar` (via `build`)                    | Executable JAR containing the compiled service code. Runtime dependencies are placed alongside it in `build/image/lib/` by the `stageForImage` task.                                                                                                                                                                                                            |
+| `ghcr.io/surimi-project/surimiposeidon:latest` | `buildDockerImage` / `pushDockerImage` | Docker image based on `eclipse-temurin:25-jre`. Bundles the JAR, all runtime dependencies, `logging.properties` and the `scenarios/northwestern_med.yaml` scenario file, but no input data (see [S3 bucket](#s3-bucket)). This is the deployable artefact pushed to GHCR by CI.                                                                                 |
+| `scenarios/northwestern_med.yaml`              | `writeNorthwesternMedScenario`         | Serialised YAML representation of the `NorthwesternMedScenario`. Generated from Java code and committed to this repo (users may edit it by hand for local runs); also regenerated at Docker image build time to ensure consistency. The data files it references (`inputs/northwestern_med/`) are produced upstream by the SURIMI data-preprocessing pipelines. |
+| Javadoc site                                   | `javadoc`                              | API documentation, published to GitHub Pages by CI.                                                                                                                                                                                                                                                                                                             |
 
 ---
 
 ## Responsibilities
 
-- Load and hold a configurable fishery **scenario** (e.g., Northwestern Mediterranean).
-- Manage the lifecycle of one or more concurrent **simulation instances**, each identified by a UUID.
-- Honour the **simulation contract** received at initialisation: report only on the species,
-  markets, price categories, and fleet segments it lists, and exchange masses in its mass unit.
-- Advance a simulation by a configurable **time step** (typically one month) on request.
-- Accept updated **biomass grids** from the ecology model (relayed by the controller) and apply
-  them to the internal simulation state.
-- Accept updated **TAC (Total Allowable Catch) quotas** and apply them as fishing regulations.
-- Accept updated **species market prices** and propagate them to the internal market grid.
-- Return **catch-disposition summaries** (gross catch, live discards, dead discards) per contract
-  fleet segment, species, and grid cell.
-- Return **fishing-activity ratios** (the share of a time interval during which TAC regulations
-  allowed fishing) per fleet segment.
-- Return **sales summaries** (quantity and value) per market, contract fleet segment, catch
-  category, and species.
+- Load and hold a configurable fishery **scenario** (e.g., Northwestern
+  Mediterranean).
+- Manage the lifecycle of one or more concurrent **simulation instances**, each
+  identified by a UUID.
+- Honour the **simulation contract** received at initialisation: report only on
+  the species, markets, price categories, and fleet segments it lists, and
+  exchange masses in its mass unit.
+- Advance a simulation by a configurable **time step** (typically one month) on
+  request.
+- Accept updated **biomass grids** from the ecology model (relayed by the
+  controller) and apply them to the internal simulation state.
+- Accept updated **TAC (Total Allowable Catch) quotas** and apply them as
+  fishing regulations.
+- Accept updated **species market prices** and propagate them to the internal
+  market grid.
+- Return **catch-disposition summaries** (gross catch, live discards, dead
+  discards) per contract fleet segment, species, and grid cell.
+- Return **fishing-activity ratios** (the share of a time interval during which
+  TAC regulations allowed fishing) per fleet segment.
+- Return **sales summaries** (quantity and value) per market, contract fleet
+  segment, catch category, and species.
 - Report the implemented **SURIMI protocol version** for compatibility checks.
 
 ---
 
 ## Interfaces
 
-All methods are part of the single `FisheryService` gRPC service (proto package `surimi.v1`).
-POSEIDON acts only as a **gRPC server**; it does not call any other service.
+All methods are part of the single `FisheryService` gRPC service (proto package
+`surimi.v1`). POSEIDON acts only as a **gRPC server**; it does not call any
+other service.
 
 ### Lifecycle messages
 
-| Method | Direction | Description |
-|--------|-----------|-------------|
+| Method                 | Direction             | Description                                                                                                                                                                         |
+| ---------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `InitialiseSimulation` | Controller → POSEIDON | Create and start a new simulation instance from the named scenario and record the simulation contract (see [Simulation contract](#simulation-contract)); returns the simulation ID. |
-| `SimulateStep` | Controller → POSEIDON | Advance the simulation by one configured time step. |
-| `FinaliseSimulation` | Controller → POSEIDON | Gracefully end a simulation and free all resources. |
-| `CancelSimulation` | Controller → POSEIDON | Abruptly drop a simulation reference without calling `finish()`. |
-| `GetProtocolVersion` | Controller → POSEIDON | Return the SURIMI protocol version implemented by this service. |
+| `SimulateStep`         | Controller → POSEIDON | Advance the simulation by one configured time step.                                                                                                                                 |
+| `FinaliseSimulation`   | Controller → POSEIDON | Gracefully end a simulation and free all resources.                                                                                                                                 |
+| `CancelSimulation`     | Controller → POSEIDON | Abruptly drop a simulation reference without calling `finish()`.                                                                                                                    |
+| `GetProtocolVersion`   | Controller → POSEIDON | Return the SURIMI protocol version implemented by this service.                                                                                                                     |
 
 ### Domain messages
 
-| Method | Direction | Description |
-|--------|-----------|-------------|
-| `UpdateBiomass` | Controller → POSEIDON | Overwrite internal biomass grids with values provided by the ecology model. |
-| `UpdateRegulations` | Controller → POSEIDON | Set TAC quotas per fleet segment and species for a given time interval. |
-| `UpdateSpeciesPrices` | Controller → POSEIDON | Update fish prices per market, species, and catch category. |
-| `GetCatchDisposition` | Controller → POSEIDON | Return gross catch, live discards, and dead discards per contract fleet segment/species/cell for a time window. |
-| `GetFishingActivity` | Controller → POSEIDON | Return, per fleet segment with TAC quotas in the interval, the share of the interval during which fishing was permitted. |
-| `GetSales` | Controller → POSEIDON | Return sold quantity and monetary value per market, contract fleet segment, catch category, and species for a time window. |
+| Method                | Direction             | Description                                                                                                                |
+| --------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `UpdateBiomass`       | Controller → POSEIDON | Overwrite internal biomass grids with values provided by the ecology model.                                                |
+| `UpdateRegulations`   | Controller → POSEIDON | Set TAC quotas per fleet segment and species for a given time interval.                                                    |
+| `UpdateSpeciesPrices` | Controller → POSEIDON | Update fish prices per market, species, and catch category.                                                                |
+| `GetCatchDisposition` | Controller → POSEIDON | Return gross catch, live discards, and dead discards per contract fleet segment/species/cell for a time window.            |
+| `GetFishingActivity`  | Controller → POSEIDON | Return, per fleet segment with TAC quotas in the interval, the share of the interval during which fishing was permitted.   |
+| `GetSales`            | Controller → POSEIDON | Return sold quantity and monetary value per market, contract fleet segment, catch category, and species for a time window. |
 
 ### Simulation contract
 
-`InitialiseSimulation` carries the simulation contract: the species, markets, price categories,
-fleet segments, and units that the models in the ensemble exchange information about. POSEIDON
-may model more than the contract lists, but its outputs only ever mention contract items:
+`InitialiseSimulation` carries the simulation contract: the species, markets,
+price categories, fleet segments, and units that the models in the ensemble
+exchange information about. POSEIDON may model more than the contract lists, but
+its outputs only ever mention contract items:
 
-- `GetCatchDisposition` and `GetSales` skip species not in the contract; `GetSales` also skips
-  markets and price categories not in the contract.
-- Fleet segments: POSEIDON only considers contract segments whose `model` is `POSEIDON`. There
-  must be at least one, and no two may overlap (unset segment fields match any value), otherwise
-  `InitialiseSimulation` fails with `INVALID_ARGUMENT`. Each vessel's catches and sales are
-  reported under the contract segment covering it; vessels no segment covers are not reported.
-- Masses (biomass, quotas, catches, sales) are exchanged in the contract's mass unit and converted
-  to and from kilograms internally.
+- `GetCatchDisposition` and `GetSales` skip species not in the contract;
+  `GetSales` also skips markets and price categories not in the contract.
+- Fleet segments: POSEIDON only considers contract segments whose `model` is
+  `POSEIDON`. There must be at least one, and no two may overlap (unset segment
+  fields match any value), otherwise `InitialiseSimulation` fails with
+  `INVALID_ARGUMENT`. Each vessel's catches and sales are reported under the
+  contract segment covering it; vessels no segment covers are not reported.
+- Masses (biomass, quotas, catches, sales) are exchanged in the contract's mass
+  unit and converted to and from kilograms internally.
 
 ---
 
@@ -95,66 +108,85 @@ may model more than the contract lists, but its outputs only ever mention contra
 POSEIDON is built on several interacting theoretical concepts:
 
 **Agent-Based Model (ABM)**  
-Fishing vessels are modelled as autonomous agents. Each vessel independently decides when to
-depart, where to fish, how long to stay at sea, and when to return to port, based on its own
-experience and limited social information.
+Fishing vessels are modelled as autonomous agents. Each vessel independently
+decides when to depart, where to fish, how long to stay at sea, and when to
+return to port, based on its own experience and limited social information.
 
 **Discrete-time, discrete-space simulation**  
-The ocean is represented as a raster grid derived from a bathymetric dataset. The simulation
-advances in configurable time steps (typically monthly). Each grid cell can be an active water
-cell or excluded (land / protected area).
+The ocean is represented as a raster grid derived from a bathymetric dataset.
+The simulation advances in configurable time steps (typically monthly). Each
+grid cell can be an active water cell or excluded (land / protected area).
 
 **Biomass dynamics with carrying capacity**  
-Fish biomass is distributed across the spatial grid up to a per-cell carrying capacity. Biomass
-is treated as a scalar (kg) per species per cell and is updated externally each step by the
-ecology model.
+Fish biomass is distributed across the spatial grid up to a per-cell carrying
+capacity. Biomass is treated as a scalar (kg) per species per cell and is
+updated externally each step by the ecology model.
 
 **Bandit-style destination choice with shared observations**  
-Each vessel remembers the catch it expects in each grid cell it knows, as an exponential moving
-average of the fishing operations made there, so that recent ones count more. Vessels also form
-small, exclusive cliques (at most five vessels) with others of the same home port and gear: each
-fishing operation is passed on to the vessel's partners, which record it in their own memory with
-a lower weight than their own. A cell's value is its expected catch priced at the vessel's home-port market,
-minus the cost of the time needed to sail there and back. On each trip, vessels choose a
-destination by ε-greedy exploration: with probability ε they explore a cell near the best one
-they know; otherwise they go to the most valuable cell they are allowed to fish and can reach
-within their trip limits.
+Each vessel remembers the catch it expects in each grid cell it knows, as an
+exponential moving average of the fishing operations made there, so that recent
+ones count more. Vessels also form small, exclusive cliques (at most five
+vessels) with others of the same home port and gear: each fishing operation is
+passed on to the vessel's partners, which record it in their own memory with a
+lower weight than their own. A cell's value is its expected catch priced at the
+vessel's home-port market, minus the cost of the time needed to sail there and
+back. On each trip, vessels choose a destination by ε-greedy exploration: with
+probability ε they explore a cell near the best one they know; otherwise they go
+to the most valuable cell they are allowed to fish and can reach within their
+trip limits.
 
 **Regulations: Total Allowable Catch (TAC)**  
-TAC quotas are defined per interval, fleet segment, and species, and tracked by a
-`TotalAllowableCatchQuotas` component that accumulates gross catch (landed and discarded). Once
-any species' quota for a fleet segment and interval is reached, fishing is closed for that
-segment until the end of the interval; vessels in a closed segment do not depart. The controller
-sets quotas via `UpdateRegulations` and reads the resulting share of open fishing time via
-`GetFishingActivity`. TACs whose fleet segment overlaps no contract segment (the fisheries
-authority sends every model the TACs of all fleets) are ignored; the rest of a request is
+TAC quotas are defined per interval, fleet segment, and species, and tracked by
+a `TotalAllowableCatchQuotas` component that accumulates gross catch (landed and
+discarded). Once any species' quota for a fleet segment and interval is reached,
+fishing is closed for that segment until the end of the interval; vessels in a
+closed segment do not depart. The controller sets quotas via `UpdateRegulations`
+and reads the resulting share of open fishing time via `GetFishingActivity`.
+TACs whose fleet segment overlaps no contract segment (the fisheries authority
+sends every model the TACs of all fleets) are ignored; the rest of a request is
 registered all or nothing.
 
 **Regulations: spatial and port closures**  
-The Northwestern Mediterranean scenario also forbids fishing in marine protected areas during
-their closed months for the restricted gear/country combinations, and fishing by vessels whose
-home port is closed for their gear during configured closure windows.
+The Northwestern Mediterranean scenario also forbids fishing in marine protected
+areas during their closed months for the restricted gear/country combinations,
+and fishing by vessels whose home port is closed for their gear during
+configured closure windows.
 
 **Gear-specific catchability**  
-Each gear type (e.g., Purse Seine `PS`, Bottom Trawl `OTB`) has a gear-specific catchability
-coefficient per species. Catch is proportional to local biomass and the coefficient. Vessels
-carry infinite holds in the current NW-Med parameterisation.
+Each gear type (e.g., Purse Seine `PS`, Bottom Trawl `OTB`) has a gear-specific
+catchability coefficient per species. Catch is proportional to local biomass and
+the coefficient. Vessels carry infinite holds in the current NW-Med
+parameterisation.
 
 **Discard dynamics**  
-A fraction of the gross catch is discarded, using species- and gear-specific discard ratios. The
-framework distinguishes live from dead discards; the Northwestern Mediterranean scenario
-currently treats all discards as dead.
+A fraction of the gross catch is discarded, using species- and gear-specific
+discard ratios. The framework distinguishes live from dead discards; the
+Northwestern Mediterranean scenario currently treats all discards as dead.
 
 **Market prices and sales accounting**  
-Landed catch is sold at market prices read from a spatially distributed market grid. Revenue is
-recorded in a `BiomassSaleAccumulator`. Prices can be updated at any step via
-`UpdateSpeciesPrices`.
+Landed catch is sold at market prices read from a spatially distributed market
+grid. Revenue is recorded in a `BiomassSaleAccumulator`. Prices can be updated
+at any step via `UpdateSpeciesPrices`.
 
 ---
 
 ## Service architecture
 
-POSEIDON runs as a single-process **gRPC server** that exposes one service (`FisheryService`) on a configurable TCP port. All inbound calls pass through a four-layer interceptor chain — protocol-version trailers, OpenTelemetry tracing, exception enrichment, and request validation — before reaching the business logic. The business logic is organised as a set of independent `RequestHandler` subclasses, each responsible for exactly one gRPC method; they share access to a central `SimulationManager` that maintains a Caffeine cache of live `Simulation` objects keyed by UUID. Each `Simulation` is a self-contained MASON agent-based engine that owns its own biomass grids, TAC quota tracker, market grid, and event accumulators, making concurrent multi-simulation execution safe without inter-simulation state sharing. The service is intentionally stateless with respect to fisheries domain data between steps: biomass and prices are pushed in by the controller each time step and regulations whenever new quotas apply, while catch, fishing-activity, and sales data are pulled out by the controller after each step.
+POSEIDON runs as a single-process **gRPC server** that exposes one service
+(`FisheryService`) on a configurable TCP port. All inbound calls pass through a
+four-layer interceptor chain — protocol-version trailers, OpenTelemetry tracing,
+exception enrichment, and request validation — before reaching the business
+logic. The business logic is organised as a set of independent `RequestHandler`
+subclasses, each responsible for exactly one gRPC method; they share access to a
+central `SimulationManager` that maintains a Caffeine cache of live `Simulation`
+objects keyed by UUID. Each `Simulation` is a self-contained MASON agent-based
+engine that owns its own biomass grids, TAC quota tracker, market grid, and
+event accumulators, making concurrent multi-simulation execution safe without
+inter-simulation state sharing. The service is intentionally stateless with
+respect to fisheries domain data between steps: biomass and prices are pushed in
+by the controller each time step and regulations whenever new quotas apply,
+while catch, fishing-activity, and sales data are pulled out by the controller
+after each step.
 
 ### High-Level Architecture
 
@@ -185,9 +217,10 @@ flowchart TD
     SIM --> ACC2
 ```
 
-**Interceptor stack** (outermost to innermost). `Server.startServer` adds the server-wide
-interceptors in the order exception → telemetry → trailer; gRPC runs server-wide interceptors in
-reverse order of addition, and before per-service ones:
+**Interceptor stack** (outermost to innermost). `Server.startServer` adds the
+server-wide interceptors in the order exception → telemetry → trailer; gRPC runs
+server-wide interceptors in reverse order of addition, and before per-service
+ones:
 
 ```
 TrailerInterceptor         ← appends protocol-version to every response trailer
@@ -241,59 +274,65 @@ sequenceDiagram
 ### Key design decisions / trade-offs
 
 **Multiple concurrent simulations via UUID-keyed cache**  
-`SimulationManager` stores live `Simulation` objects in a Caffeine cache keyed by UUID. This
-allows the controller to run ensemble simulations (e.g., Monte-Carlo runs) in a single service
-instance without restarting the JVM. The trade-off is that each live simulation consumes
-significant heap.
+`SimulationManager` stores live `Simulation` objects in a Caffeine cache keyed
+by UUID. This allows the controller to run ensemble simulations (e.g.,
+Monte-Carlo runs) in a single service instance without restarting the JVM. The
+trade-off is that each live simulation consumes significant heap.
 
 **Lazy, per-scenario-name scenario loading**  
-`InitialiseRequestHandler` keys a `ConcurrentHashMap<String, Scenario>` by the request's
-`scenario_name` field, loading `<scenario-folder>/<scenario_name>.yaml` via `ScenarioLoader` on
-first use (`computeIfAbsent`) and reusing the parsed `Scenario` for every later `Initialise` call
-that names the same scenario. Each call derives a scenario with the request's start date
-(`withStartingDateTime`) and starts it with the request's simulation id, so the global products
-of the parsed scenario are shared by every simulation started from it. Multiple distinct scenarios
-can therefore be live in one server process simultaneously, each parsed from YAML at most once.
+`InitialiseRequestHandler` keys a `ConcurrentHashMap<String, Scenario>` by the
+request's `scenario_name` field, loading
+`<scenario-folder>/<scenario_name>.yaml` via `ScenarioLoader` on first use
+(`computeIfAbsent`) and reusing the parsed `Scenario` for every later
+`Initialise` call that names the same scenario. Each call derives a scenario
+with the request's start date (`withStartingDateTime`) and starts it with the
+request's simulation id, so the global products of the parsed scenario are
+shared by every simulation started from it. Multiple distinct scenarios can
+therefore be live in one server process simultaneously, each parsed from YAML at
+most once.
 
 **Biomass updates are externally driven**  
-POSEIDON does not perform its own biomass growth calculations. It relies on the controller to
-push updated biomass grids each step (obtained from a dedicated ecology model). This clean
-separation lets each model focus on its domain.
+POSEIDON does not perform its own biomass growth calculations. It relies on the
+controller to push updated biomass grids each step (obtained from a dedicated
+ecology model). This clean separation lets each model focus on its domain.
 
 **Protocol version embedded in every response trailer**  
-The `TrailerInterceptor` adds a `protocol-version` metadata entry to all responses. The
-controller can detect incompatibilities without an explicit handshake call.
+The `TrailerInterceptor` adds a `protocol-version` metadata entry to all
+responses. The controller can detect incompatibilities without an explicit
+handshake call.
 
 **Outputs restricted to the contract**  
-POSEIDON scenarios may model more species and fleets than the ensemble exchanges information
-about. Rather than requiring scenario and contract to match exactly, outputs are filtered to the
-contract and vessels are reported under the contract fleet segment covering them, so a scenario
-can be reused under different contracts.
+POSEIDON scenarios may model more species and fleets than the ensemble exchanges
+information about. Rather than requiring scenario and contract to match exactly,
+outputs are filtered to the contract and vessels are reported under the contract
+fleet segment covering them, so a scenario can be reused under different
+contracts.
 
 **Request validation at the gRPC boundary**  
-The `ValidationInterceptor` rejects invalid protobuf messages (using `protovalidate` CEL rules
-on the proto schema) before they reach the business logic, enforcing schema constraints at the
-transport layer.
+The `ValidationInterceptor` rejects invalid protobuf messages (using
+`protovalidate` CEL rules on the proto schema) before they reach the business
+logic, enforcing schema constraints at the transport layer.
 
 ---
 
 ## Error handling
 
-All gRPC method invocations go through `RequestHandler.handle()`, which wraps the business logic
-in a uniform `try/catch`:
+All gRPC method invocations go through `RequestHandler.handle()`, which wraps
+the business logic in a uniform `try/catch`:
 
-| Exception type | gRPC status | Log level |
-|---|---|---|
-| `StatusRuntimeException` | Passed through as-is | `WARNING` |
-| `IllegalArgumentException` | `INVALID_ARGUMENT` | `WARNING` |
-| Any other `Exception` | `INTERNAL` | `ERROR` |
+| Exception type             | gRPC status          | Log level |
+| -------------------------- | -------------------- | --------- |
+| `StatusRuntimeException`   | Passed through as-is | `WARNING` |
+| `IllegalArgumentException` | `INVALID_ARGUMENT`   | `WARNING` |
+| Any other `Exception`      | `INTERNAL`           | `ERROR`   |
 
-The `ExceptionInterceptor` additionally adds the gRPC method name and the string `"POSEIDON"` to
-the response trailers of any failing call, making it easy to identify the origin service in
-distributed traces or client-side error messages.
+The `ExceptionInterceptor` additionally adds the gRPC method name and the string
+`"POSEIDON"` to the response trailers of any failing call, making it easy to
+identify the origin service in distributed traces or client-side error messages.
 
 Request-level validation failures (from `ValidationInterceptor`) are returned as
-`INVALID_ARGUMENT` with a `Violations` detail proto listing up to 20 constraint violations.
+`INVALID_ARGUMENT` with a `Violations` detail proto listing up to 20 constraint
+violations.
 
 ---
 
@@ -301,101 +340,109 @@ Request-level validation failures (from `ValidationInterceptor`) are returned as
 
 Logging is configured via `logging.properties` (Java Util Logging):
 
-| Setting | Value |
-|---------|-------|
-| Handler | `java.util.logging.ConsoleHandler` |
-| Root level | `INFO` |
-| `org.geotools` level | `SEVERE` (suppressed) |
-| Formatter | `java.util.logging.SimpleFormatter` |
+| Setting              | Value                               |
+| -------------------- | ----------------------------------- |
+| Handler              | `java.util.logging.ConsoleHandler`  |
+| Root level           | `INFO`                              |
+| `org.geotools` level | `SEVERE` (suppressed)               |
+| Formatter            | `java.util.logging.SimpleFormatter` |
 
-GeoTools is suppressed because it emits verbose warnings at startup that are not actionable.
-All application log output goes to stdout, which is captured by the Kubernetes / Docker
-container runtime.
+GeoTools is suppressed because it emits verbose warnings at startup that are not
+actionable. All application log output goes to stdout, which is captured by the
+Kubernetes / Docker container runtime.
 
 ---
 
 ## S3 bucket
 
-The scenario input data (bathymetry, species tables, fleet register, port locations, costs, …) is
-not in the Docker image. On every push to `master`, a workflow in the inputs repository
-(`.github/workflows/s3-sync.yml`) mirrors the repository to `poseidon/` in the
-`project-surimi` bucket on EDITO's MinIO (`minio.dive.edito.eu`). It leaves out the inputs that
-only local runs and calibration read (`biomass_grids.nc`, `prices.csv` and
-`target_landings.csv`), which the workflow lists in `LOCAL_ONLY`: the served scenario gets
-biomass and prices from the controller.
+The scenario input data (bathymetry, species tables, fleet register, port
+locations, costs, …) is not in the Docker image. On every push to `master`, a
+workflow in the inputs repository (`.github/workflows/s3-sync.yml`) mirrors the
+repository to `poseidon/` in the `project-surimi` bucket on EDITO's MinIO
+(`minio.dive.edito.eu`). It leaves out the inputs that only local runs and
+calibration read (`biomass_grids.nc`, `prices.csv` and `target_landings.csv`),
+which the workflow lists in `LOCAL_ONLY`: the served scenario gets biomass and
+prices from the controller.
 
-When `AWS_BUCKET_NAME` is set, `S3Inputs` downloads everything under `poseidon/` into
-`inputs/` (`/app/inputs/` in the container) at startup, before the gRPC server starts:
+When `AWS_BUCKET_NAME` is set, `S3Inputs` downloads everything under `poseidon/`
+into `inputs/` (`/app/inputs/` in the container) at startup, before the gRPC
+server starts:
 
-- `inputs/` must not exist yet. Nothing local is overwritten or deleted, so a local checkout of
-  the inputs submodule is never touched.
-- Any failure (missing variable, bad keys, Vault or S3 unreachable, empty prefix) stops startup
-  with an exception and exit code 1. There is no fallback.
-- The prefix is listed again after the download. If it changed (an upload was in progress), the
-  download may mix old and new files, so startup fails too; Kubernetes restarts the container,
-  which downloads again.
-- The service stays up across experiments, so each `InitialiseSimulation` lists the prefix again
-  and logs a warning if it no longer matches what was downloaded (compared by key and ETag).
-  The simulation still starts, with the inputs downloaded at startup; restart the service to
-  use the new ones. Refreshing the inputs in place would mean changing files under experiments
-  running in parallel; doing it safely would need a new folder per experiment and the scenario
-  pointed at it.
+- `inputs/` must not exist yet. Nothing local is overwritten or deleted, so a
+  local checkout of the inputs submodule is never touched.
+- Any failure (missing variable, bad keys, Vault or S3 unreachable, empty
+  prefix) stops startup with an exception and exit code 1. There is no fallback.
+- The prefix is listed again after the download. If it changed (an upload was in
+  progress), the download may mix old and new files, so startup fails too;
+  Kubernetes restarts the container, which downloads again.
+- The service stays up across experiments, so each `InitialiseSimulation` lists
+  the prefix again and logs a warning if it no longer matches what was
+  downloaded (compared by key and ETag). The simulation still starts, with the
+  inputs downloaded at startup; restart the service to use the new ones.
+  Refreshing the inputs in place would mean changing files under experiments
+  running in parallel; doing it safely would need a new folder per experiment
+  and the scenario pointed at it.
 
-Without `AWS_BUCKET_NAME`, the service reads the local `inputs/` folder, as `./gradlew run` and
-the GUI do.
+Without `AWS_BUCKET_NAME`, the service reads the local `inputs/` folder, as
+`./gradlew run` and the GUI do.
 
 ### S3 bucket authentication
 
-When `VAULT_ADDR` is set, as on EDITO, the keys are read from the Vault secret (KV version 2)
-that the chart points to with the `VAULT_*` variables. It holds long-lived keys made in the
-[MinIO console](https://minio-console.dive.edito.eu/access-keys), under the same variable names,
-and the other SURIMI services read it too (see the SURIMI-project wiki page "S3 bucket
-authentication"). EDITO also puts `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and
-`AWS_SESSION_TOKEN` in the environment, but those expire after 24 hours, so they are ignored
-when Vault is configured. Without `VAULT_ADDR` (local tests, CI), the keys come from those
+When `VAULT_ADDR` is set, as on EDITO, the keys are read from the Vault secret
+(KV version 2) that the chart points to with the `VAULT_*` variables. It holds
+long-lived keys made in the
+[MinIO console](https://minio-console.dive.edito.eu/access-keys), under the same
+variable names, and the other SURIMI services read it too (see the
+SURIMI-project wiki page "S3 bucket authentication"). EDITO also puts
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` in the
+environment, but those expire after 24 hours, so they are ignored when Vault is
+configured. Without `VAULT_ADDR` (local tests, CI), the keys come from those
 environment variables.
 
 ---
 
 ## Kubernetes
 
-POSEIDON is deployed as a container in the **EDITO Datalab** Kubernetes cluster. The controller
-discovers and calls the service over the cluster-internal network. The default gRPC port is
-`50051` (configurable via the `-p` command-line argument, set in the Docker `CMD` directive).
+POSEIDON is deployed as a container in the **EDITO Datalab** Kubernetes cluster.
+The controller discovers and calls the service over the cluster-internal
+network. The default gRPC port is `50051` (configurable via the `-p`
+command-line argument, set in the Docker `CMD` directive).
 
-The deployment is described by the `surimi-poseidon` Helm chart, which lives on EDITO's GitLab,
-not in this repository: `gitlab.mercator-ocean.fr/pub/edito-infra/service-playground`, branch
-`Surimi`, `charts/surimi-poseidon/`. It sets `AWS_BUCKET_NAME` (the namespace with `user-`
-replaced by `oidc-`, so `project-surimi` when deployed from that namespace), the S3 endpoint and
-region, and the `VAULT_*` variables (see [Environment](#environment)), but not the S3 keys. It
-mounts no volume, so a restarted container starts from the image again and downloads the inputs
-anew.
+The deployment is described by the `surimi-poseidon` Helm chart, which lives on
+EDITO's GitLab, not in this repository:
+`gitlab.mercator-ocean.fr/pub/edito-infra/service-playground`, branch `Surimi`,
+`charts/surimi-poseidon/`. It sets `AWS_BUCKET_NAME` (the namespace with `user-`
+replaced by `oidc-`, so `project-surimi` when deployed from that namespace), the
+S3 endpoint and region, and the `VAULT_*` variables (see
+[Environment](#environment)), but not the S3 keys. It mounts no volume, so a
+restarted container starts from the image again and downloads the inputs anew.
 
-JVM heap is bounded to a maximum of 8 GB (`-Xmx8g`) to allow the Kubernetes scheduler to set
-appropriate resource limits.
+JVM heap is bounded to a maximum of 8 GB (`-Xmx8g`) to allow the Kubernetes
+scheduler to set appropriate resource limits.
 
 ---
 
 ## Environment
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OTLP-compatible gRPC endpoint for OpenTelemetry trace export (e.g., `http://jaeger:4317`). When absent, tracing is disabled and no external connection is made. |
-| `AWS_BUCKET_NAME` | No | Bucket holding the inputs under `poseidon/`. When set, inputs are downloaded from S3 at startup (see [S3 bucket](#s3-bucket)); all variables below become required, except those marked otherwise. |
-| `AWS_S3_ENDPOINT` | With S3 | S3 endpoint, e.g. `minio.dive.edito.eu`; `https://` is added if no scheme is given. |
-| `AWS_DEFAULT_REGION` | With S3 | S3 region, e.g. `waw3-1`. |
-| `VAULT_ADDR`, `VAULT_TOKEN`, `VAULT_MOUNT`, `VAULT_TOP_DIR`, `VAULT_RELATIVE_PATH` | With S3 on EDITO | Location of the Vault secret holding the S3 keys: `${VAULT_ADDR}/v1/${VAULT_MOUNT}/data/${VAULT_TOP_DIR}/${VAULT_RELATIVE_PATH}`. When `VAULT_ADDR` is set, all are required and the `AWS_*` keys below are ignored. |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | With S3, without Vault | S3 keys, for local tests and CI. |
-| `AWS_SESSION_TOKEN` | No | S3 session token, for temporary keys; only read without Vault. |
+| Variable                                                                           | Required               | Description                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`                                                      | No                     | OTLP-compatible gRPC endpoint for OpenTelemetry trace export (e.g., `http://jaeger:4317`). When absent, tracing is disabled and no external connection is made.                                                      |
+| `AWS_BUCKET_NAME`                                                                  | No                     | Bucket holding the inputs under `poseidon/`. When set, inputs are downloaded from S3 at startup (see [S3 bucket](#s3-bucket)); all variables below become required, except those marked otherwise.                   |
+| `AWS_S3_ENDPOINT`                                                                  | With S3                | S3 endpoint, e.g. `minio.dive.edito.eu`; `https://` is added if no scheme is given.                                                                                                                                  |
+| `AWS_DEFAULT_REGION`                                                               | With S3                | S3 region, e.g. `waw3-1`.                                                                                                                                                                                            |
+| `VAULT_ADDR`, `VAULT_TOKEN`, `VAULT_MOUNT`, `VAULT_TOP_DIR`, `VAULT_RELATIVE_PATH` | With S3 on EDITO       | Location of the Vault secret holding the S3 keys: `${VAULT_ADDR}/v1/${VAULT_MOUNT}/data/${VAULT_TOP_DIR}/${VAULT_RELATIVE_PATH}`. When `VAULT_ADDR` is set, all are required and the `AWS_*` keys below are ignored. |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`                                       | With S3, without Vault | S3 keys, for local tests and CI.                                                                                                                                                                                     |
+| `AWS_SESSION_TOKEN`                                                                | No                     | S3 session token, for temporary keys; only read without Vault.                                                                                                                                                       |
 
 ### Command-line arguments (Docker `CMD`)
 
-These are passed as arguments to the Java process and can be overridden in Kubernetes pod specs:
+These are passed as arguments to the Java process and can be overridden in
+Kubernetes pod specs:
 
-| Argument | Default | Description |
-|----------|---------|-------------|
+| Argument                   | Default     | Description                                                             |
+| -------------------------- | ----------- | ----------------------------------------------------------------------- |
 | `-s` / `--scenario_folder` | `scenarios` | Path to the folder containing scenario YAML files inside the container. |
-| `-p` / `--port` | `50051` | TCP port on which the gRPC server listens. |
+| `-p` / `--port`            | `50051`     | TCP port on which the gRPC server listens.                              |
 
 ---
 
@@ -409,68 +456,73 @@ Triggered on every push to and pull request targeting the `main` branch.
 
 **Steps:**
 
-1. Check out the repository **including submodules** (POSEIDON is a Git submodule) and Git LFS
-   files (scenario input data), using the `POSEIDON_PAT` secret for private-submodule access.
+1. Check out the repository **including submodules** (POSEIDON is a Git
+   submodule) and Git LFS files (scenario input data), using the `POSEIDON_PAT`
+   secret for private-submodule access.
 2. Set up **JDK 25** (Temurin distribution).
 3. Configure the Gradle wrapper cache.
-4. Run `./gradlew build` — compiles sources, executes unit tests, generates the JaCoCo coverage
-   report, runs SpotBugs static analysis, and checks formatting and license headers
-   (`spotlessCheck`, with Prettier on a Node.js that Gradle downloads). The `AWS_ACCESS_KEY_ID`
-   and `AWS_SECRET_ACCESS_KEY` secrets enable `S3InputsIntegrationTest`, which downloads the
-   inputs from the real bucket; it is skipped where the secrets are unavailable (forks,
-   Dependabot pull requests).
-5. Authenticate with **GitHub Container Registry (GHCR)** (pushes to `main` only).
-6. Run `./gradlew pushDockerImage` — builds and pushes the Docker image (pushes to `main` only;
-   pull requests never publish it).
+4. Run `./gradlew build` — compiles sources, executes unit tests, generates the
+   JaCoCo coverage report, runs SpotBugs static analysis, and checks formatting
+   and license headers (`spotlessCheck`, with Prettier on a Node.js that Gradle
+   downloads). The `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` secrets
+   enable `S3InputsIntegrationTest`, which downloads the inputs from the real
+   bucket; it is skipped where the secrets are unavailable (forks, Dependabot
+   pull requests).
+5. Authenticate with **GitHub Container Registry (GHCR)** (pushes to `main`
+   only).
+6. Run `./gradlew pushDockerImage` — builds and pushes the Docker image (pushes
+   to `main` only; pull requests never publish it).
 
 ### `dependency-submission.yml` — dependency graph submission
 
-Triggered on push to `main` only (not on pull requests). Checks out the repository (submodules +
-LFS, same `POSEIDON_PAT` secret), sets up JDK 25, and runs
-`gradle/actions/dependency-submission@v6` to submit the resolved Gradle dependency graph to
-GitHub's dependency graph / Dependabot alerting feature. Requires `contents: write` permission.
+Triggered on push to `main` only (not on pull requests). Checks out the
+repository (submodules + LFS, same `POSEIDON_PAT` secret), sets up JDK 25, and
+runs `gradle/actions/dependency-submission@v6` to submit the resolved Gradle
+dependency graph to GitHub's dependency graph / Dependabot alerting feature.
+Requires `contents: write` permission.
 
 ### `javadoc.yml` — API documentation
 
-Triggered on push to `main`. Checks out the repository (submodules + LFS), runs `./gradlew javadoc`,
-and deploys the result to GitHub Pages.
+Triggered on push to `main`. Checks out the repository (submodules + LFS), runs
+`./gradlew javadoc`, and deploys the result to GitHub Pages.
 
 **Docker image:**
 
-| Image | Registry |
-|-------|----------|
+| Image                                          | Registry                  |
+| ---------------------------------------------- | ------------------------- |
 | `ghcr.io/surimi-project/surimiposeidon:latest` | GitHub Container Registry |
 
-The image is built from `eclipse-temurin:25-jre` and contains the application JAR, all runtime
-dependencies, the `logging.properties` file and `scenarios/northwestern_med.yaml`. The input
-data is downloaded from S3 at startup (see [S3 bucket](#s3-bucket)).
+The image is built from `eclipse-temurin:25-jre` and contains the application
+JAR, all runtime dependencies, the `logging.properties` file and
+`scenarios/northwestern_med.yaml`. The input data is downloaded from S3 at
+startup (see [S3 bucket](#s3-bucket)).
 
 ---
 
 ## Technology stack
 
-| Package | Role |
-|---------|------|
-| **POSEIDON** (git submodule, University of Oxford) | Agent-based fisheries simulation framework — provides `core`, `agents`, `biology`, `geography`, `regulations`, `io`, `gui`, `calibration`, `examples` modules |
-| **MASON** (bundled in `core/libs/mason/`) | Discrete-event / agent-based simulation engine underlying POSEIDON |
-| `io.grpc:grpc-netty-shaded` | gRPC transport layer (Netty-based HTTP/2) |
-| `io.grpc:grpc-services` | gRPC server-reflection service |
-| `build.buf.gen:surimi_surimi-protocol_grpc_java` | Generated gRPC stubs and protobuf types from the SURIMI protocol definition (Buf registry) |
-| `build.buf:protovalidate` | CEL-based request validation against proto constraints |
-| `io.opentelemetry:opentelemetry-sdk` + `opentelemetry-exporter-otlp` | Distributed tracing SDK and OTLP exporter |
-| `io.opentelemetry.instrumentation:opentelemetry-grpc-1.6` | OpenTelemetry server interceptor for gRPC |
-| `com.github.ben-manes.caffeine:caffeine` | High-performance in-memory cache for simulation instances |
-| `org.jcommander:jcommander` | Command-line argument parsing (`-s` / `-p`) |
-| `org.projectlombok:lombok` | Compile-time code generation (`@Data`, `@RequiredArgsConstructor`, etc.) |
-| `commons-beanutils:commons-beanutils` | Reflective property access used during scenario initialisation |
-| `commons-io:commons-io` | Byte-count formatting in memory-usage log messages |
-| `com.google.guava:guava` | Immutable collections, precondition checks, ranges (transitive via POSEIDON) |
-| `org.joda:joda-money` | Currency-safe monetary values for sales and price calculations |
-| `tech.units:indriya` + `si.uom:si-units` | JSR-385 unit-of-measurement implementation and non-SI units (tonnes, knots, etc.; transitive via POSEIDON) |
-| `org.threeten.extra:threeten-extra` | `Interval` type used for TAC query periods |
-| `net.jqwik:jqwik` | Property-based testing |
-| `org.assertj:assertj-core` | Fluent test assertions |
-| `org.mockito:mockito-core` | Test mocking |
+| Package                                                              | Role                                                                                                                                                          |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **POSEIDON** (git submodule, University of Oxford)                   | Agent-based fisheries simulation framework — provides `core`, `agents`, `biology`, `geography`, `regulations`, `io`, `gui`, `calibration`, `examples` modules |
+| **MASON** (bundled in `core/libs/mason/`)                            | Discrete-event / agent-based simulation engine underlying POSEIDON                                                                                            |
+| `io.grpc:grpc-netty-shaded`                                          | gRPC transport layer (Netty-based HTTP/2)                                                                                                                     |
+| `io.grpc:grpc-services`                                              | gRPC server-reflection service                                                                                                                                |
+| `build.buf.gen:surimi_surimi-protocol_grpc_java`                     | Generated gRPC stubs and protobuf types from the SURIMI protocol definition (Buf registry)                                                                    |
+| `build.buf:protovalidate`                                            | CEL-based request validation against proto constraints                                                                                                        |
+| `io.opentelemetry:opentelemetry-sdk` + `opentelemetry-exporter-otlp` | Distributed tracing SDK and OTLP exporter                                                                                                                     |
+| `io.opentelemetry.instrumentation:opentelemetry-grpc-1.6`            | OpenTelemetry server interceptor for gRPC                                                                                                                     |
+| `com.github.ben-manes.caffeine:caffeine`                             | High-performance in-memory cache for simulation instances                                                                                                     |
+| `org.jcommander:jcommander`                                          | Command-line argument parsing (`-s` / `-p`)                                                                                                                   |
+| `org.projectlombok:lombok`                                           | Compile-time code generation (`@Data`, `@RequiredArgsConstructor`, etc.)                                                                                      |
+| `commons-beanutils:commons-beanutils`                                | Reflective property access used during scenario initialisation                                                                                                |
+| `commons-io:commons-io`                                              | Byte-count formatting in memory-usage log messages                                                                                                            |
+| `com.google.guava:guava`                                             | Immutable collections, precondition checks, ranges (transitive via POSEIDON)                                                                                  |
+| `org.joda:joda-money`                                                | Currency-safe monetary values for sales and price calculations                                                                                                |
+| `tech.units:indriya` + `si.uom:si-units`                             | JSR-385 unit-of-measurement implementation and non-SI units (tonnes, knots, etc.; transitive via POSEIDON)                                                    |
+| `org.threeten.extra:threeten-extra`                                  | `Interval` type used for TAC query periods                                                                                                                    |
+| `net.jqwik:jqwik`                                                    | Property-based testing                                                                                                                                        |
+| `org.assertj:assertj-core`                                           | Fluent test assertions                                                                                                                                        |
+| `org.mockito:mockito-core`                                           | Test mocking                                                                                                                                                  |
 
 ---
 
@@ -526,28 +578,30 @@ SURIMI-POSEIDON/
 
 ## Source control
 
-The repository is hosted on **GitHub** at `https://github.com/SURIMI-Project/SURIMI-POSEIDON`.
+The repository is hosted on **GitHub** at
+`https://github.com/SURIMI-Project/SURIMI-POSEIDON`.
 
 ### Submodules
 
 The repository contains **two Git submodules**:
 
-| Submodule | Local path | Remote | Branch / note |
-|-----------|------------|--------|---------------|
-| POSEIDON ABM framework | `POSEIDON/` | `https://github.com/poseidon-fisheries/POSEIDON.git` | `main` branch |
-| Scenario input data | `inputs/` | `https://github.com/SURIMI-Project/SURIMI-POSEIDON_inputs.git` | `master` branch — kept in a separate repository because input files are large and versioned independently of the service code |
+| Submodule              | Local path  | Remote                                                         | Branch / note                                                                                                                 |
+| ---------------------- | ----------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| POSEIDON ABM framework | `POSEIDON/` | `https://github.com/poseidon-fisheries/POSEIDON.git`           | `main` branch                                                                                                                 |
+| Scenario input data    | `inputs/`   | `https://github.com/SURIMI-Project/SURIMI-POSEIDON_inputs.git` | `master` branch — kept in a separate repository because input files are large and versioned independently of the service code |
 
-A change to a submodule takes two commits: one in the submodule, then a pointer update in this
-repository. Push the submodule commit first.
+A change to a submodule takes two commits: one in the submodule, then a pointer
+update in this repository. Push the submodule commit first.
 
-The CI workflow checks out all submodules recursively (`submodules: 'recursive'`) and uses a
-**Personal Access Token** (`POSEIDON_PAT` secret) to access the private submodules.
+The CI workflow checks out all submodules recursively
+(`submodules: 'recursive'`) and uses a **Personal Access Token** (`POSEIDON_PAT`
+secret) to access the private submodules.
 
 ### Git LFS
 
-The CI checkout step enables **Git LFS** (`lfs: true`). The largest input files in the `inputs`
-submodule (currently the NetCDF biomass grids) are stored in Git LFS so they do not bloat its
-history.
+The CI checkout step enables **Git LFS** (`lfs: true`). The largest input files
+in the `inputs` submodule (currently the NetCDF biomass grids) are stored in Git
+LFS so they do not bloat its history.
 
 ---
 
@@ -555,52 +609,57 @@ history.
 
 ### Automated tests
 
-Tests are written with **JUnit 5**, **jqwik** (property-based), **AssertJ**, and **Mockito** and
-run via `./gradlew test`.
+Tests are written with **JUnit 5**, **jqwik** (property-based), **AssertJ**, and
+**Mockito** and run via `./gradlew test`.
 
-| Test class | What is tested |
-|---|---|
-| `SimulationServiceTest` | Lifecycle (initialise → step → finalise) using the `MinimalScenario`, including contract validation (fleet segments, scenario names) |
-| `SimulationPropertiesTest` | Mass conversion between kilograms and the contract's mass unit |
-| `NorthwesternMedScenarioTest` | The production `NorthwesternMedScenario` runs for a year, in parallel simulations |
-| `CatchProviderServiceTest` | `GetCatchDisposition` results, restricted to contract species and fleet segments |
-| `SalesProviderServiceTest` | `GetSales` results, restricted to contract fleet segments and in the contract's mass unit |
-| `SetPricesTest` (`server/prices/`) | `UpdateSpeciesPrices` propagates prices into the market grid |
-| `SetPricesValidationTest` (`server/prices/`) | `UpdateSpeciesPrices` proto constraint violations are rejected with `INVALID_ARGUMENT` |
-| `EcologyConsumerServiceTest` (`server/ecology/`) | `UpdateBiomass` applies incoming biomass grids to a live simulation |
-| `UpdateRegulationsTacQuotasTest` | TAC quota bookkeeping across multiple steps using `TacOnlyScenario` |
-| `UpdateRegulationsValidationTest` | Proto constraint violations are rejected with `INVALID_ARGUMENT` |
-| `GetFishingActivityTest` | Fishing-activity ratio reporting against known TAC state |
-| `TotalAllowableCatchQuotasTest`, `TotalAllowableCatchQuotasFactoryTest` | Quota accumulation and closure logic; factory wiring |
-| `MpaClosurePredicateTest`, `MpaClosedMonthsFromTableFactoryTest`, `MpaFleetRestrictionsFromTableFactoryTest`, `PortClosurePredicateTest` (`regulations/`) | MPA and port closure rules and the tables they are read from |
-| `ProtocolVersionExtractorTest` | Protocol version is non-null and non-empty |
-| `FleetSegmentTest`, `FleetSegmentMapperTest`, `FleetSegmentMapperFactoryTest`, `FactoriesTest` (`server/fleet/`) | Fleet-segment model, its mapper, and the mapper factory |
-| `SpeciesMapperTest`, `FleetSegmentProtoMapperTest` (`server/mappers/`) | Proto ↔ domain object mapping for species and fleet segments |
+| Test class                                                                                                                                                | What is tested                                                                                                                       |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `SimulationServiceTest`                                                                                                                                   | Lifecycle (initialise → step → finalise) using the `MinimalScenario`, including contract validation (fleet segments, scenario names) |
+| `SimulationPropertiesTest`                                                                                                                                | Mass conversion between kilograms and the contract's mass unit                                                                       |
+| `NorthwesternMedScenarioTest`                                                                                                                             | The production `NorthwesternMedScenario` runs for a year, in parallel simulations                                                    |
+| `CatchProviderServiceTest`                                                                                                                                | `GetCatchDisposition` results, restricted to contract species and fleet segments                                                     |
+| `SalesProviderServiceTest`                                                                                                                                | `GetSales` results, restricted to contract fleet segments and in the contract's mass unit                                            |
+| `SetPricesTest` (`server/prices/`)                                                                                                                        | `UpdateSpeciesPrices` propagates prices into the market grid                                                                         |
+| `SetPricesValidationTest` (`server/prices/`)                                                                                                              | `UpdateSpeciesPrices` proto constraint violations are rejected with `INVALID_ARGUMENT`                                               |
+| `EcologyConsumerServiceTest` (`server/ecology/`)                                                                                                          | `UpdateBiomass` applies incoming biomass grids to a live simulation                                                                  |
+| `UpdateRegulationsTacQuotasTest`                                                                                                                          | TAC quota bookkeeping across multiple steps using `TacOnlyScenario`                                                                  |
+| `UpdateRegulationsValidationTest`                                                                                                                         | Proto constraint violations are rejected with `INVALID_ARGUMENT`                                                                     |
+| `GetFishingActivityTest`                                                                                                                                  | Fishing-activity ratio reporting against known TAC state                                                                             |
+| `TotalAllowableCatchQuotasTest`, `TotalAllowableCatchQuotasFactoryTest`                                                                                   | Quota accumulation and closure logic; factory wiring                                                                                 |
+| `MpaClosurePredicateTest`, `MpaClosedMonthsFromTableFactoryTest`, `MpaFleetRestrictionsFromTableFactoryTest`, `PortClosurePredicateTest` (`regulations/`) | MPA and port closure rules and the tables they are read from                                                                         |
+| `ProtocolVersionExtractorTest`                                                                                                                            | Protocol version is non-null and non-empty                                                                                           |
+| `FleetSegmentTest`, `FleetSegmentMapperTest`, `FleetSegmentMapperFactoryTest`, `FactoriesTest` (`server/fleet/`)                                          | Fleet-segment model, its mapper, and the mapper factory                                                                              |
+| `SpeciesMapperTest`, `FleetSegmentProtoMapperTest` (`server/mappers/`)                                                                                    | Proto ↔ domain object mapping for species and fleet segments                                                                         |
 
-This table is a snapshot, not generated from the test tree — check `src/test/java/eu/project/surimi/poseidon/` directly if it matters which tests currently exist.
+This table is a snapshot, not generated from the test tree — check
+`src/test/java/eu/project/surimi/poseidon/` directly if it matters which tests
+currently exist.
 
-The integration tests in `ServiceTest` subclasses start a real in-process Netty gRPC server on a
-random port and connect via a standard `ManagedChannel`, exercising the full interceptor and
-serialization stack.
+The integration tests in `ServiceTest` subclasses start a real in-process Netty
+gRPC server on a random port and connect via a standard `ManagedChannel`,
+exercising the full interceptor and serialization stack.
 
-A JaCoCo coverage report (XML + HTML) is generated after each test run and published as a CI
-artifact.
+A JaCoCo coverage report (XML + HTML) is generated after each test run and
+published as a CI artifact.
 
 ### Manual testing with Postman
 
-The service exposes **gRPC Server Reflection** (`ProtoReflectionServiceV1`), so Postman (or
-`grpcurl`) can discover all methods without a separate `.proto` file:
+The service exposes **gRPC Server Reflection** (`ProtoReflectionServiceV1`), so
+Postman (or `grpcurl`) can discover all methods without a separate `.proto`
+file:
 
 1. Create a new **gRPC request** in Postman pointing to `localhost:50051`.
-2. Click **Import service definition → via server reflection** — Postman will enumerate all
-   methods of `FisheryService`.
+2. Click **Import service definition → via server reflection** — Postman will
+   enumerate all methods of `FisheryService`.
 3. Call `GetProtocolVersion` first to confirm connectivity.
-4. Call `InitialiseSimulation` with a valid `simulation_id` (UUID v4), `scenario_name`
-   (`"northwestern_med"`), a non-empty `climate_scenario`, and a `simulation` contract with:
-   `time_step` (`"P1M"`), `start_date_time`, a `mass` unit under `standards.measurements` (e.g.
-   `"kg"`), `geography.raster_cell_origin` set to centroid, and `items` listing the species,
-   markets, price categories, and at least one fleet segment with `model: "POSEIDON"`.
-5. Use `UpdateBiomass`, `UpdateRegulations`, and `UpdateSpeciesPrices` to prime the state, then
-   `SimulateStep` to advance, and query with `GetCatchDisposition` / `GetSales` /
-   `GetFishingActivity`.
+4. Call `InitialiseSimulation` with a valid `simulation_id` (UUID v4),
+   `scenario_name` (`"northwestern_med"`), a non-empty `climate_scenario`, and a
+   `simulation` contract with: `time_step` (`"P1M"`), `start_date_time`, a
+   `mass` unit under `standards.measurements` (e.g. `"kg"`),
+   `geography.raster_cell_origin` set to centroid, and `items` listing the
+   species, markets, price categories, and at least one fleet segment with
+   `model: "POSEIDON"`.
+5. Use `UpdateBiomass`, `UpdateRegulations`, and `UpdateSpeciesPrices` to prime
+   the state, then `SimulateStep` to advance, and query with
+   `GetCatchDisposition` / `GetSales` / `GetFishingActivity`.
 6. Finish with `FinaliseSimulation`.

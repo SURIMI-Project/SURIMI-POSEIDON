@@ -57,7 +57,7 @@ substituting `POSEIDON:<module>` coordinates for its subprojects (see
 ./gradlew test                                           # root tests (~3 min, mostly NW Med runs)
 ./gradlew test --tests "eu.project.surimi.poseidon.server.SimulationServiceTest"            # one class
 ./gradlew :POSEIDON:<module>:test                        # a submodule's tests (core, io, agents, …)
-./gradlew spotlessApply                                  # format src/ with Prettier, remove unused imports, add missing license headers
+./gradlew spotlessApply                                  # format src/ and Markdown with Prettier, remove unused imports, add missing license headers
 ./gradlew :POSEIDON:spotlessApply                        # the same for the submodule
 ./gradlew writeNorthwesternMedScenario                   # regenerate scenarios/northwestern_med.yaml
 ./gradlew writeAnchovyBayScenario                        # regenerate scenarios/anchovy_bay.yaml
@@ -72,14 +72,13 @@ substituting `POSEIDON:<module>` coordinates for its subprojects (see
 
 Follow `POSEIDON/AGENTS.md` ("Code style") and
 `POSEIDON/docs/agents/code-style.md`, including the scenario-class conventions,
-which apply to `NorthwesternMedScenario` and `AnchovyBayScenario`. Hard-wrap
-Markdown at 80 columns, except headings, URLs, code blocks and tables.
+which apply to `NorthwesternMedScenario` and `AnchovyBayScenario`.
 
 Spotless, compilation and Checkstyle follow POSEIDON's rules (see "Build & test
 commands" in `POSEIDON/AGENTS.md`): run `./gradlew spotlessApply` after editing
-Java. Checkstyle reads `POSEIDON/config/checkstyle/checkstyle.xml` from the
-submodule. The formatting setup and the `checkstyle` version are duplicated in
-`POSEIDON/`: change both repos together (the files are listed in
+Java or Markdown. Checkstyle reads `POSEIDON/config/checkstyle/checkstyle.xml`
+from the submodule. The formatting setup and the `checkstyle` version are
+duplicated in `POSEIDON/`: change both repos together (the files are listed in
 `POSEIDON/docs/agents/code-style.md`).
 
 ## Submodules
