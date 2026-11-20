@@ -23,15 +23,14 @@ starting biomass, spread over the water cells as Ecospace spreads it.
   contract.
 - SURIMI scenarios never read an EwE model, public or not: the pre-processing
   pipeline extracts what they need into `inputs/`, and EwE's biomass arrives at
-  runtime through the controller. `AnchovyBayScenario` still reads the model
-  through the `ewe` package for now. It is to become a pipeline-fed scenario
-  like NW Med's, and its model loading a generic scenario of its own.
+  runtime through the controller. `AnchovyBayScenario` is pipeline-fed like NW
+  Med's, and `inputs/` holds no EwE model. The model loading is to become a
+  generic scenario of its own.
 - The `ewe` package will move to core POSEIDON, where `inputs/` is not
   available. Its tests use synthetic tables (CSV strings) or small inline
-  `.eiixml` files only. Checks that need the Anchovy Bay model go in
-  `AnchovyBayScenarioTest`.
+  `.eiixml` files only.
 - The Anchovy Bay files in `inputs/anchovy_bay/` are preliminary and keep
   changing (its ports went from 3 to 60 per fleet in one revision). Never pin a
-  count or a specific value of the model in a test, such as the number of ports
-  or their cells. Test relations instead: what the scenario built equals what
-  the EwE tables say, or two readers agree.
+  count or a specific value in a test, such as the number of ports or their
+  cells. Test relations instead: what the scenario built equals what the
+  pipeline's files say.
