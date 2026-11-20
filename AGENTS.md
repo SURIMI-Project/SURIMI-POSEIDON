@@ -105,7 +105,5 @@ never a merge commit. The same holds in the `POSEIDON` submodule.
 
 ## Licensing
 
-Every source file carries the GNU GPLv3 header (University of Oxford copyright).
-The year-range rule is in `POSEIDON/AGENTS.md` ("Licensing"): end the year range
-of every file you modify at the current year yourself, since `spotlessApply`
-adds the header to new files but never changes a year.
+Every source file carries the GNU GPLv3 header (University of Oxford copyright),
+with the year-range rule in `POSEIDON/AGENTS.md` ("Licensing").

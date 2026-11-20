@@ -30,10 +30,9 @@
 - `Simulation.getComponent(Class)` only finds top-level scenario components (and
   members of collections among them), not objects nested inside other
   components. To reach something from a handler, register it as its own
-  component. A factory builds its product once per owner of its level (the
-  simulation, a vessel, a vessel component, or itself for a global product), so
-  one factory object referenced both as a component and inside another component
-  yields a single instance; two equal factory objects yield two.
+  component, and reference that same factory object inside any other component
+  that needs it: products are shared by factory identity
+  (`POSEIDON/docs/agents/runtime-model.md`, "Product stores").
 - A vessel's attributes are the columns of its register row
   (`fleet_register.csv` for NW Med), and every action, catch and sale keeps the
   attributes the vessel had when it happened. Code that reports or judges

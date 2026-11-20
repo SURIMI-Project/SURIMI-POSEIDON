@@ -1,7 +1,7 @@
 # Testing
 
-- JUnit 5, AssertJ, Mockito, jqwik. Assertions follow the AssertJ rules in
-  `POSEIDON/AGENTS.md` ("Build & test commands").
+- JUnit 5, AssertJ, Mockito, jqwik. Tests follow
+  `POSEIDON/docs/agents/testing.md`.
 - The `test` task's JVM args in `build.gradle.kts` are load-bearing: the Mockito
   agent (`MockitoAgentArgumentProvider`) and the flags protobuf/Netty need under
   JDK 25. Keep them when editing the build.
