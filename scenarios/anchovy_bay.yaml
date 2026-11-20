@@ -1,71 +1,69 @@
 !!uk.ac.ox.poseidon.core.Scenario
 components:
-  modelGrid: &id002 !!eu.project.surimi.poseidon.ewe.ModelGridFromEcospaceBasemapFactory
-    ecospaceBasemap: &id001 !!eu.project.surimi.poseidon.ewe.EcospaceBasemapFromTableFactory
-      ecospaceScenarioName: BayOfAnchovies
-      table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-        eweDatabase: &id004 !!eu.project.surimi.poseidon.ewe.EweDatabaseFactory
-          path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
-            parent: !!uk.ac.ox.poseidon.io.paths.RootPathFactory {
-              path: inputs/anchovy_bay
-            }
-            path: anchovy_bay.eiixml
-        tableName: EcospaceScenario
-  bathymetricGrid: &id003 !!eu.project.surimi.poseidon.ewe.BathymetricGridFromEcospaceBasemapFactory
-    ecospaceBasemap: *id001
+  modelGrid: &id003 !!uk.ac.ox.poseidon.geography.grids.ModelGridWithActiveCellsFactory
+    activeCells: !!uk.ac.ox.poseidon.geography.grids.CellSetFromGridFileFactory
+      includedValue: 0.0
+      modelGrid: &id002 !!uk.ac.ox.poseidon.geography.grids.ModelGridFromGridFileFactory
+        gridFilePath: &id004 !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
+          parent: &id001 !!uk.ac.ox.poseidon.io.paths.RootPathFactory {
+            path: inputs/anchovy_bay
+          }
+          path: bathymetry_grid.asc
+      path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
+        parent: *id001
+        path: exclusion_grid.asc
     modelGrid: *id002
-  portGrid: !!uk.ac.ox.poseidon.geography.ports.PortGridFactory
-    bathymetricGrid: *id003
-    distanceCalculator: !!uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory
-      modelGrid: *id002
-    ports: !!uk.ac.ox.poseidon.geography.ports.PortsFromCellsFactory
-      cells: !!eu.project.surimi.poseidon.ewe.EcospacePortCellsFromTableFactory
-        ecospaceBasemap: *id001
-        table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-          eweDatabase: *id004
-          tableName: EcospaceScenarioFleet
-      code: !!uk.ac.ox.poseidon.core.utils.PrefixedIdFactory {
-        prefix: P
+  bathymetricGrid: &id005 !!uk.ac.ox.poseidon.geography.bathymetry.BathymetricGridFromGridFileFactory
+    aggregator: !!uk.ac.ox.poseidon.core.aggregators.MaxAggregatorFactory {
       }
-      modelGrid: *id002
-  species: &id006 !!eu.project.surimi.poseidon.ewe.SpeciesFromEcopathSpeciesMappingFactory
-    ecopathSpeciesMapping: &id005 !!eu.project.surimi.poseidon.ewe.EcopathSpeciesMappingFromGroupsFactory
-      groups: !!eu.project.surimi.poseidon.ewe.FilteredEcopathGroupsFactory
-        groups: !!eu.project.surimi.poseidon.ewe.EcopathGroupsFromTableFactory
-          table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-            eweDatabase: *id004
-            tableName: EcopathGroup
-        predicate: !!eu.project.surimi.poseidon.ewe.CaughtInEcopathFactory
-          ecopathCatches: !!eu.project.surimi.poseidon.ewe.EcopathCatchesFromTableFactory
-            table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-              eweDatabase: *id004
-              tableName: EcopathCatch
+    inverted: false
+    modelGrid: *id003
+    path: *id004
+  portGrid: &id006 !!uk.ac.ox.poseidon.geography.ports.PortGridFactory
+    bathymetricGrid: *id005
+    distanceCalculator: !!uk.ac.ox.poseidon.geography.distance.HaversineDistanceCalculatorFactory
+      modelGrid: *id003
+    ports: !!uk.ac.ox.poseidon.geography.ports.PortsFromTableFactory
+      latitudeColumnName: lat
+      longitudeColumnName: lon
+      portCodeColumnName: port_code
+      portNameColumnName: port_name
+      table: !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
+        dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
+          encoding: UTF-8
+          path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
+            parent: *id001
+            path: ports.csv
+  marketGrid: !!uk.ac.ox.poseidon.fishing.market.MarketGridFactory
+    markets: !!uk.ac.ox.poseidon.fishing.market.OneBiomassMarketPerPortFactory
+      currencyCode: EUR
+      eventManager: !!uk.ac.ox.poseidon.core.EventManagerFactory {
+        }
+      portGrid: *id006
+    portGrid: *id006
+  species: &id007 !!uk.ac.ox.poseidon.biology.species.SpeciesFromDataFactory
+    data: !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
+      dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
+        encoding: UTF-8
+        path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
+          parent: *id001
+          path: species.csv
+    lifeStageColumn: life_stage
+    speciesCodeColumn: species_code
+    speciesNameColumn: species_name
   biomassGrids: !!uk.ac.ox.poseidon.biology.biomass.BiomassGridsFactory
-    biomassAllocators: !!eu.project.surimi.poseidon.ewe.BiomassAllocatorsFromEcospaceFactory
-      cellAreaCalculator: !!uk.ac.ox.poseidon.geography.areas.SphericalCellAreaCalculatorFactory
-        modelGrid: *id002
-      ecopathBiomasses: !!eu.project.surimi.poseidon.ewe.EcopathBiomassesFromTableFactory
-        table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-          eweDatabase: *id004
-          tableName: EcopathGroup
-      ecopathSpeciesMapping: *id005
-      ecospaceBasemap: *id001
-      ecospaceGroups: !!eu.project.surimi.poseidon.ewe.EcospaceGroupsFromTableFactory
-        ecospaceBasemap: *id001
-        table: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-          eweDatabase: *id004
-          tableName: EcospaceScenarioGroup
-      ecospaceHabitats: !!eu.project.surimi.poseidon.ewe.EcospaceHabitatsFromTablesFactory
-        ecospaceBasemap: *id001
-        groupHabitatTable: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-          eweDatabase: *id004
-          tableName: EcospaceScenarioGroupHabitat
-        habitatTable: !!eu.project.surimi.poseidon.ewe.EweTableFactory
-          eweDatabase: *id004
-          tableName: EcospaceScenarioHabitat
-      species: *id006
-    modelGrid: *id002
-    species: *id006
+    biomassAllocators: !!uk.ac.ox.poseidon.core.utils.ListFactory
+      factories:
+      - !!uk.ac.ox.poseidon.geography.allocators.FilteredAllocatorFactory
+        cellPredicate: !!uk.ac.ox.poseidon.geography.predicates.IsActiveWaterCellFactory
+          bathymetricGrid: *id005
+        delegateAllocator: !!uk.ac.ox.poseidon.geography.allocators.SupplierAllocatorFactory
+          value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
+            object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory {
+              value: 0.0
+            }
+    modelGrid: *id003
+    species: *id007
 startingDateTime: !!uk.ac.ox.poseidon.core.time.DateTimeFactory {
   day: 1,
   hour: 0,

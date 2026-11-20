@@ -23,28 +23,30 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import static eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario.START_DATE;
-import static java.util.stream.IntStream.range;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-import com.google.common.collect.ImmutableList;
-import eu.project.surimi.poseidon.ewe.EcopathBiomasses;
-import eu.project.surimi.poseidon.ewe.EcopathCatches;
-import eu.project.surimi.poseidon.ewe.EcopathGroups;
-import eu.project.surimi.poseidon.ewe.EcospaceBasemap;
-import eu.project.surimi.poseidon.ewe.EcospacePortCells;
-import eu.project.surimi.poseidon.ewe.EweDatabase;
 import eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Locale;
+import java.util.Scanner;
+import java.util.function.BiConsumer;
+import org.joda.money.CurrencyUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.biology.biomass.BiomassGrid;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.geography.areas.SphericalCellAreaCalculator;
+import uk.ac.ox.poseidon.fishing.market.BiomassMarket;
+import uk.ac.ox.poseidon.fishing.market.Market;
+import uk.ac.ox.poseidon.fishing.market.MarketGrid;
+import uk.ac.ox.poseidon.geography.Coordinate;
+import uk.ac.ox.poseidon.geography.Envelope;
 import uk.ac.ox.poseidon.geography.bathymetry.BathymetricGrid;
 import uk.ac.ox.poseidon.geography.grids.Cell;
 import uk.ac.ox.poseidon.geography.grids.ModelGrid;
@@ -53,33 +55,73 @@ import uk.ac.ox.poseidon.geography.ports.PortGrid;
 import uk.ac.ox.poseidon.io.ScenarioLoader;
 import uk.ac.ox.poseidon.io.ScenarioWriter;
 
-// The scenario goes through YAML and back, as the generated
-// scenarios/anchovy_bay.yaml does, so the EwE factories must survive that trip.
-// The Anchovy Bay models are preliminary and keep changing, so the tests compare
-// the simulation with what the EwE tables say, never with their current content.
+// Exercise the YAML round trip used by scenarios/anchovy_bay.yaml. Compare
+// against pipeline files, whose contents can change with revisions of the model.
 class AnchovyBayScenarioTest {
 
   private static final Path INPUT_PATH = Path.of("inputs", "anchovy_bay");
-  private static final String ECOSPACE_SCENARIO = "BayOfAnchovies";
 
   private Simulation simulation;
 
-  private static EweDatabase eweDatabase(final String fileName) {
-    return EweDatabase.open(INPUT_PATH.resolve(fileName));
-  }
-
-  /** The database the scenario reads. */
-  private static EweDatabase scenarioDatabase() {
-    return eweDatabase("anchovy_bay.eiixml");
-  }
-
-  private static EcospaceBasemap ecospaceBasemap(
-    final EweDatabase eweDatabase
+  private record PipelineRaster(
+    int width,
+    int height,
+    Envelope envelope,
+    double[][] values
   ) {
-    return EcospaceBasemap.fromTable(
-      eweDatabase.table(EcospaceBasemap.TABLE_NAME),
-      ECOSPACE_SCENARIO
-    );
+    void forEach(final BiConsumer<Cell, Double> action) {
+      for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
+          action.accept(new Cell(x, y), values[x][y]);
+        }
+      }
+    }
+  }
+
+  private static PipelineRaster raster(final String fileName) {
+    try (
+      final Scanner scanner = new Scanner(
+        Files.readString(INPUT_PATH.resolve(fileName))
+      )
+    ) {
+      scanner.useLocale(Locale.ROOT);
+      scanner.next();
+      final int width = scanner.nextInt();
+      scanner.next();
+      final int height = scanner.nextInt();
+      scanner.next();
+      final double west = scanner.nextDouble();
+      scanner.next();
+      final double south = scanner.nextDouble();
+      scanner.next();
+      final double cellSize = scanner.nextDouble();
+      scanner.next();
+      final double noData = scanner.nextDouble();
+      final double[][] values = new double[width][height];
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          final double value = scanner.nextDouble();
+          values[x][y] = value == noData ? Double.NaN : value;
+        }
+      }
+      return new PipelineRaster(
+        width,
+        height,
+        new Envelope(
+          west,
+          west + width * cellSize,
+          south,
+          south + height * cellSize
+        ),
+        values
+      );
+    } catch (final IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  private static Table table(final String fileName) {
+    return Table.read().csv(INPUT_PATH.resolve(fileName).toFile());
   }
 
   @BeforeEach
@@ -105,168 +147,134 @@ class AnchovyBayScenarioTest {
   }
 
   @Test
-  void hasTheEcospaceGrid() {
+  void hasThePipelineGrid() {
     final ModelGrid modelGrid = simulation.getComponent(ModelGrid.class);
-    final EcospaceBasemap ecospaceBasemap = ecospaceBasemap(scenarioDatabase());
-    assertThat(modelGrid.getGridWidth()).isEqualTo(ecospaceBasemap.getCols());
-    assertThat(modelGrid.getGridHeight()).isEqualTo(ecospaceBasemap.getRows());
-    assertThat(modelGrid.getEnvelope()).isEqualTo(
-      ecospaceBasemap.getEnvelope()
+    final PipelineRaster bathymetry = raster("bathymetry_grid.asc");
+
+    assertThat(modelGrid.getGridWidth()).isEqualTo(bathymetry.width());
+    assertThat(modelGrid.getGridHeight()).isEqualTo(bathymetry.height());
+    assertThat(modelGrid.getEnvelope()).isEqualTo(bathymetry.envelope());
+  }
+
+  @Test
+  void hasThePipelineActiveCells() {
+    final ModelGrid modelGrid = simulation.getComponent(ModelGrid.class);
+
+    raster("exclusion_grid.asc").forEach((cell, value) ->
+      assertThat(modelGrid.isActive(cell))
+        .as("active at %s", cell)
+        .isEqualTo(value == 0)
     );
   }
 
   @Test
-  void hasTheEcospaceBathymetry() {
-    final BathymetricGrid bathymetricGrid = simulation.getComponent(
+  void hasThePipelineBathymetry() {
+    final BathymetricGrid bathymetry = simulation.getComponent(
       BathymetricGrid.class
     );
-    final EcospaceBasemap ecospaceBasemap = ecospaceBasemap(scenarioDatabase());
-    final int cols = ecospaceBasemap.getCols();
-    // EwE's row and column are the cell's y and x
-    assertThat(range(0, ecospaceBasemap.getRows() * cols).boxed()).allSatisfy(
-      i -> {
-        final int row = i / cols;
-        final int col = i % cols;
-        assertThat(bathymetricGrid.getDepth(new Cell(col, row)))
-          .as("depth at row %d, column %d", row, col)
-          .isEqualTo(ecospaceBasemap.getDepth(row, col));
-      }
+
+    raster("bathymetry_grid.asc").forEach((cell, value) ->
+      assertThat(bathymetry.getElevation(cell))
+        .as("elevation at %s", cell)
+        .isEqualTo(value)
     );
   }
 
   @Test
-  void hasAPortOnEachEcospacePortCell() {
-    final PortGrid portGrid = simulation.getComponent(PortGrid.class);
-    final Map<String, Cell> cellsByCode = portGrid
-      .getPorts()
-      .collect(Collectors.toMap(Port::getCode, portGrid::getCell));
-    final EweDatabase eweDatabase = scenarioDatabase();
-    // In row-major order, as the scenario codes them
-    final ImmutableList<Cell> portCells = EcospacePortCells.fromTable(
-      eweDatabase.table(EcospacePortCells.TABLE_NAME),
-      ecospaceBasemap(eweDatabase)
-    ).asList();
-    assertThat(cellsByCode).isEqualTo(
-      range(0, portCells.size())
-        .boxed()
-        .collect(Collectors.toMap(i -> "P" + i, portCells::get))
-    );
-  }
+  void hasEveryPipelineSpecies() {
+    final Table species = table("species.csv");
 
-  // The .eiixml and .sqlite files are different saves of the model, so only
-  // what they still share is compared: the base map, and the groups' IDs and
-  // names. Their ports and some Ecopath parameters differ.
-  @Test
-  void readsTheSameBasemapAndGroupsFromBothFormats() {
-    final EweDatabase sqlite = eweDatabase("anchovy_bay.sqlite");
-    final EweDatabase eiiXml = scenarioDatabase();
-    final EcospaceBasemap sqliteBasemap = ecospaceBasemap(sqlite);
-    final EcospaceBasemap eiiXmlBasemap = ecospaceBasemap(eiiXml);
-    assertThat(sqliteBasemap.getScenarioId()).isEqualTo(
-      eiiXmlBasemap.getScenarioId()
-    );
-    assertThat(sqliteBasemap.getRows()).isEqualTo(eiiXmlBasemap.getRows());
-    assertThat(sqliteBasemap.getCols()).isEqualTo(eiiXmlBasemap.getCols());
-    assertThat(sqliteBasemap.getEnvelope()).isEqualTo(
-      eiiXmlBasemap.getEnvelope()
-    );
-    final int cols = sqliteBasemap.getCols();
-    assertThat(range(0, sqliteBasemap.getRows() * cols).boxed()).allSatisfy(
-      i -> {
-        final int row = i / cols;
-        final int col = i % cols;
-        assertThat(sqliteBasemap.getDepth(row, col))
-          .as("depth at row %d, column %d", row, col)
-          .isEqualTo(eiiXmlBasemap.getDepth(row, col));
-        assertThat(sqliteBasemap.isExcluded(row, col))
-          .as("exclusion at row %d, column %d", row, col)
-          .isEqualTo(eiiXmlBasemap.isExcluded(row, col));
-      }
-    );
-    assertThat(
-      EcopathGroups.fromTable(sqlite.table(EcopathGroups.TABLE_NAME))
-    ).isEqualTo(
-      EcopathGroups.fromTable(eiiXml.table(EcopathGroups.TABLE_NAME))
-    );
-  }
-
-  @Test
-  void hasASpeciesPerEcopathGroupCaughtInEcopath() {
-    final EweDatabase eweDatabase = scenarioDatabase();
-    final EcopathCatches ecopathCatches = EcopathCatches.fromTable(
-      eweDatabase.table(EcopathCatches.TABLE_NAME)
-    );
     assertThat(simulation.getComponents(Species.class))
       .extracting(Species::getCode, Species::getName, Species::getLifeStage)
       .containsExactlyInAnyOrderElementsOf(
-        EcopathGroups.fromTable(eweDatabase.table(EcopathGroups.TABLE_NAME))
+        species
           .stream()
-          .filter(ecopathCatches::isCaught)
-          .map(group ->
-            tuple(String.valueOf(group.getId()), group.getName(), null)
+          .map(row ->
+            tuple(
+              row.getString("species_code"),
+              row.getString("species_name"),
+              row.getString("life_stage").isBlank()
+                ? null
+                : row.getString("life_stage")
+            )
           )
           .toList()
       );
   }
 
-  // Ecospace spreads a group's Ecopath biomass B so that its mean density over
-  // the water cells is B, however the habitat capacity shapes it. The total
-  // in kg therefore lies between B times the number of water cells times the
-  // smallest and the largest of their areas.
   @Test
-  void spreadsTheEcopathBiomassOfEachSpeciesOverTheWaterCells() {
-    final EweDatabase eweDatabase = scenarioDatabase();
-    final EcospaceBasemap ecospaceBasemap = ecospaceBasemap(eweDatabase);
-    final EcopathBiomasses ecopathBiomasses = EcopathBiomasses.fromTable(
-      eweDatabase.table(EcopathGroups.TABLE_NAME)
+  void hasEveryPipelinePortAtItsCoordinates() {
+    final PortGrid portGrid = simulation.getComponent(PortGrid.class);
+    final ModelGrid modelGrid = simulation.getComponent(ModelGrid.class);
+    final Table ports = table("ports.csv");
+
+    assertThat(portGrid.getPorts())
+      .extracting(Port::getCode, Port::getName, portGrid::getCell)
+      .containsExactlyInAnyOrderElementsOf(
+        ports
+          .stream()
+          .map(row ->
+            tuple(
+              row.getString("port_code"),
+              row.getString("port_name"),
+              modelGrid.toCell(
+                new Coordinate(row.getDouble("lon"), row.getDouble("lat"))
+              )
+            )
+          )
+          .toList()
+      );
+  }
+
+  @Test
+  void hasOneUnpricedMarketPerPort() {
+    final PortGrid portGrid = simulation.getComponent(PortGrid.class);
+    final MarketGrid marketGrid = simulation.getComponent(MarketGrid.class);
+
+    assertThat(marketGrid.stream())
+      .extracting(Market::getPort)
+      .containsExactlyInAnyOrderElementsOf(portGrid.getPorts().toList());
+    portGrid.getPorts().forEach(port -> {
+      final Market market = marketGrid.getMarket(port);
+      assertThat(market.getCode()).isEqualTo(port.getCode());
+      assertThat(marketGrid.getCell(market)).isEqualTo(portGrid.getCell(port));
+      assertThat(market).isInstanceOfSatisfying(
+        BiomassMarket.class,
+        biomassMarket -> {
+          assertThat(biomassMarket.getCurrencyUnit()).isEqualTo(
+            CurrencyUnit.EUR
+          );
+          assertThat(biomassMarket.getPrices()).isEmpty();
+        }
+      );
+    });
+  }
+
+  @Test
+  void startsWithZeroBiomassOnlyOnActiveWaterCellsForEverySpecies() {
+    final ModelGrid modelGrid = simulation.getComponent(ModelGrid.class);
+    final BathymetricGrid bathymetry = simulation.getComponent(
+      BathymetricGrid.class
     );
-    final SphericalCellAreaCalculator cellAreas =
-      new SphericalCellAreaCalculator(simulation.getComponent(ModelGrid.class));
-    final int cols = ecospaceBasemap.getCols();
-    final ImmutableList<Cell> waterCells = range(
-      0,
-      ecospaceBasemap.getRows() * cols
-    )
-      .filter(i -> ecospaceBasemap.isWater(i / cols, i % cols))
-      .mapToObj(i -> new Cell(i % cols, i / cols))
-      .collect(ImmutableList.toImmutableList());
-    final double smallestArea = waterCells
-      .stream()
-      .mapToDouble(cellAreas::areaInSquareKm)
-      .min()
-      .orElseThrow();
-    final double largestArea = waterCells
-      .stream()
-      .mapToDouble(cellAreas::areaInSquareKm)
-      .max()
-      .orElseThrow();
     final var biomassGrids = simulation.getComponents(BiomassGrid.class);
+
     assertThat(biomassGrids)
       .extracting(BiomassGrid::getSpecies)
       .containsExactlyInAnyOrderElementsOf(
         simulation.getComponents(Species.class)
       );
-    assertThat(biomassGrids).allSatisfy(biomassGrid -> {
-      final double biomassInKgPerSquareKm =
-        ecopathBiomasses.getBiomass(
-          Integer.parseInt(biomassGrid.getSpecies().getCode())
-        ) * 1000;
-      assertThat(range(0, ecospaceBasemap.getRows() * cols).boxed())
-        .as("biomass of %s", biomassGrid.getSpecies())
-        .allSatisfy(i -> {
-          final Cell cell = new Cell(i % cols, i / cols);
-          if (waterCells.contains(cell)) {
-            assertThat(biomassGrid.getValue(cell)).as("%s", cell).isPositive();
-          } else {
-            assertThat(biomassGrid.getValue(cell)).as("%s", cell).isNaN();
-          }
-        });
-      assertThat(
-        waterCells.stream().mapToDouble(biomassGrid::getValue).sum()
-      ).isBetween(
-        biomassInKgPerSquareKm * waterCells.size() * smallestArea * (1 - 1e-9),
-        biomassInKgPerSquareKm * waterCells.size() * largestArea * (1 + 1e-9)
-      );
-    });
+    assertThat(biomassGrids).allSatisfy(grid ->
+      modelGrid.getAllCells().forEach(cell -> {
+        if (bathymetry.isActiveWater(cell)) {
+          assertThat(grid.getValue(cell))
+            .as("%s at %s", grid.getSpecies(), cell)
+            .isZero();
+        } else {
+          assertThat(grid.getValue(cell))
+            .as("%s at %s", grid.getSpecies(), cell)
+            .isNaN();
+        }
+      })
+    );
   }
 }

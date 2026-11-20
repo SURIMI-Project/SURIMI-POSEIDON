@@ -22,26 +22,25 @@
 
 package eu.project.surimi.poseidon.scenarios.anchovybay;
 
-import static eu.project.surimi.poseidon.ewe.Factories.bathymetricGridFromEcospaceBasemap;
-import static eu.project.surimi.poseidon.ewe.Factories.biomassAllocatorsFromEcospace;
-import static eu.project.surimi.poseidon.ewe.Factories.caughtInEcopath;
-import static eu.project.surimi.poseidon.ewe.Factories.ecopathCatches;
-import static eu.project.surimi.poseidon.ewe.Factories.ecopathGroups;
-import static eu.project.surimi.poseidon.ewe.Factories.ecopathSpeciesMappingFromGroups;
-import static eu.project.surimi.poseidon.ewe.Factories.ecospaceBasemap;
-import static eu.project.surimi.poseidon.ewe.Factories.ecospacePortCells;
-import static eu.project.surimi.poseidon.ewe.Factories.eweDatabase;
-import static eu.project.surimi.poseidon.ewe.Factories.filteredEcopathGroups;
-import static eu.project.surimi.poseidon.ewe.Factories.modelGridFromEcospaceBasemap;
-import static eu.project.surimi.poseidon.ewe.Factories.speciesFromEcopathSpeciesMapping;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.biomassGrids;
+import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
+import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
-import static uk.ac.ox.poseidon.core.utils.Factories.prefixedId;
-import static uk.ac.ox.poseidon.geography.areas.Factories.sphericalCellAreaCalculator;
+import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
+import static uk.ac.ox.poseidon.fishing.market.Factories.marketGrid;
+import static uk.ac.ox.poseidon.fishing.market.Factories.oneBiomassMarketPerPort;
+import static uk.ac.ox.poseidon.geography.allocators.Factories.filteredAllocator;
+import static uk.ac.ox.poseidon.geography.allocators.Factories.supplierAllocator;
+import static uk.ac.ox.poseidon.geography.bathymetry.Factories.bathymetricGridFromGridFile;
 import static uk.ac.ox.poseidon.geography.distance.Factories.haversineDistanceCalculator;
+import static uk.ac.ox.poseidon.geography.grids.Factories.cellSetFromGridFile;
+import static uk.ac.ox.poseidon.geography.grids.Factories.modelGridFromGridFile;
+import static uk.ac.ox.poseidon.geography.grids.Factories.modelGridWithActiveCells;
 import static uk.ac.ox.poseidon.geography.ports.Factories.portGrid;
-import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromCells;
+import static uk.ac.ox.poseidon.geography.ports.Factories.portsFromTable;
+import static uk.ac.ox.poseidon.geography.predicates.Factories.isActiveWaterCell;
 import static uk.ac.ox.poseidon.io.paths.Factories.path;
+import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvFile;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -49,22 +48,16 @@ import java.util.function.Supplier;
 import uk.ac.ox.poseidon.core.Scenario;
 
 /**
- * The Anchovy Bay scenario, built from the EwE model in
- * {@code inputs/anchovy_bay/anchovy_bay.eiixml}. For now it has only the model
- * grid, the bathymetry and the ports of the model's "BayOfAnchovies" Ecospace
- * scenario, and the species with their starting biomass; fleets and the rest
- * of the biology come later.
- * EwE ports have no names, so each port cell is coded {@code P0}, {@code P1},
- * and so on, in row-major order. Each functional group that some fleet lands
- * or discards in the Ecopath model is a species of its own, coded by the
- * group's ID and named after it. Its starting biomass is the group's Ecopath
- * biomass spread over the water cells as Ecospace spreads it.
- * The {@code writeAnchovyBayScenario}
- * Gradle task writes it to {@code scenarios/anchovy_bay.yaml}. The server does
- * not serve it.
+ * The SURIMI Anchovy Bay scenario, built from the pre-processing pipeline's
+ * files in {@code inputs/anchovy_bay/}: the grid, active cells, bathymetry,
+ * species and ports, with one market per port. Biomass starts at zero on
+ * active water cells; biomass and market prices arrive through the controller.
+ * The {@code writeAnchovyBayScenario} Gradle task writes it to
+ * {@code scenarios/anchovy_bay.yaml}. The server does not serve it.
  */
 public class AnchovyBayScenario implements Supplier<Scenario> {
 
+  /** The start date of the Anchovy Bay simulation. */
   // EwE keeps no start date in an Ecosim scenario. It dates a run from the
   // first year of the time series dataset in use. The model's three datasets
   // all start in 1970. The Ecopath model's own first year, 2000, is not used.
@@ -76,41 +69,48 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
    */
   @Override
   public Scenario get() {
-    final var eweDatabase = eweDatabase(
-      path(INPUT_PATH).plus("anchovy_bay.eiixml")
+    final var inputPath = path(INPUT_PATH);
+    final var bathymetricGridPath = inputPath.plus("bathymetry_grid.asc");
+    final var allCellsGrid = modelGridFromGridFile(bathymetricGridPath);
+    final var modelGrid = modelGridWithActiveCells(
+      allCellsGrid,
+      cellSetFromGridFile(inputPath.plus("exclusion_grid.asc"), allCellsGrid, 0)
     );
-    final var ecospaceBasemap = ecospaceBasemap(eweDatabase, "BayOfAnchovies");
-    final var modelGrid = modelGridFromEcospaceBasemap(ecospaceBasemap);
-    final var bathymetricGrid = bathymetricGridFromEcospaceBasemap(
-      ecospaceBasemap,
-      modelGrid
+    final var bathymetricGrid = bathymetricGridFromGridFile(
+      bathymetricGridPath,
+      modelGrid,
+      maxAggregator(),
+      false
     );
     final var portGrid = portGrid(
-      portsFromCells(
-        ecospacePortCells(eweDatabase, ecospaceBasemap),
-        modelGrid,
-        prefixedId("P")
+      portsFromTable(
+        tableFromCsvFile(inputPath.plus("ports.csv")),
+        "port_code",
+        "port_name",
+        "lon",
+        "lat"
       ),
       bathymetricGrid,
       haversineDistanceCalculator(modelGrid)
     );
-    final var ecopathSpeciesMapping = ecopathSpeciesMappingFromGroups(
-      filteredEcopathGroups(
-        ecopathGroups(eweDatabase),
-        caughtInEcopath(ecopathCatches(eweDatabase))
-      )
+    final var marketGrid = marketGrid(
+      portGrid,
+      oneBiomassMarketPerPort(portGrid, "EUR")
     );
-    final var species = speciesFromEcopathSpeciesMapping(ecopathSpeciesMapping);
+    final var species = speciesFromData(
+      tableFromCsvFile(inputPath.plus("species.csv")),
+      "species_code",
+      "species_name",
+      "life_stage"
+    );
+    final var zeroBiomassAllocator = filteredAllocator(
+      supplierAllocator(0.0),
+      isActiveWaterCell(bathymetricGrid)
+    );
     final var biomassGrids = biomassGrids(
       modelGrid,
       species,
-      biomassAllocatorsFromEcospace(
-        eweDatabase,
-        ecospaceBasemap,
-        sphericalCellAreaCalculator(modelGrid),
-        ecopathSpeciesMapping,
-        species
-      )
+      listOf(zeroBiomassAllocator)
     );
 
     return Scenario.builder()
@@ -118,6 +118,7 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
       .component("modelGrid", modelGrid)
       .component("bathymetricGrid", bathymetricGrid)
       .component("portGrid", portGrid)
+      .component("marketGrid", marketGrid)
       .component("species", species)
       .component("biomassGrids", biomassGrids)
       .build();
