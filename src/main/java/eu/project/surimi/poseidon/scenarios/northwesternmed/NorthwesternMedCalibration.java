@@ -35,13 +35,14 @@ import com.beust.jcommander.ParameterException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.ImmutableLongArray;
 import eu.project.surimi.poseidon.calibration.LandingsAccumulator;
-import io.jenetics.util.DoubleRange;
 import java.nio.file.Path;
 import java.time.Period;
 import java.util.Map;
 import tech.tablesaw.api.Table;
 import uk.ac.ox.poseidon.calibration.CalibrationProblem;
 import uk.ac.ox.poseidon.calibration.CalibrationRunner;
+import uk.ac.ox.poseidon.calibration.LinearParameterRange;
+import uk.ac.ox.poseidon.calibration.ParameterRange;
 import uk.ac.ox.poseidon.calibration.errors.SumSquaredErrors;
 
 /**
@@ -130,7 +131,7 @@ public class NorthwesternMedCalibration {
       .stream()
       .collect(summarizingInt(LandingsAccumulator.Key::getYear));
 
-    final ImmutableMap<String, DoubleRange> catchabilityParameterRanges =
+    final ImmutableMap<String, ParameterRange> catchabilityParameterRanges =
       catchabilityParameterRanges();
 
     final CalibrationProblem problem = new CalibrationProblem(
@@ -172,8 +173,8 @@ public class NorthwesternMedCalibration {
    *         the catchability in the scenario: one per gear, species and life
    *         stage of the discard ratios, in the order of their rows
    */
-  static ImmutableMap<String, DoubleRange> catchabilityParameterRanges() {
-    final DoubleRange catchabilityRange = new DoubleRange(
+  static ImmutableMap<String, ParameterRange> catchabilityParameterRanges() {
+    final ParameterRange catchabilityRange = new LinearParameterRange(
       MIN_CATCHABILITY,
       MAX_CATCHABILITY
     );
