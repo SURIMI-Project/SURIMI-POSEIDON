@@ -58,10 +58,10 @@ import uk.ac.ox.poseidon.core.Scenario;
 public class AnchovyBayScenario implements Supplier<Scenario> {
 
   /** The start date of the Anchovy Bay simulation. */
-  // EwE keeps no start date in an Ecosim scenario. It dates a run from the
-  // first year of the time series dataset in use. The model's three datasets
-  // all start in 1970. The Ecopath model's own first year, 2000, is not used.
-  public static final LocalDate START_DATE = LocalDate.of(1970, 1, 1);
+  // A placeholder: the model has no calendar of its own. The pre-processing
+  // pipeline dates its outputs from the same day, and starting in January lines
+  // up the months with the fleets' seasons.
+  public static final LocalDate START_DATE = LocalDate.of(2000, 1, 1);
   static final Path INPUT_PATH = Path.of("inputs", "anchovy_bay");
 
   /**

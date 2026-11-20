@@ -70,5 +70,5 @@ startingDateTime: !!uk.ac.ox.poseidon.core.time.DateTimeFactory {
   minute: 0,
   month: 1,
   second: 0,
-  year: 1970
+  year: 2000
 }
