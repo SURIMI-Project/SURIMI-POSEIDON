@@ -574,6 +574,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // Purse seiners must be back in port by the first purse seiner return time
     // after they depart: at departure, the trip would depart now.
     final var cellEligibilityCriteriaForPurseSeinerAtDeparture = allOf(
+      isActiveWaterCell(bathymetricGrid),
       condition(
         purseSeinerFishAndReturnDurationFunction,
         lessThan(durationUntil(nextOccurrenceOf(purseSeinerReturnTime)))
@@ -593,9 +594,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    // At sea, a vessel does not fish the same cell twice in a trip. Tested
-    // first, before the checks that need a path.
+    // At sea, a vessel does not fish the same cell twice in a trip. This and
+    // biological eligibility are checked before the checks that need a path.
     final var cellEligibilityCriteriaForPurseSeinerAtSea = allOf(
+      isActiveWaterCell(bathymetricGrid),
       not(cellWasFishedThisTrip()),
       purseSeinerFishAndReturnInTime,
       purseSeinerFishingCellLegalityChecker
@@ -604,6 +606,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // Bottom trawlers must be back in port within their maximum trip duration
     // of departing: at departure, that is the whole of it.
     final var cellEligibilityCriteriaForBottomTrawlerAtDeparture = allOf(
+      isActiveWaterCell(bathymetricGrid),
       condition(
         bottomTrawlerFishAndReturnDurationFunction,
         lessThan(bottomTrawlerMaximumTripDuration)
@@ -626,6 +629,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     );
 
     final var cellEligibilityCriteriaForBottomTrawlerAtSea = allOf(
+      isActiveWaterCell(bathymetricGrid),
       not(cellWasFishedThisTrip()),
       bottomTrawlerFishAndReturnInTime,
       bottomTrawlerFishingCellLegalityChecker

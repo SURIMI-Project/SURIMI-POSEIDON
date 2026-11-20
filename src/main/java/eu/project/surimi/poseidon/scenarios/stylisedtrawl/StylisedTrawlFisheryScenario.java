@@ -415,6 +415,7 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
     // Trawlers must be back in port within their maximum trip duration of
     // departing: at departure, that is the whole of it.
     final var cellEligibilityCriteriaAtDeparture = allOf(
+      isActiveWaterCell(bathymetricGrid),
       condition(fishAndReturnDurationFunction, lessThan(maximumTripDuration)),
       fishingCellLegalityChecker
     );
@@ -430,6 +431,7 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
 
     // At sea, a vessel does not fish the same cell twice in a trip
     final var cellEligibilityCriteriaAtSea = allOf(
+      isActiveWaterCell(bathymetricGrid),
       not(cellWasFishedThisTrip()),
       fishAndReturnInTime,
       fishingCellLegalityChecker

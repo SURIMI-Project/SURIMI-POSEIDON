@@ -702,6 +702,8 @@ components:
                             exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
                               optionEligibilityCriteria: &id031 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                                 predicates:
+                                - !!uk.ac.ox.poseidon.geography.predicates.IsActiveWaterCellFactory
+                                  bathymetricGrid: *id004
                                 - !!uk.ac.ox.poseidon.core.predicates.logical.NotFactory
                                   predicate: !!uk.ac.ox.poseidon.fishing.trips.CellWasFishedThisTripFactory {
                                     }
@@ -828,6 +830,8 @@ components:
                       exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
                         optionEligibilityCriteria: &id038 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                           predicates:
+                          - !!uk.ac.ox.poseidon.geography.predicates.IsActiveWaterCellFactory
+                            bathymetricGrid: *id004
                           - !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                             predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
                               value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
@@ -1050,6 +1054,8 @@ components:
                             exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
                               optionEligibilityCriteria: &id046 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                                 predicates:
+                                - !!uk.ac.ox.poseidon.geography.predicates.IsActiveWaterCellFactory
+                                  bathymetricGrid: *id004
                                 - !!uk.ac.ox.poseidon.core.predicates.logical.NotFactory
                                   predicate: !!uk.ac.ox.poseidon.fishing.trips.CellWasFishedThisTripFactory {
                                     }
@@ -1112,6 +1118,8 @@ components:
                       exploiter: !!uk.ac.ox.poseidon.fishing.choices.GreedyPickerFactory
                         optionEligibilityCriteria: &id050 !!uk.ac.ox.poseidon.core.predicates.logical.AllOfFactory
                           predicates:
+                          - !!uk.ac.ox.poseidon.geography.predicates.IsActiveWaterCellFactory
+                            bathymetricGrid: *id004
                           - !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                             predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
                               value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
