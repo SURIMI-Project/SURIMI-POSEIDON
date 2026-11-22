@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
+import static eu.project.surimi.poseidon.vessels.Factories.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledByDateTime;
 import static uk.ac.ox.poseidon.fishing.vessels.Factories.vesselRegister;
@@ -76,7 +77,9 @@ class NorthwesternMedVoyageHomeTest {
             ESP000000379,MOD,2013-01-11,ESCAS
             """
           ),
-          base.component("vesselSpecification")
+          base.component("vesselSpecification"),
+          euFleetRegisterColumns(List.of()),
+          euFleetRegisterEventCodes()
         )
       )
     );

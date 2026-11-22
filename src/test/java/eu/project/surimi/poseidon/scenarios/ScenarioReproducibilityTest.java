@@ -23,12 +23,17 @@
 package eu.project.surimi.poseidon.scenarios;
 
 import static eu.project.surimi.poseidon.calibration.Factories.landingsAccumulator;
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.withinPercentage;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
 import eu.project.surimi.poseidon.calibration.LandingsAccumulator;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Period;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +53,55 @@ import uk.ac.ox.poseidon.io.ScenarioWriter;
  * between the runs below.
  */
 class ScenarioReproducibilityTest {
+
+  // Seed 1, two months, captured before the vessel register migration.
+  // A sanity check: no-op register rows can change scheduling and seeded results.
+  @Test
+  void localNorthwesternMedKeepsLandingsNearTheBaseline() throws IOException {
+    final Map<LandingsAccumulator.Key, Double> baselineLandings =
+      Files.readAllLines(
+        Path.of("src/test/resources/scenarios/northwestern-med-landings.csv")
+      )
+        .stream()
+        .map(row -> row.split(","))
+        .collect(
+          toMap(
+            columns ->
+              new LandingsAccumulator.Key(
+                Integer.valueOf(columns[0]),
+                columns[1],
+                columns[2]
+              ),
+            columns -> Double.valueOf(columns[3])
+          )
+        );
+    final Map<LandingsAccumulator.Key, Double> actualLandings = landings(
+      new LocalNorthwesternMedScenario().get(),
+      "main_fishing_gear",
+      Period.ofMonths(2)
+    );
+
+    assertThat(actualLandings.keySet()).containsExactlyInAnyOrderElementsOf(
+      baselineLandings.keySet()
+    );
+    baselineLandings.forEach((key, baselineKg) ->
+      assertThat(actualLandings.get(key))
+        .as("landings for %s", key)
+        .isCloseTo(baselineKg, withinPercentage(5))
+    );
+    assertThat(
+      actualLandings.values().stream().mapToDouble(Double::doubleValue).sum()
+    )
+      .as("total landings")
+      .isCloseTo(
+        baselineLandings
+          .values()
+          .stream()
+          .mapToDouble(Double::doubleValue)
+          .sum(),
+        withinPercentage(1)
+      );
+  }
 
   @Test
   void localNorthwesternMedGivesSameLandingsWithSameSeed() {

@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.scenarios.stylisedtrawl;
 
+import static eu.project.surimi.poseidon.vessels.Factories.*;
 import static java.time.DayOfWeek.*;
 import static java.time.Period.ofDays;
 import static si.uom.NonSI.KNOT;
@@ -539,10 +540,7 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
     final var socialNetwork = socialNetwork(fleet);
     final var cliqueDynamics = cliqueDynamics(
       socialNetwork,
-      List.of(
-        stringAttribute("place_of_registration"),
-        stringAttribute("main_fishing_gear")
-      ),
+      List.of(homePort(), stringAttribute("main_fishing_gear")),
       MAXIMUM_CLIQUE_SIZE
     );
     final var fishingActionSharer = fishingActionSharer(socialNetwork);
@@ -571,22 +569,23 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
 
     final var vesselSpecification = vesselSpecification(
       fleet,
-      vesselComponent(bottomTrawlerBehaviour)
-    )
-      .homePortAttribute("place_of_registration")
-      .nameAttribute("name_of_vessel")
-      .component("hold", hold)
-      .component("gear", gear)
-      .component("engine", engine)
-      .component("fuelTank", fuelTank)
-      .component("ownCatchRecorder", ownCatchRecorder)
-      .component("sharedCatchRecorder", sharedCatchRecorder)
-      .build();
+      vesselComponent(bottomTrawlerBehaviour),
+      namedComponent("hold", hold),
+      namedComponent("gear", gear),
+      namedComponent("engine", engine),
+      namedComponent("fuelTank", fuelTank),
+      namedComponent("ownCatchRecorder", ownCatchRecorder),
+      namedComponent("sharedCatchRecorder", sharedCatchRecorder)
+    );
 
     final var vesselRegister = scheduledByDateTime(
       vesselRegister(
         tableFromCsvFile(path(FLEET_REGISTER_PATH)),
-        vesselSpecification
+        vesselSpecification,
+        euFleetRegisterColumns(
+          List.of("main_fishing_gear", "country_of_registration", "loa")
+        ),
+        euFleetRegisterEventCodes()
       )
     );
 

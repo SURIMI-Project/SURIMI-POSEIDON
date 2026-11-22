@@ -44,7 +44,7 @@ import uk.ac.ox.poseidon.regulations.predicates.temporal.BetweenDates;
 /**
  * Forbids a fishing action at a port/gear whose closure windows cover the
  * action's date. The home port and gear codes are those the acting vessel had
- * when it took the action, read from the attributes the action recorded. A
+ * when it took the action: its recorded home port and gear-code attribute. A
  * port/gear pair missing from {@code portClosures} is treated as never closed,
  * matching {@link PortClosuresFromTableFactory}'s absence semantics.
  * <p>
@@ -73,14 +73,11 @@ public class PortClosurePredicate
     String,
     ImmutableMap<String, PortGearClosures>
   > closures;
-  private final @NonNull Function<? super HasAttributes, String> homePortCode;
   private final @NonNull Function<? super HasAttributes, String> gearCode;
 
   /**
    * @param portClosures each home port's closure windows, by gear code, then
    *                     by season
-   * @param homePortCode reads the home port code from the attributes an action
-   *                     recorded
    * @param gearCode     reads the gear code from the attributes an action
    *                     recorded
    */
@@ -92,7 +89,6 @@ public class PortClosurePredicate
         ImmutableSortedMap<Year, ImmutableSet<PortClosureWindow>>
       >
     > portClosures,
-    @NonNull final Function<? super HasAttributes, String> homePortCode,
     @NonNull final Function<? super HasAttributes, String> gearCode
   ) {
     this.closures = portClosures
@@ -111,7 +107,6 @@ public class PortClosurePredicate
             )
         )
       );
-    this.homePortCode = homePortCode;
     this.gearCode = gearCode;
   }
 
@@ -126,7 +121,7 @@ public class PortClosurePredicate
     final ExtendedFishingAction action
   ) {
     return closures
-      .getOrDefault(homePortCode.apply(action), ImmutableMap.of())
+      .getOrDefault(action.getHomePort().getCode(), ImmutableMap.of())
       .getOrDefault(gearCode.apply(action), NO_CLOSURES)
       .covers(action);
   }

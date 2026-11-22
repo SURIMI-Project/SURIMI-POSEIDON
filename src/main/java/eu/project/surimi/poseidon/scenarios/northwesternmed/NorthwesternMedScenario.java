@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.scenarios.northwesternmed;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static eu.project.surimi.poseidon.regulations.Factories.*;
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
+import static eu.project.surimi.poseidon.vessels.Factories.*;
 import static java.time.DayOfWeek.*;
 import static java.time.Period.ofDays;
 import static java.time.Period.ofMonths;
@@ -277,11 +278,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         stringAttribute("main_fishing_gear"),
         stringAttribute("country_of_registration")
       ),
-      portClosurePredicate(
-        portClosures,
-        stringAttribute("place_of_registration"),
-        stringAttribute("main_fishing_gear")
-      ),
+      portClosurePredicate(portClosures, stringAttribute("main_fishing_gear")),
       actionCellPredicate(
         modelGrid,
         condition(gridReading(rockGrid), greaterThan(0.0))
@@ -887,10 +884,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var socialNetwork = socialNetwork(fleet);
     final var cliqueDynamics = cliqueDynamics(
       socialNetwork,
-      List.of(
-        stringAttribute("place_of_registration"),
-        stringAttribute("main_fishing_gear")
-      ),
+      List.of(homePort(), stringAttribute("main_fishing_gear")),
       MAXIMUM_CLIQUE_SIZE
     );
     final var fishingActionSharer = fishingActionSharer(socialNetwork);
@@ -919,21 +913,25 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    final var vesselSpecification = vesselSpecification(fleet, behaviour)
-      .homePortAttribute("place_of_registration")
-      .nameAttribute("name_of_vessel")
-      .component("hold", hold)
-      .component("gear", gear)
-      .component("engine", engine)
-      .component("fuelTank", fuelTank)
-      .component("ownCatchRecorder", ownCatchRecorder)
-      .component("sharedCatchRecorder", sharedCatchRecorder)
-      .build();
+    final var vesselSpecification = vesselSpecification(
+      fleet,
+      behaviour,
+      namedComponent("hold", hold),
+      namedComponent("gear", gear),
+      namedComponent("engine", engine),
+      namedComponent("fuelTank", fuelTank),
+      namedComponent("ownCatchRecorder", ownCatchRecorder),
+      namedComponent("sharedCatchRecorder", sharedCatchRecorder)
+    );
 
     final var vesselRegister = scheduledByDateTime(
       vesselRegister(
         tableFromCsvFile(inputPath.plus("fleet_register.csv")),
-        vesselSpecification
+        vesselSpecification,
+        euFleetRegisterColumns(
+          List.of("main_fishing_gear", "country_of_registration", "loa")
+        ),
+        euFleetRegisterEventCodes()
       )
     );
 

@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.scenarios.minimal;
 
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
+import static eu.project.surimi.poseidon.vessels.Factories.*;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.KNOT;
 import static si.uom.NonSI.TONNE;
@@ -292,14 +293,14 @@ public class MinimalScenario implements Supplier<Scenario> {
 
     final var fleet = fleet(vesselField, portGrid);
 
-    final var vesselSpecification = vesselSpecification(fleet, behaviour)
-      .homePortAttribute("place_of_registration")
-      .nameAttribute("name_of_vessel")
-      .component("gear", gear)
-      .component("hold", hold)
-      .component("engine", engine)
-      .component("fuelTank", fuelTank)
-      .build();
+    final var vesselSpecification = vesselSpecification(
+      fleet,
+      behaviour,
+      namedComponent("gear", gear),
+      namedComponent("hold", hold),
+      namedComponent("engine", engine),
+      namedComponent("fuelTank", fuelTank)
+    );
 
     final var vesselRegister = scheduledByDateTime(
       vesselRegister(
@@ -312,7 +313,17 @@ public class MinimalScenario implements Supplier<Scenario> {
           V4,Vessel 4,P2,GBR,15,CEN,2000-01-01,G2,-1,-1
           """
         ),
-        vesselSpecification
+        vesselSpecification,
+        euFleetRegisterColumns(
+          List.of(
+            "gear",
+            "country_of_registration",
+            "loa",
+            "fav_lon",
+            "fav_lat"
+          )
+        ),
+        euFleetRegisterEventCodes()
       )
     );
 

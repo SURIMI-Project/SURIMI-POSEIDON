@@ -25,7 +25,6 @@ package eu.project.surimi.poseidon.regulations;
 import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttribute;
+import uk.ac.ox.poseidon.geography.ports.Port;
 
 class PortClosurePredicateTest {
 
@@ -139,15 +139,25 @@ class PortClosurePredicateTest {
   }
 
   @Test
-  void anActionWithNoHomePortIsAnError() {
+  void judgesTheRecordedHomePortRatherThanARegistrationAttribute() {
     final var predicate = predicate(window(2024, 1, 1, 2024, 1, 31));
+    final var action = action(PORT_CODE, "OTB", LocalDate.of(2024, 1, 15));
+    when(action.getAttributes()).thenReturn(
+      Map.of("place_of_registration", "ESVLC", "main_fishing_gear", "OTB")
+    );
 
-    final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
-    when(action.getAttributes()).thenReturn(Map.of("main_fishing_gear", "OTB"));
+    assertThat(predicate.apply(null, action)).isTrue();
+  }
 
-    assertThatThrownBy(() -> predicate.apply(null, action))
-      .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("place_of_registration");
+  @Test
+  void permitsARecordedHomePortOutsideTheClosureDespiteARegistrationAttribute() {
+    final var predicate = predicate(window(2024, 1, 1, 2024, 1, 31));
+    final var action = action("ESVLC", "OTB", LocalDate.of(2024, 1, 15));
+    when(action.getAttributes()).thenReturn(
+      Map.of("place_of_registration", PORT_CODE, "main_fishing_gear", "OTB")
+    );
+
+    assertThat(predicate.apply(null, action)).isFalse();
   }
 
   /** Puts each window in the season labelled by its end date's year. */
@@ -173,7 +183,6 @@ class PortClosurePredicateTest {
           )
         )
       ),
-      new StringAttribute("place_of_registration"),
       new StringAttribute("main_fishing_gear")
     );
   }
@@ -204,8 +213,11 @@ class PortClosurePredicateTest {
     );
 
     final ExtendedFishingAction action = mock(ExtendedFishingAction.class);
+    final Port homePort = mock(Port.class);
+    when(homePort.getCode()).thenReturn(portCode);
+    when(action.getHomePort()).thenReturn(homePort);
     when(action.getAttributes()).thenReturn(
-      Map.of("place_of_registration", portCode, "main_fishing_gear", gearCode)
+      Map.of("main_fishing_gear", gearCode)
     );
     when(action.getInterval()).thenReturn(interval);
     when(action.getStartDateTime()).thenReturn(startDateTime);

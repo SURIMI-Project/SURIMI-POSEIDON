@@ -278,9 +278,6 @@ components:
           gearCode: !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
             name: main_fishing_gear
           }
-          homePortCode: !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
-            name: place_of_registration
-          }
           portClosures: !!eu.project.surimi.poseidon.regulations.PortClosuresFromTableFactory
             endDateColumnName: end_date
             gearCodeColumnName: gear_code
@@ -1207,45 +1204,48 @@ components:
               alpha: 0.2
             }
     fleet: *id053
-    homePortAttribute: place_of_registration
-    nameAttribute: name_of_vessel
   vesselRegister: !!uk.ac.ox.poseidon.core.schedule.ScheduledByDateTimeFactory
     steppablesByDateTime: !!uk.ac.ox.poseidon.fishing.vessels.VesselRegisterFactory
-      changeEventCodes: [
-        MOD
-      ]
-      creationEventCodes: [
-        CEN,
-        CST,
-        IMP,
-        CHA
-      ]
+      columns:
+        attributeColumns: [
+          main_fishing_gear,
+          country_of_registration,
+          loa
+        ]
+        eventCodeColumn: event
+        eventDateColumn: event_start_date
+        homePortColumn: place_of_registration
+        vesselIdColumn: cfr
       data: !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
         dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
           encoding: UTF-8
           path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
             parent: *id001
             path: fleet_register.csv
-      eventCodeColumn: event
-      eventDateColumn: event_start_date
-      exitEventCodes: [
-        DES,
-        EXP,
-        RET
-      ]
-      ignoredColumns: [
-        event_end_date
-      ]
+      eventCodes:
+        changeCodes: [
+          MOD
+        ]
+        creationCodes: [
+          CEN,
+          CST,
+          IMP,
+          CHA
+        ]
+        exitCodes: [
+          DES,
+          EXP,
+          RET
+        ]
+        
       startingDateTime: !!uk.ac.ox.poseidon.core.StartingDateTimeFactory {
         }
-      vesselIdColumn: cfr
       vesselSpecification: *id054
   socialNetwork: *id055
   cliqueDynamics: !!uk.ac.ox.poseidon.fishing.social.CliqueDynamicsFactory
     groupingValues:
-    - !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
-      name: place_of_registration
-    }
+    - !!uk.ac.ox.poseidon.fishing.vessels.values.HomePortFactory {
+      }
     - !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.StringAttributeFactory {
       name: main_fishing_gear
     }

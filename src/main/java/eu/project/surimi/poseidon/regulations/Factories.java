@@ -151,8 +151,7 @@ public final class Factories {
   }
 
   /**
-   * @param homePortCode the home port code, read from the attributes an
-   *                     action recorded
+   * @param portClosures each home port's closure windows, by gear and season
    * @param gearCode     the gear code, read from the attributes an action
    *                     recorded
    * @return a {@link PortClosurePredicateFactory} turning port closure windows
@@ -169,13 +168,8 @@ public final class Factories {
         >
       >
     > portClosures,
-    final ValueFactory<? super S, ? super HasAttributes, String> homePortCode,
     final ValueFactory<? super S, ? super HasAttributes, String> gearCode
   ) {
-    return new PortClosurePredicateFactory<>(
-      portClosures,
-      homePortCode,
-      gearCode
-    );
+    return new PortClosurePredicateFactory<>(portClosures, gearCode);
   }
 }

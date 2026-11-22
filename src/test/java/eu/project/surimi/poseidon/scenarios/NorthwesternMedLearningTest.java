@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.scenarios;
 
+import static eu.project.surimi.poseidon.vessels.Factories.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledByDateTime;
 import static uk.ac.ox.poseidon.fishing.vessels.Factories.vesselRegister;
@@ -32,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -68,13 +70,15 @@ class NorthwesternMedLearningTest {
       scheduledByDateTime(
         vesselRegister(
           tableFromCsvString(
-            "cfr,event,event_start_date,main_fishing_gear\n" +
+            "cfr,event,event_start_date,place_of_registration,main_fishing_gear\n" +
               PURSE_SEINER_ID +
-              ",MOD,2013-01-10," +
+              ",MOD,2013-01-10,," +
               gear +
               "\n"
           ),
-          base.component("vesselSpecification")
+          base.component("vesselSpecification"),
+          euFleetRegisterColumns(List.of("main_fishing_gear")),
+          euFleetRegisterEventCodes()
         )
       )
     );

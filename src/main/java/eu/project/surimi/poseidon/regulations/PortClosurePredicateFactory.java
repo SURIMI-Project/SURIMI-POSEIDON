@@ -41,9 +41,8 @@ import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.vessels.HasAttributes;
 
 /**
- * Factory for {@link PortClosurePredicate}, sourcing its port closure windows
- * from a table, with the home port and gear codes read from the attributes an
- * action recorded.
+ * A {@link RelativeScopeFactory} counterpart of {@link PortClosurePredicate},
+ * built via {@link Factories#portClosurePredicate(Factory, ValueFactory)}.
  */
 @Getter
 @ToString
@@ -68,11 +67,6 @@ public class PortClosurePredicateFactory<S extends Scope>
       >
     >
   > portClosures;
-  private final ValueFactory<
-    ? super S,
-    ? super HasAttributes,
-    String
-  > homePortCode;
   private final ValueFactory<? super S, ? super HasAttributes, String> gearCode;
 
   @Override
@@ -81,7 +75,6 @@ public class PortClosurePredicateFactory<S extends Scope>
   ) {
     return new PortClosurePredicate(
       portClosures.get(scope),
-      homePortCode.get(scope),
       gearCode.get(scope)
     );
   }
