@@ -57,6 +57,7 @@ import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.dockAtDestination
 import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.setDestinationToOrigin;
 import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.travelAlongPathTo;
 import static uk.ac.ox.poseidon.fishing.vessels.Factories.*;
+import static uk.ac.ox.poseidon.fishing.vessels.UnlistedValueHandling.ERROR;
 import static uk.ac.ox.poseidon.fishing.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.fishing.vessels.gears.Factories.fixedBiomassProportionGear;
 import static uk.ac.ox.poseidon.fishing.vessels.holds.Factories.infiniteBiomassHold;
@@ -213,7 +214,8 @@ public class MinimalScenario implements Supplier<Scenario> {
 
     final var gear = varyingBy(
       "gear",
-      when(
+      ERROR,
+      entry(
         "G1",
         fixedBiomassProportionGear(
           0.25,
@@ -222,7 +224,7 @@ public class MinimalScenario implements Supplier<Scenario> {
           volumetricFlowRateOf(0.0, LITRE_PER_HOUR)
         )
       ),
-      when(
+      entry(
         "G2",
         fixedBiomassProportionGear(
           0.5,
@@ -236,11 +238,12 @@ public class MinimalScenario implements Supplier<Scenario> {
     // Each gear's catch is sold under a catch category named after the gear
     final var hold = varyingBy(
       "gear",
-      when(
+      ERROR,
+      entry(
         "G1",
         infiniteBiomassHold(uniformCatchCategoriser(catchCategory("G1")))
       ),
-      when(
+      entry(
         "G2",
         infiniteBiomassHold(uniformCatchCategoriser(catchCategory("G2")))
       )

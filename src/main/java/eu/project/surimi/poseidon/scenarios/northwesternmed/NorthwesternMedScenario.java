@@ -91,6 +91,7 @@ import static uk.ac.ox.poseidon.fishing.travel.Factories.timeCost;
 import static uk.ac.ox.poseidon.fishing.travel.Factories.travelCost;
 import static uk.ac.ox.poseidon.fishing.trips.Factories.cellWasFishedThisTrip;
 import static uk.ac.ox.poseidon.fishing.vessels.Factories.*;
+import static uk.ac.ox.poseidon.fishing.vessels.UnlistedValueHandling.NO_COMPONENT;
 import static uk.ac.ox.poseidon.fishing.vessels.accounts.Factories.fixedCostCollector;
 import static uk.ac.ox.poseidon.fishing.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.fishing.vessels.gears.Factories.indexedBiomassCatchabilityGear;
@@ -393,8 +394,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // behaviour: they stay in port
     final var gear = varyingBy(
       "main_fishing_gear",
-      none(),
-      when(
+      NO_COMPONENT,
+      entry(
         PURSE_SEINE_GEAR_CODE,
         indexedBiomassCatchabilityGear(
           purseSeineSetDuration,
@@ -403,7 +404,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
           massOf(1, KILOGRAM)
         )
       ),
-      when(
+      entry(
         BOTTOM_TRAWLER_GEAR_CODE,
         indexedBiomassCatchabilityGear(
           bottomTrawlerSetDuration,
@@ -416,15 +417,15 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var engine = varyingBy(
       "main_fishing_gear",
-      none(),
-      when(
+      NO_COMPONENT,
+      entry(
         PURSE_SEINE_GEAR_CODE,
         simpleEngine(
           speedOf(PURSE_SEINER_VESSEL_SPEED_IN_KNOTS, KNOT),
           volumeOf(0, LITRE) // we don't consume fuel from our infinite tank
         )
       ),
-      when(
+      entry(
         BOTTOM_TRAWLER_GEAR_CODE,
         simpleEngine(
           speedOf(BOTTOM_TRAWLER_CRUISING_SPEED_IN_KNOTS, KNOT),
@@ -876,9 +877,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var behaviour = varyingBy(
       "main_fishing_gear",
-      none(),
-      when(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour),
-      when(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
+      NO_COMPONENT,
+      entry(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour),
+      entry(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
     );
 
     final var fleet = fleet(vesselField, portGrid);
