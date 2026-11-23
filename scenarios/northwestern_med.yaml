@@ -486,7 +486,6 @@ components:
                                     }
                                     map: *id016
                                   species: *id006
-                              unlistedValueHandling: NO_COMPONENT
                           regulations: *id017
                       - !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
                         value: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
@@ -559,7 +558,6 @@ components:
                                 unitString: l,
                                 value: 0.0
                               }
-                          unlistedValueHandling: NO_COMPONENT
                         eventManager: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentTripEventManagerFactory {
                           }
                         fuelTank: &id020 !!uk.ac.ox.poseidon.fishing.vessels.FactoryComponent
@@ -1139,7 +1137,6 @@ components:
                       second: 0
                     }
           - *id051
-      unlistedValueHandling: NO_COMPONENT
     components:
       hold: *id033
       gear: *id021

@@ -62,7 +62,7 @@ class ScenarioCliqueGroupingTest {
 
   @ParameterizedTest
   @MethodSource("scenarios")
-  void groupsByHomePortAndGearWithoutReadingInactiveVessels(
+  void groupsByHomePortAndGearWithoutReadingAbsentVessels(
     final Supplier<Scenario> scenario
   ) {
     final Port homePort = mock(Port.class);
@@ -71,8 +71,8 @@ class ScenarioCliqueGroupingTest {
     final Vessel samePortAndGear = vessel(homePort, "OTB");
     final Vessel otherHomePort = vessel(otherPort, "OTB");
     final Vessel otherGear = vessel(homePort, "PS");
-    final Vessel inactiveVessel = mock(Vessel.class);
-    when(inactiveVessel.getHomePort()).thenReturn(Optional.empty());
+    final Vessel absentVessel = mock(Vessel.class);
+    when(absentVessel.getHomePort()).thenReturn(Optional.empty());
     final Fleet fleet = mock(Fleet.class);
     when(fleet.getVessels()).thenReturn(
       ImmutableSet.of(
@@ -80,7 +80,7 @@ class ScenarioCliqueGroupingTest {
         samePortAndGear,
         otherHomePort,
         otherGear,
-        inactiveVessel
+        absentVessel
       )
     );
     when(simulation.getProductStore()).thenReturn(new ProductStore());
@@ -104,12 +104,12 @@ class ScenarioCliqueGroupingTest {
     assertThat(network.getRecipients(samePortAndGear)).containsExactly(vessel);
     assertThat(network.getRecipients(otherHomePort)).isEmpty();
     assertThat(network.getRecipients(otherGear)).isEmpty();
-    assertThat(network.getRecipients(inactiveVessel)).isEmpty();
+    assertThat(network.getRecipients(absentVessel)).isEmpty();
   }
 
   private static Vessel vessel(final Port homePort, final String gearCode) {
     final Vessel vessel = mock(Vessel.class);
-    when(vessel.isActive()).thenReturn(true);
+    when(vessel.isPresent()).thenReturn(true);
     when(vessel.getHomePort()).thenReturn(Optional.of(homePort));
     when(vessel.getAttributes()).thenReturn(
       Map.of("main_fishing_gear", gearCode)

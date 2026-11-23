@@ -90,7 +90,6 @@ import static uk.ac.ox.poseidon.fishing.travel.Factories.timeCost;
 import static uk.ac.ox.poseidon.fishing.travel.Factories.travelCost;
 import static uk.ac.ox.poseidon.fishing.trips.Factories.cellWasFishedThisTrip;
 import static uk.ac.ox.poseidon.fishing.vessels.Factories.*;
-import static uk.ac.ox.poseidon.fishing.vessels.UnlistedValueHandling.NO_COMPONENT;
 import static uk.ac.ox.poseidon.fishing.vessels.accounts.Factories.fixedCostCollector;
 import static uk.ac.ox.poseidon.fishing.vessels.engines.Factories.simpleEngine;
 import static uk.ac.ox.poseidon.fishing.vessels.gears.Factories.indexedBiomassCatchabilityGear;
@@ -389,11 +388,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    // Vessels with a gear other than these two have no gear, no engine and no
-    // behaviour: they stay in port
     final var gear = varyingBy(
       "main_fishing_gear",
-      NO_COMPONENT,
       entry(
         PURSE_SEINE_GEAR_CODE,
         indexedBiomassCatchabilityGear(
@@ -416,7 +412,6 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var engine = varyingBy(
       "main_fishing_gear",
-      NO_COMPONENT,
       entry(
         PURSE_SEINE_GEAR_CODE,
         simpleEngine(
@@ -874,9 +869,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       travelHome
     );
 
+    // A vessel with a gear other than these two has no behaviour, so it is
+    // absent: it fishes outside the model until its gear is one of these
     final var behaviour = varyingBy(
       "main_fishing_gear",
-      NO_COMPONENT,
       entry(PURSE_SEINE_GEAR_CODE, purseSeinerBehaviour),
       entry(BOTTOM_TRAWLER_GEAR_CODE, bottomTrawlerBehaviour)
     );
