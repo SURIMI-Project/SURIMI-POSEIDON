@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.scenarios.stylisedtrawl;
 import static eu.project.surimi.poseidon.vessels.Factories.*;
 import static java.time.DayOfWeek.*;
 import static java.time.Period.ofDays;
+import static java.util.Map.entry;
 import static si.uom.NonSI.KNOT;
 import static tech.units.indriya.unit.Units.KILOGRAM;
 import static tech.units.indriya.unit.Units.LITRE;
@@ -570,12 +571,12 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
     final var vesselSpecification = vesselSpecification(
       fleet,
       vesselComponent(bottomTrawlerBehaviour),
-      namedComponent("hold", hold),
-      namedComponent("gear", gear),
-      namedComponent("engine", engine),
-      namedComponent("fuelTank", fuelTank),
-      namedComponent("ownCatchRecorder", ownCatchRecorder),
-      namedComponent("sharedCatchRecorder", sharedCatchRecorder)
+      entry("hold", hold),
+      entry("gear", gear),
+      entry("engine", engine),
+      entry("fuelTank", fuelTank),
+      entry("ownCatchRecorder", ownCatchRecorder),
+      entry("sharedCatchRecorder", sharedCatchRecorder)
     );
 
     final var vesselRegister = scheduledByDateTime(

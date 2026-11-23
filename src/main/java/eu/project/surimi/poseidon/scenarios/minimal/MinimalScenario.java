@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.scenarios.minimal;
 
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
 import static eu.project.surimi.poseidon.vessels.Factories.*;
+import static java.util.Map.entry;
 import static java.util.stream.IntStream.range;
 import static si.uom.NonSI.KNOT;
 import static si.uom.NonSI.TONNE;
@@ -296,10 +297,10 @@ public class MinimalScenario implements Supplier<Scenario> {
     final var vesselSpecification = vesselSpecification(
       fleet,
       behaviour,
-      namedComponent("gear", gear),
-      namedComponent("hold", hold),
-      namedComponent("engine", engine),
-      namedComponent("fuelTank", fuelTank)
+      entry("gear", gear),
+      entry("hold", hold),
+      entry("engine", engine),
+      entry("fuelTank", fuelTank)
     );
 
     final var vesselRegister = scheduledByDateTime(
