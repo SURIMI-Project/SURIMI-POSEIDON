@@ -349,8 +349,8 @@ public class MinimalScenario implements Supplier<Scenario> {
           stringAttribute("country_of_registration"),
           intervalLabel(
             doubleAttribute("loa"),
-            entry(0.0, "VL0012"),
-            entry(12.0, "VL12XX")
+            entry("VL0012", 0.0),
+            entry("VL12XX", 12.0)
           ),
           "Industrial"
         )

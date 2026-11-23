@@ -375,13 +375,13 @@ components:
         scale: Industrial
         vesselLengthClass: &id027 !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
           mapping: !!uk.ac.ox.poseidon.core.functions.IntervalLabelFactory
-            labelsByLowerBound: {
-              0.0: VL0006,
-              6.0: VL0612,
-              12.0: VL1218,
-              18.0: VL1824,
-              24.0: VL2440,
-              40.0: VL40XX
+            lowerBoundsByLabel: {
+              VL0006: 0.0,
+              VL0612: 6.0,
+              VL1218: 12.0,
+              VL1824: 18.0,
+              VL2440: 24.0,
+              VL40XX: 40.0
             }
             number: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
               value: !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.DoubleAttributeFactory {

@@ -343,12 +343,12 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
 
     final var vesselLengthClass = intervalLabel(
       doubleAttribute("loa"),
-      entry(0.0, "VL0006"),
-      entry(6.0, "VL0612"),
-      entry(12.0, "VL1218"),
-      entry(18.0, "VL1824"),
-      entry(24.0, "VL2440"),
-      entry(40.0, "VL40XX")
+      entry("VL0006", 0.0),
+      entry("VL0612", 6.0),
+      entry("VL1218", 12.0),
+      entry("VL1824", 18.0),
+      entry("VL2440", 24.0),
+      entry("VL40XX", 40.0)
     );
 
     final var costsKeyFromVessel = multiStringKeyFromFunctions(

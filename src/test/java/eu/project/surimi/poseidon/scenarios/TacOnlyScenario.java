@@ -48,8 +48,8 @@ public class TacOnlyScenario implements Supplier<Scenario> {
             stringAttribute("country_of_registration"),
             intervalLabel(
               doubleAttribute("loa"),
-              entry(12.0, "VL1218"),
-              entry(18.0, "VL1824")
+              entry("VL1218", 12.0),
+              entry("VL1824", 18.0)
             ),
             "Industrial"
           )

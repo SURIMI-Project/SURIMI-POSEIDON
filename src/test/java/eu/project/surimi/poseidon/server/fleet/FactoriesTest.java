@@ -41,7 +41,7 @@ class FactoriesTest {
     final var countryCode = stringAttribute("country_of_registration");
     final var vesselLengthClass = intervalLabel(
       doubleAttribute("loa"),
-      entry(12.0, "VL1218")
+      entry("VL1218", 12.0)
     );
     final FleetSegmentMapperFactory<Scope> factory = fleetSegmentMapper(
       gearCode,

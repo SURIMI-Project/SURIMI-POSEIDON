@@ -42,7 +42,7 @@ class FleetSegmentMapperFactoryTest {
     final FleetSegmentMapperFactory<Scope> factory = fleetSegmentMapper(
       stringAttribute("main_fishing_gear"),
       stringAttribute("country_of_registration"),
-      intervalLabel(doubleAttribute("loa"), entry(0.0, "VL0612")),
+      intervalLabel(doubleAttribute("loa"), entry("VL0612", 0.0)),
       "Industrial"
     );
 
@@ -66,7 +66,7 @@ class FleetSegmentMapperFactoryTest {
     final FleetSegmentMapperFactory<Scope> factory = fleetSegmentMapper(
       stringAttribute("gear"),
       stringAttribute("flag_state"),
-      intervalLabel(doubleAttribute("lbp"), entry(12.0, "VL1218")),
+      intervalLabel(doubleAttribute("lbp"), entry("VL1218", 12.0)),
       "Artisanal"
     );
 
