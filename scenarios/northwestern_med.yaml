@@ -1197,40 +1197,37 @@ components:
     fleet: *id053
   vesselRegister: !!uk.ac.ox.poseidon.core.schedule.ScheduledByDateTimeFactory
     steppablesByDateTime: !!uk.ac.ox.poseidon.fishing.vessels.VesselRegisterFactory
-      columns:
-        attributeColumns: [
-          main_fishing_gear,
-          country_of_registration,
-          loa
-        ]
-        eventCodeColumn: event
-        eventDateColumn: event_start_date
-        homePortColumn: place_of_registration
-        vesselIdColumn: cfr
+      attributeColumns: [
+        main_fishing_gear,
+        country_of_registration,
+        loa
+      ]
+      changeCodes: [
+        MOD
+      ]
+      creationCodes: [
+        CEN,
+        CST,
+        IMP,
+        CHA
+      ]
       data: !!uk.ac.ox.poseidon.io.tables.TableFromCsvFactory
         dataSource: !!uk.ac.ox.poseidon.io.sources.FileDataSourceFactory
           encoding: UTF-8
           path: !!uk.ac.ox.poseidon.io.paths.RelativePathFactory
             parent: *id001
             path: fleet_register.csv
-      eventCodes:
-        changeCodes: [
-          MOD
-        ]
-        creationCodes: [
-          CEN,
-          CST,
-          IMP,
-          CHA
-        ]
-        exitCodes: [
-          DES,
-          EXP,
-          RET
-        ]
-        
+      eventCodeColumn: event
+      eventDateColumn: event_start_date
+      exitCodes: [
+        DES,
+        EXP,
+        RET
+      ]
+      homePortCodeColumn: place_of_registration
       startingDateTime: !!uk.ac.ox.poseidon.core.StartingDateTimeFactory {
         }
+      vesselIdColumn: cfr
       vesselSpecification: *id054
   socialNetwork: *id055
   cliqueDynamics: !!uk.ac.ox.poseidon.fishing.social.CliqueDynamicsFactory

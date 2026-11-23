@@ -24,6 +24,7 @@ package eu.project.surimi.poseidon.vessels;
 
 import static eu.project.surimi.poseidon.vessels.Factories.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -31,35 +32,37 @@ import org.junit.jupiter.api.Test;
 class FactoriesTest {
 
   @Test
-  void givesEuColumnMeaningsAndOnlyTheRequestedAttributes() {
-    final var columns = euFleetRegisterColumns(
+  void givesTheEuFleetRegisterFormatAndOnlyTheRequestedAttributes() {
+    final var register = euFleetRegister(
+      tableFromCsvString("cfr\n"),
+      null,
       List.of("loa", "main_fishing_gear")
     );
 
-    assertThat(columns.getVesselIdColumn()).isEqualTo("cfr");
-    assertThat(columns.getEventCodeColumn()).isEqualTo("event");
-    assertThat(columns.getEventDateColumn()).isEqualTo("event_start_date");
-    assertThat(columns.getHomePortColumn()).isEqualTo("place_of_registration");
-    assertThat(columns.getAttributeColumns()).containsExactly(
+    assertThat(register.getVesselIdColumn()).isEqualTo("cfr");
+    assertThat(register.getEventCodeColumn()).isEqualTo("event");
+    assertThat(register.getEventDateColumn()).isEqualTo("event_start_date");
+    assertThat(register.getHomePortCodeColumn()).isEqualTo(
+      "place_of_registration"
+    );
+    assertThat(register.getAttributeColumns()).containsExactly(
       "loa",
       "main_fishing_gear"
     );
-    assertThat(
-      euFleetRegisterColumns(List.of()).getAttributeColumns()
-    ).isEmpty();
-  }
-
-  @Test
-  void givesEuEventCodes() {
-    final var codes = euFleetRegisterEventCodes();
-
-    assertThat(codes.getCreationCodes()).containsExactly(
+    assertThat(register.getCreationCodes()).containsExactly(
       "CEN",
       "CST",
       "IMP",
       "CHA"
     );
-    assertThat(codes.getChangeCodes()).containsExactly("MOD");
-    assertThat(codes.getExitCodes()).containsExactly("DES", "EXP", "RET");
+    assertThat(register.getChangeCodes()).containsExactly("MOD");
+    assertThat(register.getExitCodes()).containsExactly("DES", "EXP", "RET");
+    assertThat(
+      euFleetRegister(
+        tableFromCsvString("cfr\n"),
+        null,
+        List.of()
+      ).getAttributeColumns()
+    ).isEmpty();
   }
 }

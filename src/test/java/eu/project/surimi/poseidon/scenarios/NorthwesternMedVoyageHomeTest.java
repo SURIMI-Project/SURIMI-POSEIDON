@@ -25,7 +25,6 @@ package eu.project.surimi.poseidon.scenarios;
 import static eu.project.surimi.poseidon.vessels.Factories.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledByDateTime;
-import static uk.ac.ox.poseidon.fishing.vessels.Factories.vesselRegister;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
@@ -69,7 +68,7 @@ class NorthwesternMedVoyageHomeTest {
     final Scenario scenario = base.withComponent(
       "homePortChanges",
       scheduledByDateTime(
-        vesselRegister(
+        euFleetRegister(
           tableFromCsvString(
             """
             cfr,event,event_start_date,place_of_registration
@@ -78,8 +77,7 @@ class NorthwesternMedVoyageHomeTest {
             """
           ),
           base.component("vesselSpecification"),
-          euFleetRegisterColumns(List.of()),
-          euFleetRegisterEventCodes()
+          List.of()
         )
       )
     );

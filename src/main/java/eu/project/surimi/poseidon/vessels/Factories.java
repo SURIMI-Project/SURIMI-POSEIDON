@@ -22,41 +22,45 @@
 
 package eu.project.surimi.poseidon.vessels;
 
-import static uk.ac.ox.poseidon.fishing.vessels.Factories.vesselRegisterColumns;
-import static uk.ac.ox.poseidon.fishing.vessels.Factories.vesselRegisterEventCodes;
+import static uk.ac.ox.poseidon.fishing.vessels.Factories.vesselRegister;
 
 import java.util.List;
-import uk.ac.ox.poseidon.fishing.vessels.VesselRegisterColumns;
-import uk.ac.ox.poseidon.fishing.vessels.VesselRegisterEventCodes;
+import tech.tablesaw.api.Table;
+import uk.ac.ox.poseidon.core.Factory;
+import uk.ac.ox.poseidon.core.SimulationScope;
+import uk.ac.ox.poseidon.fishing.vessels.VesselRegisterFactory;
+import uk.ac.ox.poseidon.fishing.vessels.VesselSpecification;
 
-/** EU Fleet Register formats for vessel sources in SURIMI scenarios. */
+/** EU Fleet Register vessel sources in SURIMI scenarios. */
 public final class Factories {
 
   private Factories() {}
 
   /**
-   * @param attributeColumns the columns that become vessel attributes
-   * @return the EU Fleet Register's column meanings
-   * @see VesselRegisterColumns
+   * @param data                the vessel register table, in the EU Fleet
+   *                            Register's format
+   * @param vesselSpecification what the vessels are made of
+   * @param attributeColumns    the columns that become vessel attributes
+   * @return the vessel register for {@code data}, with the EU Fleet Register's
+   *         column names and event codes
+   * @see uk.ac.ox.poseidon.fishing.vessels.Factories#vesselRegister
    */
-  public static VesselRegisterColumns euFleetRegisterColumns(
+  public static VesselRegisterFactory euFleetRegister(
+    final Factory<? super SimulationScope, ? extends Table> data,
+    final Factory<
+      ? super SimulationScope,
+      ? extends VesselSpecification
+    > vesselSpecification,
     final List<String> attributeColumns
   ) {
-    return vesselRegisterColumns(
+    return vesselRegister(
+      data,
+      vesselSpecification,
       "cfr",
       "event",
       "event_start_date",
       "place_of_registration",
-      attributeColumns
-    );
-  }
-
-  /**
-   * @return the EU Fleet Register's creation, change and exit codes
-   * @see VesselRegisterEventCodes
-   */
-  public static VesselRegisterEventCodes euFleetRegisterEventCodes() {
-    return vesselRegisterEventCodes(
+      attributeColumns,
       List.of("CEN", "CST", "IMP", "CHA"),
       List.of("MOD"),
       List.of("DES", "EXP", "RET")

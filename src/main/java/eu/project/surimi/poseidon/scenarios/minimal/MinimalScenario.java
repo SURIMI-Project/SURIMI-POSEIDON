@@ -307,7 +307,7 @@ public class MinimalScenario implements Supplier<Scenario> {
     );
 
     final var vesselRegister = scheduledByDateTime(
-      vesselRegister(
+      euFleetRegister(
         tableFromCsvString(
           """
           cfr,name_of_vessel,place_of_registration,country_of_registration,loa,event,event_start_date,gear,fav_lon,fav_lat
@@ -318,16 +318,8 @@ public class MinimalScenario implements Supplier<Scenario> {
           """
         ),
         vesselSpecification,
-        euFleetRegisterColumns(
-          List.of(
-            "gear",
-            "country_of_registration",
-            "loa",
-            "fav_lon",
-            "fav_lat"
-          )
-        ),
-        euFleetRegisterEventCodes()
+
+        List.of("gear", "country_of_registration", "loa", "fav_lon", "fav_lat")
       )
     );
 

@@ -927,13 +927,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     );
 
     final var vesselRegister = scheduledByDateTime(
-      vesselRegister(
+      euFleetRegister(
         tableFromCsvFile(inputPath.plus("fleet_register.csv")),
         vesselSpecification,
-        euFleetRegisterColumns(
-          List.of("main_fishing_gear", "country_of_registration", "loa")
-        ),
-        euFleetRegisterEventCodes()
+
+        List.of("main_fishing_gear", "country_of_registration", "loa")
       )
     );
 
