@@ -25,7 +25,6 @@ package eu.project.surimi.poseidon.scenarios;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static uk.ac.ox.poseidon.core.utils.Factories.object;
 import static uk.ac.ox.poseidon.fishing.social.Factories.socialNetwork;
 
 import com.google.common.collect.ImmutableSet;
@@ -88,12 +87,12 @@ class ScenarioCliqueGroupingTest {
     when(simulation.getEventManager()).thenReturn(new SimpleEventManager());
     simulation.random = new MersenneTwisterFast(1);
     final SimulationScope scope = new SimulationScope(simulation);
-    final var network = socialNetwork(object(fleet)).get(scope);
+    final var network = socialNetwork(_ -> fleet).get(scope);
     final var dynamics = scenario
       .get()
       .component("cliqueDynamics", CliqueDynamicsFactory.class)
       .toBuilder()
-      .network(object(network))
+      .network(_ -> network)
       .build()
       .get(scope);
     final FishingTrip trip = mock(FishingTrip.class);

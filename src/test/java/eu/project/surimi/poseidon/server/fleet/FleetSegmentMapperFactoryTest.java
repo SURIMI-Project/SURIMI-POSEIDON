@@ -23,10 +23,10 @@
 package eu.project.surimi.poseidon.server.fleet;
 
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
+import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.ac.ox.poseidon.core.Scope.GLOBAL_SCOPE;
 import static uk.ac.ox.poseidon.core.functions.Factories.intervalLabel;
-import static uk.ac.ox.poseidon.core.functions.IntervalLabelFactory.interval;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.doubleAttribute;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
@@ -42,7 +42,7 @@ class FleetSegmentMapperFactoryTest {
     final FleetSegmentMapperFactory<Scope> factory = fleetSegmentMapper(
       stringAttribute("main_fishing_gear"),
       stringAttribute("country_of_registration"),
-      intervalLabel(doubleAttribute("loa"), interval(0.0, 12.0, "VL0612")),
+      intervalLabel(doubleAttribute("loa"), entry(0.0, "VL0612")),
       "Industrial"
     );
 
@@ -66,7 +66,7 @@ class FleetSegmentMapperFactoryTest {
     final FleetSegmentMapperFactory<Scope> factory = fleetSegmentMapper(
       stringAttribute("gear"),
       stringAttribute("flag_state"),
-      intervalLabel(doubleAttribute("lbp"), interval(12.0, 18.0, "VL1218")),
+      intervalLabel(doubleAttribute("lbp"), entry(12.0, "VL1218")),
       "Artisanal"
     );
 

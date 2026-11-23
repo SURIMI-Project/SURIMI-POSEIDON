@@ -375,36 +375,13 @@ components:
         scale: Industrial
         vesselLengthClass: &id027 !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
           mapping: !!uk.ac.ox.poseidon.core.functions.IntervalLabelFactory
-            intervals:
-            - {
-              lowerBoundInclusive: 0.0,
-              upperBoundExclusive: 6.0,
-              value: VL0006
-            }
-            - {
-              lowerBoundInclusive: 6.0,
-              upperBoundExclusive: 12.0,
-              value: VL0612
-            }
-            - {
-              lowerBoundInclusive: 12.0,
-              upperBoundExclusive: 18.0,
-              value: VL1218
-            }
-            - {
-              lowerBoundInclusive: 18.0,
-              upperBoundExclusive: 24.0,
-              value: VL1824
-            }
-            - {
-              lowerBoundInclusive: 24.0,
-              upperBoundExclusive: 40.0,
-              value: VL2440
-            }
-            - {
-              lowerBoundInclusive: 40.0,
-              upperBoundExclusive: null,
-              value: VL40XX
+            labelsByLowerBound: {
+              0.0: VL0006,
+              6.0: VL0612,
+              12.0: VL1218,
+              18.0: VL1824,
+              24.0: VL2440,
+              40.0: VL40XX
             }
             number: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
               value: !!uk.ac.ox.poseidon.fishing.vessels.values.attributes.DoubleAttributeFactory {
@@ -531,13 +508,14 @@ components:
                             predicate: !!uk.ac.ox.poseidon.core.predicates.InSetFactory
                               values: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                                 object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory
-                                  value: !!set {
-                                    !!java.time.DayOfWeek 'SUNDAY': null,
-                                    !!java.time.DayOfWeek 'MONDAY': null,
-                                    !!java.time.DayOfWeek 'TUESDAY': null,
-                                    !!java.time.DayOfWeek 'WEDNESDAY': null,
-                                    !!java.time.DayOfWeek 'THURSDAY': null
-                                  }
+                                  value: [
+                                    !!java.time.DayOfWeek 'SUNDAY',
+                                    !!java.time.DayOfWeek 'MONDAY',
+                                    !!java.time.DayOfWeek 'TUESDAY',
+                                    !!java.time.DayOfWeek 'WEDNESDAY',
+                                    !!java.time.DayOfWeek 'THURSDAY'
+                                  ]
+                                  
                             subject: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
                               value: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentDayOfWeekFactory
                                 currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
@@ -947,13 +925,14 @@ components:
                             predicate: !!uk.ac.ox.poseidon.core.predicates.InSetFactory
                               values: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
                                 object: !!uk.ac.ox.poseidon.core.utils.ObjectFactory
-                                  value: !!set {
-                                    !!java.time.DayOfWeek 'MONDAY': null,
-                                    !!java.time.DayOfWeek 'TUESDAY': null,
-                                    !!java.time.DayOfWeek 'WEDNESDAY': null,
-                                    !!java.time.DayOfWeek 'THURSDAY': null,
-                                    !!java.time.DayOfWeek 'FRIDAY': null
-                                  }
+                                  value: [
+                                    !!java.time.DayOfWeek 'MONDAY',
+                                    !!java.time.DayOfWeek 'TUESDAY',
+                                    !!java.time.DayOfWeek 'WEDNESDAY',
+                                    !!java.time.DayOfWeek 'THURSDAY',
+                                    !!java.time.DayOfWeek 'FRIDAY'
+                                  ]
+                                  
                             subject: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
                               value: !!uk.ac.ox.poseidon.core.providers.temporal.CurrentDayOfWeekFactory
                                 currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {

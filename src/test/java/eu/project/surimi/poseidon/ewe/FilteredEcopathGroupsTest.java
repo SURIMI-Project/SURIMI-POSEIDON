@@ -34,7 +34,7 @@ import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.not;
-import static uk.ac.ox.poseidon.core.utils.Factories.setOf;
+import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.io.tables.Factories.tableFromCsvString;
 
 import org.junit.jupiter.api.Test;
@@ -78,7 +78,7 @@ class FilteredEcopathGroupsTest {
     assertThat(
       filteredEcopathGroups(
         GROUPS,
-        condition(ecopathGroupProperty("name"), in(setOf("Cod", "Whales")))
+        condition(ecopathGroupProperty("name"), in(listOf("Cod", "Whales")))
       ).get(GLOBAL_SCOPE)
     )
       .extracting(EcopathGroup::getName)
@@ -90,7 +90,7 @@ class FilteredEcopathGroupsTest {
     assertThat(
       filteredEcopathGroups(
         GROUPS,
-        condition(ecopathGroupProperty("id"), in(setOf(1, 3)))
+        condition(ecopathGroupProperty("id"), in(listOf(1, 3)))
       ).get(GLOBAL_SCOPE)
     )
       .extracting(EcopathGroup::getName)
@@ -104,7 +104,7 @@ class FilteredEcopathGroupsTest {
         GROUPS,
         anyOf(
           CAUGHT,
-          condition(ecopathGroupProperty("name"), in(setOf("Whales")))
+          condition(ecopathGroupProperty("name"), in(listOf("Whales")))
         )
       ).get(GLOBAL_SCOPE)
     )

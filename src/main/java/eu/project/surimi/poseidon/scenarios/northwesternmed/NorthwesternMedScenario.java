@@ -42,7 +42,6 @@ import static uk.ac.ox.poseidon.biology.species.extractors.Factories.speciesProp
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.events.Factories.eventClearer;
 import static uk.ac.ox.poseidon.core.functions.Factories.*;
-import static uk.ac.ox.poseidon.core.functions.IntervalLabelFactory.interval;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.greaterThan;
@@ -483,12 +482,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var vesselLengthClass = intervalLabel(
       doubleAttribute("loa"),
-      interval(0.0, 6.0, "VL0006"),
-      interval(6.0, 12.0, "VL0612"),
-      interval(12.0, 18.0, "VL1218"),
-      interval(18.0, 24.0, "VL1824"),
-      interval(24.0, 40.0, "VL2440"),
-      interval(40.0, null, "VL40XX")
+      entry(0.0, "VL0006"),
+      entry(6.0, "VL0612"),
+      entry(12.0, "VL1218"),
+      entry(18.0, "VL1824"),
+      entry(24.0, "VL2440"),
+      entry(40.0, "VL40XX")
     );
 
     final var costsKeyFromVessel = multiStringKeyFromFunctions(
@@ -644,7 +643,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         condition(currentTime(), afterTime(time(21, 59, 59))),
         condition(
           currentDayOfWeek(),
-          in(setOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY))
+          in(listOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY))
         ),
         not(hasStartedFishingTripToday)
       )
@@ -665,7 +664,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         condition(currentTime(), afterTime(time(6, 59, 59))),
         condition(
           currentDayOfWeek(),
-          in(setOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
+          in(listOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
         ),
         not(hasStartedFishingTripToday)
       )

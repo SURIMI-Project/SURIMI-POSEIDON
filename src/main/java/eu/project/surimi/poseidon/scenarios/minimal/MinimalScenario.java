@@ -36,7 +36,6 @@ import static uk.ac.ox.poseidon.biology.biomass.Factories.*;
 import static uk.ac.ox.poseidon.biology.species.Factories.species;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesByCode;
 import static uk.ac.ox.poseidon.core.functions.Factories.intervalLabel;
-import static uk.ac.ox.poseidon.core.functions.IntervalLabelFactory.interval;
 import static uk.ac.ox.poseidon.core.quantities.Factories.*;
 import static uk.ac.ox.poseidon.core.quantities.VolumetricFlowRateFactory.LITRE_PER_HOUR;
 import static uk.ac.ox.poseidon.core.schedule.Factories.scheduledByDateTime;
@@ -137,7 +136,7 @@ public class MinimalScenario implements Supplier<Scenario> {
     final var modelGrid = modelGrid(1, -1.5, 1.5, -1.5, 1.5);
     final var bathymetricGrid = bathymetricGridFromElevationValues(
       modelGrid,
-      List.of(-1, -1, 0, -1, -1, 0, -1, -1, 0)
+      List.of(-1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0)
     );
 
     final var carryingCapacityGrid = uniformCarryingCapacityGrid(
@@ -350,8 +349,8 @@ public class MinimalScenario implements Supplier<Scenario> {
           stringAttribute("country_of_registration"),
           intervalLabel(
             doubleAttribute("loa"),
-            interval(0.0, 12.0, "VL0012"),
-            interval(12.0, null, "VL12XX")
+            entry(0.0, "VL0012"),
+            entry(12.0, "VL12XX")
           ),
           "Industrial"
         )

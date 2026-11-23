@@ -23,11 +23,11 @@
 package eu.project.surimi.poseidon.server.fleet;
 
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
+import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static uk.ac.ox.poseidon.core.Scope.GLOBAL_SCOPE;
 import static uk.ac.ox.poseidon.core.functions.Factories.intervalLabel;
-import static uk.ac.ox.poseidon.core.functions.IntervalLabelFactory.interval;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.doubleAttribute;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
 
@@ -42,8 +42,8 @@ class FleetSegmentMapperTest {
     stringAttribute("country_of_registration"),
     intervalLabel(
       doubleAttribute("loa"),
-      interval(12.0, 18.0, "VL1218"),
-      interval(18.0, 24.0, "VL1824")
+      entry(12.0, "VL1218"),
+      entry(18.0, "VL1824")
     ),
     "Industrial"
   ).get(GLOBAL_SCOPE);

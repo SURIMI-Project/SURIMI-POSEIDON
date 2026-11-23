@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.regulations;
 
 import static eu.project.surimi.poseidon.server.fleet.Factories.fleetSegmentMapper;
+import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -46,7 +47,6 @@ import org.threeten.extra.Interval;
 import uk.ac.ox.poseidon.biology.buckets.Bucket;
 import uk.ac.ox.poseidon.biology.species.Species;
 import uk.ac.ox.poseidon.core.Simulation;
-import uk.ac.ox.poseidon.core.functions.IntervalLabelFactory;
 import uk.ac.ox.poseidon.core.schedule.TemporalSchedule;
 import uk.ac.ox.poseidon.fishing.regulations.actions.ExtendedFishingAction;
 import uk.ac.ox.poseidon.fishing.regulations.actions.TemporalFishingAction;
@@ -62,8 +62,8 @@ class TotalAllowableCatchQuotasTest {
       stringAttribute("country_of_registration"),
       intervalLabel(
         doubleAttribute("loa"),
-        IntervalLabelFactory.interval(12.0, 18.0, "VL1218"),
-        IntervalLabelFactory.interval(18.0, 24.0, "VL1824")
+        entry(12.0, "VL1218"),
+        entry(18.0, "VL1824")
       ),
       "Industrial"
     ).get(GLOBAL_SCOPE);
