@@ -77,10 +77,9 @@ import static uk.ac.ox.poseidon.fishing.tasks.fishing.Factories.fishing;
 import static uk.ac.ox.poseidon.fishing.tasks.general.Factories.*;
 import static uk.ac.ox.poseidon.fishing.tasks.landings.Factories.landCatches;
 import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.*;
-import static uk.ac.ox.poseidon.fishing.travel.Factories.routeProperty;
-import static uk.ac.ox.poseidon.fishing.travel.Factories.routeViaDestination;
 import static uk.ac.ox.poseidon.fishing.travel.Factories.timeCost;
-import static uk.ac.ox.poseidon.fishing.travel.Factories.travelCost;
+import static uk.ac.ox.poseidon.fishing.travel.Factories.travelTimeHomeFromCell;
+import static uk.ac.ox.poseidon.fishing.travel.Factories.travelTimeToCell;
 import static uk.ac.ox.poseidon.fishing.trips.Factories.cellWasFishedThisTrip;
 import static uk.ac.ox.poseidon.fishing.vessels.Factories.*;
 import static uk.ac.ox.poseidon.fishing.vessels.engines.Factories.simpleEngine;
@@ -277,7 +276,11 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
 
     final var fuelTank = vesselComponent(infiniteTank());
 
-    final var routeFunction = routeViaDestination(engine, pathLengthCalculator);
+    final var travelTimeToCell = travelTimeToCell(engine, pathLengthCalculator);
+    final var travelTimeHomeFromCell = travelTimeHomeFromCell(
+      engine,
+      pathLengthCalculator
+    );
 
     final var carryingCapacityGrid = carryingCapacityGrid(
       doubleGridFromAllocator(
@@ -396,21 +399,25 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
         catchMemory,
         homePortCatchValuation(catchCategoriser, marketGrid)
       ),
-      travelCost(routeFunction, timeCost(hourlyCost))
+      timeCost(
+        combinedDuration(travelTimeToCell, travelTimeHomeFromCell),
+        hourlyCost
+      )
     );
 
+    // Fishing starts on arrival: no fishing hours here, so no wait.
     final var fishingCellLegalityChecker = fishingCellLegalityChecker(
       gear,
-      engine,
       bottomTrawlerRegulations,
-      pathLengthCalculator
+      dateTimeAfter(currentDateTime(), travelTimeToCell)
     );
 
     // How long it would take to travel to a cell, fish there once, and travel
     // back to port.
     final var fishAndReturnDurationFunction = combinedDuration(
-      routeProperty(routeFunction, "duration"),
-      always(setDuration)
+      travelTimeToCell,
+      always(setDuration),
+      travelTimeHomeFromCell
     );
 
     // Trawlers must be back in port within their maximum trip duration of

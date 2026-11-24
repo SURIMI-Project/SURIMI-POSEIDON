@@ -54,8 +54,10 @@ import uk.ac.ox.poseidon.io.ScenarioWriter;
  */
 class ScenarioReproducibilityTest {
 
-  // Seed 1, two months, captured before the vessel register migration.
-  // A sanity check: no-op register rows can change scheduling and seeded results.
+  // Seed 1, two months, regenerated when travel times replaced routes. A sanity
+  // check: a change that moves scheduling or cell eligibility, even by a second
+  // of rounding, moves the seeded results, so regenerate the baseline when such
+  // a change is intended and other seeds show no systematic shift.
   @Test
   void localNorthwesternMedKeepsLandingsNearTheBaseline() throws IOException {
     final Map<LandingsAccumulator.Key, Double> baselineLandings =

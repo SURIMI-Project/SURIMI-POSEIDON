@@ -84,10 +84,9 @@ import static uk.ac.ox.poseidon.fishing.tasks.fishing.Factories.fishingEventAccu
 import static uk.ac.ox.poseidon.fishing.tasks.general.Factories.*;
 import static uk.ac.ox.poseidon.fishing.tasks.landings.Factories.landCatches;
 import static uk.ac.ox.poseidon.fishing.tasks.travel.Factories.*;
-import static uk.ac.ox.poseidon.fishing.travel.Factories.routeProperty;
-import static uk.ac.ox.poseidon.fishing.travel.Factories.routeViaDestination;
 import static uk.ac.ox.poseidon.fishing.travel.Factories.timeCost;
-import static uk.ac.ox.poseidon.fishing.travel.Factories.travelCost;
+import static uk.ac.ox.poseidon.fishing.travel.Factories.travelTimeHomeFromCell;
+import static uk.ac.ox.poseidon.fishing.travel.Factories.travelTimeToCell;
 import static uk.ac.ox.poseidon.fishing.trips.Factories.cellWasFishedThisTrip;
 import static uk.ac.ox.poseidon.fishing.vessels.Factories.*;
 import static uk.ac.ox.poseidon.fishing.vessels.accounts.Factories.fixedCostCollector;
@@ -430,10 +429,14 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var fuelTank = vesselComponent(infiniteTank());
 
-    // The route a vessel would travel to fish at a cell and come back: one
-    // definition of the journey for both the fishing-location checks and the
-    // travel cost.
-    final var routeFunction = routeViaDestination(engine, pathLengthCalculator);
+    // How long a vessel would travel to fish at a cell, and from there back to
+    // its home port: one definition of each leg for the fishing-location
+    // checks and the travel cost.
+    final var travelTimeToCell = travelTimeToCell(engine, pathLengthCalculator);
+    final var travelTimeHomeFromCell = travelTimeHomeFromCell(
+      engine,
+      pathLengthCalculator
+    );
 
     final var zeroBiomassAllocator = filteredAllocator(
       supplierAllocator(0.0),
@@ -520,7 +523,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         catchMemory,
         homePortCatchValuation(catchCategoriser, marketGrid)
       ),
-      travelCost(routeFunction, timeCost(hourlyCost))
+      timeCost(
+        combinedDuration(travelTimeToCell, travelTimeHomeFromCell),
+        hourlyCost
+      )
     );
 
     final var fleetSegmentMapper = fleetSegmentMapper(
@@ -535,20 +541,24 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       totalAllowableCatchQuotas(fleetSegmentMapper)
     );
 
+    // Fishing starts on arrival: no fishing hours here, so no wait.
+    final var expectedFishingStart = dateTimeAfter(
+      currentDateTime(),
+      travelTimeToCell
+    );
+
     final var purseSeinerFishingCellLegalityChecker =
       fishingCellLegalityChecker(
         gear,
-        engine,
         allOf(purseSeinerRegulations, totalAllowableCatchQuotas),
-        pathLengthCalculator
+        expectedFishingStart
       );
 
     final var bottomTrawlerFishingCellLegalityChecker =
       fishingCellLegalityChecker(
         gear,
-        engine,
         allOf(bottomTrawlerRegulations, totalAllowableCatchQuotas),
-        pathLengthCalculator
+        expectedFishingStart
       );
 
     // How long it would take to travel to a cell, fish there once, and travel
@@ -556,12 +566,14 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     // is cheaper than the regulations, and late in a trip it turns down most
     // cells.
     final var purseSeinerFishAndReturnDurationFunction = combinedDuration(
-      routeProperty(routeFunction, "duration"),
-      always(purseSeineSetDuration)
+      travelTimeToCell,
+      always(purseSeineSetDuration),
+      travelTimeHomeFromCell
     );
     final var bottomTrawlerFishAndReturnDurationFunction = combinedDuration(
-      routeProperty(routeFunction, "duration"),
-      always(bottomTrawlerSetDuration)
+      travelTimeToCell,
+      always(bottomTrawlerSetDuration),
+      travelTimeHomeFromCell
     );
 
     // Purse seiners must be back in port by the first purse seiner return time
