@@ -359,7 +359,7 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
 
     final var costsKeyFromVessel = multiStringKeyFromFunctions(
       stringAttribute("country_of_registration"),
-      minInt(maxInt(currentYear(), 2013), 2023),
+      minInt(maxInt(thisYear(), 2013), 2023),
       vesselLengthClass,
       stringAttribute("main_fishing_gear")
     );
@@ -408,7 +408,7 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
       )
     );
 
-    final var currentDateTime = currentDateTime();
+    final var currentDateTime = now();
 
     // Fishing starts on arrival: no fishing hours here, so no wait.
     final var fishingCellLegalityChecker = fishingCellLegalityChecker(
@@ -456,9 +456,9 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
     // Trawlers depart in the morning and return the same day
     final var readyForDeparture = checkThat(
       allOf(
-        condition(currentTime(), not(timeIsBefore(departureTime))),
+        condition(timeOfDay(), not(timeIsBefore(departureTime))),
         condition(
-          currentDayOfWeek(),
+          dayOfWeek(),
           in(listOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
         ),
         not(hasStartedFishingTripToday)

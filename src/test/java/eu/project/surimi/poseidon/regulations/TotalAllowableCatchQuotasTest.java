@@ -98,7 +98,7 @@ class TotalAllowableCatchQuotasTest {
   }
 
   private void stepAt(final LocalDateTime dateTime) {
-    when(temporalSchedule.getDateTime()).thenReturn(dateTime);
+    when(temporalSchedule.now()).thenReturn(dateTime);
     tac.step(simulation);
     eventList.clear();
   }
@@ -381,7 +381,7 @@ class TotalAllowableCatchQuotasTest {
     final FishingActionEvent event = new FishingActionEvent(action, outcome);
     when(secondAccumulator.getEvents()).thenAnswer(__ -> Stream.of(event));
 
-    when(temporalSchedule.getDateTime()).thenReturn(end);
+    when(temporalSchedule.now()).thenReturn(end);
     tacEndingBoundary.step(simulation);
 
     assertThat(tacEndingBoundary.isPermitted(action(interval))).isTrue();

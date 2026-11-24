@@ -175,10 +175,7 @@ public class TotalAllowableCatchQuotas
   public void step(final SimState simState) {
     checkArgument(simState instanceof Simulation);
     final Simulation simulation = (Simulation) simState;
-    final Instant now = simulation
-      .getTemporalSchedule()
-      .getDateTime()
-      .toInstant(UTC);
+    final Instant now = simulation.getTemporalSchedule().now().toInstant(UTC);
     // Linked, so that the catches of several fleet segments sharing a quota
     // are added up in the order of their first fishing event, rather than that
     // of the segments' hash codes

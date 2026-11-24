@@ -132,9 +132,7 @@ class NorthwesternMedLearningTest {
         @Override
         public void receive(final FishingTripStartEvent event) {
           if (event.getVessel().getId().equals(PURSE_SEINER_ID)) {
-            final LocalDateTime now = simulation
-              .getTemporalSchedule()
-              .getDateTime();
+            final LocalDateTime now = simulation.getTemporalSchedule().now();
             (now.isBefore(CHANGE_DATE)
               ? tripStartsBeforeTheChange
               : tripStartsAfterTheChange
@@ -165,9 +163,7 @@ class NorthwesternMedLearningTest {
         public void receive(final FishingActionEvent event) {
           final Vessel vessel = event.getVessel();
           if (vessel.getId().equals(PURSE_SEINER_ID)) {
-            final LocalDateTime now = simulation
-              .getTemporalSchedule()
-              .getDateTime();
+            final LocalDateTime now = simulation.getTemporalSchedule().now();
             if (now.isBefore(CHANGE_DATE)) {
               gearsBeforeTheChange.add(vessel.getAttributes().get(GEAR));
             } else if (!now.isBefore(CHANGE_DATE.plusDays(3))) {

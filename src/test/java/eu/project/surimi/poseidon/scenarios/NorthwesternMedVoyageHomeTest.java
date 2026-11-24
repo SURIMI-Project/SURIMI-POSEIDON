@@ -88,9 +88,7 @@ class NorthwesternMedVoyageHomeTest {
         @Override
         public void receive(final FishingTripStartEvent event) {
           final Vessel vessel = event.getTrip().getVessel();
-          final LocalDateTime now = simulation
-            .getTemporalSchedule()
-            .getDateTime();
+          final LocalDateTime now = simulation.getTemporalSchedule().now();
           if (
             vessel.getId().equals(VESSEL_ID) && !now.isBefore(FIRST_CHANGE_DATE)
           ) {

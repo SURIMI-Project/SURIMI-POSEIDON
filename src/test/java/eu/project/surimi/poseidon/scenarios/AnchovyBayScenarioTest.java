@@ -141,7 +141,7 @@ class AnchovyBayScenarioTest {
 
   @Test
   void startsAtTheStartDate() {
-    assertThat(simulation.getTemporalSchedule().getDateTime()).isEqualTo(
+    assertThat(simulation.getTemporalSchedule().now()).isEqualTo(
       START_DATE.atStartOfDay()
     );
   }

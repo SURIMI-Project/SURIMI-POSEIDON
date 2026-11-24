@@ -124,7 +124,7 @@ public class UpdateSpeciesPricesRequestHandler
             catchCategory,
             requestSpecies,
             marketPrice,
-            simulation.getTemporalSchedule().getDateTime()
+            simulation.getTemporalSchedule().now()
           );
           logger.log(
             DEBUG,

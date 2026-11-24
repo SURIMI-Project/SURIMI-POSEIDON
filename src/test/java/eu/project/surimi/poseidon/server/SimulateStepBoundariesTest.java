@@ -78,7 +78,7 @@ public class SimulateStepBoundariesTest extends ServiceTest {
     for (int month = 1; month <= MONTHS; month++) {
       step(simulationId, controllerDateTime);
       controllerDateTime = controllerDateTime.plus(MONTH);
-      assertThat(schedule.getDateTime())
+      assertThat(schedule.now())
         .as("simulation date-time after step %d", month)
         .isEqualTo(controllerDateTime);
     }
@@ -143,7 +143,7 @@ public class SimulateStepBoundariesTest extends ServiceTest {
             .getEventManager()
             .broadcast(
               new Sale(
-                simulation.getTemporalSchedule().getDateTime(),
+                simulation.getTemporalSchedule().now(),
                 "last second of month " + thisMonth,
                 latest.getMarket(),
                 latest.getVessel(),

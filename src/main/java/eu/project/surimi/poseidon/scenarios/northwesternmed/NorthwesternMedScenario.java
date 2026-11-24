@@ -181,7 +181,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var temporalSchedule = simulation.getTemporalSchedule();
     range(0, numSteps).forEach(_ -> {
       temporalSchedule.stepFor(simulation, stepSize);
-      System.out.println(temporalSchedule.getDateTime());
+      System.out.println(temporalSchedule.now());
     });
     simulation.finish();
   }
@@ -494,7 +494,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var costsKeyFromVessel = multiStringKeyFromFunctions(
       stringAttribute("country_of_registration"),
-      minInt(maxInt(currentYear(), 2013), 2023),
+      minInt(maxInt(thisYear(), 2013), 2023),
       vesselLengthClass,
       stringAttribute("main_fishing_gear")
     );
@@ -545,7 +545,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       totalAllowableCatchQuotas(fleetSegmentMapper)
     );
 
-    final var currentDateTime = currentDateTime();
+    final var currentDateTime = now();
 
     // Fishing starts on arrival: no fishing hours here, so no wait.
     final var expectedFishingStart = dateTimeAfter(
@@ -660,9 +660,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var purseSeinerReadyForDeparture = checkThat(
       allOf(
         isPermitted(departNow(gear), totalAllowableCatchQuotas),
-        condition(currentTime(), not(timeIsBefore(purseSeinerDepartureTime))),
+        condition(timeOfDay(), not(timeIsBefore(purseSeinerDepartureTime))),
         condition(
-          currentDayOfWeek(),
+          dayOfWeek(),
           in(listOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY))
         ),
         not(hasStartedFishingTripToday)
@@ -684,9 +684,9 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var bottomTrawlerReadyForDeparture = checkThat(
       allOf(
         isPermitted(departNow(gear), totalAllowableCatchQuotas),
-        condition(currentTime(), not(timeIsBefore(bottomTrawlerDepartureTime))),
+        condition(timeOfDay(), not(timeIsBefore(bottomTrawlerDepartureTime))),
         condition(
-          currentDayOfWeek(),
+          dayOfWeek(),
           in(listOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
         ),
         not(hasStartedFishingTripToday)

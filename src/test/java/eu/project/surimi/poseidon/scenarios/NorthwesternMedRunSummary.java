@@ -259,15 +259,11 @@ public final class NorthwesternMedRunSummary {
         }
       })
     );
-    final LocalDateTime startDateTime = simulation
-      .getTemporalSchedule()
-      .getDateTime();
+    final LocalDateTime startDateTime = simulation.getTemporalSchedule().now();
     for (int month = 0; month < months; month++) {
       simulation.getTemporalSchedule().stepFor(simulation, Period.ofMonths(1));
     }
-    final LocalDateTime endDateTime = simulation
-      .getTemporalSchedule()
-      .getDateTime();
+    final LocalDateTime endDateTime = simulation.getTemporalSchedule().now();
     // Clique sizes at the end of the run, over the vessels that made a trip:
     // "size:vessels".
     final Map<Integer, Integer> vesselsByCliqueSize = new TreeMap<>();

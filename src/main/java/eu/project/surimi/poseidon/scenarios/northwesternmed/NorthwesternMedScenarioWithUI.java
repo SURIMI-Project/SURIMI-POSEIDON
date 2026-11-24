@@ -28,8 +28,6 @@ import static java.awt.Color.WHITE;
 import static uk.ac.ox.poseidon.biology.biomass.Factories.uniformCarryingCapacityGrid;
 import static uk.ac.ox.poseidon.core.predicates.Factories.condition;
 import static uk.ac.ox.poseidon.core.predicates.Factories.equal;
-import static uk.ac.ox.poseidon.core.providers.temporal.Factories.currentDateTime;
-import static uk.ac.ox.poseidon.core.providers.temporal.Factories.hasDateTime;
 import static uk.ac.ox.poseidon.core.quantities.Factories.massOf;
 import static uk.ac.ox.poseidon.core.utils.Factories.listOf;
 import static uk.ac.ox.poseidon.fishing.vessels.values.attributes.Factories.stringAttribute;
@@ -123,8 +121,6 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
                   )
                 )
                 .bathymetric(scenario.component("bathymetricGrid"))
-                .currentDateTime(currentDateTime())
-                .hasDateTime(hasDateTime())
                 .displayWidth(WIDTH)
                 .displayHeight(HEIGHT)
                 .build(),
@@ -143,8 +139,6 @@ public class NorthwesternMedScenarioWithUI extends ScenarioWithUI {
                   )
                 )
                 .bathymetric(scenario.component("bathymetricGrid"))
-                .currentDateTime(currentDateTime())
-                .hasDateTime(hasDateTime())
                 .displayWidth(WIDTH)
                 .displayHeight(HEIGHT)
                 .build(),

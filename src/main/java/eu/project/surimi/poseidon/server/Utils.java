@@ -44,9 +44,7 @@ public final class Utils {
     final Simulation simulation
   ) {
     final var requestDateTime = toLocalDateTime(requestTimestamp);
-    final var simulationDateTime = simulation
-      .getTemporalSchedule()
-      .getDateTime();
+    final var simulationDateTime = simulation.getTemporalSchedule().now();
     if (!requestDateTime.equals(simulationDateTime)) {
       throw INVALID_ARGUMENT.withDescription(
         "Request date-time %s is not the current simulation date-time %s.".formatted(
