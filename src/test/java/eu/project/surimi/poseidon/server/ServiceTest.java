@@ -1,6 +1,6 @@
 /*
  * POSEIDON: an agent-based model of fisheries
- * Copyright (c) 2025, University of Oxford.
+ * Copyright (c) 2025-2026, University of Oxford.
  *
  * University of Oxford means the Chancellor, Masters and Scholars of the
  * University of Oxford, having an administrative office at Wellington
@@ -223,29 +223,46 @@ public abstract class ServiceTest {
     final String massUnit
   ) {
     return simulationStub.initialiseSimulation(
-      InitialiseSimulationRequest.newBuilder()
-        .setSimulationId(simulationId)
-        .setScenarioName(scenarioName)
-        .setClimateScenario("RCP_4.5")
-        .setSimulation(
-          Simulation.newBuilder()
-            .setStartDateTime(toTimestamp(START_DATE_TIME))
-            .setTimeStep(STEP_SIZE)
-            .setGeography(
-              Geography.newBuilder().setRasterCellOrigin(
-                RASTER_CELL_ORIGIN_CENTROID
-              )
-            )
-            .setStandards(
-              Standards.newBuilder().setMeasurements(
-                Measurement.newBuilder().addUnits(
-                  Unit.newBuilder().setQuantity("mass").setUnit(massUnit)
-                )
-              )
-            )
-            .setItems(contractItems)
-        )
-        .build()
+      initialiseSimulationRequest(
+        simulationId,
+        scenarioName,
+        contractItems,
+        massUnit
+      ).build()
     );
+  }
+
+  /**
+   * @return the request {@code initialiseSimulation} sends, for tests to adjust
+   *         before sending.
+   */
+  protected static InitialiseSimulationRequest.Builder initialiseSimulationRequest(
+    final String simulationId,
+    final String scenarioName,
+    final Items contractItems,
+    final String massUnit
+  ) {
+    return InitialiseSimulationRequest.newBuilder()
+      .setSimulationId(simulationId)
+      .setScenarioName(scenarioName)
+      .setClimateScenario("RCP_4.5")
+      .setSimulation(
+        Simulation.newBuilder()
+          .setStartDateTime(toTimestamp(START_DATE_TIME))
+          .setTimeStep(STEP_SIZE)
+          .setGeography(
+            Geography.newBuilder().setRasterCellOrigin(
+              RASTER_CELL_ORIGIN_CENTROID
+            )
+          )
+          .setStandards(
+            Standards.newBuilder().setMeasurements(
+              Measurement.newBuilder().addUnits(
+                Unit.newBuilder().setQuantity("mass").setUnit(massUnit)
+              )
+            )
+          )
+          .setItems(contractItems)
+      );
   }
 }

@@ -38,12 +38,16 @@ public final class Utils {
   /**
    * Throws {@code INVALID_ARGUMENT} if {@code requestTimestamp} is not the
    * simulation's current date-time.
+   *
+   * @param fieldName the protocol field {@code requestTimestamp} comes from,
+   *                  named in the error.
    */
   public static void checkRequestDateTimeAlignment(
     final Timestamp requestTimestamp,
+    final String fieldName,
     final Simulation simulation
   ) {
-    final var requestDateTime = toLocalDateTime(requestTimestamp);
+    final var requestDateTime = toLocalDateTime(requestTimestamp, fieldName);
     final var simulationDateTime = simulation.getTemporalSchedule().now();
     if (!requestDateTime.equals(simulationDateTime)) {
       throw INVALID_ARGUMENT.withDescription(

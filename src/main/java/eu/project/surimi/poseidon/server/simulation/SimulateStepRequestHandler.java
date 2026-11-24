@@ -68,7 +68,11 @@ public class SimulateStepRequestHandler
     final Simulation simulation,
     final SimulationManager.SimulationProperties simulationProperties
   ) {
-    checkRequestDateTimeAlignment(request.getCurrentDateTime(), simulation);
+    checkRequestDateTimeAlignment(
+      request.getCurrentDateTime(),
+      "current_date_time",
+      simulation
+    );
     final Period stepSize = simulationManager
       .getSimulationProperties(simulation)
       .getStepSize();
@@ -79,7 +83,8 @@ public class SimulateStepRequestHandler
     // monthly clearing of the accumulators the controller reads after this
     // step) belong to it.
     final LocalDateTime nextStepStart = toLocalDateTime(
-      request.getCurrentDateTime()
+      request.getCurrentDateTime(),
+      "current_date_time"
     ).plus(stepSize);
     simulation.getTemporalSchedule().stepUntil(simulation, nextStepStart);
     log(DEBUG, simulation, "Stepped to {0}", nextStepStart);

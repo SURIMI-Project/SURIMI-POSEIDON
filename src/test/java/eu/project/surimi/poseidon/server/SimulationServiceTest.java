@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.server;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static tech.units.indriya.unit.Units.KILOGRAM;
 
 import build.buf.gen.surimi.v1.*;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
@@ -58,6 +59,32 @@ class SimulationServiceTest extends ServiceTest {
         .getSimulation(simulationId)
         .getComponent(FleetSegmentMapper.class)
     ).doesNotThrowAnyException();
+  }
+
+  @Test
+  void rejectsFractionalStartDateTime() {
+    final InitialiseSimulationRequest.Builder requestBuilder =
+      initialiseSimulationRequest(
+        UUID.randomUUID().toString(),
+        MinimalScenario.class.getSimpleName(),
+        contractItems().build(),
+        KILOGRAM.getSymbol()
+      );
+    requestBuilder
+      .getSimulationBuilder()
+      .setStartDateTime(
+        Server.toTimestamp(START_DATE_TIME).toBuilder().setNanos(500_000_000)
+      );
+    assertThatThrownBy(() ->
+      simulationStub.initialiseSimulation(requestBuilder.build())
+    ).isInstanceOfSatisfying(StatusRuntimeException.class, error -> {
+      assertThat(error.getStatus().getCode()).isEqualTo(
+        Status.Code.INVALID_ARGUMENT
+      );
+      assertThat(error.getStatus().getDescription()).contains(
+        "simulation.start_date_time"
+      );
+    });
   }
 
   @Test

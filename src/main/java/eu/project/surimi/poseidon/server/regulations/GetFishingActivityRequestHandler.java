@@ -75,8 +75,11 @@ public class GetFishingActivityRequestHandler
       request.hasEndDateTime(),
       "Get fishing activity request is missing an end date time."
     );
-    final var startInstant = toInstant(request.getStartDateTime());
-    final var endInstant = toInstant(request.getEndDateTime());
+    final var startInstant = toInstant(
+      request.getStartDateTime(),
+      "start_date_time"
+    );
+    final var endInstant = toInstant(request.getEndDateTime(), "end_date_time");
     checkArgument(
       endInstant.isAfter(startInstant),
       "End date time must be after start date time."

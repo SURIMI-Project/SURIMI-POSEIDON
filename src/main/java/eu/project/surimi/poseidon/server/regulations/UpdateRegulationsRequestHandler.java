@@ -83,8 +83,11 @@ public class UpdateRegulationsRequestHandler
       request.hasRegulationsSummary(),
       "Update regulations request is missing a regulations summary."
     );
-    final var startInstant = toInstant(request.getStartDateTime());
-    final var endInstant = toInstant(request.getEndDateTime());
+    final var startInstant = toInstant(
+      request.getStartDateTime(),
+      "start_date_time"
+    );
+    final var endInstant = toInstant(request.getEndDateTime(), "end_date_time");
     checkArgument(
       !endInstant.isBefore(startInstant),
       "End date time must be on or after start date time."

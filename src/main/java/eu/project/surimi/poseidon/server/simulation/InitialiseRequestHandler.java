@@ -159,7 +159,10 @@ public class InitialiseRequestHandler
 
     final Simulation simulation = scenario
       .withStartingDateTime(
-        toLocalDateTime(request.getSimulation().getStartDateTime())
+        toLocalDateTime(
+          request.getSimulation().getStartDateTime(),
+          "simulation.start_date_time"
+        )
       )
       .startNewSimulation(System.currentTimeMillis(), simulationId);
     log(INFO, simulation, "Simulation started");

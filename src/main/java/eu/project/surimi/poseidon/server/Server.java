@@ -22,6 +22,7 @@
 
 package eu.project.surimi.poseidon.server;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static eu.project.surimi.poseidon.server.OpenTelemetryConfiguration.openTelemetry;
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.INFO;
@@ -190,24 +191,48 @@ public class Server {
   }
 
   /**
+   * @param fieldName the protocol field {@code timestamp} comes from, named in
+   *                  the error.
    * @return {@code timestamp} converted to an {@link Instant}.
+   * @throws IllegalArgumentException if {@code timestamp} is not a whole number
+   *                                  of seconds.
    */
-  public static Instant toInstant(final Timestamp timestamp) {
-    return toOffsetDateTime(timestamp).toInstant();
+  public static Instant toInstant(
+    final Timestamp timestamp,
+    final String fieldName
+  ) {
+    return toOffsetDateTime(timestamp, fieldName).toInstant();
   }
 
-  private static OffsetDateTime toOffsetDateTime(final Timestamp timestamp) {
-    return Instant.ofEpochSecond(
+  private static OffsetDateTime toOffsetDateTime(
+    final Timestamp timestamp,
+    final String fieldName
+  ) {
+    final Instant instant = Instant.ofEpochSecond(
       timestamp.getSeconds(),
       timestamp.getNanos()
-    ).atOffset(UTC);
+    );
+    checkArgument(
+      timestamp.getNanos() == 0,
+      "%s must be whole seconds, but is %s.",
+      fieldName,
+      instant
+    );
+    return instant.atOffset(UTC);
   }
 
   /**
+   * @param fieldName the protocol field {@code timestamp} comes from, named in
+   *                  the error.
    * @return {@code timestamp} converted to a UTC {@link LocalDateTime}.
+   * @throws IllegalArgumentException if {@code timestamp} is not a whole number
+   *                                  of seconds.
    */
-  public static LocalDateTime toLocalDateTime(final Timestamp timestamp) {
-    return toOffsetDateTime(timestamp).toLocalDateTime();
+  public static LocalDateTime toLocalDateTime(
+    final Timestamp timestamp,
+    final String fieldName
+  ) {
+    return toOffsetDateTime(timestamp, fieldName).toLocalDateTime();
   }
 
   /**

@@ -84,8 +84,8 @@ public class GetCatchDispositionSummaryRequestHandler
     final Timestamp endDateTime
   ) {
     final Range<LocalDateTime> dateTimeRange = Range.closed(
-      toLocalDateTime(startDateTime),
-      toLocalDateTime(endDateTime)
+      toLocalDateTime(startDateTime, "start_date_time"),
+      toLocalDateTime(endDateTime, "end_date_time")
     );
     final FleetSegmentMapper fleetSegmentMapper = simulation.getComponent(
       FleetSegmentMapper.class

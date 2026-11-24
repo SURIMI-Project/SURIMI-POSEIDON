@@ -118,8 +118,8 @@ public class GetSalesRequestHandler
     checkArgument(request.hasStartDateTime(), "Start date time is required.");
     checkArgument(request.hasEndDateTime(), "End date time is required.");
     final Range<LocalDateTime> dateTimeRange = Range.closed(
-      toLocalDateTime(request.getStartDateTime()),
-      toLocalDateTime(request.getEndDateTime())
+      toLocalDateTime(request.getStartDateTime(), "start_date_time"),
+      toLocalDateTime(request.getEndDateTime(), "end_date_time")
     );
     @Value
     final class Key {

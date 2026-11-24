@@ -105,7 +105,11 @@ public class UpdateBiomassRequestHandler
       "Biomass update received for simulation {0}",
       request.getSimulationId()
     );
-    checkRequestDateTimeAlignment(request.getDateTime(), simulation);
+    checkRequestDateTimeAlignment(
+      request.getDateTime(),
+      "date_time",
+      simulation
+    );
 
     final BiomassSummary biomassSummary = request.getBiomassSummary();
     final Map<SpeciesKey, BiomassGrid> simulationGrids = simulation
