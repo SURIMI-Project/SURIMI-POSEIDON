@@ -545,13 +545,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       totalAllowableCatchQuotas(fleetSegmentMapper)
     );
 
-    final var currentDateTime = now();
-
     // Fishing starts on arrival: no fishing hours here, so no wait.
-    final var expectedFishingStart = dateTimeAfter(
-      currentDateTime,
-      travelTimeToCell
-    );
+    final var expectedFishingStart = dateTimeAfter(now(), travelTimeToCell);
 
     final var purseSeinerFishingCellLegalityChecker =
       fishingCellLegalityChecker(
@@ -590,8 +585,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         purseSeinerFishAndReturnDurationFunction,
         lessThan(
           durationBetween(
-            currentDateTime,
-            nextOccurrenceAfter(currentDateTime, purseSeinerReturnTime)
+            now(),
+            nextOccurrenceAfter(now(), purseSeinerReturnTime)
           )
         )
       ),
@@ -605,7 +600,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       purseSeinerFishAndReturnDurationFunction,
       lessThan(
         durationBetween(
-          currentDateTime,
+          now(),
           nextOccurrenceAfter(currentTripStartDateTime(), purseSeinerReturnTime)
         )
       )
@@ -637,7 +632,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       bottomTrawlerFishAndReturnDurationFunction,
       lessThan(
         durationBetween(
-          currentDateTime,
+          now(),
           dateTimeAfter(
             currentTripStartDateTime(),
             bottomTrawlerMaximumTripDuration
@@ -671,8 +666,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var purseSeinerWaitUntilNextCheckpoint = waitFor(
       durationBetween(
-        currentDateTime,
-        nextOccurrenceAfter(currentDateTime, purseSeinerDepartureTime)
+        now(),
+        nextOccurrenceAfter(now(), purseSeinerDepartureTime)
       )
     );
 
@@ -695,8 +690,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var bottomTrawlerWaitUntilNextCheckpoint = waitFor(
       durationBetween(
-        currentDateTime,
-        nextOccurrenceAfter(currentDateTime, bottomTrawlerDepartureTime)
+        now(),
+        nextOccurrenceAfter(now(), bottomTrawlerDepartureTime)
       )
     );
 
