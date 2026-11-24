@@ -49,7 +49,7 @@ import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.anyOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.not;
-import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
+import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.timeIsBefore;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.always;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
@@ -194,6 +194,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final Scenario.ScenarioBuilder builder = Scenario.builder();
 
     final var purseSeinerReturnTime = time(6, 30, 0);
+    // The earliest time of day each fleet may depart: its departure check and
+    // its wait between checks both read it, so they cannot drift apart.
+    final var purseSeinerDepartureTime = time(22, 0, 0);
+    final var bottomTrawlerDepartureTime = time(7, 0, 0);
     // How long a set lasts with each gear, for now always, so it is also the
     // gear's expected duration, which the legality checks plan with. The checks
     // that a set fits (before the return time, within the trip's length) plan
@@ -656,7 +660,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var purseSeinerReadyForDeparture = checkThat(
       allOf(
         isPermitted(departNow(gear), totalAllowableCatchQuotas),
-        condition(currentTime(), afterTime(time(21, 59, 59))),
+        condition(currentTime(), not(timeIsBefore(purseSeinerDepartureTime))),
         condition(
           currentDayOfWeek(),
           in(listOf(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY))
@@ -668,7 +672,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var purseSeinerWaitUntilNextCheckpoint = waitFor(
       durationBetween(
         currentDateTime,
-        nextOccurrenceAfter(currentDateTime, time(6, 0, 0), time(22, 0, 0))
+        nextOccurrenceAfter(currentDateTime, purseSeinerDepartureTime)
       )
     );
 
@@ -680,7 +684,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var bottomTrawlerReadyForDeparture = checkThat(
       allOf(
         isPermitted(departNow(gear), totalAllowableCatchQuotas),
-        condition(currentTime(), afterTime(time(6, 59, 59))),
+        condition(currentTime(), not(timeIsBefore(bottomTrawlerDepartureTime))),
         condition(
           currentDayOfWeek(),
           in(listOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
@@ -692,7 +696,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var bottomTrawlerWaitUntilNextCheckpoint = waitFor(
       durationBetween(
         currentDateTime,
-        nextOccurrenceAfter(currentDateTime, time(7, 0, 0))
+        nextOccurrenceAfter(currentDateTime, bottomTrawlerDepartureTime)
       )
     );
 

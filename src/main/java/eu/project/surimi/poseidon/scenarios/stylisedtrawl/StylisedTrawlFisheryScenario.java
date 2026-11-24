@@ -40,7 +40,7 @@ import static uk.ac.ox.poseidon.core.predicates.Factories.in;
 import static uk.ac.ox.poseidon.core.predicates.comparable.Factories.lessThan;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.allOf;
 import static uk.ac.ox.poseidon.core.predicates.logical.Factories.not;
-import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.afterTime;
+import static uk.ac.ox.poseidon.core.predicates.temporal.Factories.timeIsBefore;
 import static uk.ac.ox.poseidon.core.providers.Factories.shiftedInt;
 import static uk.ac.ox.poseidon.core.providers.constant.Factories.always;
 import static uk.ac.ox.poseidon.core.providers.math.Factories.maxInt;
@@ -195,6 +195,9 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
 
     final var setDuration = hours(3);
     final var maximumTripDuration = hours(12);
+    // The earliest time of day trawlers may depart: their departure check and
+    // their wait between checks both read it, so they cannot drift apart.
+    final var departureTime = time(7, 0, 0);
 
     final var inputPath = path(INPUT_PATH);
     final var bathymetricGridPath = inputPath.plus("bathymetry_grid.asc");
@@ -453,7 +456,7 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
     // Trawlers depart in the morning and return the same day
     final var readyForDeparture = checkThat(
       allOf(
-        condition(currentTime(), afterTime(time(6, 59, 59))),
+        condition(currentTime(), not(timeIsBefore(departureTime))),
         condition(
           currentDayOfWeek(),
           in(listOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
@@ -465,7 +468,7 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
     final var waitUntilNextCheckpoint = waitFor(
       durationBetween(
         currentDateTime,
-        nextOccurrenceAfter(currentDateTime, time(7, 0, 0))
+        nextOccurrenceAfter(currentDateTime, departureTime)
       )
     );
 
