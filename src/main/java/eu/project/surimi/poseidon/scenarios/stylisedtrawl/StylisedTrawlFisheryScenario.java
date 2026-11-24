@@ -405,11 +405,13 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
       )
     );
 
+    final var currentDateTime = currentDateTime();
+
     // Fishing starts on arrival: no fishing hours here, so no wait.
     final var fishingCellLegalityChecker = fishingCellLegalityChecker(
       gear,
       bottomTrawlerRegulations,
-      dateTimeAfter(currentDateTime(), travelTimeToCell)
+      dateTimeAfter(currentDateTime, travelTimeToCell)
     );
 
     // How long it would take to travel to a cell, fish there once, and travel
@@ -432,7 +434,7 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
       fishAndReturnDurationFunction,
       lessThan(
         durationBetween(
-          currentDateTime(),
+          currentDateTime,
           dateTimeAfter(currentTripStartDateTime(), maximumTripDuration)
         )
       )
@@ -462,8 +464,8 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
 
     final var waitUntilNextCheckpoint = waitFor(
       durationBetween(
-        currentDateTime(),
-        nextOccurrenceAfter(currentDateTime(), time(7, 0, 0))
+        currentDateTime,
+        nextOccurrenceAfter(currentDateTime, time(7, 0, 0))
       )
     );
 

@@ -541,9 +541,11 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       totalAllowableCatchQuotas(fleetSegmentMapper)
     );
 
+    final var currentDateTime = currentDateTime();
+
     // Fishing starts on arrival: no fishing hours here, so no wait.
     final var expectedFishingStart = dateTimeAfter(
-      currentDateTime(),
+      currentDateTime,
       travelTimeToCell
     );
 
@@ -584,8 +586,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
         purseSeinerFishAndReturnDurationFunction,
         lessThan(
           durationBetween(
-            currentDateTime(),
-            nextOccurrenceAfter(currentDateTime(), purseSeinerReturnTime)
+            currentDateTime,
+            nextOccurrenceAfter(currentDateTime, purseSeinerReturnTime)
           )
         )
       ),
@@ -599,7 +601,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       purseSeinerFishAndReturnDurationFunction,
       lessThan(
         durationBetween(
-          currentDateTime(),
+          currentDateTime,
           nextOccurrenceAfter(currentTripStartDateTime(), purseSeinerReturnTime)
         )
       )
@@ -631,7 +633,7 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       bottomTrawlerFishAndReturnDurationFunction,
       lessThan(
         durationBetween(
-          currentDateTime(),
+          currentDateTime,
           dateTimeAfter(
             currentTripStartDateTime(),
             bottomTrawlerMaximumTripDuration
@@ -665,8 +667,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var purseSeinerWaitUntilNextCheckpoint = waitFor(
       durationBetween(
-        currentDateTime(),
-        nextOccurrenceAfter(currentDateTime(), time(6, 0, 0), time(22, 0, 0))
+        currentDateTime,
+        nextOccurrenceAfter(currentDateTime, time(6, 0, 0), time(22, 0, 0))
       )
     );
 
@@ -689,8 +691,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
 
     final var bottomTrawlerWaitUntilNextCheckpoint = waitFor(
       durationBetween(
-        currentDateTime(),
-        nextOccurrenceAfter(currentDateTime(), time(7, 0, 0))
+        currentDateTime,
+        nextOccurrenceAfter(currentDateTime, time(7, 0, 0))
       )
     );
 
