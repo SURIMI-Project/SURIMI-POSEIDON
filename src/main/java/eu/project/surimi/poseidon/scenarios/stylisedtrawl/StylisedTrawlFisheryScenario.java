@@ -431,7 +431,8 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
     final var fishAndReturnInTime = condition(
       fishAndReturnDurationFunction,
       lessThan(
-        durationUntil(
+        durationBetween(
+          currentDateTime(),
           dateTimeAfter(currentTripStartDateTime(), maximumTripDuration)
         )
       )
@@ -460,7 +461,10 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
     );
 
     final var waitUntilNextCheckpoint = waitFor(
-      durationUntil(nextOccurrenceOf(time(7, 0, 0)))
+      durationBetween(
+        currentDateTime(),
+        nextOccurrenceAfter(currentDateTime(), time(7, 0, 0))
+      )
     );
 
     final var firstDestination = epsilonGreedyPicker(

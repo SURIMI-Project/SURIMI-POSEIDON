@@ -582,7 +582,12 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       isActiveWaterCell(bathymetricGrid),
       condition(
         purseSeinerFishAndReturnDurationFunction,
-        lessThan(durationUntil(nextOccurrenceOf(purseSeinerReturnTime)))
+        lessThan(
+          durationBetween(
+            currentDateTime(),
+            nextOccurrenceAfter(currentDateTime(), purseSeinerReturnTime)
+          )
+        )
       ),
       purseSeinerFishingCellLegalityChecker
     );
@@ -593,7 +598,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var purseSeinerFishAndReturnInTime = condition(
       purseSeinerFishAndReturnDurationFunction,
       lessThan(
-        durationUntil(
+        durationBetween(
+          currentDateTime(),
           nextOccurrenceAfter(currentTripStartDateTime(), purseSeinerReturnTime)
         )
       )
@@ -624,7 +630,8 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     final var bottomTrawlerFishAndReturnInTime = condition(
       bottomTrawlerFishAndReturnDurationFunction,
       lessThan(
-        durationUntil(
+        durationBetween(
+          currentDateTime(),
           dateTimeAfter(
             currentTripStartDateTime(),
             bottomTrawlerMaximumTripDuration
@@ -657,7 +664,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     );
 
     final var purseSeinerWaitUntilNextCheckpoint = waitFor(
-      durationUntil(nextOccurrenceOf(time(6, 0, 0), time(22, 0, 0)))
+      durationBetween(
+        currentDateTime(),
+        nextOccurrenceAfter(currentDateTime(), time(6, 0, 0), time(22, 0, 0))
+      )
     );
 
     // Bottom trawlers depart in the morning and return the same day (per Miquel
@@ -678,7 +688,10 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
     );
 
     final var bottomTrawlerWaitUntilNextCheckpoint = waitFor(
-      durationUntil(nextOccurrenceOf(time(7, 0, 0)))
+      durationBetween(
+        currentDateTime(),
+        nextOccurrenceAfter(currentDateTime(), time(7, 0, 0))
+      )
     );
 
     final var purseSeinerFirstDestination = epsilonGreedyPicker(

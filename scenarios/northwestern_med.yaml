@@ -631,10 +631,8 @@ components:
                           mapping: !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                             predicate: &id025 !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                               predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
-                                value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
-                                  currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
-                                    }
-                                  referenceDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextOccurrenceOfTimeOfDayFactory
+                                value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationBetweenFactory
+                                  endDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextOccurrenceOfTimeOfDayFactory
                                     referenceDateTime: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentTripStartDateTimeFactory {
                                       }
                                     times:
@@ -642,6 +640,8 @@ components:
                                       hour: 6,
                                       minute: 30,
                                       second: 0
+                                    }
+                                  startDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                     }
                               subject: &id036 !!uk.ac.ox.poseidon.core.functions.CombinedDurationFactory
                                 durations:
@@ -801,14 +801,14 @@ components:
                           bathymetricGrid: *id004
                         - !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                           predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
-                            value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
-                              currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
-                                }
-                              referenceDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextOccurrenceOfTimeOfDayFactory
+                            value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationBetweenFactory
+                              endDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextOccurrenceOfTimeOfDayFactory
                                 referenceDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                                   }
                                 times:
                                 - *id035
+                              startDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
+                                }
                           subject: *id036
                         - *id037
                       optionValues: *id038
@@ -845,10 +845,8 @@ components:
                   - !!uk.ac.ox.poseidon.fishing.vessels.values.TimeAtSeaCostFactory
                     hourlyCosts: *id040
               waitTask: !!uk.ac.ox.poseidon.fishing.tasks.general.WaitForFactory
-                duration: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
-                  currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
-                    }
-                  referenceDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextOccurrenceOfTimeOfDayFactory
+                duration: !!uk.ac.ox.poseidon.core.providers.temporal.DurationBetweenFactory
+                  endDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextOccurrenceOfTimeOfDayFactory
                     referenceDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                       }
                     times:
@@ -861,6 +859,8 @@ components:
                       hour: 22,
                       minute: 0,
                       second: 0
+                    }
+                  startDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                     }
           - &id053 !!uk.ac.ox.poseidon.fishing.tasks.branches.SequenceTaskFactory
             children:
@@ -989,10 +989,8 @@ components:
                           mapping: !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                             predicate: &id045 !!uk.ac.ox.poseidon.core.predicates.ConditionFactory
                               predicate: !!uk.ac.ox.poseidon.core.predicates.comparable.LessThanFactory
-                                value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
-                                  currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
-                                    }
-                                  referenceDateTime: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
+                                value: !!uk.ac.ox.poseidon.core.providers.temporal.DurationBetweenFactory
+                                  endDateTime: !!uk.ac.ox.poseidon.core.functions.MappingAsValueFactory
                                     mapping: !!uk.ac.ox.poseidon.core.providers.temporal.DateTimeAfterFactory
                                       amountToAdd: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
                                         value: !!uk.ac.ox.poseidon.core.providers.constant.ConstantFactory
@@ -1005,6 +1003,8 @@ components:
                                       referenceDateTime: !!uk.ac.ox.poseidon.core.functions.ValueAsMappingFactory
                                         value: !!uk.ac.ox.poseidon.fishing.vessels.values.CurrentTripStartDateTimeFactory {
                                           }
+                                  startDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
+                                    }
                               subject: &id050 !!uk.ac.ox.poseidon.core.functions.CombinedDurationFactory
                                 durations:
                                 - *id026
@@ -1126,10 +1126,8 @@ components:
                   - !!uk.ac.ox.poseidon.fishing.vessels.values.TimeAtSeaCostFactory
                     hourlyCosts: *id040
               waitTask: !!uk.ac.ox.poseidon.fishing.tasks.general.WaitForFactory
-                duration: !!uk.ac.ox.poseidon.core.providers.temporal.DurationUntilFactory
-                  currentDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
-                    }
-                  referenceDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextOccurrenceOfTimeOfDayFactory
+                duration: !!uk.ac.ox.poseidon.core.providers.temporal.DurationBetweenFactory
+                  endDateTime: !!uk.ac.ox.poseidon.core.providers.temporal.NextOccurrenceOfTimeOfDayFactory
                     referenceDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                       }
                     times:
@@ -1137,6 +1135,8 @@ components:
                       hour: 7,
                       minute: 0,
                       second: 0
+                    }
+                  startDateTime: !!uk.ac.ox.poseidon.core.CurrentDateTimeFactory {
                     }
           - *id053
     components:
