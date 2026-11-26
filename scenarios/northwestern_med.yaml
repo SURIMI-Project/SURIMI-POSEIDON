@@ -571,8 +571,8 @@ components:
                             portGrid: *id008
                           portGrid: *id008
                       - !!uk.ac.ox.poseidon.fishing.tasks.fishing.FishingFactory
-                        dispositionProcess: !!uk.ac.ox.poseidon.fishing.catches.disposition.CompositeDispositionProcessFactory
-                          dispositionStrategies:
+                        catchSorting: !!uk.ac.ox.poseidon.fishing.catches.disposition.CompositeCatchSortingFactory
+                          steps:
                           - !!uk.ac.ox.poseidon.fishing.catches.disposition.IndexedDiscardRatesFactory
                             rateFunction: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
                               defaultValue: 0.0
@@ -608,8 +608,9 @@ components:
                             species: *id006
                           - !!uk.ac.ox.poseidon.fishing.catches.disposition.ProportionallyLimitingBiomassToHoldFactory {
                             }
-                          - &id045 !!uk.ac.ox.poseidon.fishing.catches.disposition.FullDiscardMortalityFactory {
-                            }
+                        discardMortality: &id045 !!uk.ac.ox.poseidon.fishing.catches.disposition.UniformDiscardMortalityFactory {
+                          mortalityRate: 1.0
+                        }
                         fisheable: !!uk.ac.ox.poseidon.fishing.fisheables.CurrentCellFisheableFactory
                           fisheableGrid: *id019
                         fuelTank: *id020
@@ -924,8 +925,8 @@ components:
                       children:
                       - *id033
                       - !!uk.ac.ox.poseidon.fishing.tasks.fishing.FishingFactory
-                        dispositionProcess: !!uk.ac.ox.poseidon.fishing.catches.disposition.CompositeDispositionProcessFactory
-                          dispositionStrategies:
+                        catchSorting: !!uk.ac.ox.poseidon.fishing.catches.disposition.CompositeCatchSortingFactory
+                          steps:
                           - !!uk.ac.ox.poseidon.fishing.catches.disposition.IndexedDiscardRatesFactory
                             rateFunction: !!uk.ac.ox.poseidon.core.functions.MapLookupFactory
                               defaultValue: 0.0
@@ -950,7 +951,7 @@ components:
                             species: *id006
                           - !!uk.ac.ox.poseidon.fishing.catches.disposition.ProportionallyLimitingBiomassToHoldFactory {
                             }
-                          - *id045
+                        discardMortality: *id045
                         fisheable: !!uk.ac.ox.poseidon.fishing.fisheables.CurrentCellFisheableFactory
                           fisheableGrid: *id019
                         fuelTank: *id020

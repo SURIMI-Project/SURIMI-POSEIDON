@@ -788,29 +788,29 @@ public class NorthwesternMedScenario implements Supplier<Scenario> {
       )
     );
 
-    final var discardMortality = fullDiscardMortality();
+    final var discardMortality = uniformDiscardMortality(1);
 
     final var purseSeinerFishingTask = fishing(
       gear,
       hold,
       fuelTank,
       currentCellFisheable(fisheableBiomassGrids),
-      compositeDispositionProcess(
+      compositeCatchSorting(
         purseSeineDiscardRates,
-        proportionallyLimitingBiomassToHold(),
-        discardMortality
-      )
+        proportionallyLimitingBiomassToHold()
+      ),
+      discardMortality
     );
     final var bottomTrawlerFishingTask = fishing(
       gear,
       hold,
       fuelTank,
       currentCellFisheable(fisheableBiomassGrids),
-      compositeDispositionProcess(
+      compositeCatchSorting(
         bottomTrawlerDiscardRates,
-        proportionallyLimitingBiomassToHold(),
-        discardMortality
-      )
+        proportionallyLimitingBiomassToHold()
+      ),
+      discardMortality
     );
 
     final var travelToTripDestination = travelAlongPathTo(

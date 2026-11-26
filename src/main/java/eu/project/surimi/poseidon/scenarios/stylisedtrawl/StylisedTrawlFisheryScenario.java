@@ -498,7 +498,8 @@ public class StylisedTrawlFisheryScenario implements Supplier<Scenario> {
       hold,
       fuelTank,
       currentCellFisheable(fisheableBiomassGrids),
-      compositeDispositionProcess(proportionallyLimitingBiomassToHold())
+      proportionallyLimitingBiomassToHold(),
+      uniformDiscardMortality(0)
     );
 
     final var travelToTripDestination = travelAlongPathTo(

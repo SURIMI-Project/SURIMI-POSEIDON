@@ -277,12 +277,10 @@ public class MinimalScenario implements Supplier<Scenario> {
           hold,
           fuelTank,
           currentCellFisheable(fisheableBiomassGrids(biomassGrids)),
-          compositeDispositionProcess(
-            selectedSpeciesRetention(
-              speciesByCode(object(RETAINED_SPECIES_CODES), species)
-            ),
-            discardMortality(0.1)
-          )
+          selectedSpeciesRetention(
+            speciesByCode(object(RETAINED_SPECIES_CODES), species)
+          ),
+          uniformDiscardMortality(0.1)
         ),
         setDestinationToOrigin(),
         travelToTripDestination,
