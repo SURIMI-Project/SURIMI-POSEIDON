@@ -23,6 +23,7 @@
 package eu.project.surimi.poseidon.scenarios.anchovybay;
 
 import static uk.ac.ox.poseidon.biology.biomass.Factories.biomassGrids;
+import static uk.ac.ox.poseidon.biology.biomass.Factories.fisheableBiomassGrids;
 import static uk.ac.ox.poseidon.biology.species.Factories.speciesFromData;
 import static uk.ac.ox.poseidon.core.aggregators.Factories.maxAggregator;
 import static uk.ac.ox.poseidon.core.time.Factories.startOf;
@@ -112,6 +113,7 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
       species,
       listOf(zeroBiomassAllocator)
     );
+    final var fisheableBiomassGrids = fisheableBiomassGrids(biomassGrids);
 
     return Scenario.builder()
       .startingDateTime(startOf(START_DATE))
@@ -121,6 +123,7 @@ public class AnchovyBayScenario implements Supplier<Scenario> {
       .component("marketGrid", marketGrid)
       .component("species", species)
       .component("biomassGrids", biomassGrids)
+      .component("fisheableBiomassGrids", fisheableBiomassGrids)
       .build();
   }
 }

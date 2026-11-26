@@ -97,11 +97,11 @@ public class AnchovyBayScenarioWithUI extends ScenarioWithUI {
   }
 
   /**
-   * Opens the GUI for a freshly built {@link AnchovyBayScenario}.
+   * Opens the GUI for a freshly built {@link LocalAnchovyBayScenario}.
    */
   static void main(final String[] args) {
     final AnchovyBayScenarioWithUI anchovyBayScenarioWithUI =
-      new AnchovyBayScenarioWithUI(new AnchovyBayScenario().get());
+      new AnchovyBayScenarioWithUI(new LocalAnchovyBayScenario().get());
     anchovyBayScenarioWithUI.createController();
   }
 }

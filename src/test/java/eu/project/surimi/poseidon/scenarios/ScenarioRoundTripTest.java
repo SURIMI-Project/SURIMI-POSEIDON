@@ -25,6 +25,7 @@ package eu.project.surimi.poseidon.scenarios;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario;
+import eu.project.surimi.poseidon.scenarios.anchovybay.LocalAnchovyBayScenario;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.NorthwesternMedScenario;
@@ -45,7 +46,8 @@ class ScenarioRoundTripTest {
       new NorthwesternMedScenario(),
       new LocalNorthwesternMedScenario(),
       new StylisedTrawlFisheryScenario(),
-      new AnchovyBayScenario()
+      new AnchovyBayScenario(),
+      new LocalAnchovyBayScenario()
     );
   }
 

@@ -24,8 +24,8 @@ package eu.project.surimi.poseidon.scenarios;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-import eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenario;
 import eu.project.surimi.poseidon.scenarios.anchovybay.AnchovyBayScenarioWithUI;
+import eu.project.surimi.poseidon.scenarios.anchovybay.LocalAnchovyBayScenario;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenario;
 import eu.project.surimi.poseidon.scenarios.minimal.MinimalScenarioWithUI;
 import eu.project.surimi.poseidon.scenarios.northwesternmed.LocalNorthwesternMedScenario;
@@ -42,7 +42,7 @@ class ScenarioWithUIWrappersTest {
   @Test
   void anchovyBayWrapperFindsTheComponentsItPortrays() {
     assertThatCode(() ->
-      new AnchovyBayScenarioWithUI(new AnchovyBayScenario().get())
+      new AnchovyBayScenarioWithUI(new LocalAnchovyBayScenario().get())
     ).doesNotThrowAnyException();
   }
 

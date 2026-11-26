@@ -51,7 +51,7 @@ components:
     lifeStageColumn: life_stage
     speciesCodeColumn: species_code
     speciesNameColumn: species_name
-  biomassGrids: !!uk.ac.ox.poseidon.biology.biomass.BiomassGridsFactory
+  biomassGrids: &id008 !!uk.ac.ox.poseidon.biology.biomass.BiomassGridsFactory
     biomassAllocators: !!uk.ac.ox.poseidon.core.utils.ListFactory
       factories:
       - !!uk.ac.ox.poseidon.geography.allocators.FilteredAllocatorFactory
@@ -64,6 +64,8 @@ components:
             }
     modelGrid: *id003
     species: *id007
+  fisheableBiomassGrids: !!uk.ac.ox.poseidon.biology.biomass.FisheableBiomassGridsFactory
+    biomassGrids: *id008
 startingDateTime: !!uk.ac.ox.poseidon.core.time.DateTimeFactory {
   day: 1,
   hour: 0,

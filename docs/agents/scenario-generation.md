@@ -29,5 +29,6 @@ it.
 
 Under `src/main/java/eu/project/surimi/poseidon/scenarios/`: `minimal/` holds
 the scenario the tests use, `northwesternmed/` the production scenario (with its
-UI and calibration entry point), and `anchovybay/` the scenario built from an
-EwE model (local only, with a UI).
+UI and calibration entry point), and `anchovybay/` the Anchovy Bay scenario
+(local only, with a local version that plays biomass and prices from its input
+files, and a UI).
