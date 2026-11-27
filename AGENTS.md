@@ -1,6 +1,5 @@
 # AGENTS.md
 
-Guidance for coding agents (Claude Code and others) working in this repository.
 Longer topic-specific docs live in `docs/agents/` — read the relevant one before
 working in the area it covers:
 
@@ -70,16 +69,12 @@ substituting `POSEIDON:<module>` coordinates for its subprojects (see
 
 ## Code style
 
-Follow `POSEIDON/AGENTS.md` ("Code style") and
-`POSEIDON/docs/agents/code-style.md`, including the scenario-class conventions,
-which apply to `NorthwesternMedScenario` and `AnchovyBayScenario`.
-
-Spotless, compilation and Checkstyle follow POSEIDON's rules (see "Build & test
-commands" in `POSEIDON/AGENTS.md`): run `./gradlew spotlessApply` after editing
-Java or Markdown. Checkstyle reads `POSEIDON/config/checkstyle/checkstyle.xml`
-from the submodule. The formatting setup and the `checkstyle` version are
-duplicated in `POSEIDON/`: change both repos together (the files are listed in
-`POSEIDON/docs/agents/code-style.md`).
+Follow `POSEIDON/docs/agents/code-style.md`; its scenario-class conventions
+apply to `NorthwesternMedScenario` and `AnchovyBayScenario`. Run
+`./gradlew spotlessApply` after editing Java or Markdown. Checkstyle reads the
+submodule's `POSEIDON/config/checkstyle/checkstyle.xml`; the formatting setup
+and the `checkstyle` version are duplicated in `POSEIDON/`, so change both repos
+together.
 
 ## Submodules
 
@@ -98,12 +93,6 @@ After cloning or pulling: `git submodule update --init --recursive`.
   then a pointer bump here. Push the submodule commit before pushing a
   superproject commit that points to it.
 
-## Merging
+## Merging and licensing
 
-Merge into `main` as `POSEIDON/AGENTS.md` ("Merging") says: fast-forward only,
-never a merge commit. The same holds in the `POSEIDON` submodule.
-
-## Licensing
-
-Every source file carries the GNU GPLv3 header (University of Oxford copyright),
-with the year-range rule in `POSEIDON/AGENTS.md` ("Licensing").
+Merging (fast-forward only) and license headers follow `POSEIDON/AGENTS.md`.
