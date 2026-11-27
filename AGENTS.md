@@ -51,20 +51,13 @@ substituting `POSEIDON:<module>` coordinates for its subprojects (see
 
 ## Commands
 
+Root tests take about 3 minutes, mostly NW Med runs.
+
 ```
-./gradlew build                                          # root + POSEIDON: compile, tests, spotbugs, checkstyle
-./gradlew test                                           # root tests (~3 min, mostly NW Med runs)
-./gradlew test --tests "eu.project.surimi.poseidon.server.SimulationServiceTest"            # one class
-./gradlew :POSEIDON:<module>:test                        # a submodule's tests (core, io, agents, …)
-./gradlew spotlessApply                                  # format src/ and Markdown with Prettier, remove unused imports, add missing license headers
-./gradlew :POSEIDON:spotlessApply                        # the same for the submodule
-./gradlew writeNorthwesternMedScenario                   # regenerate scenarios/northwestern_med.yaml
-./gradlew writeAnchovyBayScenario                        # regenerate scenarios/anchovy_bay.yaml
-./gradlew run --args="-p 50051"                          # run the server locally
-./gradlew runNorthwesternMedGui                          # open the NW Med GUI (local inputs)
-./gradlew runAnchovyBayGui                               # open the Anchovy Bay GUI (local only, not served)
-./gradlew runNorthwesternMedCalibration                  # calibrate NW Med (local inputs, heap 75% of RAM)
-./gradlew runNorthwesternMedCalibration --args="--population 40"  # size the population to the machine
+./gradlew writeNorthwesternMedScenario       # regenerate scenarios/northwestern_med.yaml (writeAnchovyBayScenario likewise)
+./gradlew run --args="-p 50051"              # run the server locally
+./gradlew runNorthwesternMedGui              # NW Med GUI on local inputs (runAnchovyBayGui likewise, not served)
+./gradlew runNorthwesternMedCalibration --args="--population 40"  # calibrate NW Med; size the population to the machine
 ```
 
 ## Code style
